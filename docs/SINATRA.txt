@@ -1,0 +1,5 @@
+Console for Sinatra: irb -r sinbook.rb
+http://adam.heroku.com/past/2009/4/19/console_for_sinatra/#comment-8350111
+
+Debugger
+http://pivotallabs.com/users/chad/blog/articles/366-ruby-debug-in-30-seconds-we-don-t-need-no-stinkin-gui-

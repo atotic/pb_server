@@ -1,0 +1,138 @@
+TODO: 
+Refactor with models: document, pages, images
+Redo my silly queue
+test flash notice
+implement unobtrusive form ajax
+create some book pages
+https://github.com/rails/jquery-ujs/wiki/Unobtrusive-scripting-support-for-jQuery
+Display the book pages in book navigator.
+Display the book pages in page editor (iframe?)
+
+Mar 18
+Good place to get things designed:
+https://www.crowdspring.com/post-a-project/, referred from Michael LaGuardia
+
+Mar 17
+Did a bit of a code review. My js is too messy, I'd like to refactor. Deffered jQuery
+pattern holds promise.
+Saw backbone.js. http://documentcloud.github.com/backbone/#faq
+They've implemented lots of stuff I've thought about, and more. Feels like like
+too much to take on right now.
+
+Mar 16
+I like working with Sinatra. I got comfortable with the debugger, datamapper, It makes me learn interesting things. The docs are incomplete, of course. Some surprises:
+- Sinatra configuration :set creates a method on the app. I expected a get/set attr API
+
+Moved from top-level app to modular API. I do not like indeterminate namespaces.
+Starterd working the forms, return values, etc. I think it'll be easier than rails.
+
+Mar 15
+Trying out Sinatra. Pete Warden's "Social Hello World" talked me into this.
+
+Mar 14
+Thinking about moving to Sinatra. Rails documentation sucks in several major ways 
+
+1) All functions take a grab-bag of options
+2) Documentation is a large linear dump of all method calls. There are 6 methods named render, one of which is relevant.
+3) The framework makes easy things easy, and hard things a guessing game. How do I use nested forms if one of the arguments is not an ActiveRecord? I hate coding via trial and error
+4) Learning Rails feels like learning one damn thing after another, I never get to see the big picture.
+
+With Sinatra, the hope is that the learning curve will taper off.
+
+Deployment: Pete Warden uses heroku, I can start with it. Heroku runs on Amazon. 
+I think that figuring out deployment will take me a month.
+Heroku will store data in S3 temporarily
+
+Mar 11
+Diving back into Rails.
+photo_book_controller::create
+Tricky problem of using a single form to edit two models: photo book + template
+I wanted rails form helpers (error handling, saving of form data between pages for free)
+For two models in a single form you want nested forms. 
+Template needed to be a photobook nested attribute.
+As PhotoBookTemplates are not ActiveRecords, or inside db, my template fakes being an ActiveRecord. 
+The fakery happened through several simple routines.
+
+Mar 9
+Clean up the uglyness
+What does photobook looks like as json?
+
+Mar 8
+Creating rails framework for books
+Back to rails!
+field_error_proc removal was a surprise. 
+
+Mar 4
+Thinking about dropping those images, what a page looks like
+
+Mar 2, 3
+implemented image slider, looks great
+
+Mar 1
+- debugging memory issues. When loading 80 images, Firefox usage would grow very large
+and the whole computer acted sluggish.
+I investigated by loading 2000x5000 simple PNG images. PNGs were being cleverly compressed.
+An image can be up to 40MB uncompressed (2000x3008x4). Firefox clears its in-memory image
+cache after 10 seconds. Average image takes 1/3s/load.
+That means after 10s, we have 40x30, or 1.5Gb in memory, causing machine to slow down.
+Slowing down the memory 
+Feb 23
+Implementing tabs
+http://stackoverflow.com/questions/773074/vertical-tabs-with-jquery
+
+Feb 21
+Implemented simple qt html2pdf renderer
+seems to render the entire image re-encoded as jpg
+for final product, might have to hack qt.
+src/painting/qprinter.cpp creates a QPdfEngine
+will need specialized QPdfEngine that would encode images in original form
+see qprintengine_pdf.cpp::drawImage, it reencodes it from Pixmap. Might run into trouble with effects,
+text on top, etc.
+
+Feb 14
+wkhtmltopdf bugs:
+increasing DPI to 300 rotates the image on a sample photo
+decreasing dpi in reference image does not reduce the dpi
+for photo books, we'd need strict control over dpi/colors
+need to understand what qt is doing:
+
+http://labs.qt.nokia.com/2009/01/15/capturing-web-pages/
+http://discussion.forum.nokia.com/forum/showthread.php?191374-image-rendering-problem-with-webkit
+
+TOPICS
+BUSINESS MODEL
+- Blurb.com: show them the demo
+DEALING WITH IMAGES
+Need to auto-rotate rotated images
+http://www.html5rocks.com/tutorials/offline/whats-offline/#toc-compatibility
+Image upload: http://hacks.mozilla.org/2011/03/the-shortest-image-uploader-ever/
+http://muizelaar.blogspot.com/2011/02/drawing-sprites-canvas-2d-vs-webgl.html
+
+FEATURES:
+- Photo import:
+	hard drive
+	web sites: Picasa, FB
+- Images
+	auto-rotate JPGs on import
+- Business structure:
+	allow
+
+Idea 1: 
+
+PDF generation:
+http://tomayko.com/writings/pining-for-pdf-in-gecko
+a guy wrote a printpdf extension for firefox
+wkhtmltopdf
+need to generate exact representation
+no margins: -B 0in -L 0in -R 0in -T 0in
+width/height: --page-width 6in --page-height 6in
+Python PDF generator
+http://www.xhtml2pdf.com/doc/pisa-en.html
+
+Upload:
+price per GB is not so high, might be slow (use flash for this?)
+
+Reading XMP & EXIF
+https://addons.mozilla.org/en-US/firefox/addon/fxif/
+
+

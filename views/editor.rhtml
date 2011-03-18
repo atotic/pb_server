@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Photobook</title>
+	<script src="/javascripts/jquery-1.5.js"></script>
+	<script src="/javascripts/jquery-ui-1.8.9.custom.js"></script>
+	<script src="/javascripts/editor.js"></script>
+	<link href="/stylesheets/reset.css" media="screen" rel="stylesheet" type="text/css" />
+	<link href="/stylesheets/application.css" media="screen" rel="stylesheet" type="text/css" />
+	<link href="/stylesheets/smoothness/jquery-ui-1.8.9.custom.css" media="screen" rel="stylesheet" type="text/css" />
+	<link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Josefin+Sans+Std+Light">
+
+<script type="text/javascript">
+$(document).ready(function() {
+	$("#main-container").load("/books/new");
+});
+</script>
+
+</head>
+<body>
+	<div id="header" class="ui-widget-header ui-helper-clearfix">
+		<nav>
+			<a href="#photos-tab" class="">Photos</a>
+			<a href="#book-tab">Book</a>
+		</nav>
+		<div id="nav-tabs" class="ui-widget-content ui-widget">
+			<div id="photos-tab" class='tab'>
+				<div class="intro">Drag your photos here
+				</div>
+				<div id="photo-list-slider"></div>
+				<div id="photo-list-container">
+				<div id="photo-list">
+				</div>
+				</div>
+			</div>
+			<div id="book-tab" class='tab'>Book tab</div>
+		</div>
+	</div>
+<input type="file" id="file-dialog" multiple="true" accept="image/*" style="display:none">
+<div id="notice" class="ui-widget -state-highlight">
+	<div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;"></div>
+</div>
+<div id="error" class="ui-widget ui-corner-all ui-state-error">
+	<div class="ui-state-error ui-corner-all" style="padding: 0 .7em;"></div>
+</div>
+<div id="main-container">
+	<p>This is main</p>
+</div>
+<style type="text/css" contenteditable style="display:none;white-space:pre; font-size: 13px; font-family:Monaco, Mono-Space;border-top: 5px solid gray">
+/* GENERAL */
+body {
+	height:100%;
+}
+#notice {
+	display:none;
+	padding: .5em;
+}
+#error {
+	display:none;
+	padding: .5em;
+}
+.drop-feedback {
+	box-shadow: inset 0px 0px 15px #61A326;
+}
+
+/* MAIN */
+
+#main-container {
+	min-height: 300px;
+	background-color: yellow;
+}
+
+/* HEADER */
+
+#header {
+	padding-top: 1em;
+	background-position: 0% 0%;
+}
+#header nav {
+	float:left;
+	margin: 0em 0.2em 0.2em 0.2em;
+	padding-top: 8px;
+}
+
+#header nav a {
+	display:block;
+	text-decoration: none;
+	color: inherit;
+	margin:0 0 0 0.2em;
+	padding: 0.5em 8px 0.5em 0.2em;
+}
+#header nav a.ui-state-active {
+	border-right: 0px !important;
+}
+
+.header-tab {
+	background-color: white;
+	height: 150px;
+	border-top: 1px solid #AAAAAA;
+	padding: 0.5em;
+}
+.tab {
+	font-weight: normal;
+}
+.intro {
+	font-family: 'Josefin Sans Std Light',Helvetica,fancy;
+	font-size: 24px;
+}
+
+/* Photos tab */
+#photos-tab {
+	padding-right: 1px;
+}
+#photo-list-container {
+	overflow-y: hidden;
+	overflow-x: hidden;
+	position: relative;
+}
+#photo-list {
+	max-height: 128px;
+}
+#photo-list canvas {
+	padding: 0 3px 0 3px;
+}
+#photo-list-slider {
+	display:none;
+	margin-bottom: 4px;
+}
+#photo-list-slider .ui-slider-handle {
+	background: none; 
+	background-color: rgba(100,100,0,0.5);
+	border: 2px solid yellow;
+	height:14px;
+	top:-2px;
+	margin-left:0px;
+}
+
+
+</style>
+</body>
+</html>

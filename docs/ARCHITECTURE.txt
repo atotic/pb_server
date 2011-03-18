@@ -1,0 +1,66 @@
+Editor:
+
+not happy with overall architecture, encapsulation sucks
+want better MVC separation
+
+What is our model? Lots of small models floating around
+
+The events is where it gets tricky, lots of callbacks
+PB
+	init
+	handleFiles
+	loadDocument
+
+PB.UI
+	utility UI routines
+		notice
+		error
+		ajaxMessageReporting
+	navigationTabs
+	resizing of widgets
+	
+PB.UI.Phototab
+	accepts drags
+	slider
+	image list addition/removal
+	
+PB.LoadImageQueue
+	loads image in a queue
+	
+PB.fn.Image
+	Image class
+	
+PB.ImageList - real model
+	
+Things I dislike: 
+init chains
+scattered model
+image dropping:
+	- drop adds files to image list
+	- image list broadcasts image-added event
+	- phototab listens to image-added
+	- it asks pbimage to get the canvas with cb1
+	- pbimage places request on image-loading queue cb2
+	- queue executes cb2 sometime later
+	- cb2 creates the small image, calls cb1
+	- cb1 modifies the UI
+	
+what would ideal api look like
+imageAdded() {
+	canvas = image.toCanvas().then()
+}
+toCanvas() {
+	queue.push().then().fail()
+	
+}
+
+queue should be a jquery extension, or something.
+
+Models:
+PB.Model.Book
+	images: array(BookImage)
+	pages: array(BookPage)
+	
+When user drags images before the document is created, merge with existing images.
+
+
