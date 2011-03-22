@@ -62,5 +62,6 @@ PB.Model.Book
 	pages: array(BookPage)
 	
 When user drags images before the document is created, merge with existing images.
+toCanvas returns deffered
 
 

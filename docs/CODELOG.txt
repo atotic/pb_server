@@ -1,5 +1,4 @@
 TODO: 
-Refactor with models: document, pages, images
 Redo my silly queue
 test flash notice
 implement unobtrusive form ajax
@@ -8,9 +7,27 @@ https://github.com/rails/jquery-ujs/wiki/Unobtrusive-scripting-support-for-jQuer
 Display the book pages in book navigator.
 Display the book pages in page editor (iframe?)
 
+Mar 21
+Take a look at SVG http://people.mozilla.com/~vladimir/demos/photos.svg
+svg converts straight to PDF :)
+http://www.somebits.com/weblog/tech/good/svg.html
+Nelson discovered SVG around the same time.
+
 Mar 18
+Refactored. Models are separated out:
+Timer - util
+EventListener - mixin 
+Book 
+BookImage
+Deferred pattern makes code more understandeable
+Antsy to get started on page layout, but refactored code makes me happy
+
 Good place to get things designed:
 https://www.crowdspring.com/post-a-project/, referred from Michael LaGuardia
+Interesting SVG vector graphics library:
+http://raphaeljs.com/
+HTML5 flipping pages animation:
+http://studio.html5rocks.com/#Flip
 
 Mar 17
 Did a bit of a code review. My js is too messy, I'd like to refactor. Deffered jQuery
