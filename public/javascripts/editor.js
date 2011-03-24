@@ -138,7 +138,7 @@ $.extend(PB.fn.BookImage.prototype, {
 	toCanvas: function(options) {
 		var deferred = new $.Deferred();
 		$.extend({
-			desiredHeight: 128,
+			desiredHeight: 128
 		}, options);
 		
 		if (this.img && $(this.img).data('loaded'))
@@ -182,12 +182,101 @@ $.extend(PB.fn.BookImage.prototype, {
 
 });
 
+// Image loading queue
+// Limits how many images:
+// - can be downloaded simultaneusly
+// - can be downloaded in a 10 second window. This is to prevent
+//   memory trashing, FF keeps all images in used memory for 10 seconds, 
+//   unused for 25. When loading images off local disk, single image can be
+//   4928 x 3264 x 4 = 60MB undecoded.
+// 	 TestPix loads 100 images in 64s
+// gfx/surface/image cache can still grow to 1.X
+
+PB.ImageLoadQueue = {
+	activeLimit: 20,
+	liveLimit: 1,	// concurrent image loads
+	timeLimit: 10, // how long do we count a job to hold image in memory
+	imageCacheLimit: 600 * 1048576,	// 600MB
+	active: [],	// Array of [deferred, timeExpires, live, size]
+	waiting: [], // Array of [deferred, fn]
+	
+	activeObject: function(deferred) {
+		this.deferred = deferred;
+		this.size = 0;
+		this.expireTime = Date.now() + PB.ImageLoadQueue.timeLimit * 1000;
+		this.live = true;
+		this.imageSize = 0;
+	},
+	push: function(deferred, fn) {
+		this.waiting.push([deferred, fn]);
+		this.process();
+	},
+	execute: function(deferred, fn) {
+		this.active.push(new this.activeObject(deferred));
+		var THIS = this;
+		deferred.done(function() {
+			// Mark job as inactive
+			for (var i=0; i< THIS.active.length; i++)
+				if (THIS.active[i].deferred == deferred) {
+					THIS.active[i].live = false;
+					if ('imageSize' in deferred)
+						THIS.active[i].imageSize = deferred.imageSize;
+			}
+			THIS.timer.imagesLoaded += 1;
+			THIS.process(); // Process any new jobs
+		});
+		fn();
+	},
+	process: function() {
+		if (! ("timer" in this )) {
+			this.timer = new PB.fn.Timer("Image queue").start();
+			this.timer.imagesLoaded = 0;
+		}
+		// remove inactive jobs
+		var expiry = Date.now();
+		var liveJobs = 0;
+		var imageCacheSize = 0;
+		for (var i=0; i< this.active.length; i++) {
+			// Remove inactive/expired jobs
+			if (this.active[i].expireTime < expiry) { 
+				this.active.splice(i, 1);
+				i -= 1;
+			}
+			else {
+				imageCacheSize += this.active[i].imageSize;
+				// Count live jobs
+				if (this.active[i].live)
+					liveJobs += 1;
+			}
+		}
+		// Fill up the work queue
+//		console.log("Waiting:" + this.waiting.length + " Active:" + this.active.length + " imageCacheSize:" + imageCacheSize + " liveJobs:" + liveJobs);
+		while (this.waiting.length > 0
+				&& this.active.length < this.activeLimit
+				&& imageCacheSize < this.imageCacheLimit
+				&& liveJobs < this.liveLimit) {
+			var rec = this.waiting.shift();
+			this.execute(rec[0], rec[1]);
+			liveJobs += 1;
+		}
+		// Set up heartbeat if no jobs complete and call us back
+		if (this.waiting.length > 0 && liveJobs == 0) {
+			var THIS = this;
+			window.setTimeout(function() {
+				THIS.process();
+			}, 1000);
+		}
+//		this.timer.end("LIQ::process, images " + this.timer.imagesLoaded + " executed in ");
+	}
+};
+
 //
 // PB global functions
 //
 $.extend(PB, new PB.fn.EventListener("docLoaded"));
 
 $.extend(PB, {
+	_init: $(document).ready(function() { PB.init() }),
 	init: function () {
 		this._book = new PB.fn.Book();
 	},
@@ -203,8 +292,8 @@ $.extend(PB, {
 	},
 	
 	load: function(id) {
-		// loads the photo book document
-		alert(id);
+		$.ajax({url: "/books/" + id});
+		PB.UI.notice("Loading book");
 	},
 	stopEvent: function(e) {
 		e.stopPropagation();
@@ -212,13 +301,9 @@ $.extend(PB, {
 	}
 });
 
-$(document).ready(function() { PB.init()});
-
-PB.UI = {};
-
-$.extend(PB.UI, {
+PB.UI = {
 		
-	initSetup: $(document).ready(function() { PB.UI.init() }),
+	_init: $(document).ready(function() { PB.UI.init() } ),
 	
 	init: function() {
 		PB.UI.initNavTabs();
@@ -228,7 +313,6 @@ $.extend(PB.UI, {
 			$("#main-container").css("height", newHeight + "px");
 		});
 		$(window).resize(); // trigger reflow
-		$(document).ajaxComplete(PB.UI.reportAjaxMessages);
 	},
 	
 	initNavTabs: function() {
@@ -273,18 +357,13 @@ $.extend(PB.UI, {
 		const icon = '<span class="ui-icon ui-icon-alert" style="float: left; margin: 0.3em 0.3em 0em .2em"></span>';
 		$('#notice').hide();
 		$('#error').html(icon + text).show('blind');
-	},
-
-	reportAjaxMessages: function(event, request) {
-		var msg = request.getResponseHeader('X-FlashError``');
-		if (msg) PB.UI.error(msg);
-		var msg = request.getResponseHeader('X-FlashNotice');
-		if (msg) PB.UI.notice(msg);		
 	}
-});
+
+};
 
 
 PB.UI.Phototab = {
+	_init: $(document).ready(function() { PB.UI.Phototab.init() }),
 	init: function() {
 		var imageTabDragEvents = {
 				'dragenter': function(e) {
@@ -432,94 +511,52 @@ PB.UI.Phototab = {
 	}
 }
 
-$(document).ready(PB.UI.Phototab.init);
-
-// Image loading queue
-// Limits how many images:
-// - can be downloaded simultaneusly
-// - can be downloaded in a 10 second window. This is to prevent
-//   memory trashing, FF keeps all images in used memory for 10 seconds, 
-//   unused for 25. When loading images off local disk, single image can be
-//   4928 x 3264 x 4 = 60MB undecoded.
-// 	 TestPix loads 100 images in 64s
-// gfx/surface/image cache can still grow to 1.X
-
-PB.ImageLoadQueue = {
-	activeLimit: 20,
-	liveLimit: 1,	// concurrent image loads
-	timeLimit: 10, // how long do we count a job to hold image in memory
-	imageCacheLimit: 600 * 1048576,	// 600MB
-	active: [],	// Array of [deferred, timeExpires, live, size]
-	waiting: [], // Array of [deferred, fn]
-	
-	activeObject: function(deferred) {
-		this.deferred = deferred;
-		this.size = 0;
-		this.expireTime = Date.now() + PB.ImageLoadQueue.timeLimit * 1000;
-		this.live = true;
-		this.imageSize = 0;
-	},
-	push: function(deferred, fn) {
-		this.waiting.push([deferred, fn]);
-		this.process();
-	},
-	execute: function(deferred, fn) {
-		this.active.push(new this.activeObject(deferred));
-		var THIS = this;
-		deferred.done(function() {
-			// Mark job as inactive
-			for (var i=0; i< THIS.active.length; i++)
-				if (THIS.active[i].deferred == deferred) {
-					THIS.active[i].live = false;
-					if ('imageSize' in deferred)
-						THIS.active[i].imageSize = deferred.imageSize;
-			}
-			THIS.timer.imagesLoaded += 1;
-			THIS.process(); // Process any new jobs
+//
+// Responding to ajax requests
+//
+PB.Ajax = {
+	_init: $(document).ready(function() { PB.Ajax.init()}),
+	init: function() {
+		$('form[data-remote]').live('submit', function(event) {
+			$.ajax({
+				url: this.action,
+				type: this.method,
+				data: $(this).serialize()
+			});
+			event.preventDefault();
 		});
-		fn();
+		$(document).ajaxComplete(PB.Ajax.ajaxComplete);
 	},
-	process: function() {
-		if (! ("timer" in this )) {
-			this.timer = new PB.fn.Timer("Image queue").start();
-			this.timer.imagesLoaded = 0;
-		}
-		// remove inactive jobs
-		var expiry = Date.now();
-		var liveJobs = 0;
-		var imageCacheSize = 0;
-		for (var i=0; i< this.active.length; i++) {
-			// Remove inactive/expired jobs
-			if (this.active[i].expireTime < expiry) { 
-				this.active.splice(i, 1);
-				i -= 1;
+	ajaxComplete: function(event, jqXHR, ajaxOptions) {
+		var msg = jqXHR.getResponseHeader('X-FlashError``');
+		if (msg) PB.UI.error(msg);
+		var msg = jqXHR.getResponseHeader('X-FlashNotice');
+		if (msg) PB.UI.notice(msg);
+		
+		var contentType = jqXHR.getResponseHeader("Content-Type");
+		try {
+			if (contentType.match("text/html")) {
+				// All HTML returned is a single div
+				// It replaces content of main-container, unless data-destination is specified
+				var destination = "main-container";
+				$("#" + destination).html(jqXHR.responseText);
 			}
-			else {
-				imageCacheSize += this.active[i].imageSize;
-				// Count live jobs
-				if (this.active[i].live)
-					liveJobs += 1;
+			else if (contentType.match("application/json")) {
+				var json = $.parseJSON(jqXHR.responseText);
+				
+				if (ajaxOptions.url.match("/books$") && ajaxOptions.type == "POST")
+				{
+					PB.load(json.id);
+				}
 			}
 		}
-		// Fill up the work queue
-		console.log("Waiting:" + this.waiting.length + " Active:" + this.active.length + " imageCacheSize:" + imageCacheSize + " liveJobs:" + liveJobs);
-		while (this.waiting.length > 0
-				&& this.active.length < this.activeLimit
-				&& imageCacheSize < this.imageCacheLimit
-				&& liveJobs < this.liveLimit) {
-			var rec = this.waiting.shift();
-			this.execute(rec[0], rec[1]);
-			liveJobs += 1;
+		catch(e) {
+			alert("Unexpected ajaxComplete error " + e);
 		}
-		// Set up heartbeat if no jobs complete and call us back
-		if (this.waiting.length > 0 && liveJobs == 0) {
-			var THIS = this;
-			window.setTimeout(function() {
-				THIS.process();
-			}, 1000);
-		}
-		this.timer.end("LIQ::process, images " + this.timer.imagesLoaded + " executed in ");
 	}
-};
+}
 
+$(document).ready(function() {
+	$.get("/books/new");
+});
 

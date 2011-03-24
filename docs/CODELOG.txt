@@ -7,11 +7,44 @@ https://github.com/rails/jquery-ujs/wiki/Unobtrusive-scripting-support-for-jQuer
 Display the book pages in book navigator.
 Display the book pages in page editor (iframe?)
 
-Mar 21
+Mar 24
+Bug: properly initialize templates
+PB.load.success, not default handling
+display an SVG page?
+Displaying fully formatted SVGs with d'n'd will take two weeks
+Start simple, try to generate some pages
+	CSS turn on/off
+	Page sorting
+	Page insertion
+
+Mar 23
+Implemented:
+	- ajax architecture for editor. Forms with data-remote get remoted automatically
+	- ajax responses: html replaces main-content by default
+										json gets handled on case-by-case
+	- json generation, book & pages
+
+Mar 22
+Diddled around with templates a bit, created 1st SVG file
+
+Create 4 svg pages.
+Load them, and see what happens when I drag images.
+
 Take a look at SVG http://people.mozilla.com/~vladimir/demos/photos.svg
-svg converts straight to PDF :)
+svg converts straight to PDF :), might need 
 http://www.somebits.com/weblog/tech/good/svg.html
 Nelson discovered SVG around the same time.
+CSS easing is cool: http://matthewlein.com/ceaser/
+Uploading files in Sintatra
+Mozilla SVG tutorial https://developer.mozilla.org/en/SVG/Tutorial/
+
+Mar 21
+Rewrote ImageLoadingQueue
+Firefox memory usage still shoots sometimes. gfx/surface/image is the problem
+Unlike image cache which is on a timer, this cache gets emptied unpredictably.
+Bug where they work on the cache:
+https://bugzilla.mozilla.org/show_bug.cgi?id=466586
+I could use it to track down what exactly happens.
 
 Mar 18
 Refactored. Models are separated out:

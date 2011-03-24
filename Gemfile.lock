@@ -1,6 +1,7 @@
 GEM
   specs:
     addressable (2.2.4)
+    backports (2.0.2)
     data_objects (0.10.3)
       addressable (~> 2.1)
     datamapper (1.0.2)
@@ -51,10 +52,22 @@ GEM
     fastercsv (1.5.4)
     json (1.5.1)
     json_pure (1.5.1)
+    monkey-lib (0.5.4)
+      backports
     rack (1.2.2)
     sinatra (1.2.0)
       rack (~> 1.1)
       tilt (>= 1.2.2, < 2.0)
+    sinatra-advanced-routes (0.5.1)
+      monkey-lib (~> 0.5.0)
+      sinatra (~> 1.0)
+      sinatra-sugar (~> 0.5.0)
+    sinatra-reloader (0.5.0)
+      sinatra (~> 1.0)
+      sinatra-advanced-routes (~> 0.5.0)
+    sinatra-sugar (0.5.0)
+      monkey-lib (~> 0.5.0)
+      sinatra (~> 1.0)
     stringex (1.1.0)
     tilt (1.2.2)
     uuidtools (2.1.2)
@@ -67,3 +80,4 @@ DEPENDENCIES
   dm-sqlite-adapter
   json
   sinatra
+  sinatra-reloader
