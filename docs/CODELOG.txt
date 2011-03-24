@@ -7,15 +7,28 @@ https://github.com/rails/jquery-ujs/wiki/Unobtrusive-scripting-support-for-jQuer
 Display the book pages in book navigator.
 Display the book pages in page editor (iframe?)
 
-Mar 24
-Bug: properly initialize templates
-PB.load.success, not default handling
-display an SVG page?
+Future
+Book page tab: display
+main-container display of svg (shrink-to-fit, + full size)
+image dragging
+image upload
+generating pages
+
 Displaying fully formatted SVGs with d'n'd will take two weeks
 Start simple, try to generate some pages
 	CSS turn on/off
 	Page sorting
 	Page insertion
+
+Mar 24
+YAY: we've displayed an SVG book cover page
+Rewrote the book initialization code.
+I had trouble propagating, and attributing errors correctly in datamapper
+I had to use transactions, as associated models cannot be added before
+the parent has been saved.
+rdebug sometimes took too long to start. Using 'ruby-debug' require with debugger
+instead. Drawback is that it does not use rdbrc file.
+
 
 Mar 23
 Implemented:

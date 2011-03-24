@@ -69,9 +69,21 @@ $.extend(PB.fn.EventListener.prototype, {
 
 // Book class
 
-PB.fn.Book = function() {
-	this.images = [];
-	this.pages = [];
+PB.fn.Book = function(json) {
+	if (json) {
+		this.id = json.id;
+		this.title = json.title;
+		this.images = [];
+		this.pages = [];
+		for (var i = 0; i < json.pages.length; i++)
+			this.pages.push(new PB.fn.BookPage(json.pages[i]));
+	}
+	else {
+		this.id = 0;
+		this.title = "";
+		this.images = [];
+		this.pages = [];
+	}
 	$.extend(this, new PB.fn.EventListener("imageAdded imageRemoved"));
 };
 
@@ -79,19 +91,20 @@ PB.fn.Book = function() {
 $.extend(PB.fn.Book.prototype, {
 	
 	addLocalFileImage: function (file) {
-		this.images.forEach(function(image) {
-			if (image.name == file.name) {
-				PB.UI.notice("Image " + file.name + " was already in the photo book.");
+		for (var i=0; i< this.images.length; i++)
+			if (this.images[i].name() == file.fileName) 
+			{
+				PB.UI.notice(file.fileName + " is already in the book.");
 				return;
-			}
-		});
+			};
+
 		var image = new PB.fn.BookImage(file);
 		var pos = this.images.push(image);
 		this.send('imageAdded', image, pos);
 	}
 });
 
-// Photobook image class
+// Book image class
 PB.fn.BookImage = function(file) {
 	this.file = file;
 	this.img = null;
@@ -105,7 +118,7 @@ $.extend(PB.fn.BookImage.prototype, {
 	error: null,
 	
 	name: function() {
-		return this.file.name;
+		return this.file.fileName;
 	},
 	
 	toCanvasFinalize: function(deferred, options) {
@@ -180,6 +193,14 @@ $.extend(PB.fn.BookImage.prototype, {
 		this.img = null;
 	}
 
+});
+
+PB.fn.BookPage = function(json) {
+	$.extend(this, json);
+}
+
+$.extend(PB.fn.BookPage.prototype, {
+	
 });
 
 // Image loading queue
@@ -279,6 +300,7 @@ $.extend(PB, {
 	_init: $(document).ready(function() { PB.init() }),
 	init: function () {
 		this._book = new PB.fn.Book();
+		PB.UI.bookLoaded(this._book);
 	},
 
 	book: function() {
@@ -292,8 +314,22 @@ $.extend(PB, {
 	},
 	
 	load: function(id) {
-		$.ajax({url: "/books/" + id});
-		PB.UI.notice("Loading book");
+		$("#main-container").html("<h1>Loading...</h1>");
+		var THIS = this;
+		$.ajax({url: "/books/" + id}).then(
+			function(json, status, jqXHR) {
+				try {
+					var oldBook = THIS._book;
+					THIS._book=  new PB.fn.Book(json);
+					if (oldBook.id == 0)	// transfer the images dropped before
+						for (var i =0; i< oldBook.images.length; i++)
+							THIS._book.addLocalFileImage(oldBook.images[i].file);
+				}
+				catch(e) {
+					alert("Unexpected ajaxComplete error " + e);
+				}
+				PB.UI.bookLoaded(THIS._book);
+		});
 	},
 	stopEvent: function(e) {
 		e.stopPropagation();
@@ -357,8 +393,29 @@ PB.UI = {
 		const icon = '<span class="ui-icon ui-icon-alert" style="float: left; margin: 0.3em 0.3em 0em .2em"></span>';
 		$('#notice').hide();
 		$('#error').html(icon + text).show('blind');
-	}
+	},
 
+	bookLoaded: function(book) {
+		document.title = "Photobook: " + book.title;
+		// Bind the event handlers
+		book.bind('imageAdded', function(image, index) {
+			PB.UI.Phototab.imageAdded(image, index);
+		});
+		// Display 1st page
+		if (book.pages.length == 0)
+		{
+			if (book.id ==0)
+				$.get("/books/new");
+			else
+				$("#main-container").html("<h1>Book is empty</h1>");
+		}
+		else
+			$("#main-container").html(book.pages[0].html);
+		// Load in the images
+		PB.UI.Phototab.clear();
+		for (var i=0; i < book.images.length; i++)
+			PB.UI.Phototab.imageAdded(book.images[i], i);
+	}
 };
 
 
@@ -388,9 +445,6 @@ PB.UI.Phototab = {
 		};
 		// accept dragged images
 		$("#photos-tab").bind(imageTabDragEvents);
-		PB.book().bind('imageAdded', function(image, index) {
-			PB.UI.Phototab.imageAdded(image, index);
-		});
 
 		// click to select files
 		$("#photos-tab").click(function(e) {
@@ -414,6 +468,12 @@ PB.UI.Phototab = {
 			}
 		});
 		$(window).resize(this.restyleSlider);
+	},
+	
+	clear: function() {
+		$("#photo-list-slider").hide();
+		this.restyleSlider();
+		$("#photo-list canvas").detach();
 	},
 	
 	revealNthImage: function(n) {
@@ -525,14 +585,16 @@ PB.Ajax = {
 			});
 			event.preventDefault();
 		});
+		$(document).ajaxComplete(PB.Ajax.showFlashMessages)
 		$(document).ajaxComplete(PB.Ajax.ajaxComplete);
 	},
-	ajaxComplete: function(event, jqXHR, ajaxOptions) {
-		var msg = jqXHR.getResponseHeader('X-FlashError``');
+	showFlashMessages: function(event, jqXHR, ajaxOptions) {
+		var msg = jqXHR.getResponseHeader('X-FlashError');
 		if (msg) PB.UI.error(msg);
 		var msg = jqXHR.getResponseHeader('X-FlashNotice');
 		if (msg) PB.UI.notice(msg);
-		
+	},
+	ajaxComplete: function(event, jqXHR, ajaxOptions) {
 		var contentType = jqXHR.getResponseHeader("Content-Type");
 		try {
 			if (contentType.match("text/html")) {
@@ -556,7 +618,4 @@ PB.Ajax = {
 	}
 }
 
-$(document).ready(function() {
-	$.get("/books/new");
-});
 
