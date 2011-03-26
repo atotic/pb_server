@@ -5,6 +5,7 @@
 	<script src="/javascripts/jquery-1.5.js"></script>
 	<script src="/javascripts/jquery-ui-1.8.9.custom.js"></script>
 	<script src="/javascripts/editor.js"></script>
+	<script src="/javascripts/editor.ui.js"></script>
 	<link href="/stylesheets/reset.css" media="screen" rel="stylesheet" type="text/css" />
 	<link href="/stylesheets/application.css" media="screen" rel="stylesheet" type="text/css" />
 	<link href="/stylesheets/smoothness/jquery-ui-1.8.9.custom.css" media="screen" rel="stylesheet" type="text/css" />
@@ -15,7 +16,7 @@
 	<div id="header" class="ui-widget-header ui-helper-clearfix">
 		<nav>
 			<a href="#photos-tab" class="">Photos</a>
-			<a href="#book-tab">Book</a>
+			<a href="#pages-tab">Book</a>
 		</nav>
 		<div id="nav-tabs" class="ui-widget-content ui-widget">
 			<div id="photos-tab" class='tab'>
@@ -27,7 +28,13 @@
 				</div>
 				</div>
 			</div>
-			<div id="book-tab" class='tab'>Book tab</div>
+			<div id="pages-tab" class='tab'>
+				<div class="intro">Paging Dr. Guttenberg...</div>
+				<div id="page-list-slider"></div>
+				<div id="page-list-container">
+					<div id="page-list"></div>
+				</div>
+			</div>
 		</div>
 	</div>
 <input type="file" id="file-dialog" multiple="true" accept="image/*" style="display:none">
@@ -127,6 +134,10 @@ body {
 	height:14px;
 	top:-2px;
 	margin-left:0px;
+}
+#page-list-slider {
+	display:none;
+	margin-bottom: 4px;
 }
 
 

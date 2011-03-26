@@ -20,6 +20,21 @@ Start simple, try to generate some pages
 	Page sorting
 	Page insertion
 
+Mar 25
+Started the book page tab. Refactored editing code into two files.
+Still struggling with my tools. I need speedy server debugging capabilities,
+and a good js code navigator.
+- TextMate throws up trying to display an js outline.
+- Netbeans does ok
+- Eclipse gets stuck
+- My thin server keeps dropping the books table, requiring a restart
+
+Got snowed out of Tahoe, so back to coding.
+SVG to Canvas overview. http://www.svgopen.org/2010/papers/62-From_SVG_to_Canvas_and_Back/index.html
+Bottom line: no easy way to do this.
+Workaround: fake it. Drawing text placeholder & images on canvas will be enough
+http://www.trymyui.com/ great UI testing place
+
 Mar 24
 YAY: we've displayed an SVG book cover page
 Rewrote the book initialization code.
