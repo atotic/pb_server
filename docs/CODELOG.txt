@@ -20,14 +20,27 @@ Start simple, try to generate some pages
 	Page sorting
 	Page insertion
 
+Next
+click to display page.
+Drag images onto it.
+
+Mar 28
+Book & Page tabs:
+first jQuery extensions:
+revealByMarginLeft is a helper for slider scrolling
+reflowVisible helps with reflows when elements are visible
+
 Mar 25
-Started the book page tab. Refactored editing code into two files.
+Started the book page tab. Refactored editing code into two files. Bitten by "element dimensions are not available when hidden" bug.
+
 Still struggling with my tools. I need speedy server debugging capabilities,
 and a good js code navigator.
 - TextMate throws up trying to display an js outline.
 - Netbeans does ok
-- Eclipse gets stuck
+- Eclipse displays nothing
 - My thin server keeps dropping the books table, requiring a restart
+
+
 
 Got snowed out of Tahoe, so back to coding.
 SVG to Canvas overview. http://www.svgopen.org/2010/papers/62-From_SVG_to_Canvas_and_Back/index.html

@@ -70,6 +70,7 @@ PB.UI = {
 					if (el == anchor) { // make clicked element active 
 						$(anchor).addClass("ui-state-active").removeClass("ui-state-default");
 						tab.show();
+						tab.reflowVisible();
 					}
 					else { // deactivate the rest
 						$(anchor).addClass("ui-state-default").removeClass("ui-state-active");
@@ -93,13 +94,13 @@ PB.UI = {
 	notice: function(text) {
 		const icon = '<span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;margin-top:.3em"></span>';
 		$('#error').hide();
-		$('#notice').html(icon + text).show('blind');
+		$('#notice').html(icon + text).clearQueue().show('blind');
 	},
 
 	error: function(text) {
 		const icon = '<span class="ui-icon ui-icon-alert" style="float: left; margin: 0.3em 0.3em 0em .2em"></span>';
 		$('#notice').hide();
-		$('#error').html(icon + text).show('blind');
+		$('#error').html(icon + text).clearQueue().show('blind');
 	},
 
 	bookLoaded: function(book) {
@@ -190,33 +191,7 @@ PB.UI.Phototab = {
 	},
 	
 	revealNthImage: function(n) {
-		var canvasSel = "#photo-list canvas:nth-child(" + n+ ")";
-		this.revealImage( $(canvasSel).get(0));				
-	},
-	
-	revealImage: function(canvas) {
-		if (!canvas)
-			return;
-		var lastCanvas = $("#photo-list canvas:last");
-		// Find the rightmost canvas edge
-		var rightmostCanvasEdge = $(lastCanvas).position().left + Math.abs(parseInt($("#photo-list").css("margin-left")));
-		var style = window.getComputedStyle(lastCanvas.get(0));
-		$.each(['width','border-left-width', 'border-right-width', 'padding-left', 'padding-right'], 
-			function(i,key) {
-				rightmostCanvasEdge += parseFloat(style.getPropertyValue(key));
-			});
-		// Limit scrolling to now show empty space on the right
-		var leftLimit = rightmostCanvasEdge - $('#photo-list-container').width();
-		leftLimit = Math.max(0, leftLimit);
-		
-		var left = $(canvas).position().left + Math.abs(parseInt($("#photo-list").css("margin-left")));
-		if (left > leftLimit)
-			left = leftLimit;
-		$("#photo-list").clearQueue().animate({ 
-			"margin-left": "-" + Math.abs(left) + "px"
-			}, {
-				duration: 200
-			});
+		$("#photo-list").revealByMarginLeft("canvas:nth-child(" + n+ ")");
 	},
 	
 	restyleSlider: function() {
@@ -243,23 +218,26 @@ PB.UI.Phototab = {
 
 	addNewCanvas: function(canvas, img) {
 		$(canvas).draggable({ "containment": "body"}).appendTo('#photo-list');
-		// Resize the container to fit the images
-		var allPhotos = $("#photo-list canvas");
-		var newWidth = allPhotos
-			.map(function() {return $(this).outerWidth()})
-			.get()
-			.reduce( function(sum, prop) { return sum + prop;});
-		$("#photo-list").css("width", newWidth+"px");
-		
-		// Resize the slider
-		$("#photo-list-slider").slider("option", {
-			min: 0,
-			max: allPhotos.size() - 1,
-			value: Math.max(allPhotos.size() - 2, 0)
+		// reflow when element is visible
+		$('#photos-tab').reflowVisible(function(immediate) {
+			// Resize the container to fit the images
+			var allPhotos = $("#photo-list canvas");
+			var newWidth = allPhotos
+				.map(function() {return $(this).outerWidth()})
+				.get()
+				.reduce( function(sum, prop) { return sum + prop;});
+			$("#photo-list").css("width", newWidth+"px");
+			
+			// Resize the slider
+			$("#photo-list-slider").slider("option", {
+				min: 0,
+				max: allPhotos.size() - 1,
+				value: Math.max(allPhotos.size() - 2, 0)
+			});
+			PB.UI.Phototab.restyleSlider();
+			$("#photo-list-slider").show();
 		});
-		PB.UI.Phototab.restyleSlider();
-		$("#photo-list-slider").show();
-		img.clearImg();
+//		img.clearImg();
 	},
 	
 	imageAdded: function(pbimage, index) {
@@ -282,36 +260,44 @@ PB.UI.Phototab = {
 PB.UI.Pagetab = {
 	_init: $(document).ready(function() { PB.UI.Pagetab.init() }),
 	init: function() {
-		
+		$( "#page-list-slider" ).slider({
+				change: function(e, ui) {
+					PB.UI.Pagetab.revealNthPage(ui.value + 1);				
+				},
+				slide: function(e, ui) {
+					PB.UI.Pagetab.revealNthPage(ui.value + 1);
+				}
+			});		
 	},
+	revealNthPage: function(n) {
+		$("#page-list").revealByMarginLeft("canvas:nth-child(" + n+ ")");		
+	},
+	
 	pageAdded: function(page, index) {
 		$("#pages-tab .intro").hide();
 		// add new page
 		var canvas = page.toCanvas( { desiredHeight: 128 });
 		$(canvas).appendTo('#page-list');
-		var hiddenDimensionsFix = new PB.fn.HiddenDimensions(canvas);
-		hiddenDimensionsFix.startMeasure();
-		
-		var oldDisplay = $('#pages-tab').css('display');
-		var oldDisplay = $('#pages-tab').css('display');
-		// Resize the container
-		var allPages = $('#page-list canvas');
-		var newWidth = allPages
-			.map(function() {return $(this).outerWidth()})
-			.get()
-			.reduce( function(sum, prop) { return sum + prop;});
-		$('#page-list').css("width", newWidth + "px");
-		// Resize the slider
-		$("#page-list-slider").slider("option", {
-			min: 0,
-			max: allPages.size() - 1,
-			value: Math.max(allPages.size() - 2, 0)
-		});
-		var maxWidth = $("#page-list-container").width();
-		var sliderWidth = Math.min(maxWidth, allPages.size() * 20);
-		$("#page-list-slider").css("width", sliderWidth).show();
 
-		hiddenDimensionsFix.endMeasure();
+		// reflow when visible
+		$('#pages-tab').reflowVisible(function(immediate) {
+			// Resize the container
+			var allPages = $('#page-list canvas');
+			var newWidth = allPages
+				.map(function() {return $(this).outerWidth()})
+				.get()
+				.reduce( function(sum, prop) { return sum + prop;});
+			$('#page-list').css("width", newWidth + "px");
+			// Resize the slider
+			$("#page-list-slider").slider("option", {
+				min: 0,
+				max: allPages.size() - 1,
+				value: Math.max(allPages.size() - 2, 0)
+			});
+			var maxWidth = $("#page-list-container").width();
+			var sliderWidth = Math.min(maxWidth, allPages.size() * 20);
+			$("#page-list-slider").css("width", sliderWidth).show();
+		});
 	}
 }
 //

@@ -1,3 +1,73 @@
+
+// jQuery extensions
+(function(jQuery){
+
+/*
+ * reflowVisible  
+ * Solves the problem of "cannot reflow an hidden element because hidden elements have no dimensions"
+ It takes a reflow function, and calls it:
+ * a) immediately if element is visible
+ * b) before element will be shown, if element is hidden
+ * usage: 
+ * $().reflowVisible() 
+ *   call this after show();
+ * $().reflowVisible( function(immediate)) sets the reflow function
+ *   this is the $(element shown), immediate if the reflow function is immediate (animate here)
+ */
+	jQuery.fn.reflowVisible = function(reflow) {
+		this.each(function() {
+			if (reflow)
+				$(this).data('reflowVisible', reflow);
+			var visible = $(this).is(':visible');
+			var immediate = visible && reflow != undefined
+			if (!reflow || visible) {
+				var cb = $(this).data('reflowVisible');
+				if (!cb)
+					return;
+				var showHelper = new PB.fn.ShowForMeasure(this);
+//				console.log('reflow performed ' + immediate);
+				showHelper.startMeasure();
+				try {
+					cb.apply(this, [immediate]);
+				} 
+				catch (e) {
+					console.log("exception in reflow callback");
+				}
+				showHelper.endMeasure();
+				$(this).removeData('reflowVisible');
+			}
+//			else
+//				console.log('reflow postponed');
+		});
+	};
+/*
+ * Sliders scroll by making left margin negative
+ * This code will reveal the child element by fixing the margin
+ */
+	jQuery.fn.revealByMarginLeft = function(childFilter, animate) {
+		var child = this.contents().filter(childFilter);
+		if (child.size() == 0) {
+			console.warn("No child to reveal");
+			return;
+		}
+		var lastChild = this.children().last();
+		var rightmostEdge = lastChild.position().left + lastChild.outerWidth() + Math.abs(parseInt(this.css("margin-left")));
+		// Limit scrolling to now show empty space on the right
+		var leftLimit = rightmostEdge - this.parent().width();
+		leftLimit = Math.max(0, leftLimit);
+		
+		var left = child.position().left + Math.abs(parseInt(this.css("margin-left")));
+		if (left > leftLimit)
+			left = leftLimit;
+		this.clearQueue().animate({ 
+			"margin-left": "-" + Math.abs(left) + "px"
+			}, {
+				duration: 200
+			});	
+	};
+	
+})(window.jQuery);
+
 var PB = {
 	fn: {}
 };
@@ -26,11 +96,11 @@ $.extend(PB.fn.Timer.prototype, {
 // Usage:
 // var hide = new PB.fn.HiddenDimensions(el)
 // http://devblog.foliotek.com/2009/12/07/getting-the-width-of-a-hidden-element-with-jquery-using-width/
-PB.fn.HiddenDimensions = function(el) {
+PB.fn.ShowForMeasure = function(el) {
 	this.el = $(el);
 };
 
-PB.fn.HiddenDimensions.prototype = {
+PB.fn.ShowForMeasure.prototype = {
 	props:  { position: 'absolute', visibility: 'hidden', display: 'block' },
 	startMeasure: function() {
 		this.hiddenParents = this.el.parents().andSelf().not(':visible').get();
@@ -218,8 +288,9 @@ $.extend(PB.fn.ImageBroker.prototype, {
 	clearImg:function() {
 		if (this.img == null)
 		 	return;
-		window.URL.revokeObjectURL(this.img.src);
+		$(this.img).unbind(); // no error callbacks
 		this.img.src = "";
+		window.URL.revokeObjectURL(this.img.src);
 		this.img = null;
 	}
 
