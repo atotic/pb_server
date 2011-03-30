@@ -17,11 +17,11 @@
 	jQuery.fn.reflowVisible = function(reflow) {
 		this.each(function() {
 			if (reflow)
-				$(this).data('reflowVisible', reflow);
+				$(this).data('reflow-visible', reflow);
 			var visible = $(this).is(':visible');
 			var immediate = visible && reflow != undefined
 			if (!reflow || visible) {
-				var cb = $(this).data('reflowVisible');
+				var cb = $(this).data('reflow-visible');
 				if (!cb)
 					return;
 				var showHelper = new PB.fn.ShowForMeasure(this);
@@ -34,7 +34,7 @@
 					console.log("exception in reflow callback");
 				}
 				showHelper.endMeasure();
-				$(this).removeData('reflowVisible');
+				$(this).removeData('reflow-visible');
 			}
 //			else
 //				console.log('reflow postponed');
@@ -201,6 +201,12 @@ $.extend(PB.fn.Book.prototype, {
 		var image = new PB.fn.ImageBroker(file);
 		var pos = this.images.push(image);
 		this.send('imageAdded', image, pos);
+	},
+	getPageById: function(page_id) {
+		for (var i=0; i<this.pages.length; i++)
+			if (this.pages[i].id == page_id)
+				return this.pages[i];
+		console.warn("no such page id " + page_id);
 	}
 });
 
@@ -257,29 +263,29 @@ $.extend(PB.fn.ImageBroker.prototype, {
 		if (this.img && $(this.img).data('loaded'))
 			toCanvasFinalize(deferred, options);
 		else {
-			var THIS = this;
+			var self = this;
 			this.img = new Image();
 			$(this.img).bind({
 				load : function() {
-					$(THIS.img).data('loaded', true);
-					deferred.imageSize = 4 * THIS.img.width * THIS.img.height;
-					THIS.toCanvasFinalize(deferred, options);
-//					console.log("Loaded: " + THIS.name());
+					$(self.img).data('loaded', true);
+					deferred.imageSize = 4 * self.img.width * self.img.height;
+					self.toCanvasFinalize(deferred, options);
+//					console.log("Loaded: " + self.name());
 				},
 				error : function(e) {
-					$(THIS.img).data('loaded', true);
-					THIS.error = "Image could not be loaded";
-					THIS.toCanvasFinalize(deferred, options);
+					$(self.img).data('loaded', true);
+					self.error = "Image could not be loaded";
+					self.toCanvasFinalize(deferred, options);
 				},
 				abort: function(e) {
-					$(THIS.img).data('loaded', true);
-					THIS.error = "Image loading was aborted";
-					THIS.toCanvasFinalize(deferred, options);
+					$(self.img).data('loaded', true);
+					self.error = "Image loading was aborted";
+					self.toCanvasFinalize(deferred, options);
 				}
 			});
 			PB.ImageLoadQueue.push(deferred, function() {
-//				console.log("Started: " + THIS.name());
-				THIS.img.src = window.URL.createObjectURL(THIS.file);				
+//				console.log("Started: " + self.name());
+				self.img.src = window.URL.createObjectURL(self.file);				
 			});
 		};
 		return deferred;
@@ -356,17 +362,17 @@ PB.ImageLoadQueue = {
 	},
 	execute: function(deferred, fn) {
 		this.active.push(new this.activeObject(deferred));
-		var THIS = this;
+		var self = this;
 		deferred.done(function() {
 			// Mark job as inactive
-			for (var i=0; i< THIS.active.length; i++)
-				if (THIS.active[i].deferred == deferred) {
-					THIS.active[i].live = false;
+			for (var i=0; i< self.active.length; i++)
+				if (self.active[i].deferred == deferred) {
+					self.active[i].live = false;
 					if ('imageSize' in deferred)
-						THIS.active[i].imageSize = deferred.imageSize;
+						self.active[i].imageSize = deferred.imageSize;
 			}
-			THIS.timer.imagesLoaded += 1;
-			THIS.process(); // Process any new jobs
+			self.timer.imagesLoaded += 1;
+			self.process(); // Process any new jobs
 		});
 		fn();
 	},
@@ -404,9 +410,9 @@ PB.ImageLoadQueue = {
 		}
 		// Set up heartbeat if no jobs complete and call us back
 		if (this.waiting.length > 0 && liveJobs == 0) {
-			var THIS = this;
+			var self = this;
 			window.setTimeout(function() {
-				THIS.process();
+				self.process();
 			}, 1000);
 		}
 //		this.timer.end("LIQ::process, images " + this.timer.imagesLoaded + " executed in ");

@@ -15,7 +15,7 @@
 <body>
 	<div id="header" class="ui-widget-header ui-helper-clearfix">
 		<nav>
-			<a href="#photos-tab" class="">Photos</a>
+			<a href="#photos-tab">Photos</a>
 			<a href="#pages-tab">Book</a>
 		</nav>
 		<div id="nav-tabs" class="ui-widget-content ui-widget">
@@ -140,6 +140,12 @@ body {
 	margin-bottom: 4px;
 }
 
+#page-list canvas {
+	border: 2px solid transparent;
+}
+#page-list canvas.selected {
+	border: 2px solid yellow;
+}
 
 </style>
 </body>

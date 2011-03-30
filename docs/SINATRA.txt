@@ -6,3 +6,38 @@ http://pivotallabs.com/users/chad/blog/articles/366-ruby-debug-in-30-seconds-we-
 
 What is config.ru
 https://github.com/rack/rack/wiki/%28Tutorial%29-Rackup-HowTo
+
+Sinatra & Rack
+
+- Middleware is the simplest thing in the world:
+
+class ResponseTimer
+  def initialize(app)  
+    @app = app  
+  end  
+    
+  def call(env)  
+    status, headers, response = @app.call(env)  # you always call the app that came in the initializer
+    [status, headers, "<!-- Response Time: ... -->\n" + response.body]  
+  end  
+end  
+
+To configure middleware in Sinatra, call
+use(middleware, *args, &block)
+
+My logger would look like
+
+class BookAppLogger
+	def initialize(app)
+      @app = app
+      @logger = ColorLogger.new
+    end
+    
+       def call(env)
+      began_at = Time.now
+      status, header, body = @app.call(env)
+      header = Utils::HeaderHash.new(header)
+      log(env, status, header, began_at)
+      [status, header, body]
+    end
+end

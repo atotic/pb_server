@@ -22,20 +22,20 @@ $.extend(PB, {
 	
 	load: function(id) {
 		$("#main-container").html("<h1>Loading...</h1>");
-		var THIS = this;
+		var self = this;
 		$.ajax({url: "/books/" + id}).then(
 			function(json, status, jqXHR) {
 				try {
-					var oldBook = THIS._book;
-					THIS._book=  new PB.fn.Book(json);
+					var oldBook = self._book;
+					self._book=  new PB.fn.Book(json);
 					if (oldBook.id == 0)	// transfer the images dropped before
 						for (var i =0; i< oldBook.images.length; i++)
-							THIS._book.addLocalFileImage(oldBook.images[i].file);
+							self._book.addLocalFileImage(oldBook.images[i].file);
 				}
 				catch(e) {
 					alert("Unexpected ajaxComplete error " + e);
 				}
-				PB.UI.bookLoaded(THIS._book);
+				PB.UI.bookLoaded(self._book);
 		});
 	},
 	stopEvent: function(e) {
@@ -112,6 +112,13 @@ PB.UI = {
 		book.bind('pageAdded', function(page, index) {
 			PB.UI.Pagetab.pageAdded(page, index);
 		});
+		// Load in the document data
+		PB.UI.Phototab.clear();
+		for (var i=0; i < book.images.length; i++)
+			PB.UI.Phototab.imageAdded(book.images[i], i);
+		for (var i=0; i < book.pages.length; i++)
+			PB.UI.Pagetab.pageAdded(book.pages[i], i);
+		$('#header nav a[href="#pages-tab"]').click();
 		// Display 1st page
 		if (book.pages.length == 0)
 		{
@@ -121,14 +128,7 @@ PB.UI = {
 				$("#main-container").html("<h1>Book is empty</h1>");
 		}
 		else
-			$("#main-container").html(book.pages[0].html);
-		// Load in the document data
-		PB.UI.Phototab.clear();
-		for (var i=0; i < book.images.length; i++)
-			PB.UI.Phototab.imageAdded(book.images[i], i);
-		for (var i=0; i < book.pages.length; i++)
-			PB.UI.Pagetab.pageAdded(book.pages[i], i);
-		$('#header nav a[href="#pages-tab"]').click();
+			PB.UI.Pagetab.selectPage(book.pages[0].id);
 	}
 };
 
@@ -198,7 +198,8 @@ PB.UI.Phototab = {
 		var hsize = 20;
 		const vsize = 16;
 		var allPhotos = $("#photo-list canvas");
-		var maxWidth = $("#photo-list-container").width();
+		const thumbWidth = 25;
+		var maxWidth = $("#photo-list-container").width() - thumbWidth;
 		var naturalSize = allPhotos.size() * hsize;
 		if (naturalSize > maxWidth)
 		{
@@ -217,7 +218,8 @@ PB.UI.Phototab = {
 	},
 
 	addNewCanvas: function(canvas, img) {
-		$(canvas).draggable({ "containment": "body"}).appendTo('#photo-list');
+		$(canvas).draggable({ 'appendTo': 'body'})
+			.appendTo('#photo-list');
 		// reflow when element is visible
 		$('#photos-tab').reflowVisible(function(immediate) {
 			// Resize the container to fit the images
@@ -241,11 +243,11 @@ PB.UI.Phototab = {
 	},
 	
 	imageAdded: function(pbimage, index) {
-		var THIS = this;
+		var self = this;
 		pbimage.toCanvas( { desiredHeight : 128 } )
 			.done( function(canvas, img) {
 				$("#photos-tab .intro").hide();
-				THIS.addNewCanvas(canvas, img);
+				self.addNewCanvas(canvas, img);
 			})
 			.fail( function(img) {
 				alert("Could not load image " + img.name());
@@ -269,15 +271,35 @@ PB.UI.Pagetab = {
 				}
 			});		
 	},
+	selectPage: function(page_id) {
+		$('#page-list canvas').each(function() {
+			var c = $(this);
+			if (c.data('book_page_id') == page_id) {
+				if (c.hasClass('selected'))
+					return;
+				else {
+					c.addClass('selected');
+					$("#main-container").html(PB.book().getPageById(page_id).html);
+				}
+			}
+			else {
+				if (c.hasClass('selected'))
+					c.removeClass('selected');
+			}
+		});
+	},
 	revealNthPage: function(n) {
 		$("#page-list").revealByMarginLeft("canvas:nth-child(" + n+ ")");		
 	},
-	
 	pageAdded: function(page, index) {
 		$("#pages-tab .intro").hide();
 		// add new page
-		var canvas = page.toCanvas( { desiredHeight: 128 });
-		$(canvas).appendTo('#page-list');
+		var canvas = $(page.toCanvas( { desiredHeight: 128 }));
+		canvas.data('book_page_id', page.id);
+		canvas.click(function(ev) {
+			PB.UI.Pagetab.selectPage($(this).data('book_page_id'));
+		});
+		canvas.appendTo('#page-list');
 
 		// reflow when visible
 		$('#pages-tab').reflowVisible(function(immediate) {
@@ -294,7 +316,8 @@ PB.UI.Pagetab = {
 				max: allPages.size() - 1,
 				value: Math.max(allPages.size() - 2, 0)
 			});
-			var maxWidth = $("#page-list-container").width();
+			const thumbWidth = 25;
+			var maxWidth = $("#page-list-container").width() - thumbWidth;
 			var sliderWidth = Math.min(maxWidth, allPages.size() * 20);
 			$("#page-list-slider").css("width", sliderWidth).show();
 		});
