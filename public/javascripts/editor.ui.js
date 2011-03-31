@@ -29,8 +29,11 @@ $.extend(PB, {
 					var oldBook = self._book;
 					self._book=  new PB.fn.Book(json);
 					if (oldBook.id == 0)	// transfer the images dropped before
-						for (var i =0; i< oldBook.images.length; i++)
-							self._book.addLocalFileImage(oldBook.images[i].file);
+					{
+						var images = oldBook.images();
+						for (var i =0; i< images.length; i++)
+							self._book.addLocalFileImage(images[i].file);
+					}
 				}
 				catch(e) {
 					alert("Unexpected ajaxComplete error " + e);
@@ -114,13 +117,15 @@ PB.UI = {
 		});
 		// Load in the document data
 		PB.UI.Phototab.clear();
-		for (var i=0; i < book.images.length; i++)
-			PB.UI.Phototab.imageAdded(book.images[i], i);
-		for (var i=0; i < book.pages.length; i++)
-			PB.UI.Pagetab.pageAdded(book.pages[i], i);
+		var images = book.images();
+		for (var i=0; i < images.length; i++)
+			PB.UI.Phototab.imageAdded(images[i], i);
+		var pages = book.pages();
+		for (var i=0; i < pages.length; i++)
+			PB.UI.Pagetab.pageAdded(pages[i], i);
 		$('#header nav a[href="#pages-tab"]').click();
 		// Display 1st page
-		if (book.pages.length == 0)
+		if (pages.length == 0)
 		{
 			if (book.id ==0)
 				$.get("/books/new");
@@ -128,7 +133,7 @@ PB.UI = {
 				$("#main-container").html("<h1>Book is empty</h1>");
 		}
 		else
-			PB.UI.Pagetab.selectPage(book.pages[0].id);
+			PB.UI.Pagetab.selectPage(book.firstPage().id);
 	}
 };
 
@@ -161,10 +166,10 @@ PB.UI.Phototab = {
 		$("#photos-tab").bind(imageTabDragEvents);
 
 		// click to select files
-		$("#photos-tab").click(function(e) {
+/*		$("#photos-tab").click(function(e) {
 			$("#file-dialog").click();
 			e.stopPropagation();
-		});
+		});*/
 		$("#file-dialog").click(function(e) {
 			e.stopPropagation();
 		});
@@ -185,9 +190,8 @@ PB.UI.Phototab = {
 	},
 	
 	clear: function() {
-		$("#photo-list-slider").hide();
-		this.restyleSlider();
 		$("#photo-list canvas").detach();
+		this.restyleSlider();
 	},
 	
 	revealNthImage: function(n) {
@@ -198,6 +202,10 @@ PB.UI.Phototab = {
 		var hsize = 20;
 		const vsize = 16;
 		var allPhotos = $("#photo-list canvas");
+		if (allPhotos.size() == 0) {
+			$("#photo-list-slider").hide();
+			return;
+		}
 		const thumbWidth = 25;
 		var maxWidth = $("#photo-list-container").width() - thumbWidth;
 		var naturalSize = allPhotos.size() * hsize;
@@ -210,6 +218,8 @@ PB.UI.Phototab = {
 			.attr('width', allPhotos.length * hsize)
 			.attr('height', vsize).get(0);
 		var c2d = canvas.getContext('2d');
+		if (hsize < 1 || vsize < 1)
+			debu
 		allPhotos.each(function(index, el) {
 			c2d.drawImage(el, index * hsize, 0, hsize, vsize);
 		});
@@ -218,8 +228,21 @@ PB.UI.Phototab = {
 	},
 
 	addNewCanvas: function(canvas, img) {
-		$(canvas).draggable({ 'appendTo': 'body'})
-			.appendTo('#photo-list');
+		$(canvas).appendTo('#photo-list')
+			.draggable({ 
+				'appendTo': 'body',
+				'containment': 'window',
+				'opacity': 0.7,
+				'revert': 'invalid',
+				'revertDuration': 200,
+				'helper': function(ev) {
+					var copy = $(this).clone(false).get(0);
+					copy.getContext('2d').drawImage(this, 0,0); // canvas content is not cloned
+					var div = $("<div style='background-color:green'></div>");
+					$(copy).appendTo(div);
+					return div;
+				}
+		});
 		// reflow when element is visible
 		$('#photos-tab').reflowVisible(function(immediate) {
 			// Resize the container to fit the images
@@ -271,7 +294,39 @@ PB.UI.Pagetab = {
 				}
 			});		
 	},
+	createPageElement: function(page_id) {
+		var page = PB.book().getPageById(page_id);
+		var el = $(page.html());
+		var images = el.find(".book_image").wrapSvg();
+		images.each( function() {
+			  $(this).droppable({
+			  	'hoverClass': "drop-feedback",
+			  	'activeClass': 'drop-feedback',
+			  	'drop': function(event, ui) {
+			  		var image_id = $(ui.draggable).data('image_id');
+			  		var image = PB.book().getImageById(image_id);
+			  		console.log("before");
+			  		var svgns = "http://www.w3.org/2000/svg";
+			  		var xlns = "http://www.w3.org/1999/xlink";
+			  		try {
+				  		var svg = document.createElementNS(svgns, 'image');
+				  		svg.setAttributeNS(xlns, 'xlink:href', image.getFileUrl());
+				  		svg.width.baseVal.value = this.width;
+				  		svg.height.baseVal.value = this.height;
+				  		svg.x.baseVal.value = this.x;
+				  		svg.y.baseVal.value = this.y;
+				  		$(this).replaceWith(svg);
+				  	}
+				  	catch(ex)
+				  	{
+				  		console.error(ex.message);
+				  	}
+			  }});
+			 });
+		return el;
+	},
 	selectPage: function(page_id) {
+		var self = this;
 		$('#page-list canvas').each(function() {
 			var c = $(this);
 			if (c.data('book_page_id') == page_id) {
@@ -279,7 +334,8 @@ PB.UI.Pagetab = {
 					return;
 				else {
 					c.addClass('selected');
-					$("#main-container").html(PB.book().getPageById(page_id).html);
+					var svg = self.createPageElement(page_id);
+					svg.appendTo($("#main-container").empty());
 				}
 			}
 			else {
@@ -300,7 +356,6 @@ PB.UI.Pagetab = {
 			PB.UI.Pagetab.selectPage($(this).data('book_page_id'));
 		});
 		canvas.appendTo('#page-list');
-
 		// reflow when visible
 		$('#pages-tab').reflowVisible(function(immediate) {
 			// Resize the container

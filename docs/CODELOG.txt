@@ -20,10 +20,33 @@ Start simple, try to generate some pages
 	Page sorting
 	Page insertion
 
-Next
-Fix the server losing books table bug
-Drag images onto it.
+Next one of these:
+- get real about SVG & image brokers.
+- login
+- save/restore photobook
+- generate PDFs
+- visual layout (menus)
+- image manipulation
+
+Mar 31, early AM
+Fix the server losing books table bug: done, stored on disk now
+Dragging images onto SVG finally works.
+I had to wrap SVG objects with right properties for jQueryUI to work
+DOM manipulation of SVG images is a pain. They look like DOM, but behave differently.
+D3 is amazingly beautiful, Mike Bostock is super smart. Must play with it some more.
+
+Mar 30
+SVG elements have className that is not DOMString, but SVGAnimatedString
+This messes jQuery up. 
+
+Images are being dragged, no drop on SVG yet.
+Hiding some data in the models
 Nice way to do captions, HTML5 style http://css-tricks.com/slide-in-image-captions/
+Digging into why my sqlite memory database disappears
+rdb source command is missing
+I should download 10.5rc1, but it is missing ruby-debug-base dependency
+I'll need to build it from scratch
+
 Mar 28
 Book & Page tabs:
 first jQuery extensions:

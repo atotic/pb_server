@@ -66,6 +66,47 @@
 			});	
 	};
 	
+	function svgWrapper(el) {
+		this._svgEl = el;
+		this.__proto__ = el;
+		Object.defineProperty(this, "className", {
+			get:  function(){ return this._svgEl.className.baseVal; },
+			set: function(value){    this._svgEl.className.baseVal = value; }
+		});
+		Object.defineProperty(this, "width", {
+			get:  function(){ return this._svgEl.width.baseVal.value; },
+			set: function(value){    this._svgEl.width.baseVal.value = value; }
+		});
+		Object.defineProperty(this, "height", {
+			get:  function(){ return this._svgEl.height.baseVal.value; },
+			set: function(value){    this._svgEl.height.baseVal.value = value; }
+		});
+		Object.defineProperty(this, "x", {
+			get:  function(){ return this._svgEl.x.baseVal.value; },
+			set: function(value){    this._svgEl.x.baseVal.value = value; }
+		});
+		Object.defineProperty(this, "y", {
+			get:  function(){ return this._svgEl.y.baseVal.value; },
+			set: function(value){    this._svgEl.y.baseVal.value = value; }
+		});
+		Object.defineProperty(this, "offsetWidth", {
+			get:  function(){ return this._svgEl.width.baseVal.value; },
+			set: function(value){    this._svgEl.width.baseVal.value = value; }
+		});
+		Object.defineProperty(this, "offsetHeight", {
+			get:  function(){ return this._svgEl.height.baseVal.value; },
+			set: function(value){    this._svgEl.height.baseVal.value = value; }
+		});
+	};
+
+	jQuery.fn.wrapSvg = function() {
+		return this.map(function(i, el) {
+			if ('baseVal' in el.className)
+				return new svgWrapper(el);
+			else
+				return el;
+		});
+	};
 })(window.jQuery);
 
 var PB = {
@@ -172,16 +213,16 @@ PB.fn.Book = function(json) {
 	if (json) {
 		this.id = json.id;
 		this.title = json.title;
-		this.images = [];
-		this.pages = [];
+		this._images = [];
+		this._pages = [];
 		for (var i = 0; i < json.pages.length; i++)
-			this.pages.push(new PB.fn.BookPage(json.pages[i]));
+			this._pages.push(new PB.fn.BookPage(json.pages[i]));
 	}
 	else {
 		this.id = 0;
 		this.title = "";
-		this.images = [];
-		this.pages = [];
+		this._images = [];
+		this._pages = [];
 	}
 	$.extend(this, new PB.fn.EventListener("imageAdded imageRemoved pageAdded"));
 };
@@ -190,23 +231,41 @@ PB.fn.Book = function(json) {
 // Look at constructor for the list of events
 $.extend(PB.fn.Book.prototype, {
 	
+	images: function() {
+		return this._images;
+	},
+	pages: function() {
+		return this._pages;
+	},
+	firstPage: function() {
+		if (this._pages.length > 0)
+			return this._pages[0];
+		return;
+	},
 	addLocalFileImage: function (file) {
-		for (var i=0; i< this.images.length; i++)
-			if (this.images[i].name() == file.fileName) 
+		for (var i=0; i< this._images.length; i++)
+			if (this._images[i].name() == file.fileName) 
 			{
 				PB.UI.notice(file.fileName + " is already in the book.");
 				return;
 			};
 
 		var image = new PB.fn.ImageBroker(file);
-		var pos = this.images.push(image);
+		var pos = this._images.push(image);
 		this.send('imageAdded', image, pos);
 	},
 	getPageById: function(page_id) {
-		for (var i=0; i<this.pages.length; i++)
-			if (this.pages[i].id == page_id)
-				return this.pages[i];
+		for (var i=0; i<this._pages.length; i++)
+			if (this._pages[i].id == page_id)
+				return this._pages[i];
 		console.warn("no such page id " + page_id);
+	},
+	getImageById: function(image_id) {
+		for (var i=0; i< this._images.length; i++)
+			if (this._images[i].id() == image_id)
+				return this._images[i];
+		console.warn("no such image id " + image_id);
+		return undefined;
 	}
 });
 
@@ -214,19 +273,31 @@ $.extend(PB.fn.Book.prototype, {
 PB.fn.ImageBroker = function(file) {
 	this.file = file;
 	this.img = null;
+	this._id = this.getTempId();
 }
 
-$.extend(PB.fn.ImageBroker.prototype, {
+PB.fn.ImageBroker.prototype = {
 
+	tempId: 1,
 	file: null, // on-disk file
 
-	img: null, // img tag holding the image
+	img: null, // Image object with loaded image
 	error: null,
-	
+	_id: null,
+
 	name: function() {
 		return this.file.fileName;
 	},
 	
+	id: function() {
+		return this._id;
+	},
+	getTempId: function() {
+		return "temp-" + PB.fn.ImageBroker.prototype.tempId++;
+	},
+	getFileUrl: function() {
+		return window.URL.createObjectURL(this.file);
+	},
 	toCanvasFinalize: function(deferred, options) {
 		if (this.error != null) {
 			console.log(this.name() + " failed to load");
@@ -243,6 +314,7 @@ $.extend(PB.fn.ImageBroker.prototype, {
 		var canvas = $("<canvas />")
 			.attr('width', canvasWidth)
 			.attr('height', canvasHeight)
+			.data("image_id", this._id)
 			.each(function(index, el) {
 				el.getContext('2d').drawImage(img, 0,0, canvasWidth, canvasHeight);
 			}).get(0);
@@ -300,13 +372,18 @@ $.extend(PB.fn.ImageBroker.prototype, {
 		this.img = null;
 	}
 
-});
+};
 
 PB.fn.BookPage = function(json) {
 	$.extend(this, json);
+	this._html = this.html;
+	delete this.html;	// hide that html
 }
 
-$.extend(PB.fn.BookPage.prototype, {
+PB.fn.BookPage.prototype = {
+	html: function() {
+		return this._html;
+	},
 	toCanvas: function(options) {
 		$.extend({
 			desiredHeight: 128
@@ -329,7 +406,7 @@ $.extend(PB.fn.BookPage.prototype, {
 		c2d.stroke();
 		return canvas;
 	}
-});
+};
 
 // Image loading queue
 // Limits how many images:
