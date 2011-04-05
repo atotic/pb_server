@@ -24,20 +24,3 @@ end
 
 To configure middleware in Sinatra, call
 use(middleware, *args, &block)
-
-My logger would look like
-
-class BookAppLogger
-	def initialize(app)
-      @app = app
-      @logger = ColorLogger.new
-    end
-    
-       def call(env)
-      began_at = Time.now
-      status, header, body = @app.call(env)
-      header = Utils::HeaderHash.new(header)
-      log(env, status, header, began_at)
-      [status, header, body]
-    end
-end

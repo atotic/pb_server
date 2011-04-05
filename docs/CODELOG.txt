@@ -1,25 +1,3 @@
-TODO: 
-Redo my silly queue
-test flash notice
-implement unobtrusive form ajax
-create some book pages
-https://github.com/rails/jquery-ujs/wiki/Unobtrusive-scripting-support-for-jQuery
-Display the book pages in book navigator.
-Display the book pages in page editor (iframe?)
-
-Future
-Book page tab: display
-main-container display of svg (shrink-to-fit, + full size)
-image dragging
-image upload
-generating pages
-
-Displaying fully formatted SVGs with d'n'd will take two weeks
-Start simple, try to generate some pages
-	CSS turn on/off
-	Page sorting
-	Page insertion
-
 Next one of these:
 - get real about SVG & image brokers.
 - login
@@ -27,6 +5,22 @@ Next one of these:
 - generate PDFs
 - visual layout (menus)
 - image manipulation
+
+Thursday:
+sample NFC gift app
+
+Apr 4
+The name is SvegPhoto
+Got a name from my app while running: PhotoAl.
+But, photoal.com is taken. PhotobookPlace is not. I hate having photo, or book in name.
+http://mashable.com/2010/05/28/naming-startup/
+Login: logins through Google & Facebook
+http://www.dafont.com/my-underwood.font - just like an old typewriter font
+Look at duostack for deployment
+
+Apr 1
+God, I love the new web: http://www.websequencediagrams.com/
+Cool form effect: git clone git://github.com/kaylarose/Glowform
 
 Mar 31, early AM
 Fix the server losing books table bug: done, stored on disk now
