@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Photobook</title>
+	<script src="/javascripts/jquery-1.5.js"></script>
+	<script src="/javascripts/jquery-ui-1.8.9.custom.js"></script>
+	<link href="/stylesheets/reset.css" media="screen" rel="stylesheet" type="text/css" />
+	<link href="/stylesheets/application.css" media="screen" rel="stylesheet" type="text/css" />
+	<link href="/stylesheets/smoothness/jquery-ui-1.8.9.custom.css" media="screen" rel="stylesheet" type="text/css" />
+	<link href='http://fonts.googleapis.com/css?family=Gruppo' rel='stylesheet' type='text/css'>
+</head>
+<body>
+	<div id="topline" class="ui-helper-clearfix">
+		<div id="logo">
+			sveg's photo
+		</div>
+		<div id="topbar" >
+			<nav>
+				<a href="">about</a>
+				<a href="">faq</a>
+			</nav>
+		</div>
+	</div>
+	<div id="main-container">
+		<h1>Log in</h1>
+		<hr>
+	<% if @flash_notice %>
+		<div id="notice" class="ui-widget -state-highlight">
+			<div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;">
+			<%= @flash_notice %>
+			</div>
+		</div>
+	<% end %>
+	<% if @flash_error  %>
+		<div id="error" class="ui-widget ui-corner-all ui-state-error">
+			<div class="ui-state-error ui-corner-all" style="padding: 0 .7em;">
+				<%= @flash_error %>
+			</div>
+		</div>
+	<% end %>
+
+		<p>Do you already have an account on one of these sites? Click the logo to <b>log in</b> with it here:</p>
+		<div id="openid_btns">
+			<a title="log in with google" href="/auth/google" style="background-image: url(/images/auth/google_64.png)">log in with google</a>
+			<a title="log in with facebook" href="/auth/facebook" style="background-image: url(/images/auth/facebook_64.png)">log in with facebook</a>
+		</div>
+		<p>Or you can manually enter your user id:</p>
+		<form id="openid_form" action="/auth/login" method="post">
+		<p><input type="text" name="user_id">
+			<input type="submit" value="OpenId &rarr;">
+		</form>
+	</div>
+	
+
+<style type="text/css" contenteditable style="display:none;white-space:pre; font-size: 13px; font-family:Monaco, Mono-Space;border-top: 5px solid gray">
+	#topline {
+		background-color: #EEE;
+	}
+	#logo {
+		font-family: 'Gruppo', arial, serif;
+		font-size: 24px;
+		float:left;
+		margin-left: 24px;
+	}
+	#topbar {
+		float:right;
+		margin-right: 24px;
+	}
+	#topbar nav a {
+		
+	}
+	body {
+		max-width: 1024px;
+		font-family: Arial, Helvetica, sans-serif;
+	}
+	#main-container {
+		margin-left: 48px;
+		margin-right: 48px;
+	}
+	#openid_btns a {
+		display:inline-block;
+		width: 80px;
+		height: 80px;
+		background-color: white;
+		border: 2px solid transparent;
+		font-size: 9px;
+		padding-left: 8px;
+		margin-right: 16px;
+		background-position: 0px 16px;
+		background-repeat: no-repeat
+	}
+	#openid_btns a:link, a:visited{
+		text-decoration: none;
+		color: black;
+	}
+	#openid_btns a:hover {
+		box-shadow: inset 0px 0px 5px #61A326;
+		background-position: 0px 14px;
+	}
+</style>
+</body>

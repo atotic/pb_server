@@ -5,6 +5,7 @@ Next one of these:
 - generate PDFs
 - visual layout (menus)
 - image manipulation
+- refactor ajax notices into application UI framework
 
 Thursday:
 sample NFC gift app

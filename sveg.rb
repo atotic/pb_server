@@ -39,12 +39,11 @@ class SvegLogger
 	def call(env)
 		began_at = Time.now
 		status, header, body = @app.call(env)
-		header = Rack::Utils::HeaderHash.new(header)
-		log(env, status, header, began_at)
+		log(env, status, began_at)
 		[status, header, body]
 	end
 
-	def log(env, status, header, began_at)
+	def log(env, status,began_at)
 		now = Time.now
 
 		logger = @logger || env['rack.errors']
@@ -65,17 +64,14 @@ LOGGER = ColorLogger.new
 
 class Session
 
-	attr_reader :save_on_server
-	attr_reader :user_id
+	attr_accessor :user_id
 	
 	def self.from_cookie(cookie)
 		return self.new(cookie)
 	end
 	
 	def initialize(cookie)
-		@save_on_server = false
-		@expires = Time.now + 60
-		@user_id = nil;
+		clear
 		if cookie
 			begin 
 				h = Marshal.load(Base64.decode64(cookie))
@@ -84,6 +80,20 @@ class Session
 				LOGGER.error("Error decoding cookie #{cookie}")
 			end
 		end
+	end
+
+	def clear
+		@save_on_server = false
+		@expires = Time.now + 60
+		@user_id = nil			
+	end
+	
+	def save_on_server?
+		@save_on_server
+	end	
+	
+	def save_on_server!
+		@save_on_server = true
 	end
 	
 	def to_cookie_hash
@@ -109,6 +119,7 @@ class SessionMiddleware
 		load_session(env)
 		status, headers, body = @app.call(env)
 		save_session(env, headers)
+		[status, headers, body]
 	end
 	
 	def load_session(env)
@@ -118,7 +129,7 @@ class SessionMiddleware
 	end
 	
 	def save_session(env, headers)
-		if env["rack.session"].dirty
+		if env["rack.session"].save_on_server?
 			Rack::Utils.set_cookie_header!(headers, @key, env["rack.session"].to_cookie_hash)
 		end
 	end
@@ -212,11 +223,22 @@ class SvegApp < Sinatra::Base
 		end
 	end
 
-	get '/auth/login'
+	get '/auth/login' do
 		erb :login
 	end
 	
-	post '/auth/login'
+	post '/auth/login' do
+		user_id = params[:user_id]
+		debugger
+		if !user_id
+			elf.flash_error="User id cannot be blank"
+			erb :login
+		else
+			env['rack.session'].user_id = user_id
+			env['rack.session'].save_on_server!
+			self.flash_notice="Logged in successfully"
+			erb :login
+		end
 	end
 
 # setup & run	
