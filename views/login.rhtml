@@ -24,17 +24,17 @@
 	<div id="main-container">
 		<h1>Log in</h1>
 		<hr>
-	<% if @flash_notice %>
+	<% if flash[:notice] %>
 		<div id="notice" class="ui-widget -state-highlight">
 			<div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;">
-			<%= @flash_notice %>
+			<%= flash[:notice] %>
 			</div>
 		</div>
 	<% end %>
-	<% if @flash_error  %>
+	<% if flash[:error]  %>
 		<div id="error" class="ui-widget ui-corner-all ui-state-error">
 			<div class="ui-state-error ui-corner-all" style="padding: 0 .7em;">
-				<%= @flash_error %>
+				<%= flash[:error] %>
 			</div>
 		</div>
 	<% end %>
@@ -46,7 +46,7 @@
 		</div>
 		<p>Or you can manually enter your user id:</p>
 		<form id="openid_form" action="/auth/login" method="post">
-		<p><input type="text" name="user_id">
+		<p><input type="text" name="login_id">
 			<input type="submit" value="OpenId &rarr;">
 		</form>
 	</div>

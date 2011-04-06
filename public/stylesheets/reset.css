@@ -92,15 +92,11 @@ word-wrap: break-word; /* IE */
 }
  
 textarea { overflow: auto; } /* thnx ivannikolic! www.sitepoint.com/blogs/2010/08/20/ie-remove-textarea-scrollbars/ */
- 
-.ie6 legend, .ie7 legend { margin-left: -7px; } /* thnx ivannikolic! */
- 
+  
 /* align checkboxes, radios, text inputs with their label
 by: Thierry Koblentz tjkdesign.com/ez-css/css/base.css */
 input[type="radio"] { vertical-align: text-bottom; }
 input[type="checkbox"] { vertical-align: bottom; }
-.ie7 input[type="checkbox"] { vertical-align: baseline; }
-.ie6 input { vertical-align: text-bottom; }
  
 /* hand cursor on clickable input elements */
 label, input[type=button], input[type=submit], button { cursor: pointer; }
@@ -117,20 +113,8 @@ box-shadow: 0px 0px 5px red;
 .no-boxshadow input:invalid,
 .no-boxshadow textarea:invalid { background-color: #f0dddd; }
  
- 
-/* These selection declarations have to be separate.
-No text-shadow: twitter.com/miketaylr/status/12228805301
-Also: hot pink. */
-::-moz-selection{ background: #FF5E99; color:#fff; text-shadow: none; }
-::selection { background:#FF5E99; color:#fff; text-shadow: none; }
- 
+  
 /* j.mp/webkit-tap-highlight-color */
 a:link { -webkit-tap-highlight-color: #FF5E99; }
  
-/* make buttons play nice in IE:
-www.viget.com/inspire/styling-the-button-element-in-internet-explorer/ */
-button { width: auto; overflow: visible; }
  
-/* bicubic resizing for non-native sized IMG:
-code.flickr.com/blog/2008/11/12/on-ui-quality-the-little-things-client-side-image-resizing/ */
-.ie7 img { -ms-interpolation-mode: bicubic; }

@@ -9,11 +9,15 @@ require 'dm-core'
 require 'dm-migrations'
 require 'dm-transactions'
 require 'data_objects'
+require 'rack-flash'
 
 require 'ruby-debug'
 
+# our gems
 require 'book_model'
+require 'user'
 
+# logging
 class ColorLogger < Logger
 	def initialize()
 		super(STDOUT)
@@ -62,27 +66,44 @@ end
 
 LOGGER = ColorLogger.new
 
+# Our sessions
 class Session
 
 	attr_accessor :user_id
 	
-	def self.from_cookie(cookie)
-		return self.new(cookie)
+	def self.from_cookie(user_cookie, flash_cookie)
+		return self.new(user_cookie, flash_cookie)
 	end
 	
-	def initialize(cookie)
-		clear
-		if cookie
+	def initialize(user_cookie, flash_cookie)
+		clear_user
+		if user_cookie
 			begin 
-				h = Marshal.load(Base64.decode64(cookie))
-				@user_id = h[:id]
+				hash = Marshal.load(Base64.decode64(user_cookie))
+				@user_id = hash[:id]
 			rescue
-				LOGGER.error("Error decoding cookie #{cookie}")
+				LOGGER.error("Error decoding cookie #{user_cookie}")
 			end
+		end
+		if flash_cookie
+			begin
+				@flash = JSON.parse flash_cookie
+				@flash.keys.each do |key|		# JSON encoded symbols as strings :(
+					if (key.class == String)
+						@flash[key.intern] = @flash[key]
+						@flash.delete(key)
+ 					end
+				end
+			rescue
+				LOGGER.error "Could not parse flash cookie #{flash_cookie}"
+				@flash = {}
+			end
+		else
+			@flash = {}
 		end
 	end
 
-	def clear
+	def clear_user
 		@save_on_server = false
 		@expires = Time.now + 60
 		@user_id = nil			
@@ -107,36 +128,67 @@ class Session
 		}
 	end
 	
+	def to_flash_hash
+		retVal = {
+			:path => '/',
+			:httponly => true,
+			:value => JSON.generate(@flash)
+		}
+		retVal[:expires] =  Time.now - 3600 if @flash.empty?
+		retVal
+	end
+	
+	def save_flash?
+		return !@flash.empty?
+	end
+
+	def [](prop)
+		raise "Unknown property #{prop}" unless prop == :__FLASH__
+		@flash
+	end
+	
+	def []=(prop, val)
+		raise "Unknown property #{prop}" unless prop == :__FLASH__
+		@flash = val
+	end
 end
 
+# Home grown session management
 class SessionMiddleware
+	@@key = "sveg.session"
+	@@flash_key = "flash.session"
+	
 	def initialize(app, options={})
 		@app = app;
-		@key = "munch"
 	end
 
 	def call(env)
-		load_session(env)
+		request = Rack::Request.new(env)
+		load_session(env, request)
 		status, headers, body = @app.call(env)
-		save_session(env, headers)
+		save_session(env, headers, request)
 		[status, headers, body]
 	end
 	
-	def load_session(env)
-		request = Rack::Request.new(env)
-		session_data = request.cookies[@key]
-		env["rack.session"] = Session.from_cookie(session_data)
+	def load_session(env, request)
+		env["rack.session"] = Session.from_cookie(
+			request.cookies[@@key],
+			request.cookies[@@flash_key])
 	end
 	
-	def save_session(env, headers)
+	def save_session(env, headers, request)
 		if env["rack.session"].save_on_server?
-			Rack::Utils.set_cookie_header!(headers, @key, env["rack.session"].to_cookie_hash)
+			Rack::Utils.set_cookie_header!(headers, @@key, env["rack.session"].to_cookie_hash) 
+		end
+		if env['rack.session'].save_flash? || request.cookies[@@flash_key]
+			Rack::Utils.set_cookie_header!(headers, @@flash_key, env['rack.session'].to_flash_hash)
 		end
 	end
 end
 
-DataMapper::Logger.new(STDERR, :debug, "~", true)
-DataObjects::Logger.new(STDERR, :debug, "~", true)
+#DataMapper initialization
+#DataMapper::Logger.new(STDERR, :debug, "~", true)
+#DataObjects::Logger.new(STDERR, :debug, "~", true)
 
 DataMapper::Model.raise_on_save_failure = true
 # Use either the default Heroku database, or a local sqlite one for development
@@ -144,36 +196,25 @@ DataMapper.setup(:default, ENV['DATABASE_URL'] || "sqlite3://#{Dir.pwd}/developm
 DataMapper.finalize
 DataMapper.auto_upgrade!
 
-
 #
 # Main application
 #
 class SvegApp < Sinatra::Base
 
 	set :root, File.dirname(__FILE__)
-	set :templates, File.join(settings.root, "templates");
-
-#	set :logging, true - we are doing our own logging via LOGGER
+	set :templates, File.join(settings.root, "templates"); # book template directory
 	set :show_exceptions, true
 
 	helpers do
 		include Rack::Utils
+		
 		alias_method :h, :escape_html
-		def flash_notice=(msg)
-			@flash_notice = msg
-		end
-
-		def flash_error=(msg)
-			@flash_error = msg
-		end
-
+		
 		def show_error(object, prop)
 			"<span class=\"error_message\">#{object.errors[prop]}</span>" if (object.errors[prop])
 		end
 
 	end
-
-	#  require "sinatra/reloader" if development?
 
 	configure(:development) do
 	#   register Sinatra::Reloader
@@ -181,8 +222,10 @@ class SvegApp < Sinatra::Base
 	end
 
 	after do
-		headers({"X-FlashError" => @flash_error}) if @flash_error
-		headers({"X-FlashNotice" => @flash_notice}) if @flash_notice
+		if request.xhr?
+			headers({"X-FlashError" => flash[:error]}) if flash[:error]
+			headers({"X-FlashNotice" => flash[:notice]}) if flash[:notice]
+		end
 	end
 
 	#
@@ -190,7 +233,56 @@ class SvegApp < Sinatra::Base
 	#
 
 	get '/' do
-		'Hello world!'
+		flash[:notice] = "Welcome from the front page"
+		redirect "/auth/login"
+	end
+	
+	get '/account' do
+		erb :account
+	end
+	
+	get '/auth/login' do
+		erb :login
+	end
+	
+	post '/auth/login' do
+		env['rack.session'].clear_user
+		env['rack.session'].save_on_server!
+
+		login_id = params[:login_id]
+		if !login_id || login_id.empty?
+			flash[:error]="User id cannot be blank"
+			return erb :login
+		end
+
+		authlogin = AuthLogin.get(login_id)
+		nextPage = :login
+		if !authlogin
+		# no login, create new user
+			begin
+				User.transaction do |t|
+					user = User.new({:display_name => login_id})
+					user.is_administrator = true if login_id.eql? "atotic"
+					user.save
+					auth = AuthLogin.new({:login_id => login_id, :user_id => user.id} )
+					auth.save
+					env['rack.session'].user_id = user.id
+					flash[:notice]="Created a new account"
+				end
+				redirect "/account"
+			rescue => ex
+				LOGGER.error(ex.message)
+				flash[:error]="Unexpected error creating the user"
+				redirect "/login"
+			end
+		else
+		# login exists, just log in
+			authlogin.last_login = Time.now
+			authlogin.save!
+			env['rack.session'].user_id = authlogin.user_id
+			flash[:notice]="Logged in successfully"
+			redirect "/account"
+		end
 	end
 
 	get '/editor' do
@@ -218,33 +310,15 @@ class SvegApp < Sinatra::Base
 			end
 		rescue => ex
 			LOGGER.error(ex.message)
-			self.flash_error= "Errors prevented the book from being saved. Please fix them and try again."
+			flash.now[:error]= "Errors prevented the book from being saved. Please fix them and try again."
 			[400, erb(:book_new)]
-		end
-	end
-
-	get '/auth/login' do
-		erb :login
-	end
-	
-	post '/auth/login' do
-		user_id = params[:user_id]
-		debugger
-		if !user_id
-			elf.flash_error="User id cannot be blank"
-			erb :login
-		else
-			env['rack.session'].user_id = user_id
-			env['rack.session'].save_on_server!
-			self.flash_notice="Logged in successfully"
-			erb :login
 		end
 	end
 
 # setup & run	
 	use SvegLogger
 	use SessionMiddleware
-
+	use Rack::Flash
 	run! if app_file == nil
 
 end

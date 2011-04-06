@@ -9,6 +9,13 @@ Next one of these:
 
 Thursday:
 sample NFC gift app
+Apr 6
+pages:
+a) flash for redirects
+b) partials
+c) pages:
+/account - show username, last login
+/admin
 
 Apr 4
 The name is SvegPhoto
