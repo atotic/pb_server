@@ -1,0 +1,8 @@
+<h2>Administrator</h2>
+<hr />
+<h2>Users:</h2>
+<ul>
+<% User.all(:order => :display_name).each do |user|%>
+	<li><a href="/account?user_id=<%= user.id %>"><%= user.display_name %></a>
+<% end %>
+</ul>
