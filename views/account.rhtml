@@ -1,1 +1,5 @@
-<h1>This is just an account</h1>
+<div id="main-container">
+<h1>Your account summary</h1>
+
+<p>Username: <%= env['rack.session'].user.display_name %></p>
+</div>

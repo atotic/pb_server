@@ -10,8 +10,13 @@ Next one of these:
 Thursday:
 sample NFC gift app
 Apr 6
-pages:
-a) flash for redirects
+Finished sessions. I've coded a custom session middleware. This is because I did not
+like the default setup:
+- all sessions were part of the single cookie
+- session was written out for every request
+110 lines of code mean I do not have to understand all the others
+Rewrote our flash architecture, using Rack::Flash instead
+
 b) partials
 c) pages:
 /account - show username, last login
@@ -23,12 +28,8 @@ Got a name from my app while running: PhotoAl.
 But, photoal.com is taken. PhotobookPlace is not. I hate having photo, or book in name.
 http://mashable.com/2010/05/28/naming-startup/
 Login: logins through Google & Facebook
-http://www.dafont.com/my-underwood.font - just like an old typewriter font
-Look at duostack for deployment
 
 Apr 1
-God, I love the new web: http://www.websequencediagrams.com/
-Cool form effect: git clone git://github.com/kaylarose/Glowform
 
 Mar 31, early AM
 Fix the server losing books table bug: done, stored on disk now
@@ -43,7 +44,6 @@ This messes jQuery up.
 
 Images are being dragged, no drop on SVG yet.
 Hiding some data in the models
-Nice way to do captions, HTML5 style http://css-tricks.com/slide-in-image-captions/
 Digging into why my sqlite memory database disappears
 rdb source command is missing
 I should download 10.5rc1, but it is missing ruby-debug-base dependency
@@ -72,7 +72,6 @@ Got snowed out of Tahoe, so back to coding.
 SVG to Canvas overview. http://www.svgopen.org/2010/papers/62-From_SVG_to_Canvas_and_Back/index.html
 Bottom line: no easy way to do this.
 Workaround: fake it. Drawing text placeholder & images on canvas will be enough
-http://www.trymyui.com/ great UI testing place
 
 Mar 24
 YAY: we've displayed an SVG book cover page
@@ -123,11 +122,6 @@ Deferred pattern makes code more understandeable
 Antsy to get started on page layout, but refactored code makes me happy
 
 Good place to get things designed:
-https://www.crowdspring.com/post-a-project/, referred from Michael LaGuardia
-Interesting SVG vector graphics library:
-http://raphaeljs.com/
-HTML5 flipping pages animation:
-http://studio.html5rocks.com/#Flip
 
 Mar 17
 Did a bit of a code review. My js is too messy, I'd like to refactor. Deffered jQuery
@@ -252,4 +246,7 @@ price per GB is not so high, might be slow (use flash for this?)
 Reading XMP & EXIF
 https://addons.mozilla.org/en-US/firefox/addon/fxif/
 
-
+Thanks to:
+Sinatra
+OmniAuth
+html5doctor.com/html-5-reset-stylesheet/

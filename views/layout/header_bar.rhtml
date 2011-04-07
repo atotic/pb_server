@@ -1,0 +1,27 @@
+<div id="header_bar" class="ui-helper-clearfix">
+	<div id="logo">
+		<b>sv</b>e<b>g</b>'s photo
+	</div>
+<div id="notice" class="ui-widget -state-highlight" <%= " style='display:block'" if flash[:notice] %> >
+	<div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;">
+	<%= flash[:notice] if flash[:notice] %>
+	</div>
+</div>
+<div id="error" class="ui-widget ui-corner-all ui-state-error" <%= " style='display:block'" if flash[:error] %>>
+	<div class="ui-state-error ui-corner-all" style="padding: 0 .7em;">
+		<%= flash[:error] if flash[:error] %>
+	</div>
+</div>
+	<div id="topmenu" >
+		<nav>
+			<% if env['rack.session'].user_id %>
+				<a href="/account"><%= env['rack.session'].user.display_name %></a>
+				<a href="/logout">Log out</a>
+			<% else %>
+				<a href="/auth/login">Log in</a>			
+			<% end %>
+			<a href="">about</a>
+			<a href="">faq</a>
+		</nav>
+	</div>
+</div>

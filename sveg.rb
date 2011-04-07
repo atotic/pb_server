@@ -127,6 +127,13 @@ class Session
 			))
 		}
 	end
+	# access
+	
+	def user
+		User.get(@user_id)
+	end
+	
+	# flash methods
 	
 	def to_flash_hash
 		retVal = {
@@ -228,21 +235,33 @@ class SvegApp < Sinatra::Base
 		end
 	end
 
+	def user_must_be_logged_in
+		redirect request.referer unless env['rack.session'].user
+	end
+
 	#
 	# CONTROLLER METHODS
 	#
 
 	get '/' do
-		flash[:notice] = "Welcome from the front page"
+		flash[:notice] = "Welcome from the front page."
 		redirect "/auth/login"
 	end
 	
 	get '/account' do
-		erb :account
+		user_must_be_logged_in
+		erb :account, :layout => :'layout/plain'
 	end
 	
+	get '/logout' do
+		env['rack.session'].clear_user
+		env['rack.session'].save_on_server!
+		flash[:notice] = "You've logged out."
+		redirect '/'
+	end
+
 	get '/auth/login' do
-		erb :login
+		erb :login, :layout => :'layout/plain'
 	end
 	
 	post '/auth/login' do
@@ -252,7 +271,7 @@ class SvegApp < Sinatra::Base
 		login_id = params[:login_id]
 		if !login_id || login_id.empty?
 			flash[:error]="User id cannot be blank"
-			return erb :login
+			return erb :login, :layout => :'layout/plain'
 		end
 
 		authlogin = AuthLogin.get(login_id)
