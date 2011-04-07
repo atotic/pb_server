@@ -74,15 +74,9 @@ button, input, select, textarea { margin: 0; }
 /* SVEGPHOTO styling */
 .error_message {
 	color: red;
-	background-color: #FAA;
+	background-color: #FFE0E0;
 }
 
-#notice {
-	display:none;
-}
-#error {
-	display:none;
-}
 h1 {
 	font-size: 150%;
 	margin-top: 0.3em;
@@ -112,12 +106,19 @@ h2 {
 #topmenu nav a {
 	margin-right: 4px;
 }
+#notice {
+	display:none;
+}
+#error {
+	display:none;
+}
 #error, #notice {
 	float: left;
 	min-width: 200px;
 	max-width: 400px;
-	margin-left: 100px;
+	margin-left: 150px;
 	margin-top: 10px;
 	margin-bottom: 10px;
+	position: absolute;
 }
 

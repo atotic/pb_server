@@ -270,7 +270,7 @@ class SvegApp < Sinatra::Base
 
 		login_id = params[:login_id]
 		if !login_id || login_id.empty?
-			flash[:error]="User id cannot be blank"
+			flash.now[:error]="User id cannot be blank"
 			return erb :login, :layout => :'layout/plain'
 		end
 
