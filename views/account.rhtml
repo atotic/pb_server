@@ -1,5 +1,3 @@
-<div id="main-container">
 <h1>Your account summary</h1>
-
-<p>Username: <%= env['rack.session'].user.display_name %></p>
-</div>
+<hr>
+<p>Username: <%= locals[:user].display_name %></p>

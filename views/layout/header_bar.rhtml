@@ -14,11 +14,14 @@
 	</div>
 	<div id="topmenu" >
 		<nav>
-			<% if env['rack.session'].user_id %>
-				<a href="/account"><%= env['rack.session'].user.display_name %></a>
-				<a href="/logout">Log out</a>
+			<% if current_user %>
+				<a href="/account"><%= current_user.display_name %></a>
+				<a href="/logout">log out</a>
+				<% if current_user.is_administrator %>
+					<a href="/admin">admin</a>
+				<% end %>
 			<% else %>
-				<a href="/auth/login">Log in</a>			
+				<a href="/auth/login">log in</a>			
 			<% end %>
 			<a href="">about</a>
 			<a href="">faq</a>

@@ -160,7 +160,7 @@ class Session
 	end
 end
 
-# Home grown session management
+# Home grown session middleware
 class SessionMiddleware
 	@@key = "sveg.session"
 	@@flash_key = "flash.session"
@@ -193,10 +193,6 @@ class SessionMiddleware
 	end
 end
 
-#DataMapper initialization
-#DataMapper::Logger.new(STDERR, :debug, "~", true)
-#DataObjects::Logger.new(STDERR, :debug, "~", true)
-
 DataMapper::Model.raise_on_save_failure = true
 # Use either the default Heroku database, or a local sqlite one for development
 DataMapper.setup(:default, ENV['DATABASE_URL'] || "sqlite3://#{Dir.pwd}/development.db")
@@ -221,6 +217,22 @@ class SvegApp < Sinatra::Base
 			"<span class=\"error_message\">#{object.errors[prop]}</span>" if (object.errors[prop])
 		end
 
+		def user_must_be_logged_in
+			return if env['rack.session'].user
+			flash[:notice] = "You must be logged in to access this."
+			redirect request.path_info.end_with?(request.referer) ? "/" : request.referer
+		end
+
+		def user_must_be_admin
+			user = env['rack.session'].user
+			return if user && user.is_administrator
+			flash[:notice] = "You must be an administrator to access that page."
+			redirect request.path_info.end_with?(request.referer) ? "/" : request.referer
+		end
+		
+		def current_user
+			env['rack.session'].user
+		end
 	end
 
 	configure(:development) do
@@ -235,22 +247,30 @@ class SvegApp < Sinatra::Base
 		end
 	end
 
-	def user_must_be_logged_in
-		redirect request.referer unless env['rack.session'].user
-	end
-
 	#
 	# CONTROLLER METHODS
 	#
 
 	get '/' do
-		flash[:notice] = "Welcome from the front page."
 		redirect "/auth/login"
 	end
 	
 	get '/account' do
 		user_must_be_logged_in
-		erb :account, :layout => :'layout/plain'
+		targetuser = current_user
+		if targetuser.is_administrator && params[:user_id]
+			targetuser = User.get(params[:user_id])
+			if (targetuser == nil)
+				flash "No such user #{params[:user_id]}"
+				redirect "/admin"
+			end
+		end
+		erb :account, {:layout => :'layout/plain'}, {:locals => { :user => targetuser }}
+	end
+	
+	get '/admin' do
+		user_must_be_admin
+		erb :admin, :layout => :'layout/plain'	
 	end
 	
 	get '/logout' do
