@@ -93,18 +93,6 @@ PB.UI = {
 		// select first anchor
 		$("#header nav a").first().click();
 	},
-	
-	notice: function(text) {
-		const icon = '<span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;margin-top:.3em"></span>';
-		$('#error').hide();
-		$('#notice').html(icon + text).clearQueue().show('blind');
-	},
-
-	error: function(text) {
-		const icon = '<span class="ui-icon ui-icon-alert" style="float: left; margin: 0.3em 0.3em 0em .2em"></span>';
-		$('#notice').hide();
-		$('#error').html(icon + text).clearQueue().show('blind');
-	},
 
 	bookLoaded: function(book) {
 		document.title = "Photobook: " + book.title;
@@ -397,9 +385,9 @@ PB.Ajax = {
 	},
 	showFlashMessages: function(event, jqXHR, ajaxOptions) {
 		var msg = jqXHR.getResponseHeader('X-FlashError');
-		if (msg) PB.UI.error(msg);
+		if (msg) PB.error(msg);
 		var msg = jqXHR.getResponseHeader('X-FlashNotice');
-		if (msg) PB.UI.notice(msg);
+		if (msg) PB.notice(msg);
 	},
 	ajaxComplete: function(event, jqXHR, ajaxOptions) {
 		var contentType = jqXHR.getResponseHeader("Content-Type");

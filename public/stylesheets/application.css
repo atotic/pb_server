@@ -1,7 +1,8 @@
 /* based upon
 html5doctor.com Reset Stylesheet (Eric Meyer's Reset Reloaded + HTML5 baseline)
 */
- 
+@charset "UTF-8";
+
 html, body, div, span, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 abbr, address, cite, code,
@@ -72,11 +73,6 @@ label, input[type=button], input[type=submit], button { cursor: pointer; }
 button, input, select, textarea { margin: 0; }
 
 /* SVEGPHOTO styling */
-.error_message {
-	color: red;
-	background-color: #FFE0E0;
-}
-
 h1 {
 	font-size: 150%;
 	margin-top: 0.3em;
@@ -106,19 +102,72 @@ h2 {
 #topmenu nav a {
 	margin-right: 4px;
 }
-#notice {
+
+/* ERRORS & NOTICES */
+
+#messages {
+	position:absolute;
+	width: 400px;
+	margin-left: 150px;
+	margin-top: 4px;
+	margin-bottom: 10px;	
+}
+#error, #notice, #progress {	
 	display:none;
+	float: left;
+	width: 400px;
+	padding: 0em 0.7em 0 0.7em;
+	font-size: 1em;
+	border-radius: 3px;
+}
+#error:after, #notice:after {
+	content: "\2716";
+	font-size:	small;
+	float:right;
+	color: #AAA;
+	width:16px;
+}
+#error:hover:after, #notice:hover:after{
+	color: red;
+	cursor: pointer;
+}
+#notice {
+	background-color: #FCEFA1;
 }
 #error {
-	display:none;
+	background-color: #FF5252;
 }
-#error, #notice {
-	float: left;
-	min-width: 200px;
-	max-width: 400px;
-	margin-left: 150px;
-	margin-top: 10px;
-	margin-bottom: 10px;
-	position: absolute;
+.error_message {
+	color: red;
+	background-color: #FFE0E0;
+}
+#progress {
+	height: 18px;
+	background-color:white;
+	overflow: hidden;
+}
+#progress_bar {
+	display: inline-block;
+	height:8px;
+	width: 200px;
+}
+#progress_message {
+	width: 140px;
+	display:inline-block;
+	font-size: small;
+	padding-left: 0.1em;
+	vertical-align: 1px;
 }
 
+#progress_cancel {
+	display:inline-block;
+	background-image: url(/stylesheets/smoothness/images/ui-icons_454545_256x240.png);
+	margin-top: 0px;
+	background-position: -96px -125px;
+	height: 16px;
+	width:16px;
+}
+#progress_cancel:hover {
+	background-image: url(/stylesheets/smoothness/images/ui-icons_cd0a0a_256x240.png);
+	cursor: pointer;
+}

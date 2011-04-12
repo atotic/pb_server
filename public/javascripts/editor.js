@@ -109,9 +109,6 @@
 	};
 })(window.jQuery);
 
-var PB = {
-	fn: {}
-};
 
 // Timer utility class
 PB.fn.Timer = function(name) {
@@ -246,7 +243,7 @@ $.extend(PB.fn.Book.prototype, {
 		for (var i=0; i< this._images.length; i++)
 			if (this._images[i].name() == file.fileName) 
 			{
-				PB.UI.notice(file.fileName + " is already in the book.");
+				PB.notice(file.fileName + " is already in the book.");
 				return;
 			};
 

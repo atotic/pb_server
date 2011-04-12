@@ -2,14 +2,21 @@
 	<div id="logo">
 		<b>sv</b>e<b>g</b>'s photo
 	</div>
-	<div id="notice" class="ui-widget -state-highlight" <%= " style='display:block'" if flash[:notice] %> >
-		<div class="ui-state-highlight ui-corner-all" style="padding: 0 .7em;">
-		<%= flash[:notice] if flash[:notice] %>
+	<div id="messages">
+		<div id="progress">
+			<div id="progress_bar"></div>
+			<div id="progress_cancel"></div>
+			<div id="progress_message"></div>
 		</div>
-	</div>
-	<div id="error" class="ui-widget ui-corner-all ui-state-error" <%= " style='display:block'" if flash[:error] %>>
-		<div class="ui-state-error ui-corner-all" style="padding: 0 .7em;">
-			<%= flash[:error] if flash[:error] %>
+		<div id="notice" class="ui-widget" <%= " style='display:block'" if flash[:notice] %> >
+			<div class="" style="padding: 0 .7em;">
+			<%= flash[:notice] if flash[:notice] %>
+			</div>
+		</div>
+		<div id="error" class="ui-widget" <%= " style='display:block'" if flash[:error] %>>
+			<div style="padding: 0 .7em;">
+				<%= flash[:error] if flash[:error] %>
+			</div>
 		</div>
 	</div>
 	<div id="topmenu" >

@@ -1,24 +1,22 @@
 CSS
 
 CSS Fonts: http://www.w3.org/Style/Examples/007/fonts.en.html
-http://lamb.cc/typograph/ -- great layout suggestions
-
+Experiment with font sizes: http://lamb.cc/typograph/ -- 
 JSFiddle, nice easing animations: http://jsfiddle.net/marcofucci/rRtAq/
 Cool form effect: git clone git://github.com/kaylarose/Glowform
 Nice way to do captions, HTML5 style http://css-tricks.com/slide-in-image-captions/
 http://www.trymyui.com/ great UI testing place
+http://www.dafont.com/my-underwood.font - just like an old typewriter font
 
 JS
-http://www.dafont.com/my-underwood.font - just like an old typewriter font
-http://studio.html5rocks.com/#Flip
-HTML5 flipping pages animation:
-http://studio.html5rocks.com/#Flip
-http://arborjs.org/ - graph visualization library
+HTML5 flipping pages animation: http://studio.html5rocks.com/#Flip
+graph visualization library http://arborjs.org/ - 
+How to resume a file upload http://hacks.mozilla.org/2011/04/resumeupload/
+JS unit tests http://railscasts.com/episodes/261-testing-javascript-with-jasmine
 
 SVG
 D3 is amazingly beautiful, Mike Bostock is super smart. Must play with it some more.
-Interesting SVG vector graphics library:
-http://raphaeljs.com/
+Interesting SVG vector graphics library: http://raphaeljs.com/
 
 OTHER
 Look at duostack for deployment

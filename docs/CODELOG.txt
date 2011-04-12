@@ -6,9 +6,22 @@ Next one of these:
 - visual layout (menus)
 - image manipulation
 - refactor ajax notices into application UI framework
+- sample NFC gift app
 
-Thursday:
-sample NFC gift app
+Next
+Implement progress bar, error & notice, so they do not wrap
+Make books belong to user
+Make images belong to user, and be associated with books through images_books table
+Upload images through image broker as they are added
+Apr 11
+Back from mendocino.
+Progress bar: used jquery.ui because FF does not support progress
+Wrestled with icons & buttons with jquery ui, no success, easier to roll my own
+Implemented error & notice. They look nice now
+
+Apr 8
+No coding, getting ready for Mendicino
+Got 
 Apr 6
 Finished sessions. I've coded a custom session middleware. This is because I did not
 like the default setup:
