@@ -9,14 +9,10 @@
 			<div id="progress_message"></div>
 		</div>
 		<div id="notice" class="ui-widget" <%= " style='display:block'" if flash[:notice] %> >
-			<div class="" style="padding: 0 .7em;">
 			<%= flash[:notice] if flash[:notice] %>
-			</div>
 		</div>
 		<div id="error" class="ui-widget" <%= " style='display:block'" if flash[:error] %>>
-			<div style="padding: 0 .7em;">
 				<%= flash[:error] if flash[:error] %>
-			</div>
 		</div>
 	</div>
 	<div id="topmenu" >
@@ -25,7 +21,7 @@
 				<a href="/account"><%= current_user.display_name %></a>
 				<a href="/logout">log out</a>
 				<% if current_user.is_administrator %>
-					<a href="/admin">admin</a>
+					<a href="/admin" class="admin">admin</a>
 				<% end %>
 			<% else %>
 				<a href="/auth/login">log in</a>			

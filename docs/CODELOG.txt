@@ -9,10 +9,13 @@ Next one of these:
 - sample NFC gift app
 
 Next
-Implement progress bar, error & notice, so they do not wrap
 Make books belong to user
 Make images belong to user, and be associated with books through images_books table
 Upload images through image broker as they are added
+Apr 12
+Put timestamps on all models
+Moved models to separate directory
+
 Apr 11
 Back from mendocino.
 Progress bar: used jquery.ui because FF does not support progress

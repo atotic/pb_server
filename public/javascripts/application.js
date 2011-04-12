@@ -65,20 +65,9 @@ var PB = {
 
 $(document).ready(function() {
 	$("#error, #notice").click(function(ev) {
+		// handle clicking on the close box
 		if (ev.pageX - $(ev.currentTarget).offset().left > (ev.currentTarget.offsetWidth - 35))
 			$(ev.currentTarget).hide();
-		else
-		{
-			var x = ev.pageX - $(ev.currentTarget).offset().left;
-			var y = ev.currentTarget.offsetWidth - 35;
-			console.log("EventCoords:" + x);
-			console.log("Cuttoff:" + y);
-		}
 	});
-	PB.error("This will be a multipl asds asdf asdf asdf asdf asd fasdf asd fasd fas dfa fd");
-	PB.notice("Yo notice");
-	PB.progressSetup({cancelCb: function() {alert("cancel");}});
-	PB.progress(50);
-	PB.progress(50, "progress started");
 });
 

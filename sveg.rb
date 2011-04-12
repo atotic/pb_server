@@ -13,9 +13,9 @@ require 'rack-flash'
 
 require 'ruby-debug'
 
-# our gems
-require 'book_model'
-require 'user'
+# sveg requires
+require 'model/book'
+require 'model/user'
 
 # logging
 class ColorLogger < Logger
@@ -133,6 +133,10 @@ class Session
 		User.get(@user_id)
 	end
 	
+	def resource(*args)
+		
+	end
+
 	# flash methods
 	
 	def to_flash_hash
@@ -141,7 +145,7 @@ class Session
 			:httponly => true,
 			:value => JSON.generate(@flash)
 		}
-		retVal[:expires] =  Time.now - 3600 if @flash.empty?
+		retVal[:expires] =  Time.now - 3600 if @flash.empty?	# delete cookie if empty
 		retVal
 	end
 	
@@ -198,6 +202,7 @@ DataMapper::Model.raise_on_save_failure = true
 DataMapper.setup(:default, ENV['DATABASE_URL'] || "sqlite3://#{Dir.pwd}/development.db")
 DataMapper.finalize
 DataMapper.auto_upgrade!
+#DataMapper.auto_migrate!
 
 #
 # Main application
@@ -211,33 +216,71 @@ class SvegApp < Sinatra::Base
 	helpers do
 		include Rack::Utils
 		
+		# Utils
+		
 		alias_method :h, :escape_html
 		
 		def show_error(object, prop)
 			"<span class=\"error_message\">#{object.errors[prop]}</span>" if (object.errors[prop])
 		end
-
-		def user_must_be_logged_in
-			return if env['rack.session'].user
-			flash[:notice] = "You must be logged in to access this."
-			redirect request.path_info.end_with?(request.referer) ? "/" : request.referer
-		end
-
-		def user_must_be_admin
-			user = env['rack.session'].user
-			return if user && user.is_administrator
-			flash[:notice] = "You must be an administrator to access that page."
-			redirect request.path_info.end_with?(request.referer) ? "/" : request.referer
+		
+		def print_datetime(dt)
+			dt.strftime "%b %d %I:%M%p"
 		end
 		
+		def redirect_back
+			redirect request.referer.end_with?(request.path_info) ? "/" : request.referer
+		end
+
+		# args are a list of resources 
+		# ex: asset_link("jquery.js", "jquery-ui.js", "application.css")
+		def asset_link(*args)
+			retVal = "";		
+			args.each do |arg|
+				arg = arg.to_s if arg.is_a?(Symbol)
+				if arg.end_with?("js")
+					arg = "jquery-1.5.js" if arg.eql? "jquery.js"
+					arg = "jquery-ui-1.8.9.custom.js" if arg.eql? "jquery-ui.js"
+					retVal += "<script src='/javascripts/#{arg}'></script>\n"				
+				elsif arg.end_with?("css")
+					arg = "smoothness/jquery-ui-1.8.9.custom.css" if arg.eql? "jquery-ui.css"
+					retVal += "<link href='/stylesheets/#{arg}' rel='stylesheet' type='text/css' />"
+				else
+					raise "Unknown asset #{arg}"
+				end
+			end
+			retVal
+		end
+		
+		# User access
 		def current_user
 			env['rack.session'].user
 		end
-	end
 
-	configure(:development) do
-	#   register Sinatra::Reloader
-	#    also_reload "book_model.rb"
+		def user_must_be_logged_in
+			return if env['rack.session'].user
+			if (request.xhr?)
+				flash.now[:error] = "You must be logged in to access #{env['REQUEST_PATH']}."
+				halt 401
+			else
+				flash[:error] = "You must be logged in to access #{env['REQUEST_PATH']}."
+				redirect_back
+			end
+		end
+
+		def user_must_be_admin
+			return if current_user && current_user.is_administrator
+			flash[:notice] = "You must be an administrator to access that page."
+			redirect_back
+		end
+		
+		def user_must_own(resource)
+			if current_user.id != resource.id && !current_user.is_administrator
+				flash[:error]="Access not allowed."
+				redirect_back
+			end
+		end
+
 	end
 
 	after do
@@ -262,7 +305,7 @@ class SvegApp < Sinatra::Base
 			targetuser = User.get(params[:user_id])
 			if (targetuser == nil)
 				flash "No such user #{params[:user_id]}"
-				redirect "/admin"
+				redirect to("/admin")
 			end
 		end
 		erb :account, {:layout => :'layout/plain'}, {:locals => { :user => targetuser }}
@@ -277,7 +320,7 @@ class SvegApp < Sinatra::Base
 		env['rack.session'].clear_user
 		env['rack.session'].save_on_server!
 		flash[:notice] = "You've logged out."
-		redirect '/'
+		redirect to('/')
 	end
 
 	get '/auth/login' do
@@ -308,11 +351,11 @@ class SvegApp < Sinatra::Base
 					env['rack.session'].user_id = user.id
 					flash[:notice]="Created a new account"
 				end
-				redirect "/account"
+				redirect to("/account")
 			rescue => ex
 				LOGGER.error(ex.message)
 				flash[:error]="Unexpected error creating the user"
-				redirect "/login"
+				redirect to("/login")
 			end
 		else
 		# login exists, just log in
@@ -320,16 +363,26 @@ class SvegApp < Sinatra::Base
 			authlogin.save!
 			env['rack.session'].user_id = authlogin.user_id
 			flash[:notice]="Logged in successfully"
-			redirect "/account"
+			redirect to("/account")
 		end
 	end
 
 	get '/editor' do
+		user_must_be_logged_in
 		erb :editor
 	end
-
+	
+	get '/editor/:book_id' do
+		user_must_be_logged_in
+		book = Book.get(params[:book_id])
+		flash[:error] = "Book not found" && redirect_back unless book
+		user_must_own book
+		erb :editor
+	end
+	
 	get '/books/new' do
-		@book = Book.new({}, {})
+		user_must_be_logged_in
+		@book = Book.new(current_user, {}, {})
 		erb :book_new
 	end
 
@@ -340,9 +393,10 @@ class SvegApp < Sinatra::Base
 	end
 
 	post '/books' do
+		user_must_be_logged_in
 		begin
 			Book.transaction do |t|
-				@book = Book.new(params[:book], params[:template])
+				@book = Book.new(current_user, params[:book], params[:template])
 				@book.init_from_template
 				content_type :json
 				"{ \"id\" : #{@book.id} }"

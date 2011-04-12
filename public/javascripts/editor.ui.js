@@ -6,8 +6,13 @@ $.extend(PB, new PB.fn.EventListener("docLoaded"));
 $.extend(PB, {
 	_init: $(document).ready(function() { PB.init() }),
 	init: function () {
-		this._book = new PB.fn.Book();
-		PB.UI.bookLoaded(this._book);
+		var match = window.location.pathname.match(/editor\/(\d+)/);
+		if (match != null)
+			this.load(match[1]);
+		else {
+			this._book = new PB.fn.Book();
+			PB.UI.bookLoaded(this._book);
+		}
 	},
 
 	book: function() {
@@ -28,7 +33,7 @@ $.extend(PB, {
 				try {
 					var oldBook = self._book;
 					self._book=  new PB.fn.Book(json);
-					if (oldBook.id == 0)	// transfer the images dropped before
+					if (oldBook && oldBook.id == 0)	// transfer the images dropped before
 					{
 						var images = oldBook.images();
 						for (var i =0; i< images.length; i++)

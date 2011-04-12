@@ -1,3 +1,28 @@
-<h1>Your account summary</h1>
+<h1>Your account</h1>
 <hr>
 <p>Username: <%= locals[:user].display_name %></p>
+<p>&nbsp;</p>
+<h2>Books</h2>
+<hr>
+
+<% books = current_user.books %>
+<% if books.size == 0 %>
+	<p>None yet. Would you like to <a href="/editor">make</a> your first?</p>
+<% else %>
+<table>
+	<thead>
+		<tr>
+			<th>name</th>
+			<th>created</th>
+			<th>modified</th>
+		</tr>
+	</thead>
+<% books.each do |book| %>
+	<tr>
+		<td><a href="/editor/<%= book.id %>"><%= h book.title %></a></td>
+		<td><%= print_datetime book.created_at %></td>
+		<td><%= print_datetime book.updated_at %></td>
+	</tr>
+<% end%>
+</table>
+<% end %>
