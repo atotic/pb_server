@@ -9,10 +9,12 @@ Next one of these:
 - sample NFC gift app
 
 Next
-Make books belong to user
 Make images belong to user, and be associated with books through images_books table
 Upload images through image broker as they are added
+
 Apr 12
+Book belong to user. Editor template loads books
+Added asset_link for future proofing
 Put timestamps on all models
 Moved models to separate directory
 

@@ -275,7 +275,9 @@ class SvegApp < Sinatra::Base
 		end
 		
 		def user_must_own(resource)
-			if current_user.id != resource.id && !current_user.is_administrator
+			flash[:error] = "Resource not found" && redirect_back unless resource
+			
+			if current_user.id != resource.user_id && !current_user.is_administrator
 				flash[:error]="Access not allowed."
 				redirect_back
 			end
@@ -375,7 +377,6 @@ class SvegApp < Sinatra::Base
 	get '/editor/:book_id' do
 		user_must_be_logged_in
 		book = Book.get(params[:book_id])
-		flash[:error] = "Book not found" && redirect_back unless book
 		user_must_own book
 		erb :editor
 	end
@@ -388,6 +389,7 @@ class SvegApp < Sinatra::Base
 
 	get '/books/:id' do
 		@book = Book.get(params[:id])
+		user_must_own @book
 		content_type :json
 		@book.to_json()
 	end
