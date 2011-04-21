@@ -1,7 +1,7 @@
 http://caniuse.com/
 
 CSS
-
+Try out different effects live: http://css3please.com/
 CSS Fonts: http://www.w3.org/Style/Examples/007/fonts.en.html
 Experiment with font sizes: http://lamb.cc/typograph/ -- 
 JSFiddle, nice easing animations: http://jsfiddle.net/marcofucci/rRtAq/
@@ -10,6 +10,7 @@ Nice way to do captions, HTML5 style http://css-tricks.com/slide-in-image-captio
 http://www.trymyui.com/ great UI testing place
 http://www.dafont.com/my-underwood.font - just like an old typewriter font
 Very neat background patterns: http://leaverou.me/css3patterns/#
+39 box shadows, how do they do it: http://www.viget.com/inspire/39-ridiculous-things-to-do-with-css3-box-shadows/
 
 JS
 HTML5 flipping pages animation: http://studio.html5rocks.com/#Flip

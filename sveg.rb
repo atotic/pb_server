@@ -423,26 +423,34 @@ class SvegApp < Sinatra::Base
 	end
 	
 	# uploads the photo, returns photo.to_json
+	# if photo already exists, it discards current data, and returns original
 	post '/photos' do
 		user_must_be_logged_in
 		begin
-			Photo.transaction do |t|
-				photo_file = params.delete('photo_file')
-				book_id = params.delete('book_id')
+			destroy_me = nil	# destroy must be outside the transaction
+			photo_file = params.delete('photo_file')
+			book_id = params.delete('book_id')
 		
-				photo = Photo.new(params);
-				photo.user_id = current_user.id
+			photo = Photo.new(params);
+			photo.user_id = current_user.id
+			Photo.transaction do |t|
 				# save photo_file
 				PhotoStorage.storeFile(photo, photo_file ) if photo_file
 				photo.save
-				# if there are duplicate photos, destroy this one, and use the duplicate
-				
+				# if there are duplicate photos, destroy this one, and use duplicate instead
+				dup = Photo.first(:user_id => photo.user_id, :md5 => photo.md5, :id.not => photo.id)
+				if dup
+					destroy_me = photo
+					photo = dup
+					LOGGER.warn("duplicate photo, using old one #{photo.display_name}")
+				end
 				# associate photo with a book
 				book = Book.first(book_id) if book_id
 				book.photos << photo if book
-				content_type :json
-				photo.to_json				
-			end
+			end # transaction
+			destroy_me.destroy if destroy_me
+			content_type :json
+			photo.to_json				
 		rescue => ex
 			[500, "Unexpected server error" + ex.message]
 		end
