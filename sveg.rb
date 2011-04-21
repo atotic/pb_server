@@ -16,6 +16,7 @@ require 'ruby-debug'
 # sveg requires
 require 'model/book'
 require 'model/user'
+require 'model/photo'
 
 # logging
 class ColorLogger < Logger
@@ -51,7 +52,7 @@ class SvegLogger
 		now = Time.now
 
 		logger = @logger || env['rack.errors']
-		return if env['sinatra.static_file']
+#		return if env['sinatra.static_file']
 		STDERR.write "HTTP ERROR" if status >= 400
 		logger.write FORMAT % [
 			env["REMOTE_USER"] || "-",
@@ -105,7 +106,7 @@ class Session
 
 	def clear_user
 		@save_on_server = false
-		@expires = Time.now + 60
+		@expires = Time.now + 60 * 60 * 24	# TODO fix login expiration
 		@user_id = nil			
 	end
 	
@@ -199,7 +200,7 @@ end
 
 DataMapper::Model.raise_on_save_failure = true
 # Use either the default Heroku database, or a local sqlite one for development
-DataMapper.setup(:default, ENV['DATABASE_URL'] || "sqlite3://#{Dir.pwd}/development.db")
+DataMapper.setup(:default, ENV['DATABASE_URL'] || "sqlite3://#{Dir.pwd}/development.sqlite")
 DataMapper.finalize
 DataMapper.auto_upgrade!
 #DataMapper.auto_migrate!
@@ -211,6 +212,7 @@ class SvegApp < Sinatra::Base
 
 	set :root, File.dirname(__FILE__)
 	set :templates, File.join(settings.root, "templates"); # book template directory
+	set :photo_dir, File.join(settings.root, "photo-storage"); # photo storage directory
 	set :show_exceptions, true
 
 	helpers do
@@ -388,10 +390,10 @@ class SvegApp < Sinatra::Base
 	end
 
 	get '/books/:id' do
-		@book = Book.get(params[:id])
-		user_must_own @book
+		book = Book.get(params[:id])
+		user_must_own book
 		content_type :json
-		@book.to_json()
+		book.to_json()
 	end
 
 	post '/books' do
@@ -407,6 +409,42 @@ class SvegApp < Sinatra::Base
 			LOGGER.error(ex.message)
 			flash.now[:error]= "Errors prevented the book from being saved. Please fix them and try again."
 			[400, erb(:book_new)]
+		end
+	end
+
+	# find the photo with the hash
+	get '/photos/md5/:md5hash' do
+		user_must_be_logged_in
+		if (params[:md5hash])
+			photo = Photo.first(:user_id => current_user.id, :md5 => params[:md5hash])
+			return photo.to_json if photo
+		end
+		[404, "Photo not found"]
+	end
+	
+	# uploads the photo, returns photo.to_json
+	post '/photos' do
+		user_must_be_logged_in
+		begin
+			Photo.transaction do |t|
+				photo_file = params.delete('photo_file')
+				book_id = params.delete('book_id')
+		
+				photo = Photo.new(params);
+				photo.user_id = current_user.id
+				# save photo_file
+				PhotoStorage.storeFile(photo, photo_file ) if photo_file
+				photo.save
+				# if there are duplicate photos, destroy this one, and use the duplicate
+				
+				# associate photo with a book
+				book = Book.first(book_id) if book_id
+				book.photos << photo if book
+				content_type :json
+				photo.to_json				
+			end
+		rescue => ex
+			[500, "Unexpected server error" + ex.message]
 		end
 	end
 

@@ -1,3 +1,4 @@
+"use strict";
 
 // jQuery extensions
 (function(jQuery){
@@ -139,7 +140,7 @@ PB.fn.ShowForMeasure = function(el) {
 };
 
 PB.fn.ShowForMeasure.prototype = {
-	props:  { position: 'absolute', visibility: 'hidden', display: 'block' },
+	props:	{ position: 'absolute', visibility: 'hidden', display: 'block' },
 	startMeasure: function() {
 		this.hiddenParents = this.el.parents().andSelf().not(':visible').get();
 		this.oldProps = new Array(this.hiddenParents.length);
@@ -160,8 +161,17 @@ PB.fn.ShowForMeasure.prototype = {
 	}
 };
 
-// Event listener mixin
-PB.fn.EventListener = function(eventList) {
+// Event broadcaster mixin. Use to extend any object as event broadcaster
+// Usage:
+// function MyBroadcaster() {
+//		...your init code here ....
+//   $.extend(this, new PB.fn.EventBroadcaster("docLoaded"));
+// }
+// Listeners can bind & unbind.
+// Send events:
+// this.send('docLoaded', doc);
+
+PB.fn.EventBroadcaster = function(eventList) {
 	this.listeners = {};
 	var that = this;
 	eventList.split(' ').forEach( function(val, index, arr) {
@@ -169,7 +179,7 @@ PB.fn.EventListener = function(eventList) {
 	});
 };
 
-$.extend(PB.fn.EventListener.prototype, {
+$.extend(PB.fn.EventBroadcaster.prototype, {
 	bind: function(eventType, handler) {
 		if (!eventType in this.listeners)
 			throw "unknown event type " + eventType;
@@ -221,7 +231,7 @@ PB.fn.Book = function(json) {
 		this._images = [];
 		this._pages = [];
 	}
-	$.extend(this, new PB.fn.EventListener("imageAdded imageRemoved pageAdded"));
+	$.extend(this, new PB.fn.EventBroadcaster("imageAdded imageRemoved pageAdded"));
 };
 
 // Book represents the photo book
@@ -229,17 +239,20 @@ PB.fn.Book = function(json) {
 $.extend(PB.fn.Book.prototype, {
 	
 	images: function() {
-		return this._images;
+		return this._images;	// return ImageBroker[]
 	},
-	pages: function() {
+	pages: function() { // return BookPage[]
 		return this._pages;
 	},
+	
 	firstPage: function() {
 		if (this._pages.length > 0)
 			return this._pages[0];
-		return;
+		return null;
 	},
+	
 	addLocalFileImage: function (file) {
+		// Check if it matches any already 
 		for (var i=0; i< this._images.length; i++)
 			if (this._images[i].name() == file.fileName) 
 			{
@@ -249,14 +262,17 @@ $.extend(PB.fn.Book.prototype, {
 
 		var image = new PB.fn.ImageBroker(file);
 		var pos = this._images.push(image);
+		image.saveOnServer(this.id);
 		this.send('imageAdded', image, pos);
 	},
+		
 	getPageById: function(page_id) {
 		for (var i=0; i<this._pages.length; i++)
 			if (this._pages[i].id == page_id)
 				return this._pages[i];
 		console.warn("no such page id " + page_id);
 	},
+	
 	getImageById: function(image_id) {
 		for (var i=0; i< this._images.length; i++)
 			if (this._images[i].id() == image_id)
@@ -268,33 +284,106 @@ $.extend(PB.fn.Book.prototype, {
 
 // ImageBrooker
 PB.fn.ImageBroker = function(file) {
-	this.file = file;
-	this.img = null;
 	this._id = this.getTempId();
+	this._file = file;
+	this.img = null;
 }
 
+// ImageBroker represents an image.
 PB.fn.ImageBroker.prototype = {
 
 	tempId: 1,
-	file: null, // on-disk file
+	_file: null, // on-disk file
+	_id: null,
 
 	img: null, // Image object with loaded image
 	error: null,
-	_id: null,
+
+	initFromJson: function(json) {
+		this._id = json.id;
+		this._md5 = json.md5;
+		this._display_name = display_name;
+	},
 
 	name: function() {
-		return this.file.fileName;
+		if ('_display_name' in this)
+			return this._display_name;
+		else if ('_file' in this)
+			return this._file.fileName;
+		else
+			return "no title";
 	},
 	
 	id: function() {
 		return this._id;
 	},
+	
+	getFile: function() {
+		return _file;
+	},
+	
 	getTempId: function() {
 		return "temp-" + PB.fn.ImageBroker.prototype.tempId++;
 	},
+	
 	getFileUrl: function() {
 		return window.URL.createObjectURL(this.file);
 	},
+	
+	saveOnServer: function(book_id) {
+		var fd = new FormData();
+		fd.append('display_name', this._file.fileName);
+		fd.append('book_id', book_id);
+		fd.append('photo_file', this._file);
+		var xhr = new XMLHttpRequest();	// not using jQuery, we want to use FormData,
+		var THIS = this;
+		xhr.onreadystatechange = function(evt) {
+			if (xhr.readyState == 1)
+				PB.progressSetup();
+			if (xhr.readyState == 4) {
+		 		if(xhr.status == 200) {
+		 			UI.progress("File uploaded successfully");
+		 			THIS.initFromJson($.parseJSON(xhr.responseText));
+		 		}
+				else
+					console.error("Error saving image");
+			}
+		};
+		xhr.upload.addEventListener("progress", function(evt) {
+			if (evt.lengthComputable)
+				PB.progress(evt.loaded / evt.total);
+			else
+				PB.progress(-1);
+		}, false);
+		xhr.open("POST", "/photos");
+		xhr.send(fd);
+	},
+
+	// md5 returns deferred as computing md5 from disk might take a while
+	getMd5: function() {
+		var deferred = new $.Deferred();
+		if ('_md5' in this)
+			deferred.resolve(this._md5);
+		else if (this._file) {
+				// Compute md5 hash by reading from the file
+				var reader = new FileReader();
+				var THIS = this;
+				reader.onload = function() {
+					var t = new PB.fn.Timer("md5");
+					THIS._md5 = MD5(reader.result);
+					t.end();
+					deferred.resolve(this._md5);
+				}
+				reader.onerror = function() {
+					deferred.reject("File could not be read. Error code " + reader.error);
+				}
+				reader.readAsBinaryString(this._file);
+		}
+		else
+			deferred.reject("No hash, and no file to get it from");
+		return deferred;
+	},
+	
 	toCanvasFinalize: function(deferred, options) {
 		if (this.error != null) {
 			console.log(this.name() + " failed to load");
@@ -323,6 +412,7 @@ PB.fn.ImageBroker.prototype = {
 	
 	// Copies image to canvas
 	// Returns a deferred. done and fail will get (canvas, img) callbacks
+	// deferred will have memorySize property set to memory footprint of loaded image
 	toCanvas: function(options) {
 		var deferred = new $.Deferred();
 		$.extend({
@@ -337,7 +427,7 @@ PB.fn.ImageBroker.prototype = {
 			$(this.img).bind({
 				load : function() {
 					$(self.img).data('loaded', true);
-					deferred.imageSize = 4 * self.img.width * self.img.height;
+					deferred.memorySize = 4 * self.img.width * self.img.height;
 					self.toCanvasFinalize(deferred, options);
 //					console.log("Loaded: " + self.name());
 				},
@@ -354,7 +444,7 @@ PB.fn.ImageBroker.prototype = {
 			});
 			PB.ImageLoadQueue.push(deferred, function() {
 //				console.log("Started: " + self.name());
-				self.img.src = window.URL.createObjectURL(self.file);				
+				self.img.src = window.URL.createObjectURL(self._file);				
 			});
 		};
 		return deferred;
@@ -409,7 +499,7 @@ PB.fn.BookPage.prototype = {
 // Limits how many images:
 // - can be downloaded simultaneusly
 // - can be downloaded in a 10 second window. This is to prevent
-//   memory trashing, FF keeps all images in used memory for 10 seconds, 
+//	 memory trashing, FF keeps all images in used memory for 10 seconds, 
 //   unused for 25. When loading images off local disk, single image can be
 //   4928 x 3264 x 4 = 60MB undecoded.
 // 	 TestPix loads 100 images in 64s
@@ -428,7 +518,7 @@ PB.ImageLoadQueue = {
 		this.size = 0;
 		this.expireTime = Date.now() + PB.ImageLoadQueue.timeLimit * 1000;
 		this.live = true;
-		this.imageSize = 0;
+		this.memorySize = 0;
 	},
 	push: function(deferred, fn) {
 		this.waiting.push([deferred, fn]);
@@ -442,8 +532,8 @@ PB.ImageLoadQueue = {
 			for (var i=0; i< self.active.length; i++)
 				if (self.active[i].deferred == deferred) {
 					self.active[i].live = false;
-					if ('imageSize' in deferred)
-						self.active[i].imageSize = deferred.imageSize;
+					if ('memorySize' in deferred)
+						self.active[i].memorySize = deferred.memorySize;
 			}
 			self.timer.imagesLoaded += 1;
 			self.process(); // Process any new jobs
@@ -466,7 +556,7 @@ PB.ImageLoadQueue = {
 				i -= 1;
 			}
 			else {
-				imageCacheSize += this.active[i].imageSize;
+				imageCacheSize += this.active[i].memorySize;
 				// Count live jobs
 				if (this.active[i].live)
 					liveJobs += 1;

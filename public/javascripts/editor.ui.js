@@ -1,7 +1,7 @@
 //
 // PB global functions
 //
-$.extend(PB, new PB.fn.EventListener("docLoaded"));
+$.extend(PB, new PB.fn.EventBroadcaster("docLoaded"));
 
 $.extend(PB, {
 	_init: $(document).ready(function() { PB.init() }),
@@ -116,7 +116,7 @@ PB.UI = {
 		var pages = book.pages();
 		for (var i=0; i < pages.length; i++)
 			PB.UI.Pagetab.pageAdded(pages[i], i);
-		$('#header nav a[href="#pages-tab"]').click();
+//		$('#header nav a[href="#pages-tab"]').click();
 		// Display 1st page
 		if (pages.length == 0)
 		{

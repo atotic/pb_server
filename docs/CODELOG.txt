@@ -11,6 +11,93 @@ Next one of these:
 Next
 Make images belong to user, and be associated with books through images_books table
 Upload images through image broker as they are added
+Need background tasks that warn the user before leaving page (onbeforeunload)
+Apr 21
+Progress on image upload. Makes debugging easier
+
+Apr 20
+Analyzed Thin, to see if we could stream the requests. It can be done.
+thin/request.rb:parse method gets called repeatedly by connection.rb:receive_data when request comes in
+we could override request.rb parse. There are two cases that need to be handled:
+- save the partial post if interrupted 
+- tell client to only send us remaining part of the body
+Implemented file upload.
+This project is more work than I imagined (of course)
+Fixed the silly session expiration error. I forgot that initially I expired sessions after a minute
+
+Apr 19
+Writing down the photo architecture was difficult, so I jotted down some scenarios,
+and started coding.
+- computing md5 takes at least 16 seconds, skip it.
+
+
+Apr 14 - Imagew architecture
+Image architecture. Images are a little tricky, need to be architected.
+- Images can come from many sources: local HD, oauth2 apis
+- We want to conserve bandwidth, disk space
+- Images are displayed: in the book, icons on image strip, on pdf
+
+scenarios:
+* local file dragged to the book
+  - put it in the image load queue
+    - check for duplicates against image list, and on the server /image/md5
+    	- already there, tell user it is a duplicate, load it
+    - load image from file system
+      - create a temporary icon in the photo list
+    	- success? upload_to_server, add to the image list while creating an icon
+    	- fail? notify user that file format is not recoginzed, remove file from the list
+* facebook image dragged to the book
+ 	- post /images/new/remote
+ 		create temporary icon
+ 	  poll or have event queue come in from the server
+ 	  on the server, download image as a DelayedJob
+* upload to server
+  - put the file on the upload queue
+    - put file post /images (use sips to rotate/resize images)
+    
+* book is loaded
+  $("image.book_image").each( function(image) {
+  	imageBroker.loadInto(node);
+  	image.setAttributeNS(xlns, 'xlink:href', 'loading');
+  })
+  image
+* pdf is generated
+
+Check local files against duplicates on the server with md5? Yes, if it is fast enough
+
+HTTP API:
+get /photos/md5/:hash returns image record, fails if not
+post /photos { local or remote data } returns image record, or redirects to restart upload
+  => local data { filename: , body: , mime_type }
+  <= image record
+post /book/:book_id/photo/:photo_id -- associates image with the book
+delete /book/:book_id/photo/:photo_id -- removes image/book association
+
+JSON:
+image {
+	id: 
+	original_id:
+}
+
+DB SCHEMA:
+
+Photo:
+id:string
+original_id:string -- file name for local files
+local:string where is the image stored locally
+md5:string identity hash
+
+Photos_Books:
+image_id:
+book_id:
+
+JAVASCRIPT
+
+ImageUploadQueue
+
+
+Apr 13
+lazy day, kids AM, sleeping PM
 
 Apr 12
 Book belong to user. Editor template loads books

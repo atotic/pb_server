@@ -1,2 +1,3 @@
 Images are not automatically rotated
 Sessions need to be protected against forgery (sig with secret)
+Removal of duplicate photos
