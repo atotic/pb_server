@@ -202,8 +202,8 @@ DataMapper::Model.raise_on_save_failure = true
 # Use either the default Heroku database, or a local sqlite one for development
 DataMapper.setup(:default, ENV['DATABASE_URL'] || "sqlite3://#{Dir.pwd}/development.sqlite")
 DataMapper.finalize
-DataMapper.auto_upgrade!
-#DataMapper.auto_migrate!
+#DataMapper.auto_upgrade!
+DataMapper.auto_migrate!
 
 #
 # Main application
@@ -412,6 +412,14 @@ class SvegApp < Sinatra::Base
 		end
 	end
 
+	# get photo
+	get '/photo/:id' do
+		user_must_be_logged_in
+		photo = Photo.first(:user_id => current_user.id, :id => params[:id])
+		return [404, "Photo not found"] unless photo
+		send_file(photo.file_path)
+	end
+	
 	# find the photo with the hash
 	get '/photos/md5/:md5hash' do
 		user_must_be_logged_in
@@ -446,7 +454,10 @@ class SvegApp < Sinatra::Base
 				end
 				# associate photo with a book
 				book = Book.first(book_id) if book_id
-				book.photos << photo if book
+				if book
+					book.photos << photo 
+					book.save
+				end
 			end # transaction
 			destroy_me.destroy if destroy_me
 			content_type :json

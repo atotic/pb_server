@@ -188,7 +188,7 @@ PB.UI.Phototab = {
 	},
 	
 	revealNthImage: function(n) {
-		$("#photo-list").revealByMarginLeft("canvas:nth-child(" + n+ ")");
+		$("#photo-list").revealByMarginLeft("div:nth-child(" + n+ ")");
 	},
 	
 	restyleSlider: function() {
@@ -221,8 +221,11 @@ PB.UI.Phototab = {
 	},
 
 	addNewCanvas: function(canvas, img) {
-		$(canvas).appendTo('#photo-list')
-			.draggable({ 
+		canvas = $(canvas);
+		var enclosingDiv = $("<div></div>").appendTo('#photo-list');
+		canvas.appendTo(enclosingDiv);
+		enclosingDiv.width(canvas.width());
+		canvas.draggable({ 
 				'appendTo': 'body',
 				'containment': 'window',
 				'opacity': 0.7,
@@ -239,7 +242,7 @@ PB.UI.Phototab = {
 		// reflow when element is visible
 		$('#photos-tab').reflowVisible(function(immediate) {
 			// Resize the container to fit the images
-			var allPhotos = $("#photo-list canvas");
+			var allPhotos = $("#photo-list div");
 			var newWidth = allPhotos
 				.map(function() {return $(this).outerWidth()})
 				.get()
@@ -255,7 +258,6 @@ PB.UI.Phototab = {
 			PB.UI.Phototab.restyleSlider();
 			$("#photo-list-slider").show();
 		});
-//		img.clearImg();
 	},
 	
 	imageAdded: function(pbimage, index) {
@@ -303,7 +305,7 @@ PB.UI.Pagetab = {
 			  		var xlns = "http://www.w3.org/1999/xlink";
 			  		try {
 				  		var svg = document.createElementNS(svgns, 'image');
-				  		svg.setAttributeNS(xlns, 'xlink:href', image.getFileUrl());
+				  		svg.setAttributeNS(xlns, 'xlink:href', image.getImageUrl('icon'));
 				  		svg.width.baseVal.value = this.width;
 				  		svg.height.baseVal.value = this.height;
 				  		svg.x.baseVal.value = this.x;

@@ -12,11 +12,11 @@ Next
 Make images belong to user, and be associated with books through images_books table
 Upload images through image broker as they are added
 Need background tasks that warn the user before leaving page (onbeforeunload)
+I need a test framework for models, urls, 
 
 Apr 21
 Photo deletion should delete the file too. Test
 Visible progress on image upload. Makes debugging easier
-Do I need a simple test framework?
 
 Apr 20
 Analyzed Thin, to see if we could stream the requests. It can be done.

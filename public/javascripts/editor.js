@@ -224,6 +224,8 @@ PB.fn.Book = function(json) {
 		this._pages = [];
 		for (var i = 0; i < json.pages.length; i++)
 			this._pages.push(new PB.fn.BookPage(json.pages[i]));
+		for (var i = 0; i < json.photos.length; i++)
+			this._images.push(new PB.fn.ImageBroker(json.photos[i]))
 	}
 	else {
 		this.id = 0;
@@ -283,10 +285,15 @@ $.extend(PB.fn.Book.prototype, {
 });
 
 // ImageBrooker
-PB.fn.ImageBroker = function(file) {
-	this._id = this.getTempId();
-	this._file = file;
-	this.img = null;
+PB.fn.ImageBroker = function(jsonOrFile) {
+	if ('display_name' in jsonOrFile) {
+		this.initFromJson(jsonOrFile);
+	}
+	else {
+		this._id = this.getTempId();
+		this._file = jsonOrFile;
+		this.img = null;
+	}
 }
 
 // ImageBroker represents an image.
@@ -295,14 +302,20 @@ PB.fn.ImageBroker.prototype = {
 	tempId: 1,
 	_file: null, // on-disk file
 	_id: null,
-
-	img: null, // Image object with loaded image
+	_fileUrl: null,
+	
 	error: null,
 
 	initFromJson: function(json) {
 		this._id = json.id;
 		this._md5 = json.md5;
-		this._display_name = display_name;
+		this._display_name = json.display_name;
+	},
+	
+	destroy: function() {
+		if (this._fileUrl)
+			window.URL.revokeObjectURL(this._fileUrl)
+		this._fileUrl = null;
 	},
 
 	name: function() {
@@ -326,8 +339,17 @@ PB.fn.ImageBroker.prototype = {
 		return "temp-" + PB.fn.ImageBroker.prototype.tempId++;
 	},
 	
-	getFileUrl: function() {
-		return window.URL.createObjectURL(this.file);
+	// size is 'icon', 'display', 'full'
+	getImageUrl: function(size) {
+		if (this._file) {
+			if (!this._fileUrl)
+				this._fileUrl = window.URL.createObjectURL(this._file);
+			return this._fileUrl;
+		}
+		var url = "/photo/"	+ this._id;
+		if (size)
+			url += "?size=" + size;
+		return url;	
 	},
 	
 	saveOnServer: function(book_id) {
@@ -342,7 +364,7 @@ PB.fn.ImageBroker.prototype = {
 				PB.progressSetup();
 			if (xhr.readyState == 4) {
 		 		if(xhr.status == 200) {
-		 			UI.progress("File uploaded successfully");
+		 			PB.progress("File uploaded successfully");
 		 			THIS.initFromJson($.parseJSON(xhr.responseText));
 		 		}
 				else
@@ -384,19 +406,18 @@ PB.fn.ImageBroker.prototype = {
 		return deferred;
 	},
 	
-	toCanvasFinalize: function(deferred, options) {
+	toCanvasFinalize: function(deferred, options, img) {
 		if (this.error != null) {
 			console.log(this.name() + " failed to load");
 			return deferred.rejectWith(document, [this]);
 		}
 		console.log(this.name() + " loaded");
 		// Resize image to canvas
-		var scale = options.desiredHeight / this.img.naturalHeight;
+		var scale = options.desiredHeight / img.naturalHeight;
 		if (scale > 1)
 			scale = 1;
-		var canvasWidth = Math.round(this.img.naturalWidth * scale);
+		var canvasWidth = Math.round(img.naturalWidth * scale);
 		var canvasHeight = options.desiredHeight;
-		var img = this.img;
 		var canvas = $("<canvas />")
 			.attr('width', canvasWidth)
 			.attr('height', canvasHeight)
@@ -405,9 +426,9 @@ PB.fn.ImageBroker.prototype = {
 				el.getContext('2d').drawImage(img, 0,0, canvasWidth, canvasHeight);
 			}).get(0);
 		// Complete callback
+		$(img).unbind();
+		img.src = "";
 		deferred.resolveWith(document, [canvas, this]);
-		// Clean up
-		this.clearImg();
 	},
 	
 	// Copies image to canvas
@@ -419,46 +440,29 @@ PB.fn.ImageBroker.prototype = {
 			desiredHeight: 128
 		}, options);
 		
-		if (this.img && $(this.img).data('loaded'))
-			toCanvasFinalize(deferred, options);
-		else {
-			var self = this;
-			this.img = new Image();
-			$(this.img).bind({
-				load : function() {
-					$(self.img).data('loaded', true);
-					deferred.memorySize = 4 * self.img.width * self.img.height;
-					self.toCanvasFinalize(deferred, options);
+		var THIS = this;
+		var img = new Image();
+		$(img).bind({
+			load : function() {
+				deferred.memorySize = 4 * img.width * img.height;
+				THIS.toCanvasFinalize(deferred, options, img);
 //					console.log("Loaded: " + self.name());
-				},
-				error : function(e) {
-					$(self.img).data('loaded', true);
-					self.error = "Image could not be loaded";
-					self.toCanvasFinalize(deferred, options);
-				},
-				abort: function(e) {
-					$(self.img).data('loaded', true);
-					self.error = "Image loading was aborted";
-					self.toCanvasFinalize(deferred, options);
-				}
-			});
-			PB.ImageLoadQueue.push(deferred, function() {
-//				console.log("Started: " + self.name());
-				self.img.src = window.URL.createObjectURL(self._file);				
-			});
-		};
+			},
+			error : function(e) {
+				THIS.error = "Image could not be loaded";
+				THIS.toCanvasFinalize(deferred, options, img);
+			},
+			abort: function(e) {
+				THIS.error = "Image loading was aborted";
+				THIS.toCanvasFinalize(deferred, options, img);
+			}
+		});
+		PB.ImageLoadQueue.push(deferred, function() {
+//	console.log("Started: " + self.name());
+			img.src = THIS.getImageUrl(options.desiredHeight)
+		});
 		return deferred;
-	},
-	
-	clearImg:function() {
-		if (this.img == null)
-		 	return;
-		$(this.img).unbind(); // no error callbacks
-		this.img.src = "";
-		window.URL.revokeObjectURL(this.img.src);
-		this.img = null;
 	}
-
 };
 
 PB.fn.BookPage = function(json) {

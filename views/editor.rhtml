@@ -31,12 +31,6 @@
 		</div>
 	</div>
 <input type="file" id="file-dialog" multiple="true" accept="image/*" style="display:none">
-<div id="notice" class="ui-widget -state-highlight">
-	<div class="ui-state-highlight ui-corner-all" style="margin-top: 20px; padding: 0 .7em;"></div>
-</div>
-<div id="error" class="ui-widget ui-corner-all ui-state-error">
-	<div class="ui-state-error ui-corner-all" style="padding: 0 .7em;"></div>
-</div>
 <div id="main-container">
 	<p>This is main</p>
 </div>
@@ -106,9 +100,11 @@ body {
 #photo-list {
 	max-height: 128px;
 }
-#photo-list canvas {
+#photo-list > div {
 	padding: 0 3px 0 3px;
+	display: inline-block;
 }
+
 #photo-list-slider {
 	display:none;
 	margin-bottom: 4px;
