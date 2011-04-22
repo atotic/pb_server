@@ -202,8 +202,8 @@ DataMapper::Model.raise_on_save_failure = true
 # Use either the default Heroku database, or a local sqlite one for development
 DataMapper.setup(:default, ENV['DATABASE_URL'] || "sqlite3://#{Dir.pwd}/development.sqlite")
 DataMapper.finalize
-#DataMapper.auto_upgrade!
-DataMapper.auto_migrate!
+DataMapper.auto_upgrade!
+#DataMapper.auto_migrate!
 
 #
 # Main application
@@ -389,6 +389,16 @@ class SvegApp < Sinatra::Base
 		erb :book_new
 	end
 
+	delete '/books/:id' do
+		user_must_be_logged_in
+		book = Book.get(params[:id])
+		user_must_own book
+		flash[:notice] = "Book " + book.title + " was deleted";
+		book.destroy
+		content_type "text/plain"
+		
+	end
+	
 	get '/books/:id' do
 		book = Book.get(params[:id])
 		user_must_own book
@@ -453,7 +463,7 @@ class SvegApp < Sinatra::Base
 					LOGGER.warn("duplicate photo, using old one #{photo.display_name}")
 				end
 				# associate photo with a book
-				book = Book.first(book_id) if book_id
+				book = Book.get(book_id) if book_id
 				if book
 					book.photos << photo 
 					book.save
@@ -467,6 +477,16 @@ class SvegApp < Sinatra::Base
 		end
 	end
 
+	put '/book_page/:id' do
+		user_must_be_logged_in
+		page = BookPage.get(params.delete("id"))
+		halt [404, "Book page not found"] unless page
+		user_must_own(page.book)
+		page.update(params)
+		content_type "text/plain"
+		"Update successful"
+	end
+	
 # setup & run	
 	use SvegLogger
 	use SessionMiddleware

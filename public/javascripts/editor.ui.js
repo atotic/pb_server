@@ -1,3 +1,4 @@
+"use strict";
 //
 // PB global functions
 //
@@ -117,8 +118,9 @@ PB.UI = {
 		for (var i=0; i < pages.length; i++)
 			PB.UI.Pagetab.pageAdded(pages[i], i);
 //		$('#header nav a[href="#pages-tab"]').click();
+
 		// Display 1st page
-		if (pages.length == 0)
+		if (book.firstPage() == null)
 		{
 			if (book.id ==0)
 				$.get("/books/new");
@@ -277,6 +279,79 @@ PB.UI.Phototab = {
 	}
 }
 
+/* Page in a book
+ * Main page element contains data:
+ * page-id, dirty, and class "page"
+ *
+ * DOM structure:
+ * #main-container
+ *   div.svg-enclosure
+ * 		 svg.book_page  data:page_id data:dirty
+ *       
+ */
+PB.UI.Bookpage = {
+	// makes element accept images on drop
+	makeDroppable: function(el) {
+		$(el).wrapSvg().droppable({
+			  	'hoverClass': "drop-feedback-svg",
+			  	'activeClass': 'drop-feedback-svg',
+			  	'drop': function(event, ui) {
+			  		// when image drops, replace drop element with an image of the same size
+			  		var image_id = $(ui.draggable).data('image_id');
+			  		var imageBroker = PB.book().getImageById(image_id);
+			  		var svgns = "http://www.w3.org/2000/svg";
+			  		var xlns = "http://www.w3.org/1999/xlink";
+			  		try {
+				  		var svg = document.createElementNS(svgns, 'image');
+				  		svg.setAttributeNS(xlns, 'xlink:href', imageBroker.getImageUrl('icon'));
+				  		svg.width.baseVal.value = this.width;
+				  		svg.height.baseVal.value = this.height;
+				  		svg.x.baseVal.value = this.x;
+				  		svg.y.baseVal.value = this.y;
+				  		$(this).replaceWith(svg);
+				  	  $(svg).wrapSvg().addClass("book_image");
+							$(svg).parent('svg').data("dirty", true);	// FIXME, need to find parent.
+				  	  PB.UI.Bookpage.makeDroppable(svg);
+				  	}
+				  	catch(ex)
+				  	{
+				  		console.error(ex.message);
+				  	}
+			  }});
+	},
+	// Loads page from model
+	createPageElement: function(page_id) {
+		var page = PB.book().getPageById(page_id);
+		var el = $(page.html());
+		el.data('page_id', page_id);
+		el.data('dirty', false);
+		$(el).wrapSvg().addClass("book_page");
+		var images = el.find(".book_image").wrapSvg();
+		images.each( function() {
+				PB.UI.Bookpage.makeDroppable(this);
+			});
+		var enclosingDiv = $("<div></div>").addClass('svg-enclosure');
+		enclosingDiv.append(el);
+		var rawEl = el.get(0);
+//		enclosingDiv.width(rawEl.width.baseVal.value).height(rawEl.height.baseVal.value);
+		return enclosingDiv;
+	},
+	setCurrentPage: function(page_id) {
+		// save the old page if possible
+		$("#main-container div.svg-enclosure").each(function() {
+			var dom_page = $(this).children("svg");
+			if (dom_page.data('dirty'))
+			{
+				var book_page = PB.book().getPageById(dom_page.data('page_id'));
+				book_page.setHtml(this.innerHTML);
+				book_page.saveOnServer();
+			}
+		});
+		var svg = this.createPageElement(page_id);
+		svg.appendTo($("#main-container").empty());
+	}
+}
+
 PB.UI.Pagetab = {
 	_init: $(document).ready(function() { PB.UI.Pagetab.init() }),
 	init: function() {
@@ -289,37 +364,6 @@ PB.UI.Pagetab = {
 				}
 			});		
 	},
-	createPageElement: function(page_id) {
-		var page = PB.book().getPageById(page_id);
-		var el = $(page.html());
-		var images = el.find(".book_image").wrapSvg();
-		images.each( function() {
-			  $(this).droppable({
-			  	'hoverClass': "drop-feedback",
-			  	'activeClass': 'drop-feedback',
-			  	'drop': function(event, ui) {
-			  		var image_id = $(ui.draggable).data('image_id');
-			  		var image = PB.book().getImageById(image_id);
-			  		console.log("before");
-			  		var svgns = "http://www.w3.org/2000/svg";
-			  		var xlns = "http://www.w3.org/1999/xlink";
-			  		try {
-				  		var svg = document.createElementNS(svgns, 'image');
-				  		svg.setAttributeNS(xlns, 'xlink:href', image.getImageUrl('icon'));
-				  		svg.width.baseVal.value = this.width;
-				  		svg.height.baseVal.value = this.height;
-				  		svg.x.baseVal.value = this.x;
-				  		svg.y.baseVal.value = this.y;
-				  		$(this).replaceWith(svg);
-				  	}
-				  	catch(ex)
-				  	{
-				  		console.error(ex.message);
-				  	}
-			  }});
-			 });
-		return el;
-	},
 	selectPage: function(page_id) {
 		var self = this;
 		$('#page-list canvas').each(function() {
@@ -329,8 +373,7 @@ PB.UI.Pagetab = {
 					return;
 				else {
 					c.addClass('selected');
-					var svg = self.createPageElement(page_id);
-					svg.appendTo($("#main-container").empty());
+					PB.UI.Bookpage.setCurrentPage(page_id);
 				}
 			}
 			else {

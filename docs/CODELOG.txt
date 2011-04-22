@@ -9,14 +9,23 @@ Next one of these:
 - sample NFC gift app
 
 Next
-Make images belong to user, and be associated with books through images_books table
-Upload images through image broker as they are added
 Need background tasks that warn the user before leaving page (onbeforeunload)
-I need a test framework for models, urls, 
+I need a test framework for models, urls
+Visible progress on image upload. Makes debugging easier
+Delete books
+
+Apr 22
+- Tried to implement drop feedback through CSS on images. Did not work,
+because SVG's CSS is crippled (no box-shadow, etc).
+Saving of photo pages
+- got a bug where SVG is not serialized correctly
+Creating PDFs
+Saving of photos when they were dragged before book was created
 
 Apr 21
-Photo deletion should delete the file too. Test
-Visible progress on image upload. Makes debugging easier
+Photo deletion deletes the file
+Loading images from the server
+Enclosed photo canvases within a div in prep for progress work
 
 Apr 20
 Analyzed Thin, to see if we could stream the requests. It can be done.

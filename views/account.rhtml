@@ -1,10 +1,18 @@
+<script type="application/javascript">
+	function deleteBook(bookId) {
+		$.ajax("/books/" + bookId, {
+			type: "DELETE",
+			success: function() {
+				window.location.reload();
+			}
+		});
+	}
+</script>
 <h1>Your account</h1>
 <hr>
 <p>Username: <%= locals[:user].display_name %></p>
-<p>&nbsp;</p>
 <h2>Books</h2>
 <hr>
-
 <% books = current_user.books %>
 <% if books.size == 0 %>
 	<p>None yet. Would you like to <a href="/editor">make</a> your first?</p>
@@ -15,6 +23,7 @@
 			<th>name</th>
 			<th>created</th>
 			<th>modified</th>
+			<th>actions</th>
 		</tr>
 	</thead>
 <% books.each do |book| %>
@@ -22,7 +31,23 @@
 		<td><a href="/editor/<%= book.id %>"><%= h book.title %></a></td>
 		<td><%= print_datetime book.created_at %></td>
 		<td><%= print_datetime book.updated_at %></td>
+		<td><a href="javascript:deleteBook(<%= book.id %>)">delete</a>
 	</tr>
 <% end%>
 </table>
 <% end %>
+<h2>Photos</h2>
+<hr>
+<table>
+	<thead>
+		<th></th>
+		<th>name</th>
+	</thead>
+<% current_user.photos.each do |photo| %>
+	<tr>
+		<td><img src="<%= photo.url() %>?size=icon" height="128px"></td>
+		<td><%= h photo.display_name %></td>
+	</tr>
+<% end %>
+</table>
+<hr>

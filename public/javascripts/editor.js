@@ -102,8 +102,11 @@
 
 	jQuery.fn.wrapSvg = function() {
 		return this.map(function(i, el) {
-			if ('baseVal' in el.className)
-				return new svgWrapper(el);
+			if (el.namespaceURI == "http://www.w3.org/2000/svg" && 
+				!('_svgEl' in el)) {
+				var x =  new svgWrapper(el);
+				return x;
+			}
 			else
 				return el;
 		});
@@ -130,11 +133,14 @@ $.extend(PB.fn.Timer.prototype, {
 	}
 });
 
-// Helper for measuring hidden dimensions
-// briefly shows all the hidden parents of the element
-// Usage:
-// var hide = new PB.fn.HiddenDimensions(el)
-// http://devblog.foliotek.com/2009/12/07/getting-the-width-of-a-hidden-element-with-jquery-using-width/
+/* Helper for measuring hidden dimensions
+ * briefly shows all the hidden parents of the element
+ * Usage:
+ * var hide = new PB.fn.HiddenDimensions(el)
+ * hide.startMeasure()
+ * hide.endMeasure()
+ * http://devblog.foliotek.com/2009/12/07/getting-the-width-of-a-hidden-element-with-jquery-using-width/
+ */
 PB.fn.ShowForMeasure = function(el) {
 	this.el = $(el);
 };
@@ -238,7 +244,7 @@ PB.fn.Book = function(json) {
 
 // Book represents the photo book
 // Look at constructor for the list of events
-$.extend(PB.fn.Book.prototype, {
+PB.fn.Book.prototype = {
 	
 	images: function() {
 		return this._images;	// return ImageBroker[]
@@ -282,7 +288,7 @@ $.extend(PB.fn.Book.prototype, {
 		console.warn("no such image id " + image_id);
 		return undefined;
 	}
-});
+};
 
 // ImageBrooker
 PB.fn.ImageBroker = function(jsonOrFile) {
@@ -347,8 +353,17 @@ PB.fn.ImageBroker.prototype = {
 			return this._fileUrl;
 		}
 		var url = "/photo/"	+ this._id;
-		if (size)
+		if (size) {
+			if (typeof size == 'number') {
+				if (size < 256)
+					size = 'icon';
+				else if (size < 1280)
+					size = 'display';
+				else
+					size = 'full'
+			}
 			url += "?size=" + size;
+		}
 		return url;	
 	},
 	
@@ -466,21 +481,47 @@ PB.fn.ImageBroker.prototype = {
 };
 
 PB.fn.BookPage = function(json) {
-	$.extend(this, json);
-	this._html = this.html;
-	delete this.html;	// hide that html
-}
+	for (var prop in json)	// make them all private
+		this["_" + prop] = json[prop];
+	this._dirty = false;
+};
 
 PB.fn.BookPage.prototype = {
 	html: function() {
 		return this._html;
 	},
+	get id() {
+		return this._id;
+	},
+	dirty: function() {
+		return this._dirty;
+	},
+	setHtml: function(newHtml) {
+		var imageRe = /<image([^>]*)>/g;
+		// Bug fix, FF does not close svg:image tags
+		// https://bugzilla.mozilla.org/show_bug.cgi?id=652243
+		newHtml = newHtml.replace(imageRe, "<image $1 ></image>");
+		
+		this._html = newHtml;
+		this.setDirty();
+	},
+	setDirty: function() {
+		this._dirty = true;
+	},
+	saveOnServer: function() {
+		if (!this._dirty)
+			return;
+		$.ajax("/book_page/" + this._id, {
+			data: { html: this._html },
+			type: "PUT"
+		});
+	},
 	toCanvas: function(options) {
 		$.extend({
 			desiredHeight: 128
 		}, options);
-		var height = parseFloat(this.height);
-		var width = parseFloat(this.width);
+		var height = parseFloat(this._height);
+		var width = parseFloat(this._width);
 		var scale = options.desiredHeight / height;
 		var canvasWidth = Math.round(width * scale);
 		var canvasHeight = options.desiredHeight;
