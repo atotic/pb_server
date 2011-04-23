@@ -1,25 +1,36 @@
 Next one of these:
-- get real about SVG & image brokers.
-- login
-- save/restore photobook
 - generate PDFs
 - visual layout (menus)
 - image manipulation
-- refactor ajax notices into application UI framework
 - sample NFC gift app
 
 Next
-Need background tasks that warn the user before leaving page (onbeforeunload)
+Bug fixes:
+Image upload progress
+Saving of pages at appropriate times
+Warning before leaving page if something in progress
+Resizing of images
+
 I need a test framework for models, urls
 Visible progress on image upload. Makes debugging easier
-Delete books
+Creating PDFs
+
+Apr 25
+Try rendering to PDFs
+Fix the many shortcuts:
+Progress on image uplad
+- Fix image urls before upload
+- Save pages when we leave the page, etc.
 
 Apr 22
+IMAGE SAVES WORK!
+Regex fix: fixing the image tags
+Fix mangling of the <image> tag in SVG
+Book deletion done. Opted for manually maintaining associations
+Page upload in process
 - Tried to implement drop feedback through CSS on images. Did not work,
 because SVG's CSS is crippled (no box-shadow, etc).
 Saving of photo pages
-- got a bug where SVG is not serialized correctly
-Creating PDFs
 Saving of photos when they were dragged before book was created
 
 Apr 21

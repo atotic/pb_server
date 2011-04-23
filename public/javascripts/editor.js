@@ -287,6 +287,14 @@ PB.fn.Book.prototype = {
 				return this._images[i];
 		console.warn("no such image id " + image_id);
 		return undefined;
+	},
+	getImageByFileUrl: function(url) {
+		if (url == null)
+			return null;
+		for (var i=0; i< this._images.length; i++)
+			if (this._images[i].getFileUrl() == url)
+				return this._images[i];
+		return null;
 	}
 };
 
@@ -298,7 +306,6 @@ PB.fn.ImageBroker = function(jsonOrFile) {
 	else {
 		this._id = this.getTempId();
 		this._file = jsonOrFile;
-		this.img = null;
 	}
 }
 
@@ -348,11 +355,22 @@ PB.fn.ImageBroker.prototype = {
 	// size is 'icon', 'display', 'full'
 	getImageUrl: function(size) {
 		if (this._file) {
-			if (!this._fileUrl)
+			if (!("_fileUrl" in this))
 				this._fileUrl = window.URL.createObjectURL(this._file);
 			return this._fileUrl;
 		}
-		var url = "/photo/"	+ this._id;
+		else 
+			return this.getServerUrl(size);
+	},
+	getFileUrl: function() {
+		if ("_fileUrl" in this)
+			return this._fileUrl;
+		return null;
+	},
+	getServerUrl: function(size) {
+		if ((typeof this._id == "string") && this._id.match(/temp/)) {
+			debugger; // Should throw deferred, so we can wait until image is created
+		}
 		if (size) {
 			if (typeof size == 'number') {
 				if (size < 256)
@@ -362,11 +380,13 @@ PB.fn.ImageBroker.prototype = {
 				else
 					size = 'full'
 			}
-			url += "?size=" + size;
 		}
+		else
+			size = "display";
+		var url = "/photo/"	+ this._id;
+		url += "?size=" + size;
 		return url;	
 	},
-	
 	saveOnServer: function(book_id) {
 		var fd = new FormData();
 		fd.append('display_name', this._file.fileName);
@@ -497,12 +517,33 @@ PB.fn.BookPage.prototype = {
 		return this._dirty;
 	},
 	setHtml: function(newHtml) {
-		var imageRe = /<image([^>]*)>/g;
-		// Bug fix, FF does not close svg:image tags
-		// https://bugzilla.mozilla.org/show_bug.cgi?id=652243
-		newHtml = newHtml.replace(imageRe, "<image $1 ></image>");
-		
-		this._html = newHtml;
+		// HTML needs cleanup of <image> tags:
+		// FF does not close svg:image tags https://bugzilla.mozilla.org/show_bug.cgi?id=652243
+		// FF uses href, not xlink:href
+		// Our src might be local files, change to server location
+		// Bug: we might not know server location until file is saved.
+		// fixing that will be a bitch
+		var split = newHtml.split(/(<image[^>]*>)/im); // use image tags as line separators
+		debugger;
+		for (var i=0; i<split.length; i++) {
+			// split image into components
+			var match = split[i].match(/(<image[^>]*)(href=")([^"]*)(".*)/mi)
+			if (match) {
+				var front = match[1];
+				var href = match[2];
+				var fileLoc = match[3];
+				var back = match[4] + "</image>";
+				href = "xlink:" + href;
+				var possibleImg = PB.book().getImageByFileUrl(fileLoc);
+				if (possibleImg)
+					fileLoc = possibleImg.getServerUrl('display');
+				split[i] = front + href + fileLoc + back;
+			}
+		}
+		var z = split.reduce(function(prev, current, index, arry) {
+			return prev + current;
+		}, "");
+		this._html = z;
 		this.setDirty();
 	},
 	setDirty: function() {
