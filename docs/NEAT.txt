@@ -11,6 +11,7 @@ http://www.trymyui.com/ great UI testing place
 http://www.dafont.com/my-underwood.font - just like an old typewriter font
 Very neat background patterns: http://leaverou.me/css3patterns/#
 39 box shadows, how do they do it: http://www.viget.com/inspire/39-ridiculous-things-to-do-with-css3-box-shadows/
+Gradient editor: http://www.colorzilla.com/gradient-editor/
 
 JS
 HTML5 flipping pages animation: http://studio.html5rocks.com/#Flip

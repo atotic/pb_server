@@ -17,6 +17,7 @@ require 'ruby-debug'
 require 'model/book'
 require 'model/user'
 require 'model/photo'
+require 'jobs/book2pdf'
 
 # logging
 class ColorLogger < Logger
@@ -211,8 +212,9 @@ DataMapper.auto_upgrade!
 class SvegApp < Sinatra::Base
 
 	set :root, File.dirname(__FILE__)
-	set :templates, File.join(settings.root, "templates"); # book template directory
+	set :templates, File.join(settings.root, "book-templates"); # book template directory
 	set :photo_dir, File.join(settings.root, "photo-storage"); # photo storage directory
+	set :book2pdf_dir, File.join(settings.root, "pdf-books"); # generated books
 	set :show_exceptions, true
 
 	helpers do
@@ -422,12 +424,31 @@ class SvegApp < Sinatra::Base
 		end
 	end
 
+	get '/books/:id/pdf' do
+		user_must_be_logged_in
+		book = Book.get(params[:id])
+		user_must_own book
+		send_file book.pdf_path
+	end
+	
+	post '/books/:id/pdf' do
+		book = Book.get(params[:id])
+		user_must_own book
+		BookToPdf.new.process(book.id)
+		if request.xhr?
+			flash.now[:notice] = "<a href='/books/#{book.id}/pdf'>PDF</a> being generated"
+			200
+		else
+			[200, "PDF generation in progress..."]
+		end
+	end
+	
 	# get photo
-	get '/photo/:id' do
+	get '/photos/:id' do
 		user_must_be_logged_in
 		photo = Photo.first(:user_id => current_user.id, :id => params[:id])
 		return [404, "Photo not found"] unless photo
-		send_file(photo.file_path)
+		send_file photo.file_path
 	end
 	
 	# find the photo with the hash

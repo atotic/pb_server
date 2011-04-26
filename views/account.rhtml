@@ -7,6 +7,14 @@
 			}
 		});
 	}
+	function generatePdf(bookId) {
+		$.ajax("/books/" + bookId + "/pdf", {
+			type: "POST",
+			error: function(jqXHR, textStatus, errorThrown) {
+				PB.error("Unexpected server error " + textStatus)
+			}
+		});
+	}
 </script>
 <h1>Your account</h1>
 <hr>
@@ -31,7 +39,12 @@
 		<td><a href="/editor/<%= book.id %>"><%= h book.title %></a></td>
 		<td><%= print_datetime book.created_at %></td>
 		<td><%= print_datetime book.updated_at %></td>
-		<td><a href="javascript:deleteBook(<%= book.id %>)">delete</a>
+		<td>
+<% if book.pdf_path %>
+				<a href="/books/<%= book.id %>/pdf">view pdf</a>
+<% end %>
+				<a href="javascript:generatePdf(<%= book.id %>)">generate pdf</a>
+				<a href="javascript:deleteBook(<%= book.id %>)">delete</a>
 	</tr>
 <% end%>
 </table>

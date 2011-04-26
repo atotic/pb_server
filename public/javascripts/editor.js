@@ -524,7 +524,6 @@ PB.fn.BookPage.prototype = {
 		// Bug: we might not know server location until file is saved.
 		// fixing that will be a bitch
 		var split = newHtml.split(/(<image[^>]*>)/im); // use image tags as line separators
-		debugger;
 		for (var i=0; i<split.length; i++) {
 			// split image into components
 			var match = split[i].match(/(<image[^>]*)(href=")([^"]*)(".*)/mi)

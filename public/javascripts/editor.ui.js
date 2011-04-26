@@ -303,7 +303,7 @@ PB.UI.Bookpage = {
 			  		var xlns = "http://www.w3.org/1999/xlink";
 			  		try {
 				  		var svg = document.createElementNS(svgns, 'image');
-				  		svg.setAttributeNS(xlns, 'xlink:href', imageBroker.getImageUrl('icon'));
+				  		svg.setAttributeNS(xlns, 'xlink:href', imageBroker.getImageUrl('display'));
 				  		svg.width.baseVal.value = this.width;
 				  		svg.height.baseVal.value = this.height;
 				  		svg.x.baseVal.value = this.x;
