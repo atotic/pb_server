@@ -14,6 +14,13 @@ Resizing of images
 I need a test framework for models, urls
 Visible progress on image upload. Makes debugging easier
 Creating PDFs
+Better test framework
+
+Apr 26
+PDFs are getting rendered. I've finally closed the loop!
+Using inkscape to convert from SVG to PDF
+Using some silly python script to join PDFs
+Yay, this is Alpha 1
 
 Apr 25
 Try rendering to PDFs

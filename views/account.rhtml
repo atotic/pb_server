@@ -10,6 +10,9 @@
 	function generatePdf(bookId) {
 		$.ajax("/books/" + bookId + "/pdf", {
 			type: "POST",
+			success: function() {
+				window.location.reload();
+			},
 			error: function(jqXHR, textStatus, errorThrown) {
 				PB.error("Unexpected server error " + textStatus)
 			}

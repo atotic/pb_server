@@ -10,6 +10,13 @@ var PB = {
 //		$('#notice').hide();
 		$('#error').html(text).clearQueue().show('blind');
 	},
+	// shows flash messages from xhr headers
+	showXhrFlash: function(event, jqXHR, ajaxOptions) {
+		var msg = jqXHR.getResponseHeader('X-FlashError');
+		if (msg) PB.error(msg);
+		var msg = jqXHR.getResponseHeader('X-FlashNotice');
+		if (msg) PB.notice(msg);
+	},
 	// progress(val) -- show val
 	// progress(mgs) -- show msg
 	// progress(val, msg) -- show val, msg
@@ -64,6 +71,7 @@ var PB = {
 };
 
 $(document).ready(function() {
+	$(document).ajaxComplete(PB.showXhrFlash)
 	$("#error, #notice").click(function(ev) {
 		// handle clicking on the close box
 		if (ev.pageX - $(ev.currentTarget).offset().left > (ev.currentTarget.offsetWidth - 35))

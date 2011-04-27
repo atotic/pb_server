@@ -430,14 +430,7 @@ PB.Ajax = {
 			});
 			event.preventDefault();
 		});
-		$(document).ajaxComplete(PB.Ajax.showFlashMessages)
 		$(document).ajaxComplete(PB.Ajax.ajaxComplete);
-	},
-	showFlashMessages: function(event, jqXHR, ajaxOptions) {
-		var msg = jqXHR.getResponseHeader('X-FlashError');
-		if (msg) PB.error(msg);
-		var msg = jqXHR.getResponseHeader('X-FlashNotice');
-		if (msg) PB.notice(msg);
 	},
 	ajaxComplete: function(event, jqXHR, ajaxOptions) {
 		var contentType = jqXHR.getResponseHeader("Content-Type");

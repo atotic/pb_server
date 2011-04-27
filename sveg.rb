@@ -444,7 +444,7 @@ class SvegApp < Sinatra::Base
 	end
 	
 	# get photo
-	get '/photos/:id' do
+	get '/photo/:id' do
 		user_must_be_logged_in
 		photo = Photo.first(:user_id => current_user.id, :id => params[:id])
 		return [404, "Photo not found"] unless photo
