@@ -195,13 +195,13 @@ PB.UI.Phototab = {
 	
 	restyleSlider: function() {
 		var hsize = 20;
-		const vsize = 16;
+		var vsize = 16;
 		var allPhotos = $("#photo-list canvas");
 		if (allPhotos.size() == 0) {
 			$("#photo-list-slider").hide();
 			return;
 		}
-		const thumbWidth = 25;
+		var thumbWidth = 25;
 		var maxWidth = $("#photo-list-container").width() - thumbWidth;
 		var naturalSize = allPhotos.size() * hsize;
 		if (naturalSize > maxWidth)
@@ -409,7 +409,7 @@ PB.UI.Pagetab = {
 				max: allPages.size() - 1,
 				value: Math.max(allPages.size() - 2, 0)
 			});
-			const thumbWidth = 25;
+			var thumbWidth = 25;
 			var maxWidth = $("#page-list-container").width() - thumbWidth;
 			var sliderWidth = Math.min(maxWidth, allPages.size() * 20);
 			$("#page-list-slider").css("width", sliderWidth).show();

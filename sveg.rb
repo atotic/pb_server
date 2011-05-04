@@ -199,12 +199,6 @@ class SessionMiddleware
 	end
 end
 
-DataMapper::Model.raise_on_save_failure = true
-# Use either the default Heroku database, or a local sqlite one for development
-DataMapper.setup(:default, ENV['DATABASE_URL'] || "sqlite3://#{Dir.pwd}/development.sqlite")
-DataMapper.finalize
-DataMapper.auto_upgrade!
-#DataMapper.auto_migrate!
 
 #
 # Main application
@@ -212,11 +206,30 @@ DataMapper.auto_upgrade!
 class SvegApp < Sinatra::Base
 
 	set :root, File.dirname(__FILE__)
+	set :test_root, File.join(settings.root, "test")
 	set :templates, File.join(settings.root, "book-templates"); # book template directory
-	set :photo_dir, File.join(settings.root, "photo-storage"); # photo storage directory
-	set :book2pdf_dir, File.join(settings.root, "pdf-books"); # generated books
+
 	set :show_exceptions, true
 
+	def initialize(*args)
+		super(args)
+		DataMapper::Model.raise_on_save_failure = true
+		# Use either the default Heroku database, or a local sqlite one for development
+		database_url = ENV['DATABASE_URL'] || "sqlite3://#{Dir.pwd}/development.sqlite";
+		database_url = "sqlite3://#{Dir.pwd}/test/test.sqlite" if settings.environment == :test
+		DataMapper.setup(:default, database_url)
+		DataMapper.finalize
+		DataMapper.auto_upgrade! # extends tables to match model
+		#DataMapper.auto_migrate!  # blows up database
+		SvegApp.set :photo_dir, File.join(settings.root, "photo-storage"); # photo storage directory
+		SvegApp.set :book2pdf_dir, File.join(settings.root, "pdf-books"); # generated books
+		# Testing setup
+		if settings.environment == :test
+			SvegApp.set :photo_dir, File.join(File.dirname(settings.photo_dir), "test", File.basename(settings.photo_dir))
+			SvegApp.set :book2pdf_dir, File.join(File.dirname(settings.book2pdf_dir), "test", File.basename(settings.book2pdf_dir))
+		end
+	end
+	
 	helpers do
 		include Rack::Utils
 		
@@ -512,6 +525,6 @@ class SvegApp < Sinatra::Base
 	use SvegLogger
 	use SessionMiddleware
 	use Rack::Flash
-	run! if app_file == nil
+	run! if $0 == __FILE__
 
 end

@@ -6,15 +6,55 @@ Next one of these:
 
 Next
 Bug fixes:
-Image upload progress
-Saving of pages at appropriate times
+SVG wrapper does not work, need to implement drag'n'drop myself
 Warning before leaving page if something in progress
 Resizing of images
 
 I need a test framework for models, urls
-Visible progress on image upload. Makes debugging easier
-Creating PDFs
-Better test framework
+Progress framework: image upload, page upload
+Network failure retry
+
+PLAN:
+Goals:
+- UI2: 
+		progress framework: image upload, resume interrupted, etc
+		save book pages at appropriate checkpoints
+		accordion instead of tabs
+    better book page icons
+    button templates & menus
+    do not use jquery UI for UI elements, just functionality (for now, probably eliminate all the way)
+
+- can create interesting books and templates
+  interesting features: colored books, backgrounds, text, rotation
+    pages with different 
+- test framework for ruby
+		rack::test
+- test framework for js
+		selenium 2.0 has ruby drivers http://code.google.com/p/selenium/wiki/RubyBindings
+- resizing of images
+- background jobs - realistic api
+- test everything in chrome too
+
+Stage 1: testing
+What do I want to test?
+Photobook creation: start to finish
+Next:
+Unit tests for HTTP: figure out how to initialize db, 
+
+May 4
+Very preliminary test setup, can test urls
+
+Apr 29
+Installed Selenium IDE to Firefox. Needed beta, since release does not work with FF4
+Figuring out Ruby testing framework
+Will use Rack::Test for Sinatra
+Test::Unit looks nice and simple
+Intro: http://test-unit.rubyforge.org/test-unit/Test/Unit.html
+
+Apr 28
+PHASE 2:
+generating PDFs was awesome, now it is time for phase 2.
+
 
 Apr 26
 PDFs are getting rendered. I've finally closed the loop!
