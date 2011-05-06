@@ -10,10 +10,6 @@ $.extend(PB, {
 		var match = window.location.pathname.match(/editor\/(\d+)/);
 		if (match != null)
 			this.load(match[1]);
-		else {
-			this._book = new PB.fn.Book();
-			PB.UI.bookLoaded(this._book);
-		}
 	},
 
 	book: function() {
@@ -32,14 +28,7 @@ $.extend(PB, {
 		$.ajax({url: "/books/" + id}).then(
 			function(json, status, jqXHR) {
 				try {
-					var oldBook = self._book;
 					self._book=  new PB.fn.Book(json);
-					if (oldBook && oldBook.id == 0)	// transfer the images dropped before
-					{
-						var images = oldBook.images();
-						for (var i =0; i< images.length; i++)
-							self._book.addLocalFileImage(images[i].file);
-					}
 				}
 				catch(e) {
 					alert("Unexpected ajaxComplete error " + e);
@@ -58,7 +47,6 @@ PB.UI = {
 	_init: $(document).ready(function() { PB.UI.init() } ),
 	
 	init: function() {
-		PB.UI.initNavTabs();
 		$(document).bind('drop dragover dragenter dragleave', PB.stopEvent);
 		$(window).resize(function(e) {
 			var newHeight = $(window).height() - $("#header").outerHeight();
@@ -67,39 +55,6 @@ PB.UI = {
 		$(window).resize(); // trigger reflow
 	},
 	
-	initNavTabs: function() {
-		$("#nav-tabs").addClass('ui-corner-all');
-		$("#header nav a").each(function(i, el) {	// all nav anchors
-			$(this).addClass("ui-corner-left ui-widget ui-state-default"); // setup class styling
-			var tab = $("#" + el.href.split('#')[1]);
-			tab.addClass("header-tab ui-corner-all");
-			$(this).click(function() { // and click handler
-				$(this).parent().children().each(function(j, anchor) { // traverse all anchors
-					var tab = $("#" + anchor.href.split('#')[1]);
-					if (el == anchor) { // make clicked element active 
-						$(anchor).addClass("ui-state-active").removeClass("ui-state-default");
-						tab.show();
-						tab.reflowVisible();
-					}
-					else { // deactivate the rest
-						$(anchor).addClass("ui-state-default").removeClass("ui-state-active");
-						tab.hide();
-					}
-				});
-				return false;
-			});
-		});
-		// move tab panes to the right of tabs
-		var style = window.getComputedStyle($('#header > nav').get(0));
-		var width = parseFloat(style.getPropertyValue("width"))
-			+ parseFloat(style.getPropertyValue("margin-left"))
-			+ parseFloat(style.getPropertyValue("border-left-width"))
-			+ parseFloat(style.getPropertyValue("padding-left"));
-		$("#nav-tabs").css("margin-left", Math.floor(width-2) + "px");
-		// select first anchor
-		$("#header nav a").first().click();
-	},
-
 	bookLoaded: function(book) {
 		document.title = "Photobook: " + book.title;
 		// Bind the event handlers
@@ -138,21 +93,22 @@ PB.UI.Phototab = {
 	init: function() {
 		var imageTabDragEvents = {
 				'dragenter': function(e) {
-		//			console.log("dragenter" + e.currentTarget);
+					console.log("dragenter" + e.currentTarget);
 					$("#photos-tab").addClass('drop-feedback');
 					PB.stopEvent(e);	
 				},
 				'dragleave': function(e) {
-		//			console.log("dragleave" + e.currentTarget);
+					console.log("dragleave" + e.currentTarget);
 					$("#photos-tab").removeClass('drop-feedback');
 					PB.stopEvent(e);			
 				},
 				'drop': function(e) {
-		//			console.log("drop" + e.currentTarget);
+					console.log("drop" + e.currentTarget);
 					$("#photos-tab").removeClass('drop-feedback');
 					PB.handleFiles(e.originalEvent.dataTransfer.files);			
 				},
 				'dragover': function(e) {
+					console.log("dragover" + e.currentTarget);
 					$("#photos-tab").addClass('drop-feedback');
 					PB.stopEvent(e);
 				}
@@ -223,10 +179,11 @@ PB.UI.Phototab = {
 	},
 
 	addNewCanvas: function(canvas, img) {
+		var canvasWidth = canvas.width;	// Once appended, width becomes 0 when hidden
 		canvas = $(canvas);
 		var enclosingDiv = $("<div></div>").appendTo('#photo-list');
 		canvas.appendTo(enclosingDiv);
-		enclosingDiv.width(canvas.width());
+		enclosingDiv.width(canvasWidth);
 		canvas.draggable({ 
 				'appendTo': 'body',
 				'containment': 'window',

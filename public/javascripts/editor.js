@@ -67,6 +67,8 @@
 			});	
 	};
 	
+	jQuery.fn.flippy
+	
 	function svgWrapper(el) {
 		this._svgEl = el;
 		this.__proto__ = el;
@@ -111,6 +113,38 @@
 				return el;
 		});
 	};
+	
+	// Creates a "flippy" UI element
+	// state: 'open'|'closed'
+	// flippyContent: content to show when flippy opens
+	// clickEl: element that accepts the click, defaults to flippy
+	jQuery.fn.flippy = function(state, flippyContent, clickEl) {
+		if (this.length == 0)
+			return;
+		var flippy = $(this[0]);
+		flippy.addClass('flippy');
+		flippy.attr('state', state);
+		if (state == 'open')
+			flippyContent.show();
+		else
+			flippyContent.hide();
+		clickEl = clickEl.length == 0 ? flippy : clickEl[0]
+		$(clickEl).click( function(e) {
+			var timing = 100;
+			if (flippy.attr('state') == 'closed') {
+				flippy.attr('state', 'open');
+				flippyContent.show(timing);
+			}
+			else {
+				flippy.attr('state', 'closed');
+				flippyContent.hide(timing);
+			}
+			e.preventDefault();
+		})
+		.css("cursor", "pointer");
+		return this;
+	};
+	
 })(window.jQuery);
 
 

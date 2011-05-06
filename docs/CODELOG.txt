@@ -1,3 +1,4 @@
+Pjo
 Next one of these:
 - generate PDFs
 - visual layout (menus)
@@ -27,19 +28,13 @@ Goals:
 - can create interesting books and templates
   interesting features: colored books, backgrounds, text, rotation
     pages with different 
-- test framework for ruby
-		rack::test
 - test framework for js
 		selenium 2.0 has ruby drivers http://code.google.com/p/selenium/wiki/RubyBindings
 - resizing of images
 - background jobs - realistic api
 - test everything in chrome too
-
-Stage 1: testing
-What do I want to test?
-Photobook creation: start to finish
-Next:
-Unit tests for HTTP: figure out how to initialize db, 
+- test framework for ruby
+		rack::test
 
 May 4
 Very preliminary test setup, can test urls

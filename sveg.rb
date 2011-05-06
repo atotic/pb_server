@@ -69,6 +69,7 @@ end
 LOGGER = ColorLogger.new
 
 # Our sessions
+# Rolled my own to prevent cookie traffic on every response
 class Session
 
 	attr_accessor :user_id
@@ -167,6 +168,7 @@ class Session
 end
 
 # Home grown session middleware
+# have 2 cookies, one for login, one for flash
 class SessionMiddleware
 	@@key = "sveg.session"
 	@@flash_key = "flash.session"
@@ -256,11 +258,11 @@ class SvegApp < Sinatra::Base
 			args.each do |arg|
 				arg = arg.to_s if arg.is_a?(Symbol)
 				if arg.end_with?("js")
-					arg = "jquery-1.5.js" if arg.eql? "jquery.js"
-					arg = "jquery-ui-1.8.9.custom.js" if arg.eql? "jquery-ui.js"
+					arg = "jquery-1.6.js" if arg.eql? "jquery.js"
+					arg = "jquery-ui-1.8.12.custom.js" if arg.eql? "jquery-ui.js"
 					retVal += "<script src='/javascripts/#{arg}'></script>\n"				
 				elsif arg.end_with?("css")
-					arg = "smoothness/jquery-ui-1.8.9.custom.css" if arg.eql? "jquery-ui.css"
+					arg = "smoothness/jquery-ui-1.8.12.custom.css" if arg.eql? "jquery-ui.css"
 					retVal += "<link href='/stylesheets/#{arg}' rel='stylesheet' type='text/css' />"
 				else
 					raise "Unknown asset #{arg}"
@@ -397,11 +399,11 @@ class SvegApp < Sinatra::Base
 		user_must_own book
 		erb :editor
 	end
-	
+		
 	get '/books/new' do
 		user_must_be_logged_in
 		@book = Book.new(current_user, {}, {})
-		erb :book_new
+		erb :book_new, {:layout => :'layout/plain'}
 	end
 
 	delete '/books/:id' do
@@ -427,13 +429,17 @@ class SvegApp < Sinatra::Base
 			Book.transaction do |t|
 				@book = Book.new(current_user, params[:book], params[:template])
 				@book.init_from_template
-				content_type :json
-				"{ \"id\" : #{@book.id} }"
+				if request.xhr?
+					content_type :json
+					"{ \"id\" : #{@book.id} }"
+				else
+					redirect to("/editor/#{@book.id}")
+				end
 			end
 		rescue => ex
 			LOGGER.error(ex.message)
 			flash.now[:error]= "Errors prevented the book from being saved. Please fix them and try again."
-			[400, erb(:book_new)]
+			erb :book_new, {:layout => :'layout/plain'}
 		end
 	end
 

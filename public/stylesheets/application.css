@@ -73,6 +73,10 @@ label, input[type=button], input[type=submit], button { cursor: pointer; }
 button, input, select, textarea { margin: 0; }
 
 /* SVEGPHOTO styling */
+body {
+		font-family: Arial, Helvetica, sans-serif;
+}
+
 h1 {
 	font-size: 133%;
 	margin-top: 0.3em;
@@ -85,7 +89,7 @@ h2 {
 }
 
 #header_bar {
-	background-color: #EEE;
+	background-color: #777;
 }
 #logo {
 	font-family: 'Gruppo', arial, serif;
@@ -100,7 +104,16 @@ h2 {
 	margin-top: 4px;
 }
 #topmenu nav a {
+	margin-right: 6px;
+	color:white;
+	text-decoration: none;
+}
+#topmenu nav a:visited {
+	color: white;
 	margin-right: 4px;
+}
+#topmenu nav a:hover {
+	background: #333;
 }
 
 /* ERRORS & NOTICES */
