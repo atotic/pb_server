@@ -52,7 +52,8 @@
 			return;
 		}
 		var lastChild = this.children().last();
-		var rightmostEdge = lastChild.position().left + lastChild.outerWidth() + Math.abs(parseInt(this.css("margin-left")));
+		var rightmostEdge = lastChild.position().left + lastChild.outerWidth() 
+				+ Math.abs(parseInt(this.css("margin-left")));
 		// Limit scrolling to now show empty space on the right
 		var leftLimit = rightmostEdge - this.parent().width();
 		leftLimit = Math.max(0, leftLimit);
@@ -122,6 +123,7 @@
 		if (this.length == 0)
 			return;
 		var flippy = $(this[0]);
+		// set up initial conditions
 		flippy.addClass('flippy');
 		flippy.attr('state', state);
 		if (state == 'open')
@@ -129,16 +131,18 @@
 		else
 			flippyContent.hide();
 		clickEl = clickEl.length == 0 ? flippy : clickEl[0]
+		// click toggles the state
 		$(clickEl).click( function(e) {
 			var timing = 100;
 			if (flippy.attr('state') == 'closed') {
 				flippy.attr('state', 'open');
-				flippyContent.show(timing);
+				flippyContent.show();	// FIXME jQuery bug, does not hide when has timing
 			}
 			else {
 				flippy.attr('state', 'closed');
-				flippyContent.hide(timing);
+				flippyContent.hide();
 			}
+			e.stopPropagation();
 			e.preventDefault();
 		})
 		.css("cursor", "pointer");
@@ -254,365 +258,128 @@ $.extend(PB.fn.EventBroadcaster.prototype, {
 	}
 });
 
-// Book class
 
-PB.fn.Book = function(json) {
-	if (json) {
-		this.id = json.id;
-		this.title = json.title;
-		this._images = [];
-		this._pages = [];
-		for (var i = 0; i < json.pages.length; i++)
-			this._pages.push(new PB.fn.BookPage(json.pages[i]));
-		for (var i = 0; i < json.photos.length; i++)
-			this._images.push(new PB.fn.ImageBroker(json.photos[i]))
-	}
-	else {
-		this.id = 0;
-		this.title = "";
-		this._images = [];
-		this._pages = [];
-	}
-	$.extend(this, new PB.fn.EventBroadcaster("imageAdded imageRemoved pageAdded"));
+// DeferredFilter is part of DeferredQueue framework
+// filters are notified when job starts/completes
+// see prototype for callback function signatures
+PB.fn.DeferredFilter = function(callbacks) {
+	this.ready = callbacks.ready;
+	this.jobStarted = callbacks.jobStarted;
+	this.jobCompleted = callbacks.jobCompleted;
 };
 
-// Book represents the photo book
-// Look at constructor for the list of events
-PB.fn.Book.prototype = {
-	
-	images: function() {
-		return this._images;	// return ImageBroker[]
-	},
-	pages: function() { // return BookPage[]
-		return this._pages;
-	},
-	
-	firstPage: function() {
-		if (this._pages.length > 0)
-			return this._pages[0];
-		return null;
-	},
-	
-	addLocalFileImage: function (file) {
-		// Check if it matches any already 
-		for (var i=0; i< this._images.length; i++)
-			if (this._images[i].name() == file.fileName) 
-			{
-				PB.notice(file.fileName + " is already in the book.");
-				return;
-			};
-
-		var image = new PB.fn.ImageBroker(file);
-		var pos = this._images.push(image);
-		image.saveOnServer(this.id);
-		this.send('imageAdded', image, pos);
-	},
-		
-	getPageById: function(page_id) {
-		for (var i=0; i<this._pages.length; i++)
-			if (this._pages[i].id == page_id)
-				return this._pages[i];
-		console.warn("no such page id " + page_id);
-	},
-	
-	getImageById: function(image_id) {
-		for (var i=0; i< this._images.length; i++)
-			if (this._images[i].id() == image_id)
-				return this._images[i];
-		console.warn("no such image id " + image_id);
-		return undefined;
-	},
-	getImageByFileUrl: function(url) {
-		if (url == null)
-			return null;
-		for (var i=0; i< this._images.length; i++)
-			if (this._images[i].getFileUrl() == url)
-				return this._images[i];
-		return null;
-	}
-};
-
-// ImageBrooker
-PB.fn.ImageBroker = function(jsonOrFile) {
-	if ('display_name' in jsonOrFile) {
-		this.initFromJson(jsonOrFile);
-	}
-	else {
-		this._id = this.getTempId();
-		this._file = jsonOrFile;
-	}
+PB.fn.DeferredFilter.prototype = {
+	ready: function(queue) {return true;},	// true means job allowed
+	jobStarted: function(deferredJob, queue) {},
+	jobCompleted: function(deferredJob, queue) {}
 }
 
-// ImageBroker represents an image.
-PB.fn.ImageBroker.prototype = {
-
-	tempId: 1,
-	_file: null, // on-disk file
-	_id: null,
-	_fileUrl: null,
-	
-	error: null,
-
-	initFromJson: function(json) {
-		this._id = json.id;
-		this._md5 = json.md5;
-		this._display_name = json.display_name;
-	},
-	
-	destroy: function() {
-		if (this._fileUrl)
-			window.URL.revokeObjectURL(this._fileUrl)
-		this._fileUrl = null;
-	},
-
-	name: function() {
-		if ('_display_name' in this)
-			return this._display_name;
-		else if ('_file' in this)
-			return this._file.fileName;
-		else
-			return "no title";
-	},
-	
-	id: function() {
-		return this._id;
-	},
-	
-	getFile: function() {
-		return _file;
-	},
-	
-	getTempId: function() {
-		return "temp-" + PB.fn.ImageBroker.prototype.tempId++;
-	},
-	
-	// size is 'icon', 'display', 'full'
-	getImageUrl: function(size) {
-		if (this._file) {
-			if (!("_fileUrl" in this))
-				this._fileUrl = window.URL.createObjectURL(this._file);
-			return this._fileUrl;
+PB.getConcurrentFilter = function(maxConcurrent) {
+	var filter = new PB.fn.DeferredFilter({
+		ready: function( queue) {
+			return this.jobCount < this.jobLimit;
+		},
+		jobStarted: function(job, queue) {
+			this.jobCount += 1;
+		},
+		jobCompleted: function(job, queue) {
+			this.jobCount -= 1;
 		}
-		else 
-			return this.getServerUrl(size);
-	},
-	getFileUrl: function() {
-		if ("_fileUrl" in this)
-			return this._fileUrl;
-		return null;
-	},
-	getServerUrl: function(size) {
-		if ((typeof this._id == "string") && this._id.match(/temp/)) {
-			debugger; // Should throw deferred, so we can wait until image is created
-		}
-		if (size) {
-			if (typeof size == 'number') {
-				if (size < 256)
-					size = 'icon';
-				else if (size < 1280)
-					size = 'display';
-				else
-					size = 'full'
-			}
-		}
-		else
-			size = "display";
-		var url = "/photo/"	+ this._id;
-		url += "?size=" + size;
-		return url;	
-	},
-	saveOnServer: function(book_id) {
-		var fd = new FormData();
-		fd.append('display_name', this._file.fileName);
-		fd.append('book_id', book_id);
-		fd.append('photo_file', this._file);
-		var xhr = new XMLHttpRequest();	// not using jQuery, we want to use FormData,
-		var THIS = this;
-		xhr.onreadystatechange = function(evt) {
-			if (xhr.readyState == 1)
-				PB.progressSetup();
-			if (xhr.readyState == 4) {
-		 		if(xhr.status == 200) {
-		 			PB.progress("File uploaded successfully");
-		 			THIS.initFromJson($.parseJSON(xhr.responseText));
-		 		}
-				else
-					console.error("Error saving image");
-			}
-		};
-		xhr.upload.addEventListener("progress", function(evt) {
-			if (evt.lengthComputable)
-				PB.progress(evt.loaded / evt.total);
+	});	
+	filter.jobCount = 0;
+	filter.jobLimit = maxConcurrent;
+	return filter;
+}
+
+PB.getMemorySizeFilter = function(maxSize, ttl) { // bytes, milis
+	var filter = new PB.fn.DeferredFilter({
+		ready: function(queue) {
+			// Remove expired elements
+			var tooOld = Date.now() - this.ttl;
+			this.jobTotals = this.jobTotals.filter(function(el) {
+				return el.endTime > tooOld;
+			});
+			// Calculate the total
+			var total = this.jobTotals.reduce(function(prev, curr, index, arry) {
+				return prev + curr.size;
+			}, 0);
+			return total < this.maxSize;
+		},
+		jobStarted: function(job, queue) {
+		},
+		jobCompleted: function(job, queue) {
+			if ('memory_size' in job)
+				filter.jobTotals.push({ endTime: Date.now(), size: job.memory_size });
 			else
-				PB.progress(-1);
-		}, false);
-		xhr.open("POST", "/photos");
-		xhr.send(fd);
-	},
+				console.warn("job without memory size");
+		}
+	});
+	filter.jobTotals = []; // array of { completed: Time(), size: int }]
+	filter.maxSize = maxSize;
+	filter.ttl = ttl;
+	return filter;
+}
 
-	// md5 returns deferred as computing md5 from disk might take a while
-	getMd5: function() {
-		var deferred = new $.Deferred();
-		if ('_md5' in this)
-			deferred.resolve(this._md5);
-		else if (this._file) {
-				// Compute md5 hash by reading from the file
-				var reader = new FileReader();
-				var THIS = this;
-				reader.onload = function() {
-					var t = new PB.fn.Timer("md5");
-					THIS._md5 = MD5(reader.result);
-					t.end();
-					deferred.resolve(this._md5);
-				}
-				reader.onerror = function() {
-					deferred.reject("File could not be read. Error code " + reader.error);
-				}
-				reader.readAsBinaryString(this._file);
-		}
-		else
-			deferred.reject("No hash, and no file to get it from");
-		return deferred;
+// DeferredJob is part of DeferredQueue framework
+// just like deferred, except it does not execute until start is called
+PB.createDeferredJob = function(name, startFn) {
+	var job = new $.Deferred(function() {
+		this.start = startFn;
+		this.name = name;
+	});
+	return job;
+};
+
+/*
+ * DeferredQueue class
+ * Queues up deferreds for execution. The deferreds have a start method
+ * Deferred queue decides when to execute depending upon filters.
+ * Filters are notified when jobs are started/done
+ */
+PB.fn.DeferredQueue = function(filters) {
+	this._waitJobs = [];
+	this._filters = filters || [];
+	this.timeout = null;
+}
+
+PB.fn.DeferredQueue.prototype = {
+	push: function(deferredJob) {
+		this._waitJobs.push(deferredJob);
+		this.process();
 	},
-	
-	toCanvasFinalize: function(deferred, options, img) {
-		if (this.error != null) {
-			console.log(this.name() + " failed to load");
-			return deferred.rejectWith(document, [this]);
-		}
-		console.log(this.name() + " loaded");
-		// Resize image to canvas
-		var scale = options.desiredHeight / img.naturalHeight;
-		if (scale > 1)
-			scale = 1;
-		var canvasWidth = Math.round(img.naturalWidth * scale);
-		var canvasHeight = options.desiredHeight;
-		var canvas = $("<canvas />")
-			.attr('width', canvasWidth)
-			.attr('height', canvasHeight)
-			.data("image_id", this._id)
-			.each(function(index, el) {
-				el.getContext('2d').drawImage(img, 0,0, canvasWidth, canvasHeight);
-			}).get(0);
-		// Complete callback
-		$(img).unbind();
-		img.src = "";
-		deferred.resolveWith(document, [canvas, this]);
-	},
-	
-	// Copies image to canvas
-	// Returns a deferred. done and fail will get (canvas, img) callbacks
-	// deferred will have memorySize property set to memory footprint of loaded image
-	toCanvas: function(options) {
-		var deferred = new $.Deferred();
-		$.extend({
-			desiredHeight: 128
-		}, options);
-		
+	process: function() {
 		var THIS = this;
-		var img = new Image();
-		$(img).bind({
-			load : function() {
-				deferred.memorySize = 4 * img.width * img.height;
-				THIS.toCanvasFinalize(deferred, options, img);
-//					console.log("Loaded: " + self.name());
-			},
-			error : function(e) {
-				THIS.error = "Image could not be loaded";
-				THIS.toCanvasFinalize(deferred, options, img);
-			},
-			abort: function(e) {
-				THIS.error = "Image loading was aborted";
-				THIS.toCanvasFinalize(deferred, options, img);
-			}
-		});
-		PB.ImageLoadQueue.push(deferred, function() {
-//	console.log("Started: " + self.name());
-			img.src = THIS.getImageUrl(options.desiredHeight)
-		});
-		return deferred;
-	}
-};
-
-PB.fn.BookPage = function(json) {
-	for (var prop in json)	// make them all private
-		this["_" + prop] = json[prop];
-	this._dirty = false;
-};
-
-PB.fn.BookPage.prototype = {
-	html: function() {
-		return this._html;
-	},
-	get id() {
-		return this._id;
-	},
-	dirty: function() {
-		return this._dirty;
-	},
-	setHtml: function(newHtml) {
-		// HTML needs cleanup of <image> tags:
-		// FF does not close svg:image tags https://bugzilla.mozilla.org/show_bug.cgi?id=652243
-		// FF uses href, not xlink:href
-		// Our src might be local files, change to server location
-		// Bug: we might not know server location until file is saved.
-		// fixing that will be a bitch
-		var split = newHtml.split(/(<image[^>]*>)/im); // use image tags as line separators
-		for (var i=0; i<split.length; i++) {
-			// split image into components
-			var match = split[i].match(/(<image[^>]*)(href=")([^"]*)(".*)/mi)
-			if (match) {
-				var front = match[1];
-				var href = match[2];
-				var fileLoc = match[3];
-				var back = match[4] + "</image>";
-				href = "xlink:" + href;
-				var possibleImg = PB.book().getImageByFileUrl(fileLoc);
-				if (possibleImg)
-					fileLoc = possibleImg.getServerUrl('display');
-				split[i] = front + href + fileLoc + back;
-			}
+		while (this._waitJobs.length > 0 
+			&& this._filters.every(function(el) { return el.ready(THIS);})
+			) {
+			this.execute(this._waitJobs.shift());
 		}
-		var z = split.reduce(function(prev, current, index, arry) {
-			return prev + current;
-		}, "");
-		this._html = z;
-		this.setDirty();
+		// Set up heartbeat if there are outstanding jobs
+		if (this._waitJobs.length > 0 && this.timeout == null) {
+			var THIS = this;
+			THIS.timeout = window.setTimeout(function() {
+				THIS.timeout = null;
+				THIS.process();
+			}, 1000);
+		}
 	},
-	setDirty: function() {
-		this._dirty = true;
-	},
-	saveOnServer: function() {
-		if (!this._dirty)
-			return;
-		$.ajax("/book_page/" + this._id, {
-			data: { html: this._html },
-			type: "PUT"
+	execute: function(deferredJob) {
+		var THIS = this;
+		// Notify filters that job is starting
+		this._filters.forEach(function(filter) {
+			filter.jobStarted(deferredJob, THIS);
 		});
-	},
-	toCanvas: function(options) {
-		$.extend({
-			desiredHeight: 128
-		}, options);
-		var height = parseFloat(this._height);
-		var width = parseFloat(this._width);
-		var scale = options.desiredHeight / height;
-		var canvasWidth = Math.round(width * scale);
-		var canvasHeight = options.desiredHeight;
-		var canvas = $("<canvas />")
-			.attr('width', canvasWidth)
-			.attr('height', canvasHeight).get(0);
-		var c2d = canvas.getContext('2d');
-		c2d.fillStyle = 'blue';
-		c2d.rect(1,1, canvasWidth - 2, canvasHeight -2);
-		c2d.fill();
-		c2d.stroke();
-		c2d.rect(10,10,10,10);
-		c2d.rect(50,100,20,20);
-		c2d.stroke();
-		return canvas;
+		// Notify filters when job completes
+		deferredJob.always(function() {
+			THIS._filters.forEach(function(filter) {
+				filter.jobCompleted(deferredJob, THIS);
+			});
+			THIS.process();
+		});
+		// start the job
+		deferredJob.start();
 	}
-};
+}
 
 // Image loading queue
 // Limits how many images:
@@ -623,81 +390,10 @@ PB.fn.BookPage.prototype = {
 //   4928 x 3264 x 4 = 60MB undecoded.
 // 	 TestPix loads 100 images in 64s
 // gfx/surface/image cache can still grow to 1.X
+PB.ImageLoadQueue = new PB.fn.DeferredQueue([
+	PB.getConcurrentFilter(2),
+	PB.getMemorySizeFilter(600 * 1048576, // 600MB
+		10 * 1000 // 10seconds
+		)
+]);
 
-PB.ImageLoadQueue = {
-	activeLimit: 20,
-	liveLimit: 1,	// concurrent image loads
-	timeLimit: 10, // how long do we count a job to hold image in memory
-	imageCacheLimit: 600 * 1048576,	// 600MB
-	active: [],	// Array of [deferred, timeExpires, live, size]
-	waiting: [], // Array of [deferred, fn]
-	
-	activeObject: function(deferred) {
-		this.deferred = deferred;
-		this.size = 0;
-		this.expireTime = Date.now() + PB.ImageLoadQueue.timeLimit * 1000;
-		this.live = true;
-		this.memorySize = 0;
-	},
-	push: function(deferred, fn) {
-		this.waiting.push([deferred, fn]);
-		this.process();
-	},
-	execute: function(deferred, fn) {
-		this.active.push(new this.activeObject(deferred));
-		var self = this;
-		deferred.done(function() {
-			// Mark job as inactive
-			for (var i=0; i< self.active.length; i++)
-				if (self.active[i].deferred == deferred) {
-					self.active[i].live = false;
-					if ('memorySize' in deferred)
-						self.active[i].memorySize = deferred.memorySize;
-			}
-			self.timer.imagesLoaded += 1;
-			self.process(); // Process any new jobs
-		});
-		fn();
-	},
-	process: function() {
-		if (! ("timer" in this )) {
-			this.timer = new PB.fn.Timer("Image queue").start();
-			this.timer.imagesLoaded = 0;
-		}
-		// remove inactive jobs
-		var expiry = Date.now();
-		var liveJobs = 0;
-		var imageCacheSize = 0;
-		for (var i=0; i< this.active.length; i++) {
-			// Remove inactive/expired jobs
-			if (this.active[i].expireTime < expiry) { 
-				this.active.splice(i, 1);
-				i -= 1;
-			}
-			else {
-				imageCacheSize += this.active[i].memorySize;
-				// Count live jobs
-				if (this.active[i].live)
-					liveJobs += 1;
-			}
-		}
-		// Fill up the work queue
-//		console.log("Waiting:" + this.waiting.length + " Active:" + this.active.length + " imageCacheSize:" + imageCacheSize + " liveJobs:" + liveJobs);
-		while (this.waiting.length > 0
-				&& this.active.length < this.activeLimit
-				&& imageCacheSize < this.imageCacheLimit
-				&& liveJobs < this.liveLimit) {
-			var rec = this.waiting.shift();
-			this.execute(rec[0], rec[1]);
-			liveJobs += 1;
-		}
-		// Set up heartbeat if no jobs complete and call us back
-		if (this.waiting.length > 0 && liveJobs == 0) {
-			var self = this;
-			window.setTimeout(function() {
-				self.process();
-			}, 1000);
-		}
-//		this.timer.end("LIQ::process, images " + this.timer.imagesLoaded + " executed in ");
-	}
-};

@@ -2,7 +2,7 @@
 <html>
 <head>
 	<title>Photobook</title>
-	<%= asset_link("jquery.js", "jquery-ui.js", "application.js", "editor.js", "editor.ui.js") %>
+	<%= asset_link("jquery.js", "jquery-ui.js", "application.js", "editor.js", "editor.model.js", "editor.ui.js") %>
 	<%= asset_link("jquery-ui.css", "application.css") %>
 </head>
 <body>
@@ -44,7 +44,7 @@
 <input type="file" id="file-dialog" multiple="true" accept="image/*" style="display:none">
 <div id="content-slab">
 	<div class="slab_top">
-		<div class="slab_title">
+		<div class="slab_title" style="padding-left:32px">
 			Page
 		</div>
 		<div class="slab_tools">
@@ -78,6 +78,8 @@ body {
 }
 .flippy {
 	padding: 0 10px 0 10px;
+	font-size: 20px;
+	font-weight: normal;
 	width:16px;
 }
 .flippy[state="closed"]:after {
@@ -95,11 +97,12 @@ body {
 	background: linear-gradient(top, #EEE 0%,#AAA 100%);
 	background: -moz-linear-gradient(top, #AAA 0%,#EEE 100%);
 	font-family: arial, serif;
-	padding: 6px 0 6px;
+	padding: 2px 0 2px;
 }
 .slab_title {
 	display: inline-block;
-	font-size: 116%;
+	font-size: 100%;
+	font-weight: bold;
 	width: 150px;
 }
 .slab_tools {

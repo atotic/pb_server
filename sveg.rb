@@ -319,6 +319,10 @@ class SvegApp < Sinatra::Base
 		redirect "/auth/login"
 	end
 	
+	get '/test/:id' do
+		erb :"test/#{params[:id]}"	
+	end
+	
 	get '/account' do
 		user_must_be_logged_in
 		targetuser = current_user

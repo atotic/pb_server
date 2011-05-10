@@ -93,22 +93,22 @@ PB.UI.Phototab = {
 	init: function() {
 		var imageTabDragEvents = {
 				'dragenter': function(e) {
-					console.log("dragenter" + e.currentTarget);
+//					console.log("dragenter" + e.currentTarget);
 					$("#photos-tab").addClass('drop-feedback');
 					PB.stopEvent(e);	
 				},
 				'dragleave': function(e) {
-					console.log("dragleave" + e.currentTarget);
+//					console.log("dragleave" + e.currentTarget);
 					$("#photos-tab").removeClass('drop-feedback');
 					PB.stopEvent(e);			
 				},
 				'drop': function(e) {
-					console.log("drop" + e.currentTarget);
+//					console.log("drop" + e.currentTarget);
 					$("#photos-tab").removeClass('drop-feedback');
 					PB.handleFiles(e.originalEvent.dataTransfer.files);			
 				},
 				'dragover': function(e) {
-					console.log("dragover" + e.currentTarget);
+//					console.log("dragover" + e.currentTarget);
 					$("#photos-tab").addClass('drop-feedback');
 					PB.stopEvent(e);
 				}

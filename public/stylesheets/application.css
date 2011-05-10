@@ -88,6 +88,19 @@ h2 {
 	margin: 0.8em auto 0.2em auto;
 }
 
+a {
+	color:blue;
+	text-decoration: none;
+}
+a:visited {
+	color:blue;
+}
+
+.drop-feedback {
+	box-shadow: inset 0px 0px 15px #61A326;
+}
+
+/* HEADER */
 #header_bar {
 	background-color: #777;
 }

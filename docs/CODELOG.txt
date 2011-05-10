@@ -1,29 +1,17 @@
-Pjo
-Next one of these:
-- generate PDFs
-- visual layout (menus)
-- image manipulation
-- sample NFC gift app
-
 Next
 Bug fixes:
-SVG wrapper does not work, need to implement drag'n'drop myself
-Warning before leaving page if something in progress
-Resizing of images
-
-I need a test framework for models, urls
-Progress framework: image upload, page upload
-Network failure retry
 
 PLAN:
 Goals:
 - UI2: 
+    image resizing on server
 		progress framework: image upload, resume interrupted, etc
 		save book pages at appropriate checkpoints
-		accordion instead of tabs
+		Warning before leaving page if something in progress
     better book page icons
     button templates & menus
     do not use jquery UI for UI elements, just functionality (for now, probably eliminate all the way)
+		SVG wrapper does not work, need to implement drag'n'drop myself
 
 - can create interesting books and templates
   interesting features: colored books, backgrounds, text, rotation
@@ -33,8 +21,20 @@ Goals:
 - resizing of images
 - background jobs - realistic api
 - test everything in chrome too
-- test framework for ruby
-		rack::test
+
+May 9
+
+May 6
+Ran into bugs: jquery.show(100) does not work. My deferred jobs get lost.
+Redoing the Deferred Jobs architecture.
+
+Drop images
+Better book saving
+Menus/buttons http://www.1stwebdesigner.com/css/38-jquery-and-css-drop-down-multi-level-menu-solutions/
+
+May 5
+Redoing the UI to slab style. Visual is there, restoring functionality.
+Upgraded jquery to 1.6
 
 May 4
 Very preliminary test setup, can test urls

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Test: Deferred</title>
+	<%= asset_link("jquery.js", "application.js", "editor.js", "editor.model.js") %>
+	<%= asset_link("application.css") %>
+</head>
+<body>
+<h1>Test: Deferred</h1>
+<script>
+
+	function queueJobs(queue, n) {
+		for (var i=0; i< n; i++) 
+		{
+			var job = PB.createDeferredJob("Job " + i, function() {
+				console.log(this.name + " started");
+				var THIS = this;
+				window.setTimeout(function() {
+					console.log(THIS.name + " ended");
+					THIS.memory_size = Math.floor(Math.random() * 5);
+					THIS.resolve();
+				});
+			});
+			queue.push(job);
+		}
+	}
+	function queue100Jobs(queue) {
+		queueJobs(queue, 100);
+	}
+
+	function getConcurrentFilter(maxConcurrent) {
+		var filter = new PB.fn.DeferredFilter({
+			ready: function( queue) {
+//				if (!this.jobCount < this.jobLimit) console.log("concurrent not ready");
+				return this.jobCount < this.jobLimit;
+			},
+			jobStarted: function(job, queue) {
+				this.jobCount += 1;
+			},
+			jobCompleted: function(job, queue) {
+				this.jobCount -= 1;
+			}
+		});	
+		filter.jobCount = 0;
+		filter.jobLimit = maxConcurrent;
+		return filter;
+	}
+
+	function getMemorySizeFilter(maxSize, ttl) { // bytes, milis
+		var filter = new PB.fn.DeferredFilter({
+			ready: function(queue) {
+				// Remove expired elements
+				var tooOld = Date.now() - this.ttl;
+				this.jobTotals = this.jobTotals.filter(function(el) {
+					return el.endTime > tooOld;
+				});
+				// Calculate the total
+				var total = this.jobTotals.reduce(function(prev, curr, index, arry) {
+					return prev + curr.size;
+				}, 0);
+	//			console.log(Date.now() + "memoryFilter " + this.jobTotals.length + " items. Max: " + this.maxSize + ", total:" + total);
+				return total < this.maxSize;
+			},
+			jobStarted: function(job, queue) {
+			},
+			jobCompleted: function(job, queue) {
+				filter.jobTotals.push({ endTime: Date.now(), size: job.memory_size });
+			}
+		});
+		filter.jobTotals = []; // array of { completed: Time(), size: int }]
+		filter.maxSize = maxSize;
+		filter.ttl = ttl;
+		return filter;
+	}
+
+	function test_justQueue() {
+		var queue = new PB.fn.DeferredQueue([]);
+		queue100Jobs(queue);
+	}
+
+	function test_concurrentFilter() {
+		var queue = new PB.fn.DeferredQueue([ getConcurrentFilter(5) ]);
+		queue100Jobs(queue);
+	}
+
+	function test_memorySizeFilter() {
+		var memorySizeFilter = getMemorySizeFilter(10, 5000);
+		var queue = new PB.fn.DeferredQueue([ memorySizeFilter]);
+		queueJobs(queue, 5);
+		window.setTimeout(function() {
+			queueJobs(queue, 100);
+		}, 50);
+	};
+
+	function test_deferreds() {
+		var deferreds = [];
+		for (var i=0; i< 100; i++)
+			deferreds.push(PB.fn.createDeferredJob("Job " +i, function() {
+				var THIS = this;
+				window.setTimeout( function() {
+					THIS.resolve();
+				});
+			}));
+//			deferreds.push($.Deferred());
+		console.log('deferred[0].isResolved ', deferreds[0].isResolved());
+		console.log('deferred[1].isResolved ', deferreds[1].isResolved());
+		deferreds[0].start();
+		deferreds[1].start();
+		window.setTimeout( function() {
+			console.log('deferred[0].isResolved ', deferreds[0].isResolved());
+			console.log('deferred[1].isResolved ', deferreds[1].isResolved());
+			console.log('deferred[2].isResolved ', deferreds[2].isResolved());
+		});
+	}
+	
+	function test_combo() {
+		var memorySizeFilter = getMemorySizeFilter(10, 5000);
+		var concurrentFilter = getConcurrentFilter(5);
+		var queue = new PB.fn.DeferredQueue([memorySizeFilter, concurrentFilter]);
+		queue100Jobs(queue);
+	}
+	test_combo();
+</script>
+</body>

@@ -22,12 +22,13 @@
 <h1>Your account</h1>
 <hr>
 <p>Username: <%= locals[:user].display_name %></p>
-<h2>Books</h2>
+<h2>Books <a href='/books/new'>[new]</a></h2>
 <hr>
 <% books = current_user.books %>
 <% if books.size == 0 %>
-	<p>None yet. Would you like to <a href="/editor">make</a> your first?</p>
+	<p>None yet. Would you like to <a href="/books/new">make</a> your first?</p>
 <% else %>
+<p></p>
 <table>
 	<thead>
 		<tr>
