@@ -319,6 +319,10 @@ class SvegApp < Sinatra::Base
 		redirect "/auth/login"
 	end
 	
+	get '/debugger' do
+		debugger
+	end
+	
 	get '/test/:id' do
 		erb :"test/#{params[:id]}"	
 	end
@@ -361,18 +365,14 @@ class SvegApp < Sinatra::Base
 			flash.now[:error]="User id cannot be blank"
 			return erb :login, :layout => :'layout/plain'
 		end
-
 		authlogin = AuthLogin.get(login_id)
 		nextPage = :login
 		if !authlogin
 		# no login, create new user
 			begin
 				User.transaction do |t|
-					user = User.new({:display_name => login_id})
-					user.is_administrator = true if login_id.eql? "atotic"
-					user.save
-					auth = AuthLogin.new({:login_id => login_id, :user_id => user.id} )
-					auth.save
+					auth = AuthLogin.create(login_id)
+					user = auth.user
 					env['rack.session'].user_id = user.id
 					flash[:notice]="Created a new account"
 				end
@@ -380,7 +380,7 @@ class SvegApp < Sinatra::Base
 			rescue => ex
 				LOGGER.error(ex.message)
 				flash[:error]="Unexpected error creating the user"
-				redirect to("/login")
+				redirect to("/auth/login")
 			end
 		else
 		# login exists, just log in
@@ -471,10 +471,10 @@ class SvegApp < Sinatra::Base
 		user_must_be_logged_in
 		photo = Photo.first(:user_id => current_user.id, :id => params[:id])
 		return [404, "Photo not found"] unless photo
-		send_file photo.file_path
+		send_file photo.file_path(params[:size])
 	end
 	
-	# find the photo with the hash
+	# find the photo with the hash -- unused
 	get '/photos/md5/:md5hash' do
 		user_must_be_logged_in
 		if (params[:md5hash])
@@ -497,7 +497,7 @@ class SvegApp < Sinatra::Base
 			photo.user_id = current_user.id
 			Photo.transaction do |t|
 				# save photo_file
-				PhotoStorage.storeFile(photo, photo_file ) if photo_file
+				PhotoStorage.storeFile(photo, photo_file[:tempfile].path ) if photo_file
 				photo.save
 				# if there are duplicate photos, destroy this one, and use duplicate instead
 				dup = Photo.first(:user_id => photo.user_id, :md5 => photo.md5, :id.not => photo.id)

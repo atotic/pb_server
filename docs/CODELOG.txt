@@ -15,14 +15,25 @@ Goals:
 
 - can create interesting books and templates
   interesting features: colored books, backgrounds, text, rotation
-    pages with different 
 - test framework for js
 		selenium 2.0 has ruby drivers http://code.google.com/p/selenium/wiki/RubyBindings
 - resizing of images
-- background jobs - realistic api
+- background jobs - realistic api: image resizing after upload
 - test everything in chrome too
 
+May 10
+Implemented rake db:clean
+rake environment RACK_ENV=development|test db:clean 
+Implementing image resize on demand. Want to test it with unit tests
+Working on test/helper/seed
+Busy day: had to deal with well digging, getting birth certificate, loan refinancing, linda loan
+
 May 9
+Redid the DeferredQueue architecture. Like it. Made the image loading bug trivial to fix
+Have initial javascript unit tests.
+I do not like my PB.blah/blah naming scheme.
+All functions get lumped under PB.
+PB.fn is for objects, got rid of it
 
 May 6
 Ran into bugs: jquery.show(100) does not work. My deferred jobs get lost.

@@ -1,15 +1,15 @@
 // Book class
 
-PB.fn.Book = function(json) {
+PB.Book = function(json) {
 	if (json) {
 		this.id = json.id;
 		this.title = json.title;
 		this._images = [];
 		this._pages = [];
 		for (var i = 0; i < json.pages.length; i++)
-			this._pages.push(new PB.fn.BookPage(json.pages[i]));
+			this._pages.push(new PB.BookPage(json.pages[i]));
 		for (var i = 0; i < json.photos.length; i++)
-			this._images.push(new PB.fn.ImageBroker(json.photos[i]))
+			this._images.push(new PB.ImageBroker(json.photos[i]))
 	}
 	else {
 		this.id = 0;
@@ -17,12 +17,12 @@ PB.fn.Book = function(json) {
 		this._images = [];
 		this._pages = [];
 	}
-	$.extend(this, new PB.fn.EventBroadcaster("imageAdded imageRemoved pageAdded"));
+	$.extend(this, new PB.EventBroadcaster("imageAdded imageRemoved pageAdded"));
 };
 
 // Book represents the photo book
 // Look at constructor for the list of events
-PB.fn.Book.prototype = {
+PB.Book.prototype = {
 	
 	images: function() {
 		return this._images;	// return ImageBroker[]
@@ -46,7 +46,7 @@ PB.fn.Book.prototype = {
 				return;
 			};
 
-		var image = new PB.fn.ImageBroker(file);
+		var image = new PB.ImageBroker(file);
 		var pos = this._images.push(image);
 		image.saveOnServer(this.id);
 		this.send('imageAdded', image, pos);
@@ -77,7 +77,7 @@ PB.fn.Book.prototype = {
 };
 
 // ImageBrooker
-PB.fn.ImageBroker = function(jsonOrFile) {
+PB.ImageBroker = function(jsonOrFile) {
 	if ('display_name' in jsonOrFile) {
 		this.initFromJson(jsonOrFile);
 	}
@@ -88,7 +88,7 @@ PB.fn.ImageBroker = function(jsonOrFile) {
 }
 
 // ImageBroker represents an image.
-PB.fn.ImageBroker.prototype = {
+PB.ImageBroker.prototype = {
 
 	tempId: 1,
 	_file: null, // on-disk file
@@ -127,7 +127,7 @@ PB.fn.ImageBroker.prototype = {
 	},
 	
 	getTempId: function() {
-		return "temp-" + PB.fn.ImageBroker.prototype.tempId++;
+		return "temp-" + PB.ImageBroker.prototype.tempId++;
 	},
 	
 	// size is 'icon', 'display', 'full'
@@ -204,7 +204,7 @@ PB.fn.ImageBroker.prototype = {
 				var reader = new FileReader();
 				var THIS = this;
 				reader.onload = function() {
-					var t = new PB.fn.Timer("md5");
+					var t = new PB.Timer("md5");
 					THIS._md5 = MD5(reader.result);
 					t.end();
 					deferred.resolve(this._md5);
@@ -277,13 +277,13 @@ PB.fn.ImageBroker.prototype = {
 	}
 };
 
-PB.fn.BookPage = function(json) {
+PB.BookPage = function(json) {
 	for (var prop in json)	// make them all private
 		this["_" + prop] = json[prop];
 	this._dirty = false;
 };
 
-PB.fn.BookPage.prototype = {
+PB.BookPage.prototype = {
 	html: function() {
 		return this._html;
 	},

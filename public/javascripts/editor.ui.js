@@ -2,7 +2,7 @@
 //
 // PB global functions
 //
-$.extend(PB, new PB.fn.EventBroadcaster("docLoaded"));
+$.extend(PB, new PB.EventBroadcaster("docLoaded"));
 
 $.extend(PB, {
 	_init: $(document).ready(function() { PB.init() }),
@@ -28,7 +28,7 @@ $.extend(PB, {
 		$.ajax({url: "/books/" + id}).then(
 			function(json, status, jqXHR) {
 				try {
-					self._book=  new PB.fn.Book(json);
+					self._book=  new PB.Book(json);
 				}
 				catch(e) {
 					alert("Unexpected ajaxComplete error " + e);

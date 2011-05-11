@@ -25,7 +25,7 @@
 				var cb = $(this).data('reflow-visible');
 				if (!cb)
 					return;
-				var showHelper = new PB.fn.ShowForMeasure(this);
+				var showHelper = new PB.ShowForMeasure(this);
 //				console.log('reflow performed ' + immediate);
 				showHelper.startMeasure();
 				try {
@@ -67,9 +67,7 @@
 				duration: 200
 			});	
 	};
-	
-	jQuery.fn.flippy
-	
+		
 	function svgWrapper(el) {
 		this._svgEl = el;
 		this.__proto__ = el;
@@ -153,12 +151,12 @@
 
 
 // Timer utility class
-PB.fn.Timer = function(name) {
+PB.Timer = function(name) {
 	this.startMili = Date.now();
 	this.endMili = this.startMili;
 	this.name = name;
 }
-$.extend(PB.fn.Timer.prototype, {
+$.extend(PB.Timer.prototype, {
 	start: function() {
 		this.startMili = Date.now();
 		return this;
@@ -174,16 +172,16 @@ $.extend(PB.fn.Timer.prototype, {
 /* Helper for measuring hidden dimensions
  * briefly shows all the hidden parents of the element
  * Usage:
- * var hide = new PB.fn.HiddenDimensions(el)
+ * var hide = new PB.HiddenDimensions(el)
  * hide.startMeasure()
  * hide.endMeasure()
  * http://devblog.foliotek.com/2009/12/07/getting-the-width-of-a-hidden-element-with-jquery-using-width/
  */
-PB.fn.ShowForMeasure = function(el) {
+PB.ShowForMeasure = function(el) {
 	this.el = $(el);
 };
 
-PB.fn.ShowForMeasure.prototype = {
+PB.ShowForMeasure.prototype = {
 	props:	{ position: 'absolute', visibility: 'hidden', display: 'block' },
 	startMeasure: function() {
 		this.hiddenParents = this.el.parents().andSelf().not(':visible').get();
@@ -209,13 +207,13 @@ PB.fn.ShowForMeasure.prototype = {
 // Usage:
 // function MyBroadcaster() {
 //		...your init code here ....
-//   $.extend(this, new PB.fn.EventBroadcaster("docLoaded"));
+//   $.extend(this, new PB.EventBroadcaster("docLoaded"));
 // }
 // Listeners can bind & unbind.
 // Send events:
 // this.send('docLoaded', doc);
 
-PB.fn.EventBroadcaster = function(eventList) {
+PB.EventBroadcaster = function(eventList) {
 	this.listeners = {};
 	var that = this;
 	eventList.split(' ').forEach( function(val, index, arr) {
@@ -223,7 +221,7 @@ PB.fn.EventBroadcaster = function(eventList) {
 	});
 };
 
-$.extend(PB.fn.EventBroadcaster.prototype, {
+$.extend(PB.EventBroadcaster.prototype, {
 	bind: function(eventType, handler) {
 		if (!eventType in this.listeners)
 			throw "unknown event type " + eventType;
@@ -262,20 +260,20 @@ $.extend(PB.fn.EventBroadcaster.prototype, {
 // DeferredFilter is part of DeferredQueue framework
 // filters are notified when job starts/completes
 // see prototype for callback function signatures
-PB.fn.DeferredFilter = function(callbacks) {
+PB.DeferredFilter = function(callbacks) {
 	this.ready = callbacks.ready;
 	this.jobStarted = callbacks.jobStarted;
 	this.jobCompleted = callbacks.jobCompleted;
 };
 
-PB.fn.DeferredFilter.prototype = {
+PB.DeferredFilter.prototype = {
 	ready: function(queue) {return true;},	// true means job allowed
 	jobStarted: function(deferredJob, queue) {},
 	jobCompleted: function(deferredJob, queue) {}
 }
 
 PB.getConcurrentFilter = function(maxConcurrent) {
-	var filter = new PB.fn.DeferredFilter({
+	var filter = new PB.DeferredFilter({
 		ready: function( queue) {
 			return this.jobCount < this.jobLimit;
 		},
@@ -292,7 +290,7 @@ PB.getConcurrentFilter = function(maxConcurrent) {
 }
 
 PB.getMemorySizeFilter = function(maxSize, ttl) { // bytes, milis
-	var filter = new PB.fn.DeferredFilter({
+	var filter = new PB.DeferredFilter({
 		ready: function(queue) {
 			// Remove expired elements
 			var tooOld = Date.now() - this.ttl;
@@ -336,13 +334,13 @@ PB.createDeferredJob = function(name, startFn) {
  * Deferred queue decides when to execute depending upon filters.
  * Filters are notified when jobs are started/done
  */
-PB.fn.DeferredQueue = function(filters) {
+PB.DeferredQueue = function(filters) {
 	this._waitJobs = [];
 	this._filters = filters || [];
 	this.timeout = null;
 }
 
-PB.fn.DeferredQueue.prototype = {
+PB.DeferredQueue.prototype = {
 	push: function(deferredJob) {
 		this._waitJobs.push(deferredJob);
 		this.process();
@@ -390,7 +388,7 @@ PB.fn.DeferredQueue.prototype = {
 //   4928 x 3264 x 4 = 60MB undecoded.
 // 	 TestPix loads 100 images in 64s
 // gfx/surface/image cache can still grow to 1.X
-PB.ImageLoadQueue = new PB.fn.DeferredQueue([
+PB.ImageLoadQueue = new PB.DeferredQueue([
 	PB.getConcurrentFilter(2),
 	PB.getMemorySizeFilter(600 * 1048576, // 600MB
 		10 * 1000 // 10seconds

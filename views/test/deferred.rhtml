@@ -29,7 +29,7 @@
 	}
 
 	function getConcurrentFilter(maxConcurrent) {
-		var filter = new PB.fn.DeferredFilter({
+		var filter = new PB.DeferredFilter({
 			ready: function( queue) {
 //				if (!this.jobCount < this.jobLimit) console.log("concurrent not ready");
 				return this.jobCount < this.jobLimit;
@@ -47,7 +47,7 @@
 	}
 
 	function getMemorySizeFilter(maxSize, ttl) { // bytes, milis
-		var filter = new PB.fn.DeferredFilter({
+		var filter = new PB.DeferredFilter({
 			ready: function(queue) {
 				// Remove expired elements
 				var tooOld = Date.now() - this.ttl;
@@ -74,18 +74,18 @@
 	}
 
 	function test_justQueue() {
-		var queue = new PB.fn.DeferredQueue([]);
+		var queue = new PB.DeferredQueue([]);
 		queue100Jobs(queue);
 	}
 
 	function test_concurrentFilter() {
-		var queue = new PB.fn.DeferredQueue([ getConcurrentFilter(5) ]);
+		var queue = new PB.DeferredQueue([ getConcurrentFilter(5) ]);
 		queue100Jobs(queue);
 	}
 
 	function test_memorySizeFilter() {
 		var memorySizeFilter = getMemorySizeFilter(10, 5000);
-		var queue = new PB.fn.DeferredQueue([ memorySizeFilter]);
+		var queue = new PB.DeferredQueue([ memorySizeFilter]);
 		queueJobs(queue, 5);
 		window.setTimeout(function() {
 			queueJobs(queue, 100);
@@ -95,7 +95,7 @@
 	function test_deferreds() {
 		var deferreds = [];
 		for (var i=0; i< 100; i++)
-			deferreds.push(PB.fn.createDeferredJob("Job " +i, function() {
+			deferreds.push(PB.createDeferredJob("Job " +i, function() {
 				var THIS = this;
 				window.setTimeout( function() {
 					THIS.resolve();
@@ -116,7 +116,7 @@
 	function test_combo() {
 		var memorySizeFilter = getMemorySizeFilter(10, 5000);
 		var concurrentFilter = getConcurrentFilter(5);
-		var queue = new PB.fn.DeferredQueue([memorySizeFilter, concurrentFilter]);
+		var queue = new PB.DeferredQueue([memorySizeFilter, concurrentFilter]);
 		queue100Jobs(queue);
 	}
 	test_combo();

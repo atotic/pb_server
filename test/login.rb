@@ -1,7 +1,4 @@
-ENV['RACK_ENV'] = 'test'
-
 require File.dirname(__FILE__) + '/helper'
-
 
 class MyFirstTest < Test::Unit::TestCase
 	
