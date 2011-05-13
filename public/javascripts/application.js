@@ -1,5 +1,4 @@
 var PB = {
-	fn: {},
 
 	notice: function(text) {
 //		$('#error').hide();

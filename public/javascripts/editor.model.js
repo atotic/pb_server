@@ -170,28 +170,26 @@ PB.ImageBroker.prototype = {
 		fd.append('display_name', this._file.fileName);
 		fd.append('book_id', book_id);
 		fd.append('photo_file', this._file);
-		var xhr = new XMLHttpRequest();	// not using jQuery, we want to use FormData,
-		var THIS = this;
-		xhr.onreadystatechange = function(evt) {
-			if (xhr.readyState == 1)
-				PB.progressSetup();
-			if (xhr.readyState == 4) {
-		 		if(xhr.status == 200) {
-		 			PB.progress("File uploaded successfully");
-		 			THIS.initFromJson($.parseJSON(xhr.responseText));
-		 		}
-				else
-					console.error("Error saving image");
-			}
-		};
-		xhr.upload.addEventListener("progress", function(evt) {
-			if (evt.lengthComputable)
-				PB.progress(evt.loaded / evt.total);
-			else
-				PB.progress(-1);
-		}, false);
-		xhr.open("POST", "/photos");
-		xhr.send(fd);
+		var job = PB.createDeferredJob("Save " + this.name(), function() {
+			var xhr = $.ajax({
+				url: "/photos",
+				type: "POST",
+				data: fd,
+				processData: false,
+				contentType: false,
+				xhr: function() {
+					var xhr = new window.XMLHttpRequest();
+					xhr.upload.addEventListener("progress", function(evt) {
+						PB.progress( evt.lengthComputable ? evt.loaded / evt.total : -1);
+					}, false);
+					return xhr;
+				}
+			})
+			xhr.done(function() { job.resolve() })
+				.fail(function() { job.reject() }) // TODO handle failure with retries, etc
+				.complete(function() { PB.progress() });	
+		});
+		PB.ImageUploadQueue.push(job);
 	},
 
 	// md5 returns deferred as computing md5 from disk might take a while
@@ -227,14 +225,14 @@ PB.ImageBroker.prototype = {
 		console.log(this.name() + " loaded");
 		// Resize image to canvas
 		var scale = options.desiredHeight / img.naturalHeight;
+		var canvasWidth = Math.round(img.naturalWidth * scale);
 		if (scale > 1)
 			scale = 1;
-		var canvasWidth = Math.round(img.naturalWidth * scale);
 		var canvasHeight = options.desiredHeight;
 		var canvas = $("<canvas />")
 			.attr('width', canvasWidth)
 			.attr('height', canvasHeight)
-			.data("image_id", this._id)
+			.data("imageBroker", this)
 			.each(function(index, el) {
 				el.getContext('2d').drawImage(img, 0,0, canvasWidth, canvasHeight);
 			}).get(0);
@@ -280,7 +278,7 @@ PB.ImageBroker.prototype = {
 PB.BookPage = function(json) {
 	for (var prop in json)	// make them all private
 		this["_" + prop] = json[prop];
-	this._dirty = false;
+	this._dirty = null;
 };
 
 PB.BookPage.prototype = {
@@ -290,16 +288,14 @@ PB.BookPage.prototype = {
 	get id() {
 		return this._id;
 	},
-	dirty: function() {
-		return this._dirty;
-	},
-	setHtml: function(newHtml) {
+	setHtml: function(domEl) {
 		// HTML needs cleanup of <image> tags:
 		// FF does not close svg:image tags https://bugzilla.mozilla.org/show_bug.cgi?id=652243
 		// FF uses href, not xlink:href
 		// Our src might be local files, change to server location
 		// Bug: we might not know server location until file is saved.
 		// fixing that will be a bitch
+		var newHtml = domEl.innerHTML;
 		var split = newHtml.split(/(<image[^>]*>)/im); // use image tags as line separators
 		for (var i=0; i<split.length; i++) {
 			// split image into components
@@ -320,10 +316,13 @@ PB.BookPage.prototype = {
 			return prev + current;
 		}, "");
 		this._html = z;
-		this.setDirty();
 	},
-	setDirty: function() {
-		this._dirty = true;
+	// domEl contains new contents of the page
+	setDirty: function(domEl) {
+		this._dirty = domEl;   
+	},
+	doneEditing: function() {
+		//setHtml(domEl);
 	},
 	saveOnServer: function() {
 		if (!this._dirty)

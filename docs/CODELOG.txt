@@ -4,7 +4,6 @@ Bug fixes:
 PLAN:
 Goals:
 - UI2: 
-    image resizing on server
 		progress framework: image upload, resume interrupted, etc
 		save book pages at appropriate checkpoints
 		Warning before leaving page if something in progress
@@ -17,9 +16,27 @@ Goals:
   interesting features: colored books, backgrounds, text, rotation
 - test framework for js
 		selenium 2.0 has ruby drivers http://code.google.com/p/selenium/wiki/RubyBindings
-- resizing of images
-- background jobs - realistic api: image resizing after upload
+- background jobs - realistic api: image resizing after upload, pdf generation in background
 - test everything in chrome too
+- implement google/fb logins
+- deploy
+
+Next:
+Will need custom notifiers.
+Image upload queue: retry on failure. Implement with global network failure filter.
+Image upload queue: display progress: image upload progress meter?
+Page save queue: save within 60 seconds|when page switches
+Page save queue: retry on failure.
+
+May 12
+Errand day again: truckee loan, tired
+Implementing "warn before leaving page if something in progress"
+onbeforeunload checks all queues. If active, gives user option not to leave the page
+Image upload now uses jQuery, has its own queue
+
+May 11
+Another crappy day. Hungover, had to deal with loans, passport renewal at the post office
+Implemented rake test:seed
 
 May 10
 Implemented rake db:clean

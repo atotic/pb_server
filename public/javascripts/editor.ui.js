@@ -254,21 +254,21 @@ PB.UI.Bookpage = {
 			  	'activeClass': 'drop-feedback-svg',
 			  	'drop': function(event, ui) {
 			  		// when image drops, replace drop element with an image of the same size
-			  		var image_id = $(ui.draggable).data('image_id');
-			  		var imageBroker = PB.book().getImageById(image_id);
+			  		var imageBroker = $(ui.draggable).data('imageBroker');
 			  		var svgns = "http://www.w3.org/2000/svg";
 			  		var xlns = "http://www.w3.org/1999/xlink";
 			  		try {
-				  		var svg = document.createElementNS(svgns, 'image');
-				  		svg.setAttributeNS(xlns, 'xlink:href', imageBroker.getImageUrl('display'));
-				  		svg.width.baseVal.value = this.width;
-				  		svg.height.baseVal.value = this.height;
-				  		svg.x.baseVal.value = this.x;
-				  		svg.y.baseVal.value = this.y;
-				  		$(this).replaceWith(svg);
-				  	  $(svg).wrapSvg().addClass("book_image");
-							$(svg).parent('svg').data("dirty", true);	// FIXME, need to find parent.
-				  	  PB.UI.Bookpage.makeDroppable(svg);
+				  		var image = document.createElementNS(svgns, 'image');
+				  		image.setAttributeNS(xlns, 'xlink:href', imageBroker.getImageUrl('display'));
+				  		image.width.baseVal.value = this.width;
+				  		image.height.baseVal.value = this.height;
+				  		image.x.baseVal.value = this.x;
+				  		image.y.baseVal.value = this.y;
+				  		$(this).replaceWith(image);
+				  	  $(image).wrapSvg().addClass("book_image");
+				  	  PB.UI.Bookpage.makeDroppable(image);
+							var svg = $(image).parent('svg');
+							svg.data("page").setDirty(svg);
 				  	}
 				  	catch(ex)
 				  	{
@@ -281,7 +281,7 @@ PB.UI.Bookpage = {
 		var page = PB.book().getPageById(page_id);
 		var el = $(page.html());
 		el.data('page_id', page_id);
-		el.data('dirty', false);
+		el.data('page', page);
 		$(el).wrapSvg().addClass("book_page");
 		var images = el.find(".book_image").wrapSvg();
 		images.each( function() {
@@ -297,12 +297,7 @@ PB.UI.Bookpage = {
 		// save the old page if possible
 		$("#main-container div.svg-enclosure").each(function() {
 			var dom_page = $(this).children("svg");
-			if (dom_page.data('dirty'))
-			{
-				var book_page = PB.book().getPageById(dom_page.data('page_id'));
-				book_page.setHtml(this.innerHTML);
-				book_page.saveOnServer();
-			}
+			dom_page.data("page").doneEditing();
 		});
 		var svg = this.createPageElement(page_id);
 		svg.appendTo($("#main-container").empty());

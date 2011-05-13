@@ -336,11 +336,16 @@ PB.createDeferredJob = function(name, startFn) {
  */
 PB.DeferredQueue = function(filters) {
 	this._waitJobs = [];
+	this._activeJobs = [];
 	this._filters = filters || [];
 	this.timeout = null;
 }
 
 PB.DeferredQueue.prototype = {
+	// number of waiting + active jobs
+	get length() {
+		return this._waitJobs.length + this._activeJobs.length;
+	},
 	push: function(deferredJob) {
 		this._waitJobs.push(deferredJob);
 		this.process();
@@ -372,14 +377,17 @@ PB.DeferredQueue.prototype = {
 			THIS._filters.forEach(function(filter) {
 				filter.jobCompleted(deferredJob, THIS);
 			});
+			var i = THIS._activeJobs.indexOf(deferredJob);
+			if (i != -1) THIS._activeJobs.splice(i, 1);
 			THIS.process();
 		});
 		// start the job
+		this._activeJobs.push(deferredJob);
 		deferredJob.start();
 	}
 }
 
-// Image loading queue
+// Image loading for display queue
 // Limits how many images:
 // - can be downloaded simultaneusly
 // - can be downloaded in a 10 second window. This is to prevent
@@ -395,3 +403,26 @@ PB.ImageLoadQueue = new PB.DeferredQueue([
 		)
 ]);
 
+PB.ImageUploadQueue = new PB.DeferredQueue([
+	PB.getConcurrentFilter(1)
+]);
+PB.ImageUploadQueue.displayStatus = function() {
+	if (this.length > 0)
+		PB.notice("Images being uploaded:" + this.length);
+};
+
+/*
+ * This 
+ */
+window.onbeforeunload = function(e) {
+	var haveChanges = false;
+	if (PB.ImageUploadQueue.length > 0) {
+		haveChanges = true;
+		PB.ImageUploadQueue.displayStatus();
+	}
+	if (haveChanges) {
+		if (e)
+			e.returnValue = "You have unsaved changes. Are you sure that you want to leave the page?";
+		return "You have unsaved changes. Are you sure that you want to leave the page?"
+	}
+};
