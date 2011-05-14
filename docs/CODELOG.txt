@@ -28,6 +28,10 @@ Image upload queue: display progress: image upload progress meter?
 Page save queue: save within 60 seconds|when page switches
 Page save queue: retry on failure.
 
+May 13
+Blech, all erands, all the timem, no coding.
+1 thing! Dropping images now works in Chrome!
+
 May 12
 Errand day again: truckee loan, tired
 Implementing "warn before leaving page if something in progress"

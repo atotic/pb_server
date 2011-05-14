@@ -104,8 +104,12 @@ PB.ImageBroker.prototype = {
 	},
 	
 	destroy: function() {
-		if (this._fileUrl)
-			window.URL.revokeObjectURL(this._fileUrl)
+		if (this._fileUrl) {
+			if ('URL' in window)
+				window.URL.revokeObjectURL(this._fileUrl)
+			else if ('webkitURL' in window)
+					this._fileUrl = window.webkitURL.revokeObjectURL(this._fileUrl);		
+		}
 		this._fileUrl = null;
 	},
 
@@ -134,7 +138,12 @@ PB.ImageBroker.prototype = {
 	getImageUrl: function(size) {
 		if (this._file) {
 			if (!("_fileUrl" in this) || this._fileUrl == null)
-				this._fileUrl = window.URL.createObjectURL(this._file);
+			{
+				if ('URL' in window)
+					this._fileUrl = window.URL.createObjectURL(this._file);
+				else if ('webkitURL' in window)
+					this._fileUrl = window.webkitURL.createObjectURL(this._file);
+			}
 			return this._fileUrl;
 		}
 		else 
