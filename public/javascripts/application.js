@@ -9,6 +9,15 @@ var PB = {
 //		$('#notice').hide();
 		$('#error').html(text).clearQueue().show('blind');
 	},
+	// Creates a new bar, or returns existing
+	getMessageBar: function(bar_id) {
+		var bar = $('#messages #' + bar_id);
+		if (bar.length > 0) 
+			return bar.get(0);
+		bar = $("<div id='" + bar_id + "'></div>");
+		bar.addClass("generic_notice").appendTo($("#messages"));
+		return bar.get(0);
+	},
 	// shows flash messages from xhr headers
 	showXhrFlash: function(event, jqXHR, ajaxOptions) {
 		var msg = jqXHR.getResponseHeader('X-FlashError');

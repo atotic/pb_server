@@ -48,7 +48,7 @@ PB.Book.prototype = {
 
 		var image = new PB.ImageBroker(file);
 		var pos = this._images.push(image);
-		image.saveOnServer(this.id);
+		image.saveOnServer(this.id, false);
 		this.send('imageAdded', image, pos);
 	},
 		
@@ -149,11 +149,13 @@ PB.ImageBroker.prototype = {
 		else 
 			return this.getServerUrl(size);
 	},
+
 	getFileUrl: function() {
 		if ("_fileUrl" in this)
 			return this._fileUrl;
 		return null;
 	},
+	
 	getServerUrl: function(size) {
 		if ((typeof this._id == "string") && this._id.match(/temp/)) {
 			debugger; // Should throw deferred, so we can wait until image is created
@@ -174,12 +176,15 @@ PB.ImageBroker.prototype = {
 		url += "?size=" + size;
 		return url;	
 	},
-	saveOnServer: function(book_id) {
+	
+	saveOnServer: function(book_id, jumpQueue) {
 		var fd = new FormData();
 		fd.append('display_name', this._file.fileName);
 		fd.append('book_id', book_id);
 		fd.append('photo_file', this._file);
-		var job = PB.createDeferredJob("Save " + this.name(), function() {
+		var THIS = this;
+		var startFn = function() {
+			PB.progressSetup({message: "-> " + THIS.name(), show:true});
 			var xhr = $.ajax({
 				url: "/photos",
 				type: "POST",
@@ -189,16 +194,34 @@ PB.ImageBroker.prototype = {
 				xhr: function() {
 					var xhr = new window.XMLHttpRequest();
 					xhr.upload.addEventListener("progress", function(evt) {
-						PB.progress( evt.lengthComputable ? evt.loaded / evt.total : -1);
+						PB.progress( evt.lengthComputable ? evt.loaded * 100 / evt.total : -1);
 					}, false);
 					return xhr;
 				}
 			})
-			xhr.done(function() { job.resolve() })
-				.fail(function() { job.reject() }) // TODO handle failure with retries, etc
-				.complete(function() { PB.progress() });	
-		});
-		PB.ImageUploadQueue.push(job);
+			xhr
+				.done(function() {
+					PB.progress();
+					var filter = PB.DeferredFilter.getNetworkErrorFilter();
+					filter.setNetworkError(false);
+					job.resolve();
+				})
+				.fail(function() { 
+					PB.progress();
+					var filter = PB.DeferredFilter.getNetworkErrorFilter();
+					filter.setNetworkError(true);
+					job.reject();			
+					THIS.saveOnServer(book_id, true);
+				})
+				.complete(function() { 
+				});	
+		};
+		var job = PB.createDeferredJob("Save " + this.name(), startFn);
+		if (jumpQueue)
+			PB.ImageUploadQueue.unshift(job);
+		else
+			PB.ImageUploadQueue.push(job);
+		return job;
 	},
 
 	// md5 returns deferred as computing md5 from disk might take a while

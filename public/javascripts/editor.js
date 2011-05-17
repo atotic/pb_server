@@ -272,7 +272,8 @@ PB.DeferredFilter.prototype = {
 	jobCompleted: function(deferredJob, queue) {}
 }
 
-PB.getConcurrentFilter = function(maxConcurrent) {
+// Concurrent filter limits number of simultaneous operations
+PB.DeferredFilter.getConcurrentFilter = function(maxConcurrent) {
 	var filter = new PB.DeferredFilter({
 		ready: function( queue) {
 			return this.jobCount < this.jobLimit;
@@ -289,7 +290,8 @@ PB.getConcurrentFilter = function(maxConcurrent) {
 	return filter;
 }
 
-PB.getMemorySizeFilter = function(maxSize, ttl) { // bytes, milis
+// MemorySize filter limits memory used during ttl. Used for loading images
+PB.DeferredFilter.getMemorySizeFilter = function(maxSize, ttl) { // bytes, milis
 	var filter = new PB.DeferredFilter({
 		ready: function(queue) {
 			// Remove expired elements
@@ -318,6 +320,79 @@ PB.getMemorySizeFilter = function(maxSize, ttl) { // bytes, milis
 	return filter;
 }
 
+// NetworkError filter 
+PB.DeferredFilter.getNetworkErrorFilter = function() {
+	if (this.networkErrorFilter)	// singleton
+		return this.networkErrorFilter;
+		
+	var filter = new PB.DeferredFilter({
+		ready: function(queue) {
+			return this._netDown == false || this._secondsLeft == 0;
+		},
+		jobStarted: function(job, queue) {			
+		},
+		jobCompleted: function(job, queue) {
+			this.setNetworkError(job.isRejected());
+		}
+	});
+	
+	var networkErrorPrototype = {
+		_netDown: false,	// Network is down?
+		_timeoutId: false, // window.setTimeout id
+		_initialDelay: 5,
+		setNetworkError : function(err) {
+			if (err)
+			{
+				if(!this._netDown) 
+				{
+					this._netDown = true;
+					this._initialDelay = 5;	// seconds
+					this._secondsLeft = this._initialDelay;
+					this.setTimeoutIf();
+				}
+				else if (this._secondsLeft == 0) {
+					// timer already fired, double time, and retry again
+						this._initialDelay = Math.min(this._initialDelay * 2, 60);
+						this._secondsLeft = this._initialDelay;
+						this.setTimeoutIf();
+				}
+			}
+			else
+				if (this._netDown)
+				{
+					this._netDown = false;
+					if (this._timeoutId)
+						window.clearTimeout(this._timeoutId);
+					this._timeoutId = false;
+					$(PB.getMessageBar("network_retry")).remove();
+				}
+		},
+		setTimeoutIf: function() {
+			if (this._timeoutId == false && this._netDown) {
+				var THIS = this;
+				this._timeoutId = window.setTimeout(function() { THIS.windowTimer()} , 1000);
+			}
+		},
+		windowTimer: function() {
+			this._secondsLeft = Math.max(0, this._secondsLeft - 1);
+			this.displayDelayMessage();
+			this._timeoutId = false;
+			this.setTimeoutIf();
+			if (this._netDown && this._delayTimer > 0)
+				this.setTimeoutIf();
+		},
+		displayDelayMessage: function() {
+			var bar = PB.getMessageBar("network_retry");
+			$(bar).show();
+			bar.innerHTML = "A network error has occured. Retry in " + this._secondsLeft;
+		}
+	}
+	
+	$.extend(filter, networkErrorPrototype);
+	this.networkErrorFilter = filter;
+	return filter;
+}
+
 // DeferredJob is part of DeferredQueue framework
 // just like deferred, except it does not execute until start is called
 PB.createDeferredJob = function(name, startFn) {
@@ -333,6 +408,7 @@ PB.createDeferredJob = function(name, startFn) {
  * Queues up deferreds for execution. The deferreds have a start method
  * Deferred queue decides when to execute depending upon filters.
  * Filters are notified when jobs are started/done
+ * Keeps track of currently active jobs
  */
 PB.DeferredQueue = function(filters) {
 	this._waitJobs = [];
@@ -346,8 +422,15 @@ PB.DeferredQueue.prototype = {
 	get length() {
 		return this._waitJobs.length + this._activeJobs.length;
 	},
+	addFilter: function(filter) {
+		this._filters.push(filter);
+	},
 	push: function(deferredJob) {
 		this._waitJobs.push(deferredJob);
+		this.process();
+	},
+	unshift: function(deferredJob) {
+		this._waitJobs.unshift(deferredJob);
 		this.process();
 	},
 	process: function() {
@@ -397,22 +480,30 @@ PB.DeferredQueue.prototype = {
 // 	 TestPix loads 100 images in 64s
 // gfx/surface/image cache can still grow to 1.X
 PB.ImageLoadQueue = new PB.DeferredQueue([
-	PB.getConcurrentFilter(2),
-	PB.getMemorySizeFilter(600 * 1048576, // 600MB
+	PB.DeferredFilter.getConcurrentFilter(2),
+	PB.DeferredFilter.getMemorySizeFilter(600 * 1048576, // 600MB
 		10 * 1000 // 10seconds
 		)
 ]);
 
 PB.ImageUploadQueue = new PB.DeferredQueue([
-	PB.getConcurrentFilter(1)
+	PB.DeferredFilter.getConcurrentFilter(1),
+	PB.DeferredFilter.getNetworkErrorFilter()
 ]);
+
 PB.ImageUploadQueue.displayStatus = function() {
-	if (this.length > 0)
-		PB.notice("Images being uploaded:" + this.length);
+	var notice = PB.getMessageBar("image_upload_notice");
+	if (PB.ImageUploadQueue.length > 0) {
+		$(notice).show();
+		notice.innerHTML = this.length + " images are uploading.";
+		window.setTimeout(PB.ImageUploadQueue.displayStatus, 300);
+	}
+	else
+		$(notice).remove();
 };
 
 /*
- * This 
+ * Give user a chance to save changes before navigating away
  */
 window.onbeforeunload = function(e) {
 	var haveChanges = false;

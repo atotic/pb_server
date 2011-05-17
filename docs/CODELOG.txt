@@ -22,11 +22,21 @@ Goals:
 - deploy
 
 Next:
-Will need custom notifiers.
-Image upload queue: retry on failure. Implement with global network failure filter.
-Image upload queue: display progress: image upload progress meter?
+May 17
 Page save queue: save within 60 seconds|when page switches
 Page save queue: retry on failure.
+
+Implemented custom notifiers - PB.getMessageBar
+
+Image upload queue: retry on failure. Implement with global network failure filter
+This was tricky to do due to endless chaining of Deferreds. Architecture:
+- All network queues have networkError filter. The filter needs to be notified
+when network error happens, and when everything clears. The filter displays notice,
+and retries with exponential backoff.
+Image upload queue: display progress: image upload progress meter.
+
+BeforeUnload now displays images remaining to upload
+
 
 May 13
 Blech, all erands, all the timem, no coding.

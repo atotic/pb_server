@@ -38,6 +38,9 @@ Ruby toolbox: what gem should I use for.....  http://ruby-toolbox.com/
 MD5 digests in ruby http://www.siaris.net/index.cgi/Programming/LanguageBits/Ruby/MD5.rdoc
 Ruby command shell http://rdoc.info/github/banister/pry/master/file/README.markdown
 
+S3
+Pure html ajax upload: http://zefer.posterous.com/pure-html-ajax-solutions-to-upload-files-to-s
+
 OTHER
 Look at duostack for deployment
 How to deploy custom binaries on Heroku: http://blog.mattgornick.com/using-pdfkit-on-heroku
