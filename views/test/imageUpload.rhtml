@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Test: Deferred</title>
+	<%= asset_link("jquery.js", "jquery-ui.js", "application.js", "editor.js", "editor.model.js") %>
+	<%= asset_link("jquery-ui.css", "application.css") %>
+</head>
+<body>
+<%= erb :'layout/header_bar' %>
+<h1>File upload test</h1>
+<input type="file" id="file-dialog" multiple="true" accept="image/*">
+<button id="upbutt">Upload</button>
+<script>
+	function uploadFiles() {
+		var el = $("#file-dialog").get(0);
+		for (var i=0; i<el.files.length; i++) {
+			var image = new PB.ImageBroker(el.files.item(i));
+			image.saveOnServer(1, false);
+		}
+	}
+	$("#file-dialog").change(function(e) {
+		uploadFiles();
+	});
+	$("#upbutt").click(function(e) {
+		uploadFiles();
+	});
+	
+
+</script>
+</body>
