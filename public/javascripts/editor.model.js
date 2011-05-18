@@ -1,3 +1,4 @@
+"use strict"
 // Book class
 
 PB.Book = function(json) {

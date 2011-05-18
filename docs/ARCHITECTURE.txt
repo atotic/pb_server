@@ -1,21 +1,20 @@
+Tricky parts:
+
 Editor:
 
 not happy with overall architecture, encapsulation sucks
 want better MVC separation
 
-What is our model? Lots of small models floating around
-
-The events is where it gets tricky, lots of callbacks
 PB
 	init
 	handleFiles
 	loadDocument
-
-PB.UI
 	utility UI routines
 		notice
 		error
 		ajaxMessageReporting
+
+PB.UI
 	navigationTabs
 	resizing of widgets
 	
@@ -27,14 +26,7 @@ PB.UI.Phototab
 PB.LoadImageQueue
 	loads image in a queue
 	
-PB.fn.Image
-	Image class
-	
-PB.ImageList - real model
-	
 Things I dislike: 
-init chains
-scattered model
 image dropping:
 	- drop adds files to image list
 	- image list broadcasts image-added event

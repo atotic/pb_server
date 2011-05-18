@@ -19,10 +19,13 @@ Goals:
 Next:
 
 May 18
-UI rework:
 - do not scroll image list on initial load
+UI rework:
 - display nicer page thumb
 - display the book page nicer
+- drag/drop, positioning of images (magnet sides, etc)
+- image delete button
+- text tool
 
 May 17
 
@@ -321,9 +324,7 @@ Take a look at SVG http://people.mozilla.com/~vladimir/demos/photos.svg
 svg converts straight to PDF :), might need 
 http://www.somebits.com/weblog/tech/good/svg.html
 Nelson discovered SVG around the same time.
-CSS easing is cool: http://matthewlein.com/ceaser/
 Uploading files in Sintatra
-Mozilla SVG tutorial https://developer.mozilla.org/en/SVG/Tutorial/
 
 Mar 21
 Rewrote ImageLoadingQueue
@@ -436,9 +437,7 @@ BUSINESS MODEL
 - Blurb.com: show them the demo
 DEALING WITH IMAGES
 Need to auto-rotate rotated images
-http://www.html5rocks.com/tutorials/offline/whats-offline/#toc-compatibility
 Image upload: http://hacks.mozilla.org/2011/03/the-shortest-image-uploader-ever/
-http://muizelaar.blogspot.com/2011/02/drawing-sprites-canvas-2d-vs-webgl.html
 
 FEATURES:
 - Photo import:

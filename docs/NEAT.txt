@@ -10,6 +10,7 @@ http://www.trymyui.com/ great UI testing place
 Very neat background patterns: http://leaverou.me/css3patterns/#
 39 box shadows, how do they do it: http://www.viget.com/inspire/39-ridiculous-things-to-do-with-css3-box-shadows/
 Gradient editor: http://www.colorzilla.com/gradient-editor/
+CSS easing is cool: http://matthewlein.com/ceaser/
 Font sizes with REM http://snook.ca/archives/html_and_css/font-size-with-rem
 3D CSS: http://www.webkit.org/blog/386/3d-transforms/
 Buttons can be made unselectable with : -webkit-user-select: none; (CSS3 property 
@@ -29,9 +30,11 @@ Photo editing API: http://developers.aviary.com/effects-api
 JSFiddle, nice easing animations: http://jsfiddle.net/marcofucci/rRtAq/
 
 SVG
+Mozilla SVG tutorial https://developer.mozilla.org/en/SVG/Tutorial/
 D3 is amazingly beautiful, Mike Bostock is super smart. Must play with it some more.
 Interesting SVG vector graphics library: http://raphaeljs.com/
 Going through this is better than reading a book: http://srufaculty.sru.edu/david.dailey/svg/SVGAnimations.htm
+SVG to canvas: http://www.svgopen.org/2010/papers/62-From_SVG_to_Canvas_and_Back/index.html
 
 Ruby
 Ruby toolbox: what gem should I use for.....  http://ruby-toolbox.com/
@@ -40,6 +43,7 @@ Ruby command shell http://rdoc.info/github/banister/pry/master/file/README.markd
 
 S3
 Pure html ajax upload: http://zefer.posterous.com/pure-html-ajax-solutions-to-upload-files-to-s
+http://hacks.mozilla.org/2011/03/the-shortest-image-uploader-ever/
 
 OTHER
 Look at duostack for deployment
@@ -48,3 +52,7 @@ God, I love the new web: http://www.websequencediagrams.com/
 https://www.crowdspring.com/post-a-project/, UI design referred from Michael LaGuardia
 Survey of offline: http://www.html5rocks.com/tutorials/offline/whats-offline/#toc-compatibility
 Unicode geometric shapes: http://www.unicodemap.org/range/54/Geometric_Shapes/
+
+BUSINESS
+http://www.myphotocreations.com/
+http://blurb.com/

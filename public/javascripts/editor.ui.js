@@ -6,6 +6,8 @@ $.extend(PB, new PB.EventBroadcaster("docLoaded"));
 
 $.extend(PB, {
 	_init: $(document).ready(function() { PB.init() }),
+
+	// Load the book on startup
 	init: function () {
 		var match = window.location.pathname.match(/editor\/(\d+)/);
 		if (match != null)
@@ -16,12 +18,14 @@ $.extend(PB, {
 		return this._book;
 	},
 	
+	// Call when files are dropped or added
 	handleFiles: function (files) {
 		for (var i=0; i<files.length; i++) {
 			this._book.addLocalFileImage(files.item(i));
 		}
 	},
 	
+	// Loads the book
 	load: function(id) {
 		$("#main-container").html("<h1>Loading...</h1>");
 		var self = this;
@@ -36,6 +40,7 @@ $.extend(PB, {
 				PB.UI.bookLoaded(self._book);
 		});
 	},
+	// The "stop this event" pattern
 	stopEvent: function(e) {
 		e.stopPropagation();
 		e.preventDefault();		
@@ -68,10 +73,10 @@ PB.UI = {
 		PB.UI.Phototab.clear();
 		var images = book.images();
 		for (var i=0; i < images.length; i++)
-			PB.UI.Phototab.imageAdded(images[i], i);
+			PB.UI.Phototab.imageAdded(images[i], i, true);
 		var pages = book.pages();
 		for (var i=0; i < pages.length; i++)
-			PB.UI.Pagetab.pageAdded(pages[i], i);
+			PB.UI.Pagetab.pageAdded(pages[i], i, true);
 //		$('#header nav a[href="#pages-tab"]').click();
 
 		// Display 1st page
@@ -178,7 +183,7 @@ PB.UI.Phototab = {
 		$("#photo-list-slider").css("width", naturalSize);
 	},
 
-	addNewCanvas: function(canvas, img) {
+	addNewCanvas: function(canvas, img, noScroll) {
 		var canvasWidth = canvas.width;	// Once appended, width becomes 0 when hidden
 		canvas = $(canvas);
 		var enclosingDiv = $("<div></div>").appendTo('#photo-list');
@@ -212,19 +217,20 @@ PB.UI.Phototab = {
 			$("#photo-list-slider").slider("option", {
 				min: 0,
 				max: allPhotos.size() - 1,
-				value: Math.max(allPhotos.size() - 2, 0)
+				value: noScroll ? 0 : Math.max(allPhotos.size() - 2, 0)
 			});
+				
 			PB.UI.Phototab.restyleSlider();
 			$("#photo-list-slider").show();
 		});
 	},
 	
-	imageAdded: function(pbimage, index) {
+	imageAdded: function(pbimage, index, noScroll) {
 		var self = this;
 		pbimage.toCanvas( { desiredHeight : 128 } )
 			.done( function(canvas, img) {
 				$("#photos-tab .intro").hide();
-				self.addNewCanvas(canvas, img);
+				self.addNewCanvas(canvas, img, noScroll);
 			})
 			.fail( function(img) {
 				alert("Could not load image " + img.name());
@@ -337,7 +343,7 @@ PB.UI.Pagetab = {
 	revealNthPage: function(n) {
 		$("#page-list").revealByMarginLeft("canvas:nth-child(" + n+ ")");		
 	},
-	pageAdded: function(page, index) {
+	pageAdded: function(page, index, noScroll) {
 		$("#pages-tab .intro").hide();
 		// add new page
 		var canvas = $(page.toCanvas( { desiredHeight: 128 }));
@@ -359,7 +365,7 @@ PB.UI.Pagetab = {
 			$("#page-list-slider").slider("option", {
 				min: 0,
 				max: allPages.size() - 1,
-				value: Math.max(allPages.size() - 2, 0)
+				value: noScroll ? 0 : Math.max(allPages.size() - 2, 0)
 			});
 			var thumbWidth = 25;
 			var maxWidth = $("#page-list-container").width() - thumbWidth;
