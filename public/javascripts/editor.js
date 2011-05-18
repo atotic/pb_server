@@ -422,10 +422,8 @@ PB.DeferredQueue.prototype = {
 	get length() {
 		return this._waitJobs.length + this._activeJobs.length;
 	},
-	addFilter: function(filter) {
-		this._filters.push(filter);
-	},
 	push: function(deferredJob) {
+		console.log("Push " + deferredJob.name);
 		this._waitJobs.push(deferredJob);
 		this.process();
 	},
@@ -433,6 +431,7 @@ PB.DeferredQueue.prototype = {
 		this._waitJobs.unshift(deferredJob);
 		this.process();
 	},
+	// execute any jobs we can
 	process: function() {
 		var THIS = this;
 		while (this._waitJobs.length > 0 
@@ -443,13 +442,19 @@ PB.DeferredQueue.prototype = {
 		// Set up heartbeat if there are outstanding jobs
 		if (this._waitJobs.length > 0 && this.timeout == null) {
 			var THIS = this;
-			THIS.timeout = window.setTimeout(function() {
+			this.timeout = window.setTimeout(function() {
+//				console.log("DeferredQueue timeout fired");
 				THIS.timeout = null;
 				THIS.process();
 			}, 1000);
+//			console.log("DeferredQueue timeout set" + this.timeout);
 		}
+		else
+			;//console.warn("DefferedQueue timeout not empty " + this.timeout);
 	},
+	// sets up the job for execution, and executes it
 	execute: function(deferredJob) {
+		console.log("Execute " + deferredJob.name);
 		var THIS = this;
 		// Notify filters that job is starting
 		this._filters.forEach(function(filter) {
@@ -460,8 +465,7 @@ PB.DeferredQueue.prototype = {
 			THIS._filters.forEach(function(filter) {
 				filter.jobCompleted(deferredJob, THIS);
 			});
-			var i = THIS._activeJobs.indexOf(deferredJob);
-			if (i != -1) THIS._activeJobs.splice(i, 1);
+				THIS._activeJobs.splice(THIS._activeJobs.indexOf(deferredJob), 1);
 			THIS.process();
 		});
 		// start the job
@@ -502,6 +506,80 @@ PB.ImageUploadQueue.displayStatus = function() {
 		$(notice).remove();
 };
 
+PB.PageUploadQueue = new PB.DeferredQueue([
+	PB.DeferredFilter.getConcurrentFilter(1),
+	PB.DeferredFilter.getNetworkErrorFilter()
+]);
+
+// Page upload queue saves pages at most once every 60 seconds
+// Or immediately if saveNow is called
+$.extend(PB.PageUploadQueue, {
+	_timedQueue: {}, // hash page_id => [page, saveTime]
+	_uploadTimeout: null,	
+	countPageQueue: function() {
+		var i = 0;
+		for ( var page_id in this._timedQueue )
+			i++;
+		return i;
+	},
+	get extraLength() {
+		return this.length + this.countPageQueue();
+	},
+	readyToSave: function(page)
+	{
+		if ( page.id in this._timedQueue )
+			return;
+		console.log("PageQueue readyToSave ", page.id);
+		this._timedQueue[page.id] = [page, Date.now() + 60 * 1000]
+		this.processPageQueue();
+		return this;
+	},
+	saveNowIfNeeded: function(page)
+	{
+		console.log("PageQueue saveNowIfNeeded ", page.id);
+		if (!(page.id in this._timedQueue))	// No need to save if not in queue
+			return;
+		this._timedQueue[page.id] = [page, 0];
+		this.processPageQueue();
+		return this;
+	},
+	processPageQueue: function() {
+		var now = Date.now();
+		var haveWaitingPages = false;
+		var log = "";
+		// Move pages to pageQueue->waitQueue
+		for ( var page_id in this._timedQueue ) {
+			log += " " + page_id;
+			if (this._timedQueue[page_id][1] <= now) {
+				console.log("PageQueue -> DeferredQueue " + page_id);
+				this.push(this._timedQueue[page_id][0].getSaveDeferred());
+				delete this._timedQueue[page_id];
+			}
+			else
+				haveWaitingPages = true;
+		}
+		// console.log("PageQueue process " + log);
+		// Wake ourselves up with a timeout
+		if (haveWaitingPages && this._uploadTimeout == null)
+		{
+				var THIS = this;
+				this._uploadTimeout = window.setTimeout(function() {
+					//console.log("PageQueue timeout fired");
+					THIS._uploadTimeout = null;
+					THIS.processPageQueue();
+				}, 1000);
+			//	console.log("PageQueue timeout set" + this._uploadTimeout);
+		}
+	},
+	saveAllNow: function()
+	{
+		for ( var page_id in this._timedQueue ) {
+			this.push(this._timedQueue[page_id][0].getSaveDeferred());
+			delete this._timedQueue[page_id];
+		}
+		return this;
+	}
+});
 /*
  * Give user a chance to save changes before navigating away
  */
@@ -510,6 +588,12 @@ window.onbeforeunload = function(e) {
 	if (PB.ImageUploadQueue.length > 0) {
 		haveChanges = true;
 		PB.ImageUploadQueue.displayStatus();
+	}
+	if (PB.PageUploadQueue.extraLength > 0)
+	{
+		haveChanges = true;
+		PB.PageUploadQueue.saveAllNow();
+		PB.notice("Saving pages.");
 	}
 	if (haveChanges) {
 		if (e)

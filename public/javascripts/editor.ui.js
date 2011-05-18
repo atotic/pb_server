@@ -268,7 +268,7 @@ PB.UI.Bookpage = {
 				  	  $(image).wrapSvg().addClass("book_image");
 				  	  PB.UI.Bookpage.makeDroppable(image);
 							var svg = $(image).parent('svg');
-							svg.data("page").setDirty(svg);
+							svg.data("page").setModified(svg.parent().get(0));
 				  	}
 				  	catch(ex)
 				  	{

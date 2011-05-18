@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Test: Page Upload</title>
+	<%= asset_link("jquery.js", "jquery-ui.js", "application.js", "editor.js", "editor.model.js") %>
+	<%= asset_link("jquery-ui.css", "application.css") %>
+</head>
+<body>
+<%= erb :'layout/header_bar' %>
+<h1>Page upload tests</h1>
+<pre id="log"></pre>
+<button id="upbutt">Start</button>
+<div id="page"></div>
+<script>
+
+	var Pages = [];
+	$.ajax({url: "/books/2"})
+		.then(
+			function(json, status, jqXHR) {
+				for (var i = 0; i < json.pages.length; i++)
+					Pages.push(new PB.BookPage(json.pages[i]));
+				$('log').append("<p>Book loaded</p>");
+			})
+		.fail(
+			function() {
+				$('log').append("<p>Book failed to load</p>");
+			}
+		);
+
+	function savePages() {
+		var div = $('#page').get(0);
+		for (var i=0; i< Pages.length; i++)
+		{
+			div.innerHTML = Pages[i].html();
+			Pages[i].setModified(div);
+		}
+		for (var i=0; i< Pages.length; i++)
+		{
+			Pages[i].doneEditing();
+		}
+	}
+	$("#upbutt").click(function(e) {
+		savePages();
+	});
+	
+
+</script>
+</body>

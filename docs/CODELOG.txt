@@ -4,9 +4,6 @@ Bug fixes:
 PLAN:
 Goals:
 - UI2: 
-		progress framework: image upload, resume interrupted, etc
-		save book pages at appropriate checkpoints
-		Warning before leaving page if something in progress
     better book page icons
     button templates & menus
     do not use jquery UI for UI elements, just functionality (for now, probably eliminate all the way)
@@ -14,17 +11,29 @@ Goals:
 
 - can create interesting books and templates
   interesting features: colored books, backgrounds, text, rotation
-- test framework for js
-		selenium 2.0 has ruby drivers http://code.google.com/p/selenium/wiki/RubyBindings
 - background jobs - realistic api: image resizing after upload, pdf generation in background
-- test everything in chrome too
 - implement google/fb logins
 - deploy
+- < 200MB pdf files?
 
 Next:
+
+May 18
+UI rework:
+- do not scroll image list on initial load
+- display nicer page thumb
+- display the book page nicer
+
 May 17
+
 Page save queue: save within 60 seconds|when page switches
 Page save queue: retry on failure.
+Implemented. Still not happy with my code. But it is tough to code
+for async stuff:
+- put page on save-later queue. 
+- move from save-later queue to save-now
+- if save fails, put it back on the save-now queue
+- if page closing, move all to save-now queue
 
 Implemented custom notifiers - PB.getMessageBar
 

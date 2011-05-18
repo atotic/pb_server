@@ -294,11 +294,21 @@ class SvegApp < Sinatra::Base
 		end
 		
 		def user_must_own(resource)
-			flash[:error] = "Resource not found" && redirect_back unless resource
-			
+			unless resource
+				flash[:error] = "Resource not found."
+				if (request.xhr?)
+					halt 404
+				else
+					redirect_back
+				end
+			end
 			if current_user.id != resource.user_id && !current_user.is_administrator
 				flash[:error]="Access not allowed."
-				redirect_back
+				if request.xhr?
+					halt 401
+				else
+					redirect_back
+				end
 			end
 		end
 

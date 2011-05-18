@@ -212,8 +212,6 @@ PB.ImageBroker.prototype = {
 					filter.setNetworkError(true);
 					job.reject();			
 					THIS.saveOnServer(book_id, true);
-				})
-				.complete(function() { 
 				});	
 		};
 		var job = PB.createDeferredJob("Save " + this.name(), startFn);
@@ -254,7 +252,7 @@ PB.ImageBroker.prototype = {
 			console.log(this.name() + " failed to load");
 			return deferred.rejectWith(document, [this]);
 		}
-		console.log(this.name() + " loaded");
+		// console.log(this.name() + " loaded");
 		// Resize image to canvas
 		var scale = options.desiredHeight / img.naturalHeight;
 		var canvasWidth = Math.round(img.naturalWidth * scale);
@@ -320,6 +318,7 @@ PB.BookPage.prototype = {
 	get id() {
 		return this._id;
 	},
+	
 	setHtml: function(domEl) {
 		// HTML needs cleanup of <image> tags:
 		// FF does not close svg:image tags https://bugzilla.mozilla.org/show_bug.cgi?id=652243
@@ -349,21 +348,43 @@ PB.BookPage.prototype = {
 		}, "");
 		this._html = z;
 	},
+
 	// domEl contains new contents of the page
-	setDirty: function(domEl) {
-		this._dirty = domEl;   
+	setModified: function(domEl) {
+		this.setHtml(domEl);
+		PB.PageUploadQueue.readyToSave(this);
 	},
+
 	doneEditing: function() {
-		//setHtml(domEl);
+		PB.PageUploadQueue.saveNowIfNeeded(this);
 	},
-	saveOnServer: function() {
-		if (!this._dirty)
-			return;
-		$.ajax("/book_page/" + this._id, {
-			data: { html: this._html },
-			type: "PUT"
+
+	// Creates Deferred that will save the page
+	getSaveDeferred: function() {
+		var THIS = this;
+		var job = PB.createDeferredJob("Save page " + this.id, function() {
+			var xhr = $.ajax("/book_page/" + THIS._id, {
+				data: { html: THIS._html },
+				type: "PUT"
+			});
+			xhr.done(function() {
+					var filter = PB.DeferredFilter.getNetworkErrorFilter();
+					filter.setNetworkError(false);
+					console.log("Page saved " + THIS.id);
+					job.resolve();
+				})
+				.fail(function() { 
+					var filter = PB.DeferredFilter.getNetworkErrorFilter();
+					filter.setNetworkError(true);
+					console.error("Page failed to save " + THIS.id);
+					job.reject();
+					// Try again
+					PB.PageUploadQueue.readyToSave(THIS).saveNowIfNeeded(THIS);
+				});
 		});
+		return job;
 	},
+
 	toCanvas: function(options) {
 		$.extend({
 			desiredHeight: 128
