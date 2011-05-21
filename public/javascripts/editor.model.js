@@ -269,7 +269,7 @@ PB.ImageBroker.prototype = {
 			}).get(0);
 		// Complete callback
 		$(img).unbind();
-		img.src = "";
+		img.src = null;
 		deferred.resolveWith(document, [canvas, this]);
 	},
 	

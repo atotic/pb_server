@@ -18,11 +18,22 @@ Goals:
 
 Next:
 
+May 20
+SVG resize trick discovered 
+s1.viewBox.baseVal.width += 10;
+s1.viewBox.baseVal.height += 10;
+
+On to implement a nice looking page
+- resize SVG to fit. Make sure our resize does not save
+
+May 19
+- wrestling with SVG resize problem
+
 May 18
 - do not scroll image list on initial load
 UI rework:
-- display nicer page thumb
 - display the book page nicer
+- display nicer page thumb
 - drag/drop, positioning of images (magnet sides, etc)
 - image delete button
 - text tool

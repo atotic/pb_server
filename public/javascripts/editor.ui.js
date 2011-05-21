@@ -29,16 +29,19 @@ $.extend(PB, {
 	load: function(id) {
 		$("#main-container").html("<h1>Loading...</h1>");
 		var self = this;
-		$.ajax({url: "/books/" + id}).then(
-			function(json, status, jqXHR) {
-				try {
-					self._book=  new PB.Book(json);
-				}
-				catch(e) {
-					alert("Unexpected ajaxComplete error " + e);
-				}
-				PB.UI.bookLoaded(self._book);
-		});
+		$.ajax({url: "/books/" + id})
+			.success( function(json, status, jqXHR) {
+					try {
+						self._book=  new PB.Book(json);
+					}
+					catch(e) {
+						console.error("Unexpected error creating book from JSON" + e);
+					}
+					PB.UI.bookLoaded(self._book);
+			})
+			.error( function(jqXHR, textStatus, errorThrown) {
+				PB.error("Unexpected network error loading book." + textStatus);
+			});
 	},
 	// The "stop this event" pattern
 	stopEvent: function(e) {
@@ -54,8 +57,7 @@ PB.UI = {
 	init: function() {
 		$(document).bind('drop dragover dragenter dragleave', PB.stopEvent);
 		$(window).resize(function(e) {
-			var newHeight = $(window).height() - $("#header").outerHeight();
-			$("#main-container").css("height", newHeight + "px");
+			PB.UI.MainContainer.resize();
 		});
 		$(window).resize(); // trigger reflow
 	},
@@ -222,6 +224,7 @@ PB.UI.Phototab = {
 				
 			PB.UI.Phototab.restyleSlider();
 			$("#photo-list-slider").show();
+			PB.UI.MainContainer.resize();
 		});
 	},
 	
@@ -307,6 +310,7 @@ PB.UI.Bookpage = {
 		});
 		var svg = this.createPageElement(page_id);
 		svg.appendTo($("#main-container").empty());
+		PB.UI.MainContainer.fitContent();
 	}
 }
 
@@ -346,7 +350,7 @@ PB.UI.Pagetab = {
 	pageAdded: function(page, index, noScroll) {
 		$("#pages-tab .intro").hide();
 		// add new page
-		var canvas = $(page.toCanvas( { desiredHeight: 128 }));
+		var canvas = $(page.toCanvas( { desiredHeight: 64 }));
 		canvas.data('book_page_id', page.id);
 		canvas.click(function(ev) {
 			PB.UI.Pagetab.selectPage($(this).data('book_page_id'));
@@ -374,44 +378,49 @@ PB.UI.Pagetab = {
 		});
 	}
 }
-//
-// Responding to ajax requests
-//
-PB.Ajax = {
-	_init: $(document).ready(function() { PB.Ajax.init()}),
-	init: function() {
-		$('form[data-remote]').live('submit', function(event) {
-			$.ajax({
-				url: this.action,
-				type: this.method,
-				data: $(this).serialize()
-			});
-			event.preventDefault();
-		});
-		$(document).ajaxComplete(PB.Ajax.ajaxComplete);
+
+PB.UI.MainContainer = {
+	_fitStyle: 'fit',	// fit | full
+	get mainEl() {
+		if (!("_mainEl" in this))
+			this._mainEl = $("#main-container");
+		return this._mainEl;
 	},
-	ajaxComplete: function(event, jqXHR, ajaxOptions) {
-		var contentType = jqXHR.getResponseHeader("Content-Type");
-		try {
-			if (contentType.match("text/html")) {
-				// All HTML returned is a single div
-				// It replaces content of main-container, unless data-destination is specified
-				var destination = "main-container";
-				$("#" + destination).html(jqXHR.responseText);
-			}
-			else if (contentType.match("application/json")) {
-				var json = $.parseJSON(jqXHR.responseText);
-				
-				if (ajaxOptions.url.match("/books$") && ajaxOptions.type == "POST")
-				{
-					PB.load(json.id);
-				}
-			}
+	setFitStyle: function(style) {
+		var change = this._fitStyle != style;
+		this._fitStyle = style;
+		if (change)
+			this.fitContent();
+	},
+	resize: function() {
+		var newHeight = Math.floor(window.innerHeight - this.mainEl.offset().top - 3);
+		// As a precaution, we call resize a lot, so it is good to optimize it out if not needed
+		if ((newHeight + "px"  == this.mainEl.css("height")))
+			return;
+		$("#main-container").css("height", newHeight + "px");
+		this.fitContent();
+	},
+	fitContent: function() {
+		var mainHeight = $("#main-container").height();
+		var mainWidth =  $("#main-container").width();
+		var page = $("#main-container .book_page").get(0);
+		if (!page)
+			return;
+		if (page.viewBox.baseVal.width == 0) {
+			// viewBox is not initialized on load, set initial values
+			page.viewBox.baseVal.width = page.width.baseVal.value;
+			page.viewBox.baseVal.height = page.height.baseVal.value;
 		}
-		catch(e) {
-			alert("Unexpected ajaxComplete error " + e);
-		}
+		var svgWidth =  page.viewBox.baseVal.width;
+		var svgHeight = page.viewBox.baseVal.height;
+		var vscale = mainHeight / svgHeight;
+		var hscale = mainWidth / svgWidth;
+		var scale = Math.min(vscale, hscale);
+		scale = Math.min(1, scale);
+		if (this._fitStyle == 'full')
+			scale = 1;
+		page.style.width = page.viewBox.baseVal.width * scale + "px";
+		page.style.height = page.viewBox.baseVal.height * scale + "px";
 	}
 }
-
 

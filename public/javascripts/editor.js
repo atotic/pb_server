@@ -140,6 +140,7 @@
 				flippy.attr('state', 'closed');
 				flippyContent.hide();
 			}
+			PB.UI.MainContainer.resize();
 			e.stopPropagation();
 			e.preventDefault();
 		})
@@ -423,7 +424,7 @@ PB.DeferredQueue.prototype = {
 		return this._waitJobs.length + this._activeJobs.length;
 	},
 	push: function(deferredJob) {
-		console.log("Push " + deferredJob.name);
+//		console.log("Push " + deferredJob.name);
 		this._waitJobs.push(deferredJob);
 		this.process();
 	},
@@ -454,7 +455,7 @@ PB.DeferredQueue.prototype = {
 	},
 	// sets up the job for execution, and executes it
 	execute: function(deferredJob) {
-		console.log("Execute " + deferredJob.name);
+//		console.log("Execute " + deferredJob.name);
 		var THIS = this;
 		// Notify filters that job is starting
 		this._filters.forEach(function(filter) {
