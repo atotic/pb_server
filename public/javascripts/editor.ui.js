@@ -252,7 +252,7 @@ PB.UI.Phototab = {
  * DOM structure:
  * #main-container
  *   div.svg-enclosure
- * 		 svg.book_page  data:page_id data:dirty
+ * 		 svg.book-page  data:page_id data:dirty
  *       
  */
 PB.UI.Bookpage = {
@@ -273,11 +273,12 @@ PB.UI.Bookpage = {
 				  		image.height.baseVal.value = this.height;
 				  		image.x.baseVal.value = this.x;
 				  		image.y.baseVal.value = this.y;
-				  		$(this).replaceWith(image);
+				  		var yo = this.unwrapSvg;
+				  		$(yo).replaceWith(image);
 				  	  $(image).wrapSvg().addClass("book_image");
 				  	  PB.UI.Bookpage.makeDroppable(image);
 							var svg = $(image).parent('svg');
-							svg.data("page").setModified(svg.parent().get(0));
+							svg.data("page").setModified();
 				  	}
 				  	catch(ex)
 				  	{
@@ -291,22 +292,22 @@ PB.UI.Bookpage = {
 		var el = $(page.html());
 		el.data('page_id', page_id);
 		el.data('page', page);
-		$(el).wrapSvg().addClass("book_page");
+		$(el).wrapSvg().addClass("book-page");
 		var images = el.find(".book_image").wrapSvg();
 		images.each( function() {
 				PB.UI.Bookpage.makeDroppable(this);
 			});
 		var enclosingDiv = $("<div></div>").addClass('svg-enclosure');
 		enclosingDiv.append(el);
-		var rawEl = el.get(0);
-//		enclosingDiv.width(rawEl.width.baseVal.value).height(rawEl.height.baseVal.value);
+		page.setDisplayDom(enclosingDiv);
 		return enclosingDiv;
 	},
+	
 	setCurrentPage: function(page_id) {
 		// save the old page if possible
 		$("#main-container div.svg-enclosure").each(function() {
-			var dom_page = $(this).children("svg");
-			dom_page.data("page").doneEditing();
+			$(this).children("svg")
+				.data("page").saveNow().setDisplayDom(null);
 		});
 		var svg = this.createPageElement(page_id);
 		svg.appendTo($("#main-container").empty());
@@ -401,9 +402,10 @@ PB.UI.MainContainer = {
 		this.fitContent();
 	},
 	fitContent: function() {
-		var mainHeight = $("#main-container").height();
-		var mainWidth =  $("#main-container").width();
-		var page = $("#main-container .book_page").get(0);
+		var pad = 20;
+		var mainHeight = parseInt($("#main-container").get(0).style.height) - pad;
+		var mainWidth =  $("#main-container").parent().width() - pad;
+		var page = $("#main-container .book-page").get(0);
 		if (!page)
 			return;
 		if (page.viewBox.baseVal.width == 0) {

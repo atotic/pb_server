@@ -7,13 +7,9 @@ Interesting SVG vector graphics library: http://raphaeljs.com/
 Going through this is better than reading a book: http://srufaculty.sru.edu/david.dailey/svg/SVGAnimations.htm
 SVG to canvas: http://www.svgopen.org/2010/papers/62-From_SVG_to_Canvas_and_Back/index.html
 HOWTO for JS & SVG http://www.w3.org/Graphics/SVG/IG/resources/svgprimer.html
+Mediawiki wrestling with SVG -> PNG conversion http://www.mediawiki.org/wiki/Manual:$wgSVGConverters
 
 CSS
-CSS Fonts: http://www.w3.org/Style/Examples/007/fonts.en.html
-Experiment with font sizes: http://lamb.cc/typograph/ -- 
-http://www.dafont.com/my-underwood.font - just like an old typewriter font
-Font sizes with REM http://snook.ca/archives/html_and_css/font-size-with-rem
-
 Cool form effect: git clone git://github.com/kaylarose/Glowform
 Nice way to do captions, HTML5 style http://css-tricks.com/slide-in-image-captions/
 http://www.trymyui.com/ great UI testing place
@@ -24,6 +20,10 @@ CSS easing is cool: http://matthewlein.com/ceaser/
 3D CSS: http://www.webkit.org/blog/386/3d-transforms/
 Buttons can be made unselectable with : -webkit-user-select: none; (CSS3 property 
 Buttons http://webdesignledger.com/tutorials/12-excellent-css3-button-and-menu-techniques
+CSS Fonts: http://www.w3.org/Style/Examples/007/fonts.en.html
+Experiment with font sizes: http://lamb.cc/typograph/ -- 
+http://www.dafont.com/my-underwood.font - just like an old typewriter font
+Font sizes with REM http://snook.ca/archives/html_and_css/font-size-with-rem
 
 JS
 HTML5 flipping pages animation: http://studio.html5rocks.com/#Flip
@@ -46,6 +46,7 @@ Ruby command shell http://rdoc.info/github/banister/pry/master/file/README.markd
 S3
 Pure html ajax upload: http://zefer.posterous.com/pure-html-ajax-solutions-to-upload-files-to-s
 http://hacks.mozilla.org/2011/03/the-shortest-image-uploader-ever/
+S3 command line https://github.com/pcorliss/s3cmd-modification
 
 OTHER
 Look at duostack for deployment
@@ -60,3 +61,6 @@ BUSINESS
 http://www.myphotocreations.com/
 http://blurb.com/
 http://online.wsj.com/article/SB10001424052748703509104576329272101144568.html
+
+What I'd like:
+the image workflow is a mess for an average guy

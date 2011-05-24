@@ -72,6 +72,7 @@ $(document).ready( function() {
 /* GENERAL */
 body {
 	height:100%;
+	background-color: #EEE;
 }
 .chrome {
 	font-family: arial, serif;	
@@ -85,7 +86,6 @@ body {
 .flippy[state="closed"]:after {
 	font-family: arial, serif;
 	content: "\25B8";
-
 }
 .flippy[state="open"]:after {
 	font-family: arial, serif;
@@ -96,6 +96,7 @@ body {
 	background-color: #EEE;
 	background: linear-gradient(top, #EEE 0%,#AAA 100%);
 	background: -moz-linear-gradient(top, #AAA 0%,#EEE 100%);
+	background: -webkit-linear-gradient(top, #AAA 0%,#EEE 100%);
 	font-family: arial, serif;
 	padding: 2px 0 2px;
 }
@@ -155,4 +156,24 @@ body {
 	border: 2px solid yellow;
 }
 
+/* Book page */
+#main-container {
+	display: box;
+	background-color: #EEE;
+	width: 100%;
+	display: -webkit-box;
+	display: -moz-box;
+	-webkit-box-pack: center;
+  -moz-box-pack: center;
+	box-pack: center;
+  -webkit-box-align: center;
+  -moz-box-align: center;
+	box-align: center;
+}
+.svg-enclosure {
+	box-shadow: 0 0 5px gray;
+}
+.book-page {
+	display:block;
+}
 </style>

@@ -6,7 +6,6 @@ Goals:
 - UI2: 
     better book page icons
     button templates & menus
-    do not use jquery UI for UI elements, just functionality (for now, probably eliminate all the way)
 		SVG wrapper does not work, need to implement drag'n'drop myself
 
 - can create interesting books and templates
@@ -16,15 +15,29 @@ Goals:
 - deploy
 - < 200MB pdf files?
 
-Next:
+May 24
+- photo dragging in chrome
 
+button bars: 1 or 2 pages, new page...
+add text to page, & wrap
+more interesting templates
+image placement: fill template, zoom in/out.
+page thumbnails
+
+May 23
+remove resizing artifacts of SVG element
+svg.cloneNode(true)
+instead of parsing HTML, deep clone the node, and use DOM operations to clean up
+Center the page horizontally/vertically, and give it a shadow
+gray background on main-container
+ 
 May 20
+SVG resizing to fit
+
 SVG resize trick discovered 
 s1.viewBox.baseVal.width += 10;
 s1.viewBox.baseVal.height += 10;
-
 On to implement a nice looking page
-- resize SVG to fit. Make sure our resize does not save
 
 May 19
 - wrestling with SVG resize problem

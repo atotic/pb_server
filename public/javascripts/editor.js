@@ -99,6 +99,9 @@
 			get:  function(){ return this._svgEl.height.baseVal.value; },
 			set: function(value){    this._svgEl.height.baseVal.value = value; }
 		});
+		Object.defineProperty(this, "unwrapSvg", {
+			get: function() { return this._svgEl;}
+		});
 	};
 
 	jQuery.fn.wrapSvg = function() {
@@ -257,6 +260,7 @@ $.extend(PB.EventBroadcaster.prototype, {
 	}
 });
 
+PB.svgns = "http://www.w3.org/2000/svg";
 
 // DeferredFilter is part of DeferredQueue framework
 // filters are notified when job starts/completes

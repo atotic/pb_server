@@ -320,14 +320,42 @@ PB.BookPage.prototype = {
 		return this._id;
 	},
 	
-	setHtml: function(domEl) {
-		// HTML needs cleanup of <image> tags:
-		// FF does not close svg:image tags https://bugzilla.mozilla.org/show_bug.cgi?id=652243
-		// FF uses href, not xlink:href
+	// Reads HTML from DOM
+	// Not as simple as just getting innerHTML
+	// Remove display artifacts (viewBox, image hrefs to local files)
+	// Fix bugs in SVG -> tags generation
+	readHtml: function() {
 		// Our src might be local files, change to server location
 		// Bug: we might not know server location until file is saved.
 		// fixing that will be a bitch
-		var newHtml = domEl.innerHTML;
+		if (this._displayDom == null) {
+			console.warn("_displayDom is null");
+			this._html = null;
+			return;
+		}
+		// Fix the DOM. Remove all display artifacts
+		var dom = this._displayDom.cloneNode(true);
+		var svg = $(dom).children("svg").get(0);
+		// Remove viewBox
+		svg.removeAttribute("viewBox");
+		var images = $(dom).find("image");
+		// Replace local images urls with ones from server
+		images.each(function(index, el) {
+			var href = el.getAttribute("xlink:href");
+			var serverHref = PB.book().getImageByFileUrl(href);
+			if (serverHref != null)
+				el.setAttribute("xlink:href", serverHref);
+		});
+		$(dom.getElementsByClassName("ui-droppable"))
+			.each( function(index, el){
+				$(el).wrapSvg().removeClass("ui-droppable");	
+		});
+		// HTML generation bug fixes
+		var newHtml = dom.innerHTML;
+		// FF does not close svg:image tags https://bugzilla.mozilla.org/show_bug.cgi?id=652243
+		var doCloseImg = !newHtml.match(/<\/image>/g);
+		// FF uses href, not xlink:href
+		var fixXLink = !newHtml.match(/xlink:href/g);
 		var split = newHtml.split(/(<image[^>]*>)/im); // use image tags as line separators
 		for (var i=0; i<split.length; i++) {
 			// split image into components
@@ -336,11 +364,11 @@ PB.BookPage.prototype = {
 				var front = match[1];
 				var href = match[2];
 				var fileLoc = match[3];
-				var back = match[4] + "</image>";
-				href = "xlink:" + href;
-				var possibleImg = PB.book().getImageByFileUrl(fileLoc);
-				if (possibleImg)
-					fileLoc = possibleImg.getServerUrl('display');
+				var back = match[4];
+				if (doCloseImg) 
+					back += "</image>";
+				if (fixXLink) 
+					href = "xlink:" + href;
 				split[i] = front + href + fileLoc + back;
 			}
 		}
@@ -350,14 +378,21 @@ PB.BookPage.prototype = {
 		this._html = z;
 	},
 
-	// domEl contains new contents of the page
-	setModified: function(domEl) {
-		this.setHtml(domEl);
-		PB.PageUploadQueue.readyToSave(this);
-	},
-
-	doneEditing: function() {
+	saveNow: function() {
+		this.readHtml();
 		PB.PageUploadQueue.saveNowIfNeeded(this);
+		return this;
+	},
+	setDisplayDom: function(domEl) {
+		if (domEl && 'jquery' in domEl)
+			domEl = domEl.get(0);
+		this._displayDom = domEl;
+		return this;
+	},	
+	setModified: function() {
+		this.readHtml();
+		PB.PageUploadQueue.readyToSave(this);
+		return this;
 	},
 
 	// Creates Deferred that will save the page
