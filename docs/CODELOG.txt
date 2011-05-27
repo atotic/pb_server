@@ -6,7 +6,6 @@ Goals:
 - UI2: 
     better book page icons
     button templates & menus
-		SVG wrapper does not work, need to implement drag'n'drop myself
 
 - can create interesting books and templates
   interesting features: colored books, backgrounds, text, rotation
@@ -15,14 +14,34 @@ Goals:
 - deploy
 - < 200MB pdf files?
 
+Next:
+split image upload into 2 parts to prevent saving of pages pointing to local images (create/upload)
+image tools: zoom in/out, rotate
+text tools: create new text, edit, move
+pages: templates, thumbnails
+image metadata: sort date/rating/as-if, default text
+
+May 26
+svg rip out complete, pdfs are generated
+remaining problem is that pdfs are enlarged by 25%, need to make them WYSIWYG
+
+May 25
+wkpdf: forked, compiled, fixed some bugs, sent my 1st github pull request
+Rip out SVG stuff
+
 May 24
 - photo dragging in chrome
-
-button bars: 1 or 2 pages, new page...
-add text to page, & wrap
-more interesting templates
-image placement: fill template, zoom in/out.
-page thumbnails
+- button bars: created simplest buttons
+text tools:
+I ran into trouble here: svg does not wrap text,
+and faking text wrap makes me jump through hoops, measuring
+character position with moveable spans
+Time to rethink SVG. The format is badly supported,
+badly designed. Little bugs popping up everywhere you look.
+Inkscape is not something you want to base a business on.
+HTML->PDF is still problematic. There is a new converter,
+wkpdf, which shows promise. Clean, and OS X only for now.
+Tested images, JPEGs are embedded fully.
 
 May 23
 remove resizing artifacts of SVG element

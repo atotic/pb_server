@@ -67,54 +67,6 @@
 				duration: 200
 			});	
 	};
-		
-	function svgWrapper(el) {
-		this._svgEl = el;
-		this.__proto__ = el;
-		Object.defineProperty(this, "className", {
-			get:  function(){ return this._svgEl.className.baseVal; },
-			set: function(value){    this._svgEl.className.baseVal = value; }
-		});
-		Object.defineProperty(this, "width", {
-			get:  function(){ return this._svgEl.width.baseVal.value; },
-			set: function(value){    this._svgEl.width.baseVal.value = value; }
-		});
-		Object.defineProperty(this, "height", {
-			get:  function(){ return this._svgEl.height.baseVal.value; },
-			set: function(value){    this._svgEl.height.baseVal.value = value; }
-		});
-		Object.defineProperty(this, "x", {
-			get:  function(){ return this._svgEl.x.baseVal.value; },
-			set: function(value){    this._svgEl.x.baseVal.value = value; }
-		});
-		Object.defineProperty(this, "y", {
-			get:  function(){ return this._svgEl.y.baseVal.value; },
-			set: function(value){    this._svgEl.y.baseVal.value = value; }
-		});
-		Object.defineProperty(this, "offsetWidth", {
-			get:  function(){ return this._svgEl.width.baseVal.value; },
-			set: function(value){    this._svgEl.width.baseVal.value = value; }
-		});
-		Object.defineProperty(this, "offsetHeight", {
-			get:  function(){ return this._svgEl.height.baseVal.value; },
-			set: function(value){    this._svgEl.height.baseVal.value = value; }
-		});
-		Object.defineProperty(this, "unwrapSvg", {
-			get: function() { return this._svgEl;}
-		});
-	};
-
-	jQuery.fn.wrapSvg = function() {
-		return this.map(function(i, el) {
-			if (el.namespaceURI == "http://www.w3.org/2000/svg" && 
-				!('_svgEl' in el)) {
-				var x =  new svgWrapper(el);
-				return x;
-			}
-			else
-				return el;
-		});
-	};
 	
 	// Creates a "flippy" UI element
 	// state: 'open'|'closed'
@@ -149,6 +101,12 @@
 		})
 		.css("cursor", "pointer");
 		return this;
+	};
+	// Shortcut to set multiple -moz/-webkit css values
+	jQuery.fn.mozcss = function(propertyName, value) {
+		this.css(propertyName, value);
+		this.css("-moz-" + propertyName, value);
+		return this.css("-webkit-" + propertyName, value);
 	};
 	
 })(window.jQuery);
@@ -259,8 +217,6 @@ $.extend(PB.EventBroadcaster.prototype, {
 		};
 	}
 });
-
-PB.svgns = "http://www.w3.org/2000/svg";
 
 // DeferredFilter is part of DeferredQueue framework
 // filters are notified when job starts/completes

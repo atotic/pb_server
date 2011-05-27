@@ -43,8 +43,6 @@ hr { display:block; height:1px; border:0; border-top:1px solid #ccc; margin:0 0 
  
 input, select { vertical-align:middle; }
  
-select, input, textarea, button { font:99% serif; }
- 
 pre, code, kbd, samp { font-family: monospace, serif; }
 
 ul, ol { margin-left: 1.8em; }

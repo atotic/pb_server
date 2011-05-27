@@ -10,7 +10,6 @@
 <h1>SVG tests</h1>
 <button onclick="vbox()">Change vbox</button>
 <pre id="log"></pre>
-<div id="page">
 <div id="blue" style="background-color:blue">
 <svg id="svg1" version="1.1"
      baseProfile="full"
@@ -23,17 +22,30 @@ width="100" height="100"
 
 </svg>
 </div>
-<svg id="svg2" version="1.1"
-     baseProfile="full"
-     xmlns="http://www.w3.org/2000/svg"
-width="100" height="100""
+<svg id="svg2" 
+	version="1.1"
+  xmlns="http://www.w3.org/2000/svg"
+	width="200" 
+	height="200"
+	style="display:block"
 >
-  <rect width="100%" height="100%" fill="red" />
+  <rect width="100%" height="100%" fill="gray" />
   <circle cx="50" cy="50" r="30" fill="green" />
   <text x="50" y="60" font-size="30" text-anchor="middle" fill="white">SVG</text>
-
+	<foreignObject x="0" y="0" width="180" height="180">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <div style="font-size:18px;font-family:courier">
+				I daydream of the day when photo albums will join the internet speed.
+      </div>
+    </body>
+  </foreignObject>
+	<text x="0" y="15" font-family="courier" font-size="18" style="alignment-baseline:middle">
+		<tspan>I daydream of the day</tspan>
+		<tspan x="0" dy="21.5">when photo albums </tspan>
+		<tspan x="0" dy="21.5">will join the internet speed</tspan>
+	</text>
+	<line x1="0" x2='200' y1="15" y2="15" fill="black" stroke="black"/>
 </svg>
-</div>
 <script>
 function vbox()
 {
@@ -42,6 +54,10 @@ function vbox()
 	s1.viewBox.baseVal.width += 10;
 	s1.viewBox.baseVal.height += 10;
 }
-
+function foreignObjectToSvg(fo) {
+	var headEl, midEl, footEl;
+	var svg;
+	return svg;
+}
 </script>
 </body>

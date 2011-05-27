@@ -245,75 +245,6 @@ PB.UI.Phototab = {
 	}
 }
 
-/* Page in a book
- * Main page element contains data:
- * page-id, dirty, and class "page"
- *
- * DOM structure:
- * #main-container
- *   div.svg-enclosure
- * 		 svg.book-page  data:page_id data:dirty
- *       
- */
-PB.UI.Bookpage = {
-	// makes element accept images on drop
-	makeDroppable: function(el) {
-		$(el).wrapSvg().droppable({
-			  	'hoverClass': "drop-feedback-svg",
-			  	'activeClass': 'drop-feedback-svg',
-			  	'drop': function(event, ui) {
-			  		// when image drops, replace drop element with an image of the same size
-			  		var imageBroker = $(ui.draggable).data('imageBroker');
-			  		var svgns = "http://www.w3.org/2000/svg";
-			  		var xlns = "http://www.w3.org/1999/xlink";
-			  		try {
-				  		var image = document.createElementNS(svgns, 'image');
-				  		image.setAttributeNS(xlns, 'xlink:href', imageBroker.getImageUrl('display'));
-				  		image.width.baseVal.value = this.width;
-				  		image.height.baseVal.value = this.height;
-				  		image.x.baseVal.value = this.x;
-				  		image.y.baseVal.value = this.y;
-				  		var yo = this.unwrapSvg;
-				  		$(yo).replaceWith(image);
-				  	  $(image).wrapSvg().addClass("book_image");
-				  	  PB.UI.Bookpage.makeDroppable(image);
-							var svg = $(image).parent('svg');
-							svg.data("page").setModified();
-				  	}
-				  	catch(ex)
-				  	{
-				  		console.error(ex.message);
-				  	}
-			  }});
-	},
-	// Loads page from model
-	createPageElement: function(page_id) {
-		var page = PB.book().getPageById(page_id);
-		var el = $(page.html());
-		el.data('page_id', page_id);
-		el.data('page', page);
-		$(el).wrapSvg().addClass("book-page");
-		var images = el.find(".book_image").wrapSvg();
-		images.each( function() {
-				PB.UI.Bookpage.makeDroppable(this);
-			});
-		var enclosingDiv = $("<div></div>").addClass('svg-enclosure');
-		enclosingDiv.append(el);
-		page.setDisplayDom(enclosingDiv);
-		return enclosingDiv;
-	},
-	
-	setCurrentPage: function(page_id) {
-		// save the old page if possible
-		$("#main-container div.svg-enclosure").each(function() {
-			$(this).children("svg")
-				.data("page").saveNow().setDisplayDom(null);
-		});
-		var svg = this.createPageElement(page_id);
-		svg.appendTo($("#main-container").empty());
-		PB.UI.MainContainer.fitContent();
-	}
-}
 
 PB.UI.Pagetab = {
 	_init: $(document).ready(function() { PB.UI.Pagetab.init() }),
@@ -380,6 +311,90 @@ PB.UI.Pagetab = {
 	}
 }
 
+/* Page in a book
+ * Main page element contains data:
+ * page-id, dirty, and class "page"
+ *
+ * DOM structure:
+ * #main-container
+ *   div.page-enclosure
+ * 		 div.book-page  data:page_id data:dirty
+ *       
+ */
+PB.UI.Bookpage = {
+	// makes element accept images on drop
+	makeDroppable: function(el) {
+		$(el).droppable({
+			  	'hoverClass': "drop-feedback",
+			  	'activeClass': 'drop-feedback',
+			  	'drop': function(event, ui) {
+			  		// when image drops, replace drop element with an image of the same size
+			  		var imageBroker = $(ui.draggable).data('imageBroker');
+			  		try {
+				  		var image = $('<img style="visibility:hidden"/>');
+				  		image.addClass("book_image");
+				  	  image.bind("load",  function(ev) {
+									PB.UI.Bookpage.imageLoaded(this, ev);
+									image.css("visibility", "visible");
+							});
+				  		$(this).children().remove();
+				  		$(this).append(image);
+							$(this).parents('.page-enclosure')
+								.data("page").setModified();
+				  		image.attr('src', imageBroker.getImageUrl('display'));
+				  	}
+				  	catch(ex)
+				  	{
+				  		console.error(ex.message);
+				  	}
+			  }});
+	},
+	// Loads page from model
+	createPageElement: function(page_id) {
+		var page = PB.book().getPageById(page_id);
+		var el = $(page.html());
+		el.addClass("book-page");
+		el.find(".book_image").each( function() {
+				PB.UI.Bookpage.makeDroppable(this);
+			});
+		var enclosingDiv = $("<div></div>")
+			.addClass('page-enclosure')
+			.css("position", "relative")
+			.css("width", el.css('width'))
+			.css("height", el.css('height'))
+			.data('page_id', page_id)
+			.data('page', page)
+		enclosingDiv.append(el);
+		page.setDisplayDom(enclosingDiv);
+		return enclosingDiv;
+	},
+	
+	setCurrentPage: function(page_id) {
+		// save the old page if possible
+		$("#main-container div.page-enclosure").each(function() {
+			$(this).data("page").saveNow().setDisplayDom(null);
+		});
+		var dom = this.createPageElement(page_id);
+		dom.appendTo($("#main-container").empty());
+		PB.UI.MainContainer.fitContent();
+	},
+	
+	imageLoaded: function(img, event) {
+		var parent = $(img).parent();
+		var pwidth = parent.width();
+		var pheight = parent.height();
+		var iwidth = img.naturalWidth;
+		var iheight = img.naturalHeight;
+		var vscale = pheight / iheight;
+		var hscale = pwidth / iwidth;
+		var scale = Math.min(vscale, hscale);
+		if (scale < 1) {
+			img.style.height = iheight * scale + "px";
+			img.style.width = iwidth * scale + "px";
+		} 
+	}
+}
+
 PB.UI.MainContainer = {
 	_fitStyle: 'fit',	// fit | full
 	get mainEl() {
@@ -402,27 +417,25 @@ PB.UI.MainContainer = {
 		this.fitContent();
 	},
 	fitContent: function() {
+		var page = $("#main-container .book-page");
+		if (!page) return;
+		
 		var pad = 20;
 		var mainHeight = parseInt($("#main-container").get(0).style.height) - pad;
 		var mainWidth =  $("#main-container").parent().width() - pad;
-		var page = $("#main-container .book-page").get(0);
-		if (!page)
-			return;
-		if (page.viewBox.baseVal.width == 0) {
-			// viewBox is not initialized on load, set initial values
-			page.viewBox.baseVal.width = page.width.baseVal.value;
-			page.viewBox.baseVal.height = page.height.baseVal.value;
-		}
-		var svgWidth =  page.viewBox.baseVal.width;
-		var svgHeight = page.viewBox.baseVal.height;
-		var vscale = mainHeight / svgHeight;
-		var hscale = mainWidth / svgWidth;
+
+		var pageWidth =  page.width();
+		var pageHeight = page.height();
+
+		var vscale = mainHeight / pageHeight;
+		var hscale = mainWidth / pageWidth;
 		var scale = Math.min(vscale, hscale);
 		scale = Math.min(1, scale);
 		if (this._fitStyle == 'full')
 			scale = 1;
-		page.style.width = page.viewBox.baseVal.width * scale + "px";
-		page.style.height = page.viewBox.baseVal.height * scale + "px";
+		page.parent().mozcss("transform", "scale("+scale+")")
+			.css("left", (mainWidth - pageWidth ) / 2 + (pad / 2) + "px")
+			.css("top", (mainHeight - pageHeight) / 2 + (pad / 2) + "px");
 	}
 }
 

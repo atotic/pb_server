@@ -37,6 +37,7 @@ The entire FileAPI: http://www.html5rocks.com/tutorials/file/filesystem/
 http://wiki.commonjs.org/wiki/CommonJS -- stdlib for server js
 Photo editing API: http://developers.aviary.com/effects-api
 JSFiddle, nice easing animations: http://jsfiddle.net/marcofucci/rRtAq/
+XPath for JSON http://jsonselect.org/#overview
 
 RUBY
 Ruby toolbox: what gem should I use for.....  http://ruby-toolbox.com/
@@ -48,10 +49,12 @@ Pure html ajax upload: http://zefer.posterous.com/pure-html-ajax-solutions-to-up
 http://hacks.mozilla.org/2011/03/the-shortest-image-uploader-ever/
 S3 command line https://github.com/pcorliss/s3cmd-modification
 
+HTML
+PDF converter: https://github.com/ento/wkpdf/network
+
 OTHER
 Look at duostack for deployment
 How to deploy custom binaries on Heroku: http://blog.mattgornick.com/using-pdfkit-on-heroku
-God, I love the new web: http://www.websequencediagrams.com/
 https://www.crowdspring.com/post-a-project/, UI design referred from Michael LaGuardia
 Survey of offline: http://www.html5rocks.com/tutorials/offline/whats-offline/#toc-compatibility
 Unicode geometric shapes: http://www.unicodemap.org/range/54/Geometric_Shapes/

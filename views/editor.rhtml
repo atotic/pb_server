@@ -13,7 +13,7 @@
 			<span class="flippy" state="closed"></span>Photos
 		</div>
 		<div class="slab_tools">
-			Menu button Menu button
+			<button>Simple</button>
 		</div>
 	</div>
 	<div id="photos-tab" class='slab_content'>
@@ -30,7 +30,6 @@
 			<span class="flippy" state="closed"></span>Book
 		</div>
 		<div class="slab_tools">
-			Menu button Menu button
 		</div>
 	</div>
 	<div id="pages-tab" class='slab_content'>
@@ -48,7 +47,6 @@
 			Page
 		</div>
 		<div class="slab_tools">
-			Menu button Menu button
 		</div>
 	</div>		
 	<div id="main-container">
@@ -108,7 +106,15 @@ body {
 }
 .slab_tools {
 	display: inline-block;
-	visibility: hidden;
+}
+
+.slab_tools button {
+	border: 1px none;
+	border-radius: 2px;
+	background-color: #D5D5D5;
+}
+.slab_tools button:hover {
+	background-color: #FFF;
 }
 .slab_content {
 	padding: 0px 10px 4px 10px;
@@ -158,22 +164,20 @@ body {
 
 /* Book page */
 #main-container {
-	display: box;
+	position: relative;
 	background-color: #EEE;
 	width: 100%;
-	display: -webkit-box;
-	display: -moz-box;
-	-webkit-box-pack: center;
-  -moz-box-pack: center;
-	box-pack: center;
-  -webkit-box-align: center;
-  -moz-box-align: center;
-	box-align: center;
+	overflow: hidden;
 }
-.svg-enclosure {
+.page-enclosure {
+	border: 1px solid gray;
 	box-shadow: 0 0 5px gray;
 }
 .book-page {
 	display:block;
+	position:relative;
+}
+.book-page * {
+	position: absolute;  /* book page elements are absolutely positioned by default */
 }
 </style>

@@ -321,13 +321,10 @@ PB.BookPage.prototype = {
 	},
 	
 	// Reads HTML from DOM
-	// Not as simple as just getting innerHTML
-	// Remove display artifacts (viewBox, image hrefs to local files)
-	// Fix bugs in SVG -> tags generation
+	// Removes display artifacts before
 	readHtml: function() {
 		// Our src might be local files, change to server location
-		// Bug: we might not know server location until file is saved.
-		// fixing that will be a bitch
+		// TODO we might not know server location until file is saved.
 		if (this._displayDom == null) {
 			console.warn("_displayDom is null");
 			this._html = null;
@@ -335,47 +332,18 @@ PB.BookPage.prototype = {
 		}
 		// Fix the DOM. Remove all display artifacts
 		var dom = this._displayDom.cloneNode(true);
-		var svg = $(dom).children("svg").get(0);
-		// Remove viewBox
-		svg.removeAttribute("viewBox");
-		var images = $(dom).find("image");
 		// Replace local images urls with ones from server
-		images.each(function(index, el) {
-			var href = el.getAttribute("xlink:href");
-			var serverHref = PB.book().getImageByFileUrl(href);
-			if (serverHref != null)
-				el.setAttribute("xlink:href", serverHref);
+		$(dom).find("img").each(function(index, el) {
+			var src = el.getAttribute("src");
+			var serverSrc = PB.book().getImageByFileUrl(src);
+			if (serverSrc != null)
+				el.setAttribute("src", serverSrc);
 		});
 		$(dom.getElementsByClassName("ui-droppable"))
 			.each( function(index, el){
-				$(el).wrapSvg().removeClass("ui-droppable");	
+				$(el).removeClass("ui-droppable");	
 		});
-		// HTML generation bug fixes
-		var newHtml = dom.innerHTML;
-		// FF does not close svg:image tags https://bugzilla.mozilla.org/show_bug.cgi?id=652243
-		var doCloseImg = !newHtml.match(/<\/image>/g);
-		// FF uses href, not xlink:href
-		var fixXLink = !newHtml.match(/xlink:href/g);
-		var split = newHtml.split(/(<image[^>]*>)/im); // use image tags as line separators
-		for (var i=0; i<split.length; i++) {
-			// split image into components
-			var match = split[i].match(/(<image[^>]*)(href=")([^"]*)(".*)/mi)
-			if (match) {
-				var front = match[1];
-				var href = match[2];
-				var fileLoc = match[3];
-				var back = match[4];
-				if (doCloseImg) 
-					back += "</image>";
-				if (fixXLink) 
-					href = "xlink:" + href;
-				split[i] = front + href + fileLoc + back;
-			}
-		}
-		var z = split.reduce(function(prev, current, index, arry) {
-			return prev + current;
-		}, "");
-		this._html = z;
+		this._html = dom.innerHTML;
 	},
 
 	saveNow: function() {
