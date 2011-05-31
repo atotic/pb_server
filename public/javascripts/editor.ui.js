@@ -332,7 +332,7 @@ PB.UI.Bookpage = {
 			  		var imageBroker = $(ui.draggable).data('imageBroker');
 			  		try {
 				  		var image = $('<img style="visibility:hidden"/>');
-				  		image.addClass("book_image");
+				  		image.addClass("book-image");
 				  	  image.bind("load",  function(ev) {
 									PB.UI.Bookpage.imageLoaded(this, ev);
 									image.css("visibility", "visible");
@@ -354,7 +354,7 @@ PB.UI.Bookpage = {
 		var page = PB.book().getPageById(page_id);
 		var el = $(page.html());
 		el.addClass("book-page");
-		el.find(".book_image").each( function() {
+		el.find(".book-image").each( function() {
 				PB.UI.Bookpage.makeDroppable(this);
 			});
 		var enclosingDiv = $("<div></div>")

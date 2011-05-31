@@ -38,7 +38,7 @@ http://wiki.commonjs.org/wiki/CommonJS -- stdlib for server js
 Photo editing API: http://developers.aviary.com/effects-api
 JSFiddle, nice easing animations: http://jsfiddle.net/marcofucci/rRtAq/
 XPath for JSON http://jsonselect.org/#overview
-
+Ajax history design: http://tumbledry.org/2011/05/12/screw_hashbangs_building
 RUBY
 Ruby toolbox: what gem should I use for.....  http://ruby-toolbox.com/
 MD5 digests in ruby http://www.siaris.net/index.cgi/Programming/LanguageBits/Ruby/MD5.rdoc
@@ -64,6 +64,23 @@ BUSINESS
 http://www.myphotocreations.com/
 http://blurb.com/
 http://online.wsj.com/article/SB10001424052748703509104576329272101144568.html
+smugmug: they are photo oriented
+
+nation's photo lab
 
 What I'd like:
 the image workflow is a mess for an average guy
+
+"I went to SmugMug and tried their option to create a book ONLINE (with Blub's Bookify).
+However, I seem to have some issues with it.
+
+So,
+
+1. Does anyone else know who we can do this efficiently?
+I thought it would be good if everyone created one page for their child and added it to the book online (in theory).
+And if someone needed help, others could help.
+
+However, I encountered some glitches with Blurb's Bookify.
+The other options don't seem to be ONLINE.
+In other words, the book would be saved to someone's personal computer - which would make it hard for everyone to do their own page.
+"
