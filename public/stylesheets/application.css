@@ -96,6 +96,7 @@ a:visited {
 
 .drop-feedback {
 	box-shadow: inset 0px 0px 15px #61A326;
+	background-color: #61A326 !important;
 }
 
 /* HEADER */

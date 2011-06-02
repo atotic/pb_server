@@ -10,6 +10,7 @@ HOWTO for JS & SVG http://www.w3.org/Graphics/SVG/IG/resources/svgprimer.html
 Mediawiki wrestling with SVG -> PNG conversion http://www.mediawiki.org/wiki/Manual:$wgSVGConverters
 
 CSS
+Free web app developer resources: http://www.webappers.com/category/design/icons/
 Cool form effect: git clone git://github.com/kaylarose/Glowform
 Nice way to do captions, HTML5 style http://css-tricks.com/slide-in-image-captions/
 http://www.trymyui.com/ great UI testing place
@@ -65,6 +66,7 @@ http://www.myphotocreations.com/
 http://blurb.com/
 http://online.wsj.com/article/SB10001424052748703509104576329272101144568.html
 smugmug: they are photo oriented
+hotprints: free cheap photo books
 
 nation's photo lab
 

@@ -332,7 +332,7 @@ PB.UI.Bookpage = {
 			  		var imageBroker = $(ui.draggable).data('imageBroker');
 			  		try {
 				  		var image = $('<img style="visibility:hidden"/>');
-				  		image.addClass("book-image");
+				  		image.addClass("actual-image");
 				  	  image.bind("load",  function(ev) {
 									PB.UI.Bookpage.imageLoaded(this, ev);
 									image.css("visibility", "visible");
@@ -379,7 +379,7 @@ PB.UI.Bookpage = {
 		PB.UI.MainContainer.fitContent();
 	},
 	
-	imageLoaded: function(img, event) {
+	imageLoaded: function(img, event) { 
 		var parent = $(img).parent();
 		var pwidth = parent.width();
 		var pheight = parent.height();
@@ -388,25 +388,38 @@ PB.UI.Bookpage = {
 		var vscale = pheight / iheight;
 		var hscale = pwidth / iwidth;
 		var scale = Math.min(vscale, hscale);
-		if (scale < 1) {
-			img.style.height = iheight * scale + "px";
-			img.style.width = iwidth * scale + "px";
-		} 
+		var align = $(img).parent().attr('data-align') || 'center';
+		var x = 0, y=0;
+		switch(align) {
+			case 'top':
+			case 'start':
+				break;
+			case 'center':
+				x = (pwidth - iwidth * scale) / 2;
+				y = (pheight - iheight * scale) / 2;
+				break;
+			case 'bottom':
+			case 'right':
+			case 'end':
+				x = pwidth - iwidth * scale;
+				y = pheight - iheight * scale;
+				break;
+			default:
+				console.warn("Unknown image data-align attribute: " + align);
+		}
+		img.style.position = 'relative';
+		img.style.height = iheight * scale + "px";
+		img.style.width = iwidth * scale + "px";
+		img.style.top = y + "px";
+		img.style.left = x + "px"; 
 	}
 }
 
 PB.UI.MainContainer = {
-	_fitStyle: 'fit',	// fit | full
 	get mainEl() {
 		if (!("_mainEl" in this))
 			this._mainEl = $("#main-container");
 		return this._mainEl;
-	},
-	setFitStyle: function(style) {
-		var change = this._fitStyle != style;
-		this._fitStyle = style;
-		if (change)
-			this.fitContent();
 	},
 	resize: function() {
 		var newHeight = Math.floor(window.innerHeight - this.mainEl.offset().top - 3);
@@ -430,7 +443,7 @@ PB.UI.MainContainer = {
 		var vscale = mainHeight / pageHeight;
 		var hscale = mainWidth / pageWidth;
 		var scale = Math.min(vscale, hscale);
-		scale = Math.min(1, scale);
+
 		if (this._fitStyle == 'full')
 			scale = 1;
 		page.parent().mozcss("transform", "scale("+scale+")")

@@ -15,12 +15,15 @@ Goals:
 - < 200MB pdf files?
 
 Next:
-Fix the PDF creation with WKPDF
 image tools: zoom in/out, rotate
 text tools: create new text, edit, move
 pages: templates, thumbnails
 image metadata: sort date/rating/as-if, default text
 split image upload into 2 parts to prevent saving of pages pointing to local images (create/upload)
+
+May 31:
+PDFs are generated with the correct size. Using inches is useless, as
+they map to 96px. PDF generates 72px/in.
 
 May 27
 Movie with Mike

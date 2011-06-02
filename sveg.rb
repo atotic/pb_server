@@ -247,8 +247,11 @@ class SvegApp < Sinatra::Base
 			dt.strftime "%b %d %I:%M%p"
 		end
 		
+		# TODO really redirect back, should use cookies?
 		def redirect_back
-			redirect request.referer.end_with?(request.path_info) ? "/" : request.referer
+			redirect "/"
+#			redirect "/" if !request.referer || request.referer.end_with?(request.path_info)
+#			redirect request.referer
 		end
 
 		# args are a list of resources 
