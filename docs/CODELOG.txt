@@ -15,11 +15,34 @@ Goals:
 - < 200MB pdf files?
 
 Next:
-image tools: zoom in/out, rotate
+undo/redo bug: need new command every time mouse is pressed
+image tool bugs: export of -moz-translate html style
+image frame resize
+position image tools independent of image rotation/ zoom factor
+constraints on image manipulation
+image placement hints on how border
+image borders
+hash bangs for pages
+
 text tools: create new text, edit, move
 pages: templates, thumbnails
 image metadata: sort date/rating/as-if, default text
 split image upload into 2 parts to prevent saving of pages pointing to local images (create/upload)
+
+Jun 2
+- implemented pan/move/zoom/rotate
+Solved a bunch of problems: Javascript default prototype inheritance is a pain,
+used jresig library instead. His library uses arguments.callee, which are not allowed
+in strict mode. I am still trying to wrap my brain around what his code does.
+Workaround: disable strict mode in editor.js
+
+- command framework, undo/redo
+
+
+Jun 1:
+Testbed for image manipulation. Implemented all operations without constraints
+Could not implement image rotation about image center. There is no way to find image center
+in page coordinates once it has been transformed.
 
 May 31:
 PDFs are generated with the correct size. Using inches is useless, as
@@ -520,3 +543,4 @@ Thanks to:
 Sinatra
 OmniAuth
 html5doctor.com/html-5-reset-stylesheet/
+transfrom jQuery hook by louisremi

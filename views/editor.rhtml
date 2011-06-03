@@ -2,7 +2,8 @@
 <html>
 <head>
 	<title>Photobook</title>
-	<%= asset_link("jquery.js", "jquery-ui.js", "application.js", "editor.js", "editor.model.js", "editor.ui.js") %>
+	<%= asset_link("jquery.js", "jquery-ui.js", "transform.js", "application.js" ) %>
+	<%= asset_link("editor.js", "editor.command.js", "editor.model.js", "editor.ui.js" ) %>
 	<%= asset_link("jquery-ui.css", "application.css") %>
 </head>
 <body>
@@ -47,6 +48,8 @@
 			Page
 		</div>
 		<div class="slab_tools">
+			<button id="undo-button">Undo</button>
+			<button id="redo-button">Redo</button>
 		</div>
 	</div>		
 	<div id="main-container">
@@ -112,9 +115,11 @@ body {
 	border: 1px none;
 	border-radius: 2px;
 	background-color: #D5D5D5;
+	cursor:default;
 }
-.slab_tools button:hover {
+.slab_tools button:hover:enabled {
 	background-color: #FFF;
+	cursor:pointer;
 }
 .slab_content {
 	padding: 0px 10px 4px 10px;
@@ -182,5 +187,15 @@ body {
 }
 .book-image {
 	background-color:gray;
+	overflow:hidden;
+}
+
+.image-button {
+	position: relative;
+	border: 1px none;
+	border-radius: 2px;
+	background-color: #D5D5D5;
+	z-index: 1;
+	display:none;
 }
 </style>

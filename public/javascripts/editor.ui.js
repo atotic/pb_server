@@ -317,11 +317,20 @@ PB.UI.Pagetab = {
  *
  * DOM structure:
  * #main-container
- *   div.page-enclosure
- * 		 div.book-page  data:page_id data:dirty
+ *   div.page-enclosure data:page_id data:page(model)
+ * 		 div.book-page
  *       
  */
 PB.UI.Bookpage = {
+	
+	getDomById: function(id) {
+		var found = null;
+		$(".page-enclosure").each( function(index, el) {
+			if ($(el).data("page_id") == id)
+				found = el;
+		});
+		return found;
+	},
 	// makes element accept images on drop
 	makeDroppable: function(el) {
 		$(el).droppable({
@@ -341,6 +350,7 @@ PB.UI.Bookpage = {
 				  		$(this).append(image);
 							$(this).parents('.page-enclosure')
 								.data("page").setModified();
+							PB.UI.Bookpage.updateImageControls(this);
 				  		image.attr('src', imageBroker.getImageUrl('display'));
 				  	}
 				  	catch(ex)
@@ -349,22 +359,48 @@ PB.UI.Bookpage = {
 				  	}
 			  }});
 	},
+	updateImageControls: function(bookImage) {
+		bookImage = $(bookImage);
+		var img = bookImage.find(".actual-image");
+		if (img.length == 0)
+			bookImage.find(".image-button").remove();
+		else {
+			PB.Manipulators.createImageButton("move", "move", bookImage);
+			PB.Manipulators.createImageButton("pan", "pan", bookImage);
+			PB.Manipulators.createImageButton("zoom", "zoom", bookImage);
+			PB.Manipulators.createImageButton("rotate", "rotate", bookImage);
+		}
+		if (! bookImage.data("hasManipulatorShowHide")) {
+			bookImage.data("hasManipulatorShowHide", true);
+			var showHideEvents = {
+				mouseenter: function(ev) {
+					$(ev.currentTarget).find(".image-button").show();
+				},
+				mouseleave: function(ev) {
+					$(ev.currentTarget).find(".image-button").hide();				
+				}
+			}
+			bookImage.bind(showHideEvents);
+		}
+	}, 
 	// Loads page from model
 	createPageElement: function(page_id) {
 		var page = PB.book().getPageById(page_id);
 		var el = $(page.html());
 		el.addClass("book-page");
-		el.find(".book-image").each( function() {
-				PB.UI.Bookpage.makeDroppable(this);
-			});
 		var enclosingDiv = $("<div></div>")
 			.addClass('page-enclosure')
 			.css("position", "relative")
 			.css("width", el.css('width'))
 			.css("height", el.css('height'))
 			.data('page_id', page_id)
-			.data('page', page)
+			.data('page', page);
 		enclosingDiv.append(el);
+		el.find(".book-image").each( function() {
+		// this must come after we are inside the enclosing div
+				PB.UI.Bookpage.makeDroppable(this);
+				PB.UI.Bookpage.updateImageControls(this);
+			});
 		page.setDisplayDom(enclosingDiv);
 		return enclosingDiv;
 	},
@@ -407,7 +443,7 @@ PB.UI.Bookpage = {
 			default:
 				console.warn("Unknown image data-align attribute: " + align);
 		}
-		img.style.position = 'relative';
+		img.style.position = 'absolute';
 		img.style.height = iheight * scale + "px";
 		img.style.width = iwidth * scale + "px";
 		img.style.top = y + "px";
@@ -416,6 +452,23 @@ PB.UI.Bookpage = {
 }
 
 PB.UI.MainContainer = {
+	_init: $(document).ready(function() { PB.UI.MainContainer.init() }),
+	init: function() {
+		PB.CommandQueue.bind('commandQueueChanged', function() {
+				PB.UI.MainContainer.commandQueueChanged();
+			});
+		$("#redo-button").click(function() {
+			PB.CommandQueue.redo();
+		});
+		$("#undo-button").click(function() {
+			PB.CommandQueue.undo();
+		});
+		this.commandQueueChanged();
+	},
+	commandQueueChanged: function() {
+		$("#redo-button").attr('disabled', !PB.CommandQueue.canRedo());
+		$("#undo-button").attr('disabled', !PB.CommandQueue.canUndo());
+	},
 	get mainEl() {
 		if (!("_mainEl" in this))
 			this._mainEl = $("#main-container");
@@ -446,9 +499,9 @@ PB.UI.MainContainer = {
 
 		if (this._fitStyle == 'full')
 			scale = 1;
-		page.parent().mozcss("transform", "scale("+scale+")")
+		page.parent().css("transform", "scale("+scale+")")
 			.css("left", (mainWidth - pageWidth ) / 2 + (pad / 2) + "px")
 			.css("top", (mainHeight - pageHeight) / 2 + (pad / 2) + "px");
-	}
+	},
 }
 

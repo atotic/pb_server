@@ -339,7 +339,10 @@ PB.BookPage.prototype = {
 			if (serverSrc != null)
 				el.setAttribute("src", serverSrc);
 		});
-		$(dom.getElementsByClassName("ui-droppable"))
+		$(dom).find(".deleteme").each(function(index, el) {
+			$(el).remove();
+		});
+		$(dom).find(".ui-droppable")
 			.each( function(index, el){
 				$(el).removeClass("ui-droppable");	
 		});

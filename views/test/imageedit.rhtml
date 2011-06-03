@@ -2,7 +2,8 @@
 <html>
 <head>
 	<title>Test: Image Edit</title>
-	<%= asset_link("jquery.js", "jquery-ui.js", "application.js", "editor.js", "editor.model.js") %>
+	<%= asset_link("jquery.js", "jquery-ui.js", "transform.js", "application.js") %>
+	<%= asset_link("editor.js", "editor.model.js", "editor.command.js") %>
 	<%= asset_link("jquery-ui.css", "application.css") %>
 <style type="text/css">
 #main-container {
@@ -53,10 +54,11 @@
 <script type="text/javascript">
 	
 	function createButtons(imageDiv) {
-		var butHtml = '<button class="image-button pan">pan</button>\
-		<button class="image-button move">move</button>\
-		<button class="image-button zoom">zoom</button>\
-		<button class="image-button rotate">rotate</button>';
+		var butHtml = '\
+		<button class="image-button move deleteme">move</button>\
+		<button class="image-button pan deleteme">pan</button>\
+		<button class="image-button zoom deleteme">zoom</button>\
+		<button class="image-button rotate deleteme">rotate</button>';
 		$(butHtml).appendTo(imageDiv);
 		var showHideEvents = {
 			mouseenter: function(ev) {
@@ -69,50 +71,14 @@
 		imageDiv.bind(showHideEvents);
 	}
 
-	function setupButtons(imageDiv) {
-	// Draw the buttons
-		imageDiv = $(imageDiv);
-		createButtons(imageDiv);
-		imageDiv.find(".pan").css("cursor", "all-scroll");
-		imageDiv.find(".move").css("cursor", "move");
-		imageDiv.find(".zoom").css("cursor", 'row-resize');
-		var panBut = imageDiv.find(".zoom");
-// Pan moves image within bounds
+	function setupOneButton(button, imageDiv, moveCb) {
+// moveCb(moveX, moveY, ev)
 		var docEvents = {
+			processMove: moveCb,
 			mousemove: function(ev) {
 				var moveX = ev.pageX - docEvents.data.mouseStartX;
 				var moveY = ev.pageY - docEvents.data.mouseStartY;
-/*				// pan
-				docEvents.data.image.css("top",(docEvents.data.imageTop + moveY) + "px");
-				docEvents.data.image.css("left",(docEvents.data.imageLeft + moveX) + "px");
-				// move
-//				docEvents.data.imageDiv.css("top", (docEvents.data.imageDivTop + moveY) + "px");
-//				docEvents.data.imageDiv.css("left", (docEvents.data.imageDivLeft + moveX) + "px");
-				// zoom
-					var	top = docEvents.data.imageTop + moveY;
-					var	height = docEvents.data.imageHeight - moveY * 2;
-					var	xdelta = moveY * docEvents.data.imageWidth / docEvents.data.imageHeight;
-					var	left = docEvents.data.imageLeft + xdelta;
-					var	width = docEvents.data.imageWidth - xdelta * 2;
-					docEvents.data.image.css({
-						top: top + "px",
-						left: left + "px",
-						height: height + "px",
-						width: width + "px"
-				});
-*/			
-
-				// Rotate
-		// compute in screen coordinates
-				// compute angle, pythagora
-				var b = docEvents.data.centerY - ev.pageY;
-				var a = ev.pageX - docEvents.data.centerX;
-				var c = Math.sqrt(a*a+b*b);
-				var angle = Math.asin(b / c);
-				if (a < 0)
-					angle = Math.PI / 2 + ( Math.PI / 2 - angle);
-				angle = -angle;
-				docEvents.data.imageDiv.mozcss("transform", "rotate(" + angle + "rad)");
+				docEvents.processMove(moveX, moveY, ev);
 			},
 			mouseup: function(ev) {
 				console.log("mouseup");
@@ -121,39 +87,89 @@
 			}
 		};
 		var buttonEvents = {
-				mousedown: function(ev) {
-					console.log("mousedown");
-					imageDiv.mouseleave();
-					var image = imageDiv.find(".actual-image").get(0);
-					var originalAngle = 0;
-					var transform = imageDiv.get(0).style.transform;
-					if (transform) {
-						var match = transform.match(/.*rotate\(([^)]+)\)/);
-						if (match.length == 1)
-							originalAngle = parseFloat(match[1]) || 0;
-					}
-					docEvents.data = {
-						mouseStartX: ev.pageX,
-						mouseStartY:ev.pageY,
-						image: $(image),
-						imageTop: parseFloat(image.style.top),
-						imageLeft: parseFloat(image.style.left),
-						imageWidth: parseFloat(image.style.width),
-						imageHeight: parseFloat(image.style.height),
-						centerX: ev.pageX - 50, // TODO these should be based upon position within image
-						centerY: ev.pageY,
-						originalAngle: originalAngle,
-						imageDiv: imageDiv,
-						imageDivTop: parseFloat(imageDiv.css("top")),
-						imageDivLeft: parseFloat(imageDiv.css("left")),
-						imageDivWidth: parseFloat(imageDiv.css("width")),
-						imageDivHeight: parseFloat(imageDiv.css("height"))
-					};
-					ev.preventDefault();
-					$(document).bind(docEvents);
+			mousedown: function(ev) {
+				imageDiv.mouseleave();	// hides the buttons
+				var image = imageDiv.find(".actual-image").get(0);
+				var originalAngle = 0;
+				var transform = imageDiv.css("transform");
+				if (transform) {
+					var match = transform.match(/.*rotate\(([^)]+)\)/);
+					if (match && match.length == 1)
+						originalAngle = parseFloat(match[1]) || 0;
 				}
+				docEvents.data = {
+					mouseStartX: ev.pageX,
+					mouseStartY:ev.pageY,
+					image: $(image),
+					imageTop: parseFloat(image.style.top),
+					imageLeft: parseFloat(image.style.left),
+					imageWidth: parseFloat(image.style.width),
+					imageHeight: parseFloat(image.style.height),
+					centerX: ev.pageX - 50, // BUG should be based upon center of the image
+					centerY: ev.pageY,
+					originalAngle: originalAngle,
+					imageDiv: imageDiv,
+					imageDivTop: parseFloat(imageDiv.css("top")),
+					imageDivLeft: parseFloat(imageDiv.css("left")),
+					imageDivWidth: parseFloat(imageDiv.css("width")),
+					imageDivHeight: parseFloat(imageDiv.css("height"))
+				};
+				ev.preventDefault();
+				$(document).bind(docEvents);
+			}
 		};
-		panBut.bind(buttonEvents);
+		button.bind(buttonEvents);		
+	}
+
+	function zoom(moveX, moveY, ev) {
+		var	top = this.data.imageTop + moveY;
+		var	height = this.data.imageHeight - moveY * 2;
+		var	xdelta = moveY * this.data.imageWidth / this.data.imageHeight;
+		var	left = this.data.imageLeft + xdelta;
+		var	width = this.data.imageWidth - xdelta * 2;
+			this.data.image.css({
+					top: top + "px",
+					left: left + "px",
+					height: height + "px",
+					width: width + "px"
+			});
+	}
+
+	function rotate(moveX, moveY, ev) {
+		// Rotate
+		// compute angle, pythagora
+		var b = this.data.centerY - ev.pageY;
+		var a = ev.pageX - this.data.centerX;
+		var c = Math.sqrt(a*a+b*b);
+		var angle = Math.asin(b / c);
+		if (a < 0)
+			angle = Math.PI / 2 + ( Math.PI / 2 - angle);
+		angle = -angle;
+		this.data.imageDiv.css("transform", "rotate(" + angle + "rad)");
+	}
+
+	function pan(moveX, moveY, ev) {
+		this.data.image.css("top",(this.data.imageTop + moveY) + "px");
+		this.data.image.css("left",(this.data.imageLeft + moveX) + "px");
+	}
+
+	function move(moveX, moveY, ev) {
+		this.data.imageDiv.css("top", (this.data.imageDivTop + moveY) + "px");
+		this.data.imageDiv.css("left", (this.data.imageDivLeft + moveX) + "px");
+	}
+
+	function setupButtons(imageDiv) {
+	// Draw the buttons
+		imageDiv = $(imageDiv);
+		createButtons(imageDiv);
+		imageDiv.find(".pan").css("cursor", "all-scroll");
+		imageDiv.find(".move").css("cursor", "move");
+		imageDiv.find(".zoom").css("cursor", 'row-resize');
+		imageDiv.find(".rotate").css("cursor", 'nw-resize');
+		setupOneButton(imageDiv.find(".zoom"), imageDiv, zoom);
+		setupOneButton(imageDiv.find(".rotate"), imageDiv, rotate);
+		setupOneButton(imageDiv.find(".pan"), imageDiv, pan);
+		setupOneButton(imageDiv.find(".move"), imageDiv, move);
 	}
 	$(document).ready(function() {
 		$(".book-image").each(function(index, el) {
