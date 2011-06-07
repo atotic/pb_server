@@ -527,6 +527,8 @@ function toArray(matrix) {
 	return [matrix[1], matrix[2], matrix[3], matrix[4], matrix[5], matrix[6]];
 }
 
+$.transformUnmatrix = unmatrix;
+$.transformMatrix = matrix;
 $.transform = {
 	centerOrigin: 'margin'
 };

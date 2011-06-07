@@ -15,23 +15,31 @@ Goals:
 - < 200MB pdf files?
 
 Next:
-undo/redo bug: need new command every time mouse is pressed
-image tool bugs: export of -moz-translate html style
 image frame resize
-position image tools independent of image rotation/ zoom factor
+image placement hints on border placement
 constraints on image manipulation
-image placement hints on how border
 image borders
 hash bangs for pages
+multiple editors?
+new cursors
 
 text tools: create new text, edit, move
 pages: templates, thumbnails
 image metadata: sort date/rating/as-if, default text
 split image upload into 2 parts to prevent saving of pages pointing to local images (create/upload)
 
+Jun 7
+exposed unmatrix method from transform.js to decompose transformation matrix
+Firefox bug: getClientBoundingRect does not take transform into account. 
+This issue is still being discussed in W3C, I'll work around for now.
+Redid the button interaction: click now starts a mode
+fix rotate/pan when image is rotated
+
 Jun 6
 Reimplemented innerHtml. We need styles to be saved in canonical webkit style, and restored
 upon loading into browser.
+Undo/redo bug fixing
+Image commands are in demo stage. Need buggixg.
 
 Jun 3
 Reimplement innerHtml. The trigger for this was FF not saving style.transform.

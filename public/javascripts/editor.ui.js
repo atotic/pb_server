@@ -365,10 +365,10 @@ PB.UI.Bookpage = {
 		if (img.length == 0)
 			bookImage.find(".image-button").remove();
 		else {
-			PB.Manipulators.createImageButton("move", "move", bookImage);
-			PB.Manipulators.createImageButton("pan", "pan", bookImage);
-			PB.Manipulators.createImageButton("zoom", "zoom", bookImage);
-			PB.Manipulators.createImageButton("rotate", "rotate", bookImage);
+			PB.Manipulators.createImageButton("move", "move", bookImage, "move");
+			PB.Manipulators.createImageButton("pan", "pan", bookImage, "all-scroll");
+			PB.Manipulators.createImageButton("zoom", "zoom", bookImage, 'row-resize');
+			PB.Manipulators.createImageButton("rotate", "rotate", bookImage, 'nw-resize');
 		}
 		if (! bookImage.data("hasManipulatorShowHide")) {
 			bookImage.data("hasManipulatorShowHide", true);

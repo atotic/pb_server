@@ -176,11 +176,11 @@ PB.Commands.ModifyPageCSS.prototype = {
 
 PB.Manipulators = {
 	
-	createImageButton: function(kind, title, imageDiv) {
+	createImageButton: function(kind, title, imageDiv, cursor) {
 		var html = "<button class='image-button deleteme " + kind + "'>" + title + "</button>";
 		var button = $(html).prependTo(imageDiv);
 		var mouseCb = this[kind];
-		this.bindButtonEvents(button, imageDiv, mouseCb);
+		this.bindButtonEvents(button, imageDiv, mouseCb, cursor);
 	},
 
 	saveOldProps: function() {
@@ -209,7 +209,7 @@ PB.Manipulators = {
 	},
 	
 	// 
-	bindButtonEvents: function(button, imageDiv, mouseCb) {
+	bindButtonEvents: function(button, imageDiv, mouseCb, cursor) {
 		var docEvents = {
 			processMouse: mouseCb,
 			pageId: $(imageDiv).parents(".page-enclosure").data("page_id"),
@@ -242,25 +242,19 @@ PB.Manipulators = {
 				var moveY = ev.pageY - docEvents.data.mouseStartY;
 				docEvents.processMouse(moveX, moveY, ev);
 			},
-			mouseup: function(ev) {
-				console.log("mouseup");
+			mousedown: function(ev) {
+				console.log("mousedownDoc");
 				var cmd = new PB.Commands.ModifyPageCSS(docEvents.newCss, docEvents.oldCss);
 				PB.CommandQueue.push(cmd);
+				$("body").css("cursor", "auto");
 				$(document).unbind("mousemove", docEvents.mousemove);
-				$(document).unbind("mouseup", docEvents.mouseup);
+				$(document).unbind("mousedown", docEvents.mousedown);
 			}
 		};
 		var buttonEvents = {
 			mousedown: function(ev) {
 				imageDiv.mouseleave();	// hides the buttons
 				var image = imageDiv.find(".actual-image").get(0);
-				var originalAngle = 0;
-				var transform = imageDiv.css("transform");
-				if (transform) {
-					var match = transform.match(/.*rotate\(([^)]+)\)/);
-					if (match && match.length == 1)
-						originalAngle = parseFloat(match[1]) || 0;
-				}
 				docEvents.data = {
 					mouseStartX: ev.pageX,
 					mouseStartY:ev.pageY,
@@ -269,9 +263,8 @@ PB.Manipulators = {
 					imageLeft: parseFloat(image.style.left),
 					imageWidth: parseFloat(image.style.width),
 					imageHeight: parseFloat(image.style.height),
-					centerX: ev.pageX - 50, // BUG should be based upon center of the image
+					centerX: ev.pageX - 100, // BUG should be based upon center of the image
 					centerY: ev.pageY,
-					originalAngle: originalAngle,
 					imageDiv: imageDiv,
 					imageDivTop: parseFloat(imageDiv.css("top")),
 					imageDivLeft: parseFloat(imageDiv.css("left")),
@@ -279,6 +272,8 @@ PB.Manipulators = {
 					imageDivHeight: parseFloat(imageDiv.css("height")),
 				};
 				ev.preventDefault();
+				ev.stopPropagation();
+				$("body").css("cursor", cursor);
 				$(document).bind(docEvents);
 			}
 		};
@@ -286,9 +281,13 @@ PB.Manipulators = {
 	},
 
 	pan: function (moveX, moveY, ev) {
+		if (! ('transformMatrix' in this.data))
+			this.data.transformMatrix = $.transformMatrix(this.data.imageDiv.css("transform"));
+		var transX = this.data.transformMatrix[0] * moveX + this.data.transformMatrix[1] * moveY;
+		var transY = this.data.transformMatrix[2] * moveX + this.data.transformMatrix[3] * moveY;
 		var css = {
-			top: (this.data.imageTop + moveY) + "px",
-			left: (this.data.imageLeft + moveX) + "px"
+			top: (this.data.imageTop + transY) + "px",
+			left: (this.data.imageLeft + transX) + "px"
 		}
 		this.setCss([{dom: this.data.image, style: css}]);
 	},
@@ -319,14 +318,19 @@ PB.Manipulators = {
 	rotate: function(moveX, moveY, ev) {
 		// Rotate
 		// compute angle, pythagora
+		if (! ('oldRotation' in this.data)) {
+			this.data.oldRotation = $.transformUnmatrix($.transformMatrix(this.data.imageDiv.css("transform"))).rotate;
+		}
 		var b = this.data.centerY - ev.pageY;
 		var a = ev.pageX - this.data.centerX;
-		console.log("Y:" +b + " X:" + a);
+//		console.log("Y:" +b + " X:" + a);
 		var c = Math.sqrt(a*a+b*b);
 		var angle = Math.asin(b / c);
 		if (a < 0)
 			angle = Math.PI / 2 + ( Math.PI / 2 - angle);
 		angle = -angle;
+//		console.log("angle is " + ( 360 * angle / 2 / Math.PI));
+		angle += this.data.oldRotation;
 		var css = {
 			transform: "rotate(" + angle + "rad)"
 		}
