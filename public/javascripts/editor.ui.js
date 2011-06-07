@@ -386,7 +386,7 @@ PB.UI.Bookpage = {
 	// Loads page from model
 	createPageElement: function(page_id) {
 		var page = PB.book().getPageById(page_id);
-		var el = $(page.html());
+		var el = $(page.browserHtml());
 		el.addClass("book-page");
 		var enclosingDiv = $("<div></div>")
 			.addClass('page-enclosure')

@@ -102,6 +102,12 @@
 		.css("cursor", "pointer");
 		return this;
 	};
+	jQuery.browserCssPrefix = 
+	jQuery.browser.webkit ? '-webkit-' :
+	jQuery.browser.mozilla ? '-moz-' :
+	jQuery.browser.opera ? '-o-' :
+	jQuery.browser.msie ? '-ms-' :
+  '-webkit-';
 	
 })(window.jQuery);
 

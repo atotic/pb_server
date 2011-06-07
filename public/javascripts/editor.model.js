@@ -313,40 +313,129 @@ PB.BookPage = function(json) {
 };
 
 PB.BookPage.prototype = {
-	html: function() {
-		return this._html;
+	browserHtml: function() {
+		if (this._html)
+			return this._html.replace(/-webkit-transform/g, $.browserCssPrefix + "transform");
+		else
+			return null;
 	},
 	get id() {
 		return this._id;
 	},
+
+	innerHtml: function (node) {
+		// Book editing needs prefixed CSS styles (-webkit-transform)
+		// Our pdf engine expects -webkit styles
+		// When saving, all prefix styles are saved with -webkit- prefixes
+	  // styleToWebkit does this.
+		// function styleToUserAgent reverses this
+		function styleToWebkit(val) {
+			var styles = val.split(";");
+			var stylesToRemove = {};
+			for (var i=0; i<styles.length; i++) {
+				var nameval = styles[i].split(":");
+				if (nameval.length != 2) continue;
+				nameval[0] = nameval[0].trim();
+				nameval[1] = nameval[1].trim();
+				var m = nameval[0].match(/(-moz-|-webkit-|-ms-|-o-)(.+)/);
+				if (m) { // m[1] is '-webkit'; m[2] is 'transform'
+					// mutate -moz-transform:rotate(45) into transform:rotate(45);-webkit-transform:rotate(45);
+					// assigns two values to single style entry, -webkit- and non-prefix
+					var s = "-webkit-" + m[2] + ":" + nameval[1] + ";" + m[2] + ":" + nameval[1];
+					styles[i] = s;
+					stylesToRemove[m[2]] = true;
+				}
+			}
+			for (var i=0; i<styles.length; i++) {
+				var nameval = styles[i].split(":");
+				if (nameval[0] in stylesToRemove)
+					styles.splice(i--, 1);
+			}
+			return styles.join(";");
+		}
+		
+		function serializeAttribute(a) {
+			var output = a.localName.toLowerCase() + '="';
+			var value = a.nodeValue;
+			if (a.localName.toLowerCase() == "style")
+				value = styleToWebkit(value);
+			output += value.replace(/"/g, "&quot;");
+			output += '"';
+			return output;
+		}
 	
+		var singles = {
+			area:true, base:true, basefont:true, bgsound:true, br:true, col:true, command:true,
+			embed:true,frame:true,hr:true, img:true, input:true, keygen:true, link:true, meta:true,
+			param:true, source:true, track:true, wbr:true
+		}
+	
+		function serializeElement(dom) {
+			var output = "<" + dom.nodeName.toLowerCase();
+	
+			for (var i=0; i<dom.attributes.length; i++) 
+				output += " " + serializeAttribute(dom.attributes.item(i));
+	
+			output += ">";
+			if (! (dom.nodeName.toLowerCase() in singles)) {
+				for (var i=0; i < dom.childNodes.length; i++)
+					output += serializeNode(dom.childNodes.item(i));
+				output += "</" + dom.nodeName.toLowerCase() + ">";
+			}
+			return output;
+		}
+	
+		function serializeText(dom) {
+			return dom.textContent.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+		}
+	
+		function serializeNode(node) {
+			switch (node.nodeType) {
+				case 1: // ELEMENT_NODE
+					return serializeElement(node);
+				case 3:	// Text
+				case 4: // CData
+					return serializeText(node);
+				default:
+					console.log("Not serializing node type " + dom.nodeType);
+			}
+			return "";
+		}
+	
+		var output = "";
+		for (var i=0; i < node.childNodes.length; i++)
+			output += serializeNode(node.childNodes.item(i));
+		return output;
+	 // http://www.whatwg.org/specs/web-apps/current-work/multipage/the-end.html#html-fragment-serialization-algorithm
+},
+
 	// Reads HTML from DOM
-	// Removes display artifacts before
+	// Fixes up the html in canonical form:
+	// - remove display artifacts; fix style declaration; patch up img src, etc
 	readHtml: function() {
-		// Our src might be local files, change to server location
-		// TODO we might not know server location until file is saved.
 		if (this._displayDom == null) {
 			console.warn("_displayDom is null");
 			this._html = null;
 			return;
 		}
-		// Fix the DOM. Remove all display artifacts
 		var dom = this._displayDom.cloneNode(true);
-		// Replace local images urls with ones from server
+		// Our src might be local files, change to server location
 		$(dom).find("img").each(function(index, el) {
+			// TODO we might not know server location until file is saved.
 			var src = el.getAttribute("src");
 			var serverSrc = PB.book().getImageByFileUrl(src);
 			if (serverSrc != null)
 				el.setAttribute("src", serverSrc);
 		});
+		// Remove display artifacts
 		$(dom).find(".deleteme").each(function(index, el) {
 			$(el).remove();
 		});
-		$(dom).find(".ui-droppable")
-			.each( function(index, el){
+		// Remove drag'n'drop artifacts
+		$(dom).find(".ui-droppable").each( function(index, el) {
 				$(el).removeClass("ui-droppable");	
 		});
-		this._html = dom.innerHTML;
+		this._html = this.innerHtml(dom);
 	},
 
 	saveNow: function() {

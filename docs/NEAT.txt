@@ -62,6 +62,7 @@ Unicode geometric shapes: http://www.unicodemap.org/range/54/Geometric_Shapes/
 Firebug DOM member maps: http://www.google.com/codesearch/p?hl=en#BmTejM3fPxA/content/firebug/lib.js&q=viewbox%20lang:javascript&sa=N&cd=6&ct=rc&l=4314
 
 BUSINESS
+Photo book reviews: http://www.make-your-own-photobooks.com/about-us.html
 http://www.myphotocreations.com/
 http://blurb.com/
 http://online.wsj.com/article/SB10001424052748703509104576329272101144568.html
@@ -69,6 +70,8 @@ smugmug: they are photo oriented
 hotprints: free cheap photo books
 
 nation's photo lab
+
+walmart & walgreens both use snapfish photo book creation software.
 
 What I'd like:
 the image workflow is a mess for an average guy
