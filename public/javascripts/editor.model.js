@@ -314,7 +314,7 @@ PB.BookPage = function(json) {
 
 PB.BookPage.prototype = {
 	browserHtml: function() {
-		if (this._html)
+		if (this._html)	// This will need fixing if we use other prefixed properties
 			return this._html.replace(/-webkit-transform/g, $.browserCssPrefix + "transform");
 		else
 			return null;

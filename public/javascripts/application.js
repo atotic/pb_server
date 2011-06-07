@@ -4,7 +4,9 @@ var PB = {
 //		$('#error').hide();
 		$('#notice').html(text).clearQueue().show('blind');
 	},
-
+	warn: function(text) {
+		this.notice(text);
+	},
 	error: function(text) {
 //		$('#notice').hide();
 		$('#error').html(text).clearQueue().show('blind');

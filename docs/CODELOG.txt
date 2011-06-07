@@ -29,6 +29,10 @@ pages: templates, thumbnails
 image metadata: sort date/rating/as-if, default text
 split image upload into 2 parts to prevent saving of pages pointing to local images (create/upload)
 
+Jun 6
+Reimplemented innerHtml. We need styles to be saved in canonical webkit style, and restored
+upon loading into browser.
+
 Jun 3
 Reimplement innerHtml. The trigger for this was FF not saving style.transform.
 The alternative was parsing and cleaning up innerHtml output.

@@ -23,6 +23,7 @@ PB.CommandQueue = {
 	push: function(command) {
 		if (command.canUndo()) {
 			this.completeQ.push(command);
+			this.undoneQ = [];
 			this.send('commandQueueChanged', this);
 		}
 	},
@@ -33,6 +34,7 @@ PB.CommandQueue = {
 			if (cmd.canUndo()) {
 				cmd.undo();
 				this.undoneQ.push(cmd);
+				this.send('commandQueueChanged', this);
 				return;
 			}
 		}
@@ -45,6 +47,8 @@ PB.CommandQueue = {
 			if (cmd.canRedo()) {
 				cmd.redo();
 				this.completeQ.push(cmd);
+				this.send('commandQueueChanged', this);
+				return;
 			}
 		}
 		PB.warn("Can't redo");
@@ -81,10 +85,9 @@ $.extend(PB.CommandQueue, new PB.EventBroadcaster("commandQueueChanged"));
 
 PB.Commands = {};
 
-PB.Commands.Abstract = Class.extend({
-	init: function(name) {
-		this.name = name;
-	},
+PB.Commands.Abstract = function() {
+}
+PB.Commands.Abstract.prototype = {
 	canUndo: function() {
 		alert("implement me");
 	},
@@ -97,17 +100,18 @@ PB.Commands.Abstract = Class.extend({
 	undo: function() {
 		alert("need to implement redo");
 	}
-});
+}
 
 /* 
     Page CSS manipulation within command framework
 
 Constructors:
-   ModifyPageCSS(name, jQuery, style:map)
-   ModifyPageCSS(name, [ {jQuery , style:map }+)
+	ModifyPageCSS(newCss, oldCss)
+	newCss is an array of jQuery -> style:map
+	oldCss is optional, just like newCss, but contains original values
    
 Usage:
-   cmd = new ModifyPageCSS("name", $("#el"), { position: 5px});
+   cmd = new ModifyPageCSS([$("#el"), { position: 5px}]);
 
 	 if command is to be executed once:
 	 PB.CommandQueue.execute(cmd);
@@ -118,36 +122,67 @@ Usage:
 	 cmd.setProps($("#el"), {position: 15px}).redo();
 	 PB.CommandQueue.push(cmd);
 */ 
-PB.Commands.ModifyPageCSS = PB.Commands.Abstract.extend({
-	init: function(name) {
-		this._super(name);
-		if (arguments.length == 3)
-			this.setProps(arguments[1], arguments[2]);
-		else if (arguments.length == 2)
-			this.setProps(arguments[1]);
-		else
-			console.error("ModifyPageCSS called with wrong number of arguments");
-		this.pageId = $(this.newProps[0].dom).parents(".page-enclosure").data("page_id");
-	},
+PB.Commands.ModifyPageCSS = function(newCss, oldCss) {
+	this.newCss = newCss;
+	this.oldCss = oldCss;
+	this.pageId = $(this.newCss[0].dom).parents(".page-enclosure").data("page_id");
+}
+
+PB.Commands.ModifyPageCSS.prototype = {
 	canUndo: function() {
-		return this.oldProps != null && PB.UI.Bookpage.getDomById(this.pageId) != null;
+		return this.oldCss != null && PB.UI.Bookpage.getDomById(this.pageId) != null;
 	},
 	canRedo: function() {
-		return this.newProps != null && PB.UI.Bookpage.getDomById(this.pageId) != null;
+		return this.newCss != null && PB.UI.Bookpage.getDomById(this.pageId) != null;
 	},
 	redo: function() {
-		this.applyProps(this.newProps);
+		this.applyCss(this.newCss);
 	},
 	undo: function() {
-		this.applyProps(this.oldProps);
+		this.applyCss(this.oldCss);
 	},
-	setProps: function() {
-		if (arguments.length == 2)
-			this.newProps = [ { dom: arguments[0], style: arguments[1]} ];
-		else
-			this.newProps= arguments[0];
+	setCss: function(newCss) {
+		this.newCss = newCss;
 		return this;
 	},
+	saveCss: function() {
+		if (this.oldCss)
+			return;
+		this.oldCss = [];
+		for (var i=0; i< this.newCss.length; i++) {
+			var oldStyle = {};
+			var dom = $(this.newCss[i].dom);
+			for (var pname in this.newCss[i].style) {
+				var pval = dom.css(pname);
+				if (pval === undefined)
+					pval = 'auto';
+				oldStyle[pname] = pval;
+			}
+			this.oldCss.push({ dom: this.newProps[i].dom, style: oldStyle});
+		}
+	},
+	applyCss: function(css) {
+	 	if (css == null)
+	 		return;
+		this.saveCss();
+		for (var i=0; i< css.length; i++)
+			$(css[i].dom).css(css[i].style);
+		this.setModified();
+	},
+	setModified: function() {
+		PB.book().getPageById(this.pageId).setModified();
+	}
+}
+
+PB.Manipulators = {
+	
+	createImageButton: function(kind, title, imageDiv) {
+		var html = "<button class='image-button deleteme " + kind + "'>" + title + "</button>";
+		var button = $(html).prependTo(imageDiv);
+		var mouseCb = this[kind];
+		this.bindButtonEvents(button, imageDiv, mouseCb);
+	},
+
 	saveOldProps: function() {
 		if (this.oldProps)
 			return;
@@ -172,115 +207,45 @@ PB.Commands.ModifyPageCSS = PB.Commands.Abstract.extend({
 			$(props[i].dom).css(props[i].style);
 		this.setModified();
 	},
-	setModified: function() {
-		PB.book().getPageById(this.pageId).setModified();
-	}
-});
-
-PB.Commands.AbstractImage = PB.Commands.ModifyPageCSS.extend({ 
-	init: function(name, imageDiv) {
-		this._super(name, imageDiv, {});
-	},
-	complete: function() {
-		PB.CommandQueue.push(this);
-	}	
-});
-
-PB.Commands.PanImage =  PB.Commands.AbstractImage.extend({
-	init: function(imageDiv) {
-		this._super("pan", imageDiv);
-	},
-	processMouse: function(data, moveX, moveY, ev) {
-		var css = {
-			top: (data.imageTop + moveY) + "px",
-			left: (data.imageLeft + moveX) + "px"
-		}
-		this.setProps(data.image, css).redo();
-	}
-});
-
-PB.Commands.MoveImage =  PB.Commands.AbstractImage.extend({
-	init: function(imageDiv) {
-	 this._super("move", imageDiv);
-	},
-	processMouse: function(data, moveX, moveY, ev) {
-		var css = {
-			top: (data.imageDivTop + moveY) + "px",
-			left: (data.imageDivLeft + moveX) + "px"
-		}
-		this.setProps(data.imageDiv, css).redo();
-	}
-});
-
-PB.Commands.ZoomImage =  PB.Commands.AbstractImage.extend({
-	init: function(imageDiv) {
-		this._super("zoom", imageDiv);
-	},
-	processMouse: function(data, moveX, moveY, ev) {
-		var	top = data.imageTop + moveY;
-		var	height = data.imageHeight - moveY * 2;
-		var	xdelta = moveY * data.imageWidth / data.imageHeight;
-		var	left = data.imageLeft + xdelta;
-		var	width = data.imageWidth - xdelta * 2;	
-		var css = {
-			top: top + "px",
-			left: left + "px",
-			height: height + "px",
-			width: width + "px"
-		}
-		this.setProps(data.image, css).redo();
-	}
-});
-
-PB.Commands.RotateImage =  PB.Commands.AbstractImage.extend({
-	init: function(imageDiv) {
-		this._super("zoom", imageDiv);
-	},
-	processMouse: function(data, moveX, moveY, ev) {
-		// Rotate
-		// compute angle, pythagora
-		var b = data.centerY - ev.pageY;
-		var a = ev.pageX - data.centerX;
-		var c = Math.sqrt(a*a+b*b);
-		var angle = Math.asin(b / c);
-		if (a < 0)
-			angle = Math.PI / 2 + ( Math.PI / 2 - angle);
-		angle = -angle;
-		// TODO constrain angle if shift is down
-		var css = {
-			transform: "rotate(" + angle + "rad)"
-		}
-		this.setProps(data.imageDiv, css).redo();
-	}
-});
-
-PB.Manipulators = {
 	
-	createImageButton: function(kind, title, imageDiv) {
-		var html = "<button class='image-button deleteme " + kind + "'>" + title + "</button>";
-		var button = $(html).prependTo(imageDiv);
-		var cmd = null;
-		switch(kind) {
-			case "move": cmd = new PB.Commands.MoveImage(imageDiv); break;
-			case "pan": cmd = new PB.Commands.PanImage(imageDiv); break;
-			case "zoom": cmd = new PB.Commands.ZoomImage(imageDiv); break;
-			case "rotate": cmd = new PB.Commands.RotateImage(imageDiv); break;
-			default: console.error("unknown button kind " + kind);
-		}
-		this.bindButtonEvents(button, imageDiv, cmd);
-	},
-
-	bindButtonEvents: function(button, imageDiv, cmd) {
+	// 
+	bindButtonEvents: function(button, imageDiv, mouseCb) {
 		var docEvents = {
-			cmd: cmd, 
+			processMouse: mouseCb,
+			pageId: $(imageDiv).parents(".page-enclosure").data("page_id"),
+			oldCss: null,
+			newCss: null,
+			setCss: function(newCss) {
+				this.saveOldCss(newCss);
+				this.newCss = newCss;
+				for ( var i=0; i< newCss.length; i++ )
+					$( newCss[i].dom ).css( newCss[i].style );
+				PB.book().getPageById(this.pageId).setModified();
+			},
+			saveOldCss: function(newCss) {
+				if (this.oldCss)
+					return;
+				this.oldCss = [];
+				for (var i=0; i< newCss.length; i++) {
+					var oldStyle = {};
+					var dom = $(newCss[i].dom);
+					for (var pname in newCss[i].style) {
+						var pval = dom.css(pname);
+						if (pval === undefined) pval = 'auto';
+						oldStyle[pname] = pval;
+					}
+					this.oldCss.push({ dom: newCss[i].dom, style: oldStyle});
+				}				
+			},
 			mousemove: function(ev) {
 				var moveX = ev.pageX - docEvents.data.mouseStartX;
 				var moveY = ev.pageY - docEvents.data.mouseStartY;
-				docEvents.cmd.processMouse(docEvents.data, moveX, moveY, ev);
+				docEvents.processMouse(moveX, moveY, ev);
 			},
 			mouseup: function(ev) {
 				console.log("mouseup");
-				docEvents.cmd.complete();
+				var cmd = new PB.Commands.ModifyPageCSS(docEvents.newCss, docEvents.oldCss);
+				PB.CommandQueue.push(cmd);
 				$(document).unbind("mousemove", docEvents.mousemove);
 				$(document).unbind("mouseup", docEvents.mouseup);
 			}
@@ -311,7 +276,7 @@ PB.Manipulators = {
 					imageDivTop: parseFloat(imageDiv.css("top")),
 					imageDivLeft: parseFloat(imageDiv.css("left")),
 					imageDivWidth: parseFloat(imageDiv.css("width")),
-					imageDivHeight: parseFloat(imageDiv.css("height"))
+					imageDivHeight: parseFloat(imageDiv.css("height")),
 				};
 				ev.preventDefault();
 				$(document).bind(docEvents);
@@ -321,13 +286,19 @@ PB.Manipulators = {
 	},
 
 	pan: function (moveX, moveY, ev) {
-		this.data.image.css("top",(this.data.imageTop + moveY) + "px");
-		this.data.image.css("left",(this.data.imageLeft + moveX) + "px");
+		var css = {
+			top: (this.data.imageTop + moveY) + "px",
+			left: (this.data.imageLeft + moveX) + "px"
+		}
+		this.setCss([{dom: this.data.image, style: css}]);
 	},
 
 	move: function (moveX, moveY, ev) {
-		this.data.imageDiv.css("top", (this.data.imageDivTop + moveY) + "px");
-		this.data.imageDiv.css("left", (this.data.imageDivLeft + moveX) + "px");
+		var css = {
+			top: (this.data.imageDivTop + moveY) + "px",
+			left: (this.data.imageDivLeft + moveX) + "px"
+		}
+		this.setCss([{dom: this.data.imageDiv, style: css}]);
 	},
 
 	zoom: function(moveX, moveY, ev) {
@@ -336,12 +307,13 @@ PB.Manipulators = {
 		var	xdelta = moveY * this.data.imageWidth / this.data.imageHeight;
 		var	left = this.data.imageLeft + xdelta;
 		var	width = this.data.imageWidth - xdelta * 2;
-			this.data.image.css({
-					top: top + "px",
-					left: left + "px",
-					height: height + "px",
-					width: width + "px"
-			});
+		var css = {
+			top: top + "px",
+			left: left + "px",
+			height: height + "px",
+			width: width + "px"
+		}
+		this.setCss([{dom: this.data.image, style: css}]);
 	},
 
 	rotate: function(moveX, moveY, ev) {
@@ -349,11 +321,15 @@ PB.Manipulators = {
 		// compute angle, pythagora
 		var b = this.data.centerY - ev.pageY;
 		var a = ev.pageX - this.data.centerX;
+		console.log("Y:" +b + " X:" + a);
 		var c = Math.sqrt(a*a+b*b);
 		var angle = Math.asin(b / c);
 		if (a < 0)
 			angle = Math.PI / 2 + ( Math.PI / 2 - angle);
 		angle = -angle;
-		this.data.imageDiv.css("transform", "rotate(" + angle + "rad)");
+		var css = {
+			transform: "rotate(" + angle + "rad)"
+		}
+		this.setCss([{dom: this.data.imageDiv, style: css}]);
 	}
 }
