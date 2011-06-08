@@ -15,16 +15,17 @@ Goals:
 - < 200MB pdf files?
 
 Next:
-image frame resize
 image placement hints on border placement
 constraints on image manipulation
+undo/redo flips pages
 image borders
-hash bangs for pages
 multiple editors?
 new cursors
+image frame resize
 
 text tools: create new text, edit, move
 pages: templates, thumbnails
+hash bangs for pages
 image metadata: sort date/rating/as-if, default text
 split image upload into 2 parts to prevent saving of pages pointing to local images (create/upload)
 
@@ -34,6 +35,7 @@ Firefox bug: getClientBoundingRect does not take transform into account.
 This issue is still being discussed in W3C, I'll work around for now.
 Redid the button interaction: click now starts a mode
 fix rotate/pan when image is rotated
+shift constraint for rotate
 
 Jun 6
 Reimplemented innerHtml. We need styles to be saved in canonical webkit style, and restored

@@ -85,9 +85,8 @@ $.extend(PB.CommandQueue, new PB.EventBroadcaster("commandQueueChanged"));
 
 PB.Commands = {};
 
-PB.Commands.Abstract = function() {
-}
-PB.Commands.Abstract.prototype = {
+// All commands should support this API
+PB.Commands.prototype = {
 	canUndo: function() {
 		alert("implement me");
 	},
@@ -102,12 +101,54 @@ PB.Commands.Abstract.prototype = {
 	}
 }
 
+PB.Commands.DropImage = function(pageId, imageBroker, imageDiv) {
+	PB.guaranteeId(imageDiv);
+	this.imageBroker = imageBroker;
+	this.imageDivId = $(imageDiv).attr("id");
+	this.pageId = pageId;
+}
+
+PB.Commands.DropImage.prototype = {
+	canUndo: function() {
+		return 'oldImg' in this;
+	},
+	canRedo: function() {
+		return true;
+	},
+	redo: function() {
+		// Load in the dom
+		var page = PB.book().getPageById(this.pageId);
+		var dom = $(page.getDom());
+		var imageDiv = dom.find("#" + this.imageDivId);
+		// Save for redo
+		this.oldImg = dom.find("img");
+		// Create the image
+		var image = $('<img class="actual-image" style="visibility:hidden"/>');
+	  image.bind("load",  function(ev) {
+				PB.UI.Bookpage.imageLoaded(imageDiv, ev);
+				image.css("visibility", "visible");
+		});
+		imageDiv.empty().append(image);
+		page.setModified();
+		image.attr('src', this.imageBroker.getImageUrl('display'));
+	},
+	undo: function() {
+		// Load in the dom
+		var page = PB.book().getPageById(this.pageId);
+		var dom = $(page.getDom());
+		var imageDiv = dom.find("#" + this.imageDivId);
+		// Set the old image
+		imageDiv.empty().append(this.oldImg);
+		page.setModified();
+		delete this.oldImg;
+	}
+}
 /* 
     Page CSS manipulation within command framework
 
 Constructors:
 	ModifyPageCSS(newCss, oldCss)
-	newCss is an array of jQuery -> style:map
+	newCss is an array of selector -> style:map
 	oldCss is optional, just like newCss, but contains original values
    
 Usage:
@@ -122,18 +163,30 @@ Usage:
 	 cmd.setProps($("#el"), {position: 15px}).redo();
 	 PB.CommandQueue.push(cmd);
 */ 
-PB.Commands.ModifyPageCSS = function(newCss, oldCss) {
+PB.Commands.ModifyPageCSS = function(pageId, newCss, oldCss) {
+	for (var i=0; i< newCss.length; i++) { 
+		var dom = $(newCss[i].dom);	// convert dom elements to ids
+		PB.guaranteeId(dom);
+		newCss[i].dom = "#" + dom.prop('id');
+	}
+	if (oldCss)
+			for (var i=0; i< oldCss.length; i++) {
+				var dom = $(oldCss[i].dom);
+				PB.guaranteeId(dom);
+				oldCss[i].dom = "#" + dom.prop('id');
+			}
+
 	this.newCss = newCss;
 	this.oldCss = oldCss;
-	this.pageId = $(this.newCss[0].dom).parents(".page-enclosure").data("page_id");
+	this.pageId = pageId;
 }
 
 PB.Commands.ModifyPageCSS.prototype = {
 	canUndo: function() {
-		return this.oldCss != null && PB.UI.Bookpage.getDomById(this.pageId) != null;
+		return this.oldCss != null;
 	},
 	canRedo: function() {
-		return this.newCss != null && PB.UI.Bookpage.getDomById(this.pageId) != null;
+		return this.newCss != null;
 	},
 	redo: function() {
 		this.applyCss(this.newCss);
@@ -141,36 +194,31 @@ PB.Commands.ModifyPageCSS.prototype = {
 	undo: function() {
 		this.applyCss(this.oldCss);
 	},
-	setCss: function(newCss) {
-		this.newCss = newCss;
-		return this;
-	},
-	saveCss: function() {
+	saveCss: function(page) {
 		if (this.oldCss)
 			return;
 		this.oldCss = [];
 		for (var i=0; i< this.newCss.length; i++) {
 			var oldStyle = {};
-			var dom = $(this.newCss[i].dom);
+			var dom = page.find(this.newCss[i].dom);
 			for (var pname in this.newCss[i].style) {
 				var pval = dom.css(pname);
 				if (pval === undefined)
-					pval = 'auto';
+					pval = '';
 				oldStyle[pname] = pval;
 			}
 			this.oldCss.push({ dom: this.newProps[i].dom, style: oldStyle});
 		}
 	},
 	applyCss: function(css) {
+		var page = PB.book().getPageById(this.pageId);
+		var dom = $(page.getDom());
 	 	if (css == null)
 	 		return;
-		this.saveCss();
+		this.saveCss(page);
 		for (var i=0; i< css.length; i++)
-			$(css[i].dom).css(css[i].style);
-		this.setModified();
-	},
-	setModified: function() {
-		PB.book().getPageById(this.pageId).setModified();
+			dom.find(css[i].dom).css(css[i].style);
+		page.setModified();
 	}
 }
 
@@ -183,31 +231,6 @@ PB.Manipulators = {
 		this.bindButtonEvents(button, imageDiv, mouseCb, cursor);
 	},
 
-	saveOldProps: function() {
-		if (this.oldProps)
-			return;
-		this.oldProps = [];
-		for (var i=0; i< this.newProps.length; i++) {
-			var oldStyle = {};
-			var dom = $(this.newProps[i].dom);
-			for (var pname in this.newProps[i].style) {
-				var pval = dom.css(pname);
-				if (pval === undefined)
-					pval = 'auto';
-			//	oldStyle[pname] = pval;
-			}
-			this.oldProps.push({ dom: this.newProps[i].dom, style: oldStyle});
-		}
-	},
-	applyProps: function(props) {
-	 	if (props == null)
-	 		return;
-		this.saveOldProps();
-		for (var i=0; i< props.length; i++)
-			$(props[i].dom).css(props[i].style);
-		this.setModified();
-	},
-	
 	// 
 	bindButtonEvents: function(button, imageDiv, mouseCb, cursor) {
 		var docEvents = {
@@ -229,9 +252,10 @@ PB.Manipulators = {
 				for (var i=0; i< newCss.length; i++) {
 					var oldStyle = {};
 					var dom = $(newCss[i].dom);
+					var computedStyle = window.getComputedStyle(newCss[i].dom.get(0));
 					for (var pname in newCss[i].style) {
-						var pval = dom.css(pname);
-						if (pval === undefined) pval = 'auto';
+						var pval = computedStyle[pname];// dom.css(pname);
+						if (pval === undefined) pval = '';
 						oldStyle[pname] = pval;
 					}
 					this.oldCss.push({ dom: newCss[i].dom, style: oldStyle});
@@ -244,18 +268,27 @@ PB.Manipulators = {
 			},
 			mousedown: function(ev) {
 				console.log("mousedownDoc");
-				var cmd = new PB.Commands.ModifyPageCSS(docEvents.newCss, docEvents.oldCss);
-				PB.CommandQueue.push(cmd);
+				var pageId = docEvents.data.imageDiv.parents(".page-enclosure").data("page_id");
+				PB.CommandQueue.push(
+					new PB.Commands.ModifyPageCSS(pageId, docEvents.newCss, docEvents.oldCss));
 				$("body").css("cursor", "auto");
 				$(document).unbind("mousemove", docEvents.mousemove);
 				$(document).unbind("mousedown", docEvents.mousedown);
-			}
+				$(document).unbind("mouseup", docEvents.mouseup);
+			},
+			 mouseup: function(ev) {
+			 	// Click handling can be tricky.
+			 	console.log("timedif is " + (ev.timeStamp - docEvents.data.timeStamp));
+			 	if ((ev.timeStamp - docEvents.data.timeStamp) > 200)
+			 		docEvents.mousedown(ev);
+			 }
 		};
 		var buttonEvents = {
 			mousedown: function(ev) {
 				imageDiv.mouseleave();	// hides the buttons
 				var image = imageDiv.find(".actual-image").get(0);
 				docEvents.data = {
+					timeStamp: ev.timeStamp,
 					mouseStartX: ev.pageX,
 					mouseStartY:ev.pageY,
 					image: $(image),
@@ -274,7 +307,11 @@ PB.Manipulators = {
 				ev.preventDefault();
 				ev.stopPropagation();
 				$("body").css("cursor", cursor);
-				$(document).bind(docEvents);
+				$(document).bind({
+					mousedown: docEvents.mousedown,
+					mousemove: docEvents.mousemove,
+					mouseup: docEvents.mouseup
+				});
 			}
 		};
 		button.bind(buttonEvents);		
@@ -331,6 +368,8 @@ PB.Manipulators = {
 		angle = -angle;
 //		console.log("angle is " + ( 360 * angle / 2 / Math.PI));
 		angle += this.data.oldRotation;
+		if (ev.shiftKey) // constrain to 45deg multiples
+			angle = Math.round(angle * 4 / Math.PI) * Math.PI / 4;
 		var css = {
 			transform: "rotate(" + angle + "rad)"
 		}

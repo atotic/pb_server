@@ -322,7 +322,7 @@ PB.UI.Pagetab = {
  *       
  */
 PB.UI.Bookpage = {
-	
+
 	getDomById: function(id) {
 		var found = null;
 		$(".page-enclosure").each( function(index, el) {
@@ -339,24 +339,9 @@ PB.UI.Bookpage = {
 			  	'drop': function(event, ui) {
 			  		// when image drops, replace drop element with an image of the same size
 			  		var imageBroker = $(ui.draggable).data('imageBroker');
-			  		try {
-				  		var image = $('<img style="visibility:hidden"/>');
-				  		image.addClass("actual-image");
-				  	  image.bind("load",  function(ev) {
-									PB.UI.Bookpage.imageLoaded(this, ev);
-									image.css("visibility", "visible");
-							});
-				  		$(this).children().remove();
-				  		$(this).append(image);
-							$(this).parents('.page-enclosure')
-								.data("page").setModified();
-							PB.UI.Bookpage.updateImageControls(this);
-				  		image.attr('src', imageBroker.getImageUrl('display'));
-				  	}
-				  	catch(ex)
-				  	{
-				  		console.error(ex.message);
-				  	}
+			  		var pageId = $(this).parents(".page-enclosure").data("page_id");
+			  		var cmd = new PB.Commands.DropImage(pageId, imageBroker, this);
+			  		PB.CommandQueue.execute(cmd);
 			  }});
 	},
 	updateImageControls: function(bookImage) {
@@ -415,16 +400,17 @@ PB.UI.Bookpage = {
 		PB.UI.MainContainer.fitContent();
 	},
 	
-	imageLoaded: function(img, event) { 
-		var parent = $(img).parent();
-		var pwidth = parent.width();
-		var pheight = parent.height();
-		var iwidth = img.naturalWidth;
-		var iheight = img.naturalHeight;
+	imageLoaded: function(imgDiv, event) {
+		imgDiv = $(imgDiv);
+		var img = imgDiv.find(".actual-image");
+		var pwidth = imgDiv.width();
+		var pheight = imgDiv.height();
+		var iwidth = img.prop("naturalWidth");
+		var iheight = img.prop("naturalHeight");
 		var vscale = pheight / iheight;
 		var hscale = pwidth / iwidth;
 		var scale = Math.min(vscale, hscale);
-		var align = $(img).parent().attr('data-align') || 'center';
+		var align = imgDiv.attr('data-align') || 'center';
 		var x = 0, y=0;
 		switch(align) {
 			case 'top':
@@ -443,11 +429,14 @@ PB.UI.Bookpage = {
 			default:
 				console.warn("Unknown image data-align attribute: " + align);
 		}
-		img.style.position = 'absolute';
-		img.style.height = iheight * scale + "px";
-		img.style.width = iwidth * scale + "px";
-		img.style.top = y + "px";
-		img.style.left = x + "px"; 
+		img.css({
+			position: "absolute",
+			height: iheight * scale + "px",
+			width: iwidth * scale + "px",
+			top: y + "px",
+			left: x + "px"
+		});
+		PB.UI.Bookpage.updateImageControls(imgDiv);
 	}
 }
 

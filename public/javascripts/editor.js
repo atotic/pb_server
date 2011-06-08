@@ -546,7 +546,7 @@ $.extend(PB.PageUploadQueue, {
 			i++;
 		return i;
 	},
-	get extraLength() {
+	extraLength : function() {
 		return this.length + this.countPageQueue();
 	},
 	readyToSave: function(page)
@@ -604,6 +604,19 @@ $.extend(PB.PageUploadQueue, {
 		return this;
 	}
 });
+
+// Generates random id for an element
+PB.guaranteeId = function(el) {
+	el = $(el).get(0);
+	if (el.id)
+		return el;
+	var id = "i" + Math.floor(Math.random() * 10000);
+	if (!document.getElementById(id))
+		el.id = id;
+	else
+		PB.generateRandomId(el);
+}
+
 /*
  * Give user a chance to save changes before navigating away
  */
@@ -613,7 +626,7 @@ window.onbeforeunload = function(e) {
 		haveChanges = true;
 		PB.ImageUploadQueue.displayStatus();
 	}
-	if (PB.PageUploadQueue.extraLength > 0)
+	if (PB.PageUploadQueue.extraLength() > 0)
 	{
 		haveChanges = true;
 		PB.PageUploadQueue.saveAllNow();

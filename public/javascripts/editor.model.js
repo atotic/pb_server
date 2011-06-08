@@ -448,6 +448,13 @@ PB.BookPage.prototype = {
 			domEl = domEl.get(0);
 		this._displayDom = domEl;
 		return this;
+	},
+	getDom: function() {
+		if (this._displayDom == null)
+			PB.UI.Pagetab.selectPage(this.pageId);
+		if (this._displayDom == null)
+			console.error("Cannot get dom for BookPage");
+		return this._displayDom;
 	},	
 	setModified: function() {
 		this.readHtml();
