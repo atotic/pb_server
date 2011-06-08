@@ -15,8 +15,10 @@ PB.CommandQueue = {
 		command.redo();
 		if (command.canUndo()) {
 			this.completeQ.push(command);
+			this.trim();
 			this.send('commandQueueChanged', this);
 		}
+		console.log("execute" + this);
 	},
 	
 	// Push a command onto the queue, if 
@@ -24,8 +26,15 @@ PB.CommandQueue = {
 		if (command.canUndo()) {
 			this.completeQ.push(command);
 			this.undoneQ = [];
+			this.trim();
 			this.send('commandQueueChanged', this);
 		}
+		console.log("push" + this);
+	},
+	
+	trim: function() {
+		while (this.completeQ.length > 20)
+			this.completeQ.shift();
 	},
 	
 	undo: function() {
@@ -35,6 +44,7 @@ PB.CommandQueue = {
 				cmd.undo();
 				this.undoneQ.push(cmd);
 				this.send('commandQueueChanged', this);
+				console.log("undo" + this);
 				return;
 			}
 		}
@@ -48,6 +58,7 @@ PB.CommandQueue = {
 				cmd.redo();
 				this.completeQ.push(cmd);
 				this.send('commandQueueChanged', this);
+				console.log("redo" + this);
 				return;
 			}
 		}
@@ -79,6 +90,18 @@ PB.CommandQueue = {
 	canUndo: function() {
 		this.refresh();
 		return this.completeQ.length > 0;
+	},
+	toStringQueue: function(q) {
+		var s = "";
+		q.forEach(function(el) {
+			s += el + "\n";
+		});
+		return s;
+	},
+	toString: function() {
+		var s = "CommandQueue:\nComplete:\n" + this.toStringQueue(this.completeQ);
+		s += "Undone:\n" + this.toStringQueue(this.undoneQ);
+		return s;
 	}
 }
 $.extend(PB.CommandQueue, new PB.EventBroadcaster("commandQueueChanged"));
@@ -125,7 +148,7 @@ PB.Commands.DropImage.prototype = {
 		// Create the image
 		var image = $('<img class="actual-image" style="visibility:hidden"/>');
 	  image.bind("load",  function(ev) {
-				PB.UI.Bookpage.imageLoaded(imageDiv, ev);
+				PB.UI.Bookpage.imageLoaded(imageDiv);
 				image.css("visibility", "visible");
 		});
 		imageDiv.empty().append(image);
@@ -139,8 +162,12 @@ PB.Commands.DropImage.prototype = {
 		var imageDiv = dom.find("#" + this.imageDivId);
 		// Set the old image
 		imageDiv.empty().append(this.oldImg);
+		PB.UI.Bookpage.imageLoaded(imageDiv);
 		page.setModified();
 		delete this.oldImg;
+	},
+	toString: function() {
+		return "dropImage:" + imageBroker;
 	}
 }
 /* 
@@ -164,21 +191,26 @@ Usage:
 	 PB.CommandQueue.push(cmd);
 */ 
 PB.Commands.ModifyPageCSS = function(pageId, newCss, oldCss) {
+	// deep copy incoming styles
+	newCss = newCss.slice(0);
 	for (var i=0; i< newCss.length; i++) { 
 		var dom = $(newCss[i].dom);	// convert dom elements to ids
 		PB.guaranteeId(dom);
+		newCss[i] = {dom: "#" + dom.prop('id'), style: jQuery.extend({}, newCss[i].style)};
 		newCss[i].dom = "#" + dom.prop('id');
 	}
-	if (oldCss)
+	if (oldCss) {
+			oldCss = oldCss.slice(0);
 			for (var i=0; i< oldCss.length; i++) {
 				var dom = $(oldCss[i].dom);
 				PB.guaranteeId(dom);
-				oldCss[i].dom = "#" + dom.prop('id');
+				oldCss[i] = {dom: "#" + dom.prop('id'), style: jQuery.extend({}, oldCss[i].style)} ;
 			}
-
+	}
 	this.newCss = newCss;
 	this.oldCss = oldCss;
 	this.pageId = pageId;
+	this.animate = true;
 }
 
 PB.Commands.ModifyPageCSS.prototype = {
@@ -192,7 +224,7 @@ PB.Commands.ModifyPageCSS.prototype = {
 		this.applyCss(this.newCss);
 	},
 	undo: function() {
-		this.applyCss(this.oldCss);
+		this.applyCss(this.oldCss, true);
 	},
 	saveCss: function(page) {
 		if (this.oldCss)
@@ -211,14 +243,35 @@ PB.Commands.ModifyPageCSS.prototype = {
 		}
 	},
 	applyCss: function(css) {
+	 	if (css == null) return;
 		var page = PB.book().getPageById(this.pageId);
 		var dom = $(page.getDom());
-	 	if (css == null)
-	 		return;
 		this.saveCss(page);
-		for (var i=0; i< css.length; i++)
-			dom.find(css[i].dom).css(css[i].style);
+		for (var i=0; i< css.length; i++) {
+			var el = dom.find(css[i].dom);
+			el.stop(true, true);
+			if (this.animate)
+				el.animate(css[i].style, 150);
+			else
+				el.css(css[i].style);
+		}
 		page.setModified();
+	},
+	toStringCss: function(cssSpec) {
+		if (cssSpec == null)
+			return "null";
+		var s = "";
+		cssSpec.forEach(function(el) {
+			s += el.dom + " => ";
+			for (prop in el.style)
+				s += prop + ":" + el.style[prop] + ";";
+		});
+		return s;
+	},
+	toString: function() {
+		var s = "ModifyCss\noldCss: " + this.toStringCss(this.oldCss) + "\n";
+		s += "newCss: " + this.toStringCss(this.newCss);
+		return s;
 	}
 }
 
@@ -287,6 +340,7 @@ PB.Manipulators = {
 			mousedown: function(ev) {
 				imageDiv.mouseleave();	// hides the buttons
 				var image = imageDiv.find(".actual-image").get(0);
+				docEvents.oldCss = null;
 				docEvents.data = {
 					timeStamp: ev.timeStamp,
 					mouseStartX: ev.pageX,

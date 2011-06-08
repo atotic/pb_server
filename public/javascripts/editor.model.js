@@ -451,9 +451,11 @@ PB.BookPage.prototype = {
 	},
 	getDom: function() {
 		if (this._displayDom == null)
-			PB.UI.Pagetab.selectPage(this.pageId);
-		if (this._displayDom == null)
+			PB.UI.Pagetab.selectPage(this.id);
+		if (this._displayDom == null) {
 			console.error("Cannot get dom for BookPage");
+			throw("No dom");
+		}
 		return this._displayDom;
 	},	
 	setModified: function() {

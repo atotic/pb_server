@@ -400,7 +400,7 @@ PB.UI.Bookpage = {
 		PB.UI.MainContainer.fitContent();
 	},
 	
-	imageLoaded: function(imgDiv, event) {
+	imageLoaded: function(imgDiv) {
 		imgDiv = $(imgDiv);
 		var img = imgDiv.find(".actual-image");
 		var pwidth = imgDiv.width();
