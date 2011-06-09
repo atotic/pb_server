@@ -16,8 +16,6 @@ Goals:
 
 Next:
 image placement hints on border placement
-constraints on image manipulation
-undo/redo flips pages
 image borders
 multiple editors?
 new cursors
@@ -28,6 +26,14 @@ pages: templates, thumbnails
 hash bangs for pages
 image metadata: sort date/rating/as-if, default text
 split image upload into 2 parts to prevent saving of pages pointing to local images (create/upload)
+
+Jun 9
+Bug fixing manipulators.
+Zoom works
+
+Jun 8
+undo works accross pages
+constraints on everything but zoom
 
 Jun 7
 exposed unmatrix method from transform.js to decompose transformation matrix

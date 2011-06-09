@@ -609,7 +609,7 @@ $.extend(PB.PageUploadQueue, {
 PB.guaranteeId = function(el) {
 	el = $(el).get(0);
 	if (el.id)
-		return el;
+		return;
 	var id = "i" + Math.floor(Math.random() * 10000);
 	if (!document.getElementById(id))
 		el.id = id;

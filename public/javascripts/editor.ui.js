@@ -349,7 +349,7 @@ PB.UI.Bookpage = {
 		var img = bookImage.find(".actual-image");
 		if (img.length == 0)
 			bookImage.find(".image-button").remove();
-		else {
+		else if (bookImage.find(".image-button").length == 0) {
 			PB.Manipulators.createImageButton("move", "move", bookImage, "move");
 			PB.Manipulators.createImageButton("pan", "pan", bookImage, "all-scroll");
 			PB.Manipulators.createImageButton("zoom", "zoom", bookImage, 'row-resize');
@@ -403,39 +403,41 @@ PB.UI.Bookpage = {
 	imageLoaded: function(imgDiv) {
 		imgDiv = $(imgDiv);
 		var img = imgDiv.find(".actual-image");
-		var pwidth = imgDiv.width();
-		var pheight = imgDiv.height();
-		var iwidth = img.prop("naturalWidth");
-		var iheight = img.prop("naturalHeight");
-		var vscale = pheight / iheight;
-		var hscale = pwidth / iwidth;
-		var scale = Math.min(vscale, hscale);
-		var align = imgDiv.attr('data-align') || 'center';
-		var x = 0, y=0;
-		switch(align) {
-			case 'top':
-			case 'start':
-				break;
-			case 'center':
-				x = (pwidth - iwidth * scale) / 2;
-				y = (pheight - iheight * scale) / 2;
-				break;
-			case 'bottom':
-			case 'right':
-			case 'end':
-				x = pwidth - iwidth * scale;
-				y = pheight - iheight * scale;
-				break;
-			default:
-				console.warn("Unknown image data-align attribute: " + align);
+		if (img.length != 0) {
+			var pwidth = imgDiv.width();
+			var pheight = imgDiv.height();
+			var iwidth = img.prop("naturalWidth");
+			var iheight = img.prop("naturalHeight");
+			var vscale = pheight / iheight;
+			var hscale = pwidth / iwidth;
+			var scale = Math.min(vscale, hscale);
+			var align = imgDiv.attr('data-align') || 'center';
+			var x = 0, y=0;
+			switch(align) {
+				case 'top':
+				case 'start':
+					break;
+				case 'center':
+					x = (pwidth - iwidth * scale) / 2;
+					y = (pheight - iheight * scale) / 2;
+					break;
+				case 'bottom':
+				case 'right':
+				case 'end':
+					x = pwidth - iwidth * scale;
+					y = pheight - iheight * scale;
+					break;
+				default:
+					console.warn("Unknown image data-align attribute: " + align);
+			}
+			img.css({
+				position: "absolute",
+				height: iheight * scale + "px",
+				width: iwidth * scale + "px",
+				top: y + "px",
+				left: x + "px"
+			});
 		}
-		img.css({
-			position: "absolute",
-			height: iheight * scale + "px",
-			width: iwidth * scale + "px",
-			top: y + "px",
-			left: x + "px"
-		});
 		PB.UI.Bookpage.updateImageControls(imgDiv);
 	}
 }

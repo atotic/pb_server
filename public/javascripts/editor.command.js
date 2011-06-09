@@ -10,6 +10,10 @@ PB.CommandQueue = {
 	completeQ: [],	// Already executed commands
 	undoneQ: [], // Commands that have been undone
 	
+	trace: function(f) {
+		return;
+		console.log(f + this);
+	},
 	// Execute command, and push it onto the queue
 	execute: function(command) {
 		command.redo();
@@ -18,7 +22,7 @@ PB.CommandQueue = {
 			this.trim();
 			this.send('commandQueueChanged', this);
 		}
-		console.log("execute" + this);
+		this.trace('execute');
 	},
 	
 	// Push a command onto the queue, if 
@@ -29,7 +33,7 @@ PB.CommandQueue = {
 			this.trim();
 			this.send('commandQueueChanged', this);
 		}
-		console.log("push" + this);
+		this.trace('push');
 	},
 	
 	trim: function() {
@@ -44,7 +48,7 @@ PB.CommandQueue = {
 				cmd.undo();
 				this.undoneQ.push(cmd);
 				this.send('commandQueueChanged', this);
-				console.log("undo" + this);
+				this.trace('undo');
 				return;
 			}
 		}
@@ -58,7 +62,7 @@ PB.CommandQueue = {
 				cmd.redo();
 				this.completeQ.push(cmd);
 				this.send('commandQueueChanged', this);
-				console.log("redo" + this);
+		this.trace('redo');
 				return;
 			}
 		}
@@ -126,14 +130,14 @@ PB.Commands.prototype = {
 
 PB.Commands.DropImage = function(pageId, imageBroker, imageDiv) {
 	PB.guaranteeId(imageDiv);
-	this.imageBroker = imageBroker;
 	this.imageDivId = $(imageDiv).attr("id");
+	this.imageBroker = imageBroker;
 	this.pageId = pageId;
 }
 
 PB.Commands.DropImage.prototype = {
 	canUndo: function() {
-		return 'oldImg' in this;
+		return 'oldSrc' in this;
 	},
 	canRedo: function() {
 		return true;
@@ -143,17 +147,28 @@ PB.Commands.DropImage.prototype = {
 		var page = PB.book().getPageById(this.pageId);
 		var dom = $(page.getDom());
 		var imageDiv = dom.find("#" + this.imageDivId);
+		var img = imageDiv.find("img").get(0);
 		// Save for redo
-		this.oldImg = dom.find("img");
+		this.oldSrc = img ? img.src : null;
 		// Create the image
-		var image = $('<img class="actual-image" style="visibility:hidden"/>');
-	  image.bind("load",  function(ev) {
+		if (img) 
+			img.style.visibility = 'hidden';
+		else {
+			img = $('<img class="actual-image" style="visibility:hidden"/>').get(0);
+			if ('generatedId' in this)	// if we have to recreate the element, recreate with same id
+				img.id = this.generatedId;
+			else {
+				PB.guaranteeId(img);
+				this.generatedId = img.id;
+			}
+			imageDiv.append(img);
+		}
+	  img.onload = function(ev) {
 				PB.UI.Bookpage.imageLoaded(imageDiv);
-				image.css("visibility", "visible");
-		});
-		imageDiv.empty().append(image);
+				img.style.visibility = "visible";
+		};
 		page.setModified();
-		image.attr('src', this.imageBroker.getImageUrl('display'));
+		img.src = this.imageBroker.getImageUrl('display');
 	},
 	undo: function() {
 		// Load in the dom
@@ -161,13 +176,16 @@ PB.Commands.DropImage.prototype = {
 		var dom = $(page.getDom());
 		var imageDiv = dom.find("#" + this.imageDivId);
 		// Set the old image
-		imageDiv.empty().append(this.oldImg);
+		if (this.oldSrc != null)
+			imageDiv.find("img").attr("src", this.oldSrc);
+		else
+			imageDiv.find("img").detach();
 		PB.UI.Bookpage.imageLoaded(imageDiv);
 		page.setModified();
-		delete this.oldImg;
+		delete this.oldSrc;
 	},
 	toString: function() {
-		return "dropImage:" + imageBroker;
+		return "dropImage:" + this.imageBroker.id() + "=>" + this.imageDivId;
 	}
 }
 /* 
@@ -317,7 +335,7 @@ PB.Manipulators = {
 			mousemove: function(ev) {
 				var moveX = ev.pageX - docEvents.data.mouseStartX;
 				var moveY = ev.pageY - docEvents.data.mouseStartY;
-				docEvents.processMouse(moveX, moveY, ev);
+				docEvents.processMouse(docEvents.data, moveX, moveY, ev);
 			},
 			mousedown: function(ev) {
 				console.log("mousedownDoc");
@@ -371,49 +389,84 @@ PB.Manipulators = {
 		button.bind(buttonEvents);		
 	},
 
-	pan: function (moveX, moveY, ev) {
-		if (! ('transformMatrix' in this.data))
-			this.data.transformMatrix = $.transformMatrix(this.data.imageDiv.css("transform"));
-		var transX = this.data.transformMatrix[0] * moveX + this.data.transformMatrix[1] * moveY;
-		var transY = this.data.transformMatrix[2] * moveX + this.data.transformMatrix[3] * moveY;
-		var css = {
-			top: (this.data.imageTop + transY) + "px",
-			left: (this.data.imageLeft + transX) + "px"
-		}
-		this.setCss([{dom: this.data.image, style: css}]);
+	clamp: function (val, lo, hi) {
+//			console.log("clamp " + val + " lo:" + lo + " hi:" + hi);
+			if (val < lo) return lo;
+			if (val > hi) return hi;
+			return val;
 	},
 
-	move: function (moveX, moveY, ev) {
+	pan: function (data, moveX, moveY, ev) {
+		if (! ('transformMatrix' in data))
+			data.transformMatrix = $.transformMatrix(data.imageDiv.css("transform"));
+		var transX = data.transformMatrix[0] * moveX + data.transformMatrix[1] * moveY;
+		var transY = data.transformMatrix[2] * moveX + data.transformMatrix[3] * moveY;
+		var top = data.imageTop + transY;
+		top = PB.Manipulators.clamp(top, 
+			data.imageDivHeight - data.imageHeight, 0);
+
+		left = data.imageLeft + transX;
+		left = PB.Manipulators.clamp(left, 
+			data.imageDivWidth - data.imageWidth, 0);
 		var css = {
-			top: (this.data.imageDivTop + moveY) + "px",
-			left: (this.data.imageDivLeft + moveX) + "px"
+			top: top + "px",
+			left: left + "px"
 		}
-		this.setCss([{dom: this.data.imageDiv, style: css}]);
+		this.setCss([{dom: data.image, style: css}]);
 	},
 
-	zoom: function(moveX, moveY, ev) {
-		var	top = this.data.imageTop + moveY;
-		var	height = this.data.imageHeight - moveY * 2;
-		var	xdelta = moveY * this.data.imageWidth / this.data.imageHeight;
-		var	left = this.data.imageLeft + xdelta;
-		var	width = this.data.imageWidth - xdelta * 2;
+	move: function (data, moveX, moveY, ev) {
+		var top = data.imageDivTop + moveY;
+		var left = data.imageDivLeft + moveX;
+		var page = data.imageDiv.parents(".book-page");
+		top = PB.Manipulators.clamp(top,
+			-20, page.height() - data.imageDiv.height() + 20);
+		left = PB.Manipulators.clamp(left,
+			-20, page.width() - data.imageDiv.width() + 20);
+		var css = {
+			top: top + "px",
+			left: left + "px"
+		}
+		this.setCss([{dom: data.imageDiv, style: css}]);
+	},
+
+	zoom: function(data, moveX, moveY, ev) {
+		// compute height
+		var height = data.imageHeight - moveY * 2;
+		height = PB.Manipulators.clamp(height, data.imageDivHeight, 2000);
+		// scale width by same amount
+		var scale = height / data.imageHeight;
+		var width = data.imageWidth * scale;
+		// clamp both if width is too small
+		if (width < data.imageDivWidth) {
+			width = data.imageDivWidth;
+			height = width / data.imageWidth * data.imageHeight;
+		}
+		// move left/top proportionally
+		// left_new = left_old * (width_new - width_div)/(width_old - width_div)
+		var left = data.imageLeft - ( width - data.imageWidth) / 2;
+		left = PB.Manipulators.clamp(left, 
+			data.imageDivWidth - width, 0);
+		var top = data.imageTop - ( height - data.imageHeight) / 2;
+		top = PB.Manipulators.clamp(top, 
+			data.imageDivHeight - height, 0);
+
 		var css = {
 			top: top + "px",
 			left: left + "px",
 			height: height + "px",
 			width: width + "px"
 		}
-		this.setCss([{dom: this.data.image, style: css}]);
+		this.setCss([{dom: data.image, style: css}]);
 	},
 
-	rotate: function(moveX, moveY, ev) {
+	rotate: function(data, moveX, moveY, ev) {
 		// Rotate
 		// compute angle, pythagora
-		if (! ('oldRotation' in this.data)) {
-			this.data.oldRotation = $.transformUnmatrix($.transformMatrix(this.data.imageDiv.css("transform"))).rotate;
-		}
-		var b = this.data.centerY - ev.pageY;
-		var a = ev.pageX - this.data.centerX;
+		if (! ('oldRotation' in data))
+			data.oldRotation = $.transformUnmatrix($.transformMatrix(data.imageDiv.css("transform"))).rotate;
+		var b = data.centerY - ev.pageY;
+		var a = ev.pageX - data.centerX;
 //		console.log("Y:" +b + " X:" + a);
 		var c = Math.sqrt(a*a+b*b);
 		var angle = Math.asin(b / c);
@@ -421,12 +474,12 @@ PB.Manipulators = {
 			angle = Math.PI / 2 + ( Math.PI / 2 - angle);
 		angle = -angle;
 //		console.log("angle is " + ( 360 * angle / 2 / Math.PI));
-		angle += this.data.oldRotation;
+		angle += data.oldRotation;
 		if (ev.shiftKey) // constrain to 45deg multiples
 			angle = Math.round(angle * 4 / Math.PI) * Math.PI / 4;
 		var css = {
 			transform: "rotate(" + angle + "rad)"
 		}
-		this.setCss([{dom: this.data.imageDiv, style: css}]);
+		this.setCss([{dom: data.imageDiv, style: css}]);
 	}
 }
