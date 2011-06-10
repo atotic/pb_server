@@ -455,7 +455,7 @@ class SvegApp < Sinatra::Base
 			end
 		rescue => ex
 			LOGGER.error(ex.message)
-			flash.now[:error]= "Errors prevented the book from being saved. Please fix them and try again."
+			flash.now[:error]= "Errors prevented the book from being created. Please fix them and try again."
 			erb :book_new, {:layout => :'layout/plain'}
 		end
 	end
