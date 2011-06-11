@@ -15,7 +15,6 @@ Goals:
 - < 200MB pdf files?
 
 Next:
-image placement hints on border placement
 image borders
 multiple editors?
 new cursors
@@ -26,6 +25,11 @@ pages: templates, thumbnails
 hash bangs for pages
 image metadata: sort date/rating/as-if, default text
 split image upload into 2 parts to prevent saving of pages pointing to local images (create/upload)
+
+Jun 10
+Image placement hints done, with a beautiful test page in our new test book.
+Implemented test book
+Implemented yml properties for initial book layout
 
 Jun 9
 Bug fixing manipulators.

@@ -551,7 +551,6 @@ $.extend(PB.PageUploadQueue, {
 	},
 	readyToSave: function(page)
 	{
-		return;
 		if ( page.id in this._timedQueue )
 			return;
 		console.log("PageQueue readyToSave ", page.id);
