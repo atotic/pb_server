@@ -95,8 +95,10 @@ a:visited {
 }
 
 .drop-feedback {
-	box-shadow: inset 0px 0px 15px #61A326;
+	box-shadow: 0px 0px 15px #61A326;
+	box-shadow: 0px 0px 15px Highlight;
 	background-color: #61A326 !important;
+	background-color: Highlight !important;
 }
 
 /* HEADER */

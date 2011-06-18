@@ -15,16 +15,45 @@ Goals:
 - < 200MB pdf files?
 
 Next:
-image borders
-multiple editors?
-new cursors
-image frame resize
+text tools:
+- Tools: move, right margin resize
 
-text tools: create new text, edit, move
-pages: templates, thumbnails
-hash bangs for pages
+Page assets:
+- css that comes with the book
+- css that comes with the page
+
+new cursors, and maybe consistent positioning of tools.
+image frame resize?
+pages: templates, thumbnails 
+hash bangs for pages July 15
 image metadata: sort date/rating/as-if, default text
-split image upload into 2 parts to prevent saving of pages pointing to local images (create/upload)
+split image upload into 2 parts to prevent saving of pages pointing to local images (create/upload) July 21
+multiple editors?/
+Deployment, multi-login, imports: august
+I wish I had a better Javascript test harness. Should I spend a few days developing one?
+Might be worth it, part of my book testbook? Once I have the themed javascript loading, I could
+create a test harness.
+
+June 17
+Undo/redo of text edits
+Happy, Happy Text edit paste of facebook comments works!
+Text is just a div. It has template text "Type here", which changes when type. Type here is not printed.
+Tools: click to edit, click outside to complete. Edit mode highlights with a nice round border
+
+June 16
+Crappy day, got little work done. Starting work on contentEditable. Implementing
+contentEditable is trickier than I thought.
+Added VisualEvent debugger tool.
+Got FF contentEditable to respond to first click. It responds to click event, broadcast
+
+Jun 14
+border-image is unusable because of gaps upon transform in Firefox and Webkit
+https://bugzilla.mozilla.org/show_bug.cgi?id=455308, filed one for Webkit too
+
+Jun 13
+Experimenting with border-image. We've got a few problems:
+- importing hi-res versions of the photo. Css needs to change. Books should have css associated
+- 
 
 Jun 10
 Image placement hints done, with a beautiful test page in our new test book.

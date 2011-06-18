@@ -331,19 +331,6 @@ PB.UI.Bookpage = {
 		});
 		return found;
 	},
-	// makes element accept images on drop
-	makeDroppable: function(el) {
-		$(el).droppable({
-			  	'hoverClass': "drop-feedback",
-			  	'activeClass': 'drop-feedback',
-			  	'drop': function(event, ui) {
-			  		// when image drops, replace drop element with an image of the same size
-			  		var imageBroker = $(ui.draggable).data('imageBroker');
-			  		var pageId = $(this).parents(".page-enclosure").data("page_id");
-			  		var cmd = new PB.Commands.DropImage(pageId, imageBroker, this);
-			  		PB.CommandQueue.execute(cmd);
-			  }});
-	},
 	updateImageControls: function(bookImage) {
 		bookImage = $(bookImage);
 		var img = bookImage.find(".actual-image");
@@ -383,9 +370,12 @@ PB.UI.Bookpage = {
 		enclosingDiv.append(el);
 		el.find(".book-image").each( function() {
 		// this must come after we are inside the enclosing div
-				PB.UI.Bookpage.makeDroppable(this);
+				PB.Manipulators.makeDroppableImage(this);
 				PB.UI.Bookpage.updateImageControls(this);
 			});
+		el.find(".book-text").each( function() {
+			PB.Manipulators.Text.makeEditable(this);
+		});
 		page.setDisplayDom(enclosingDiv);
 		return enclosingDiv;
 	},
@@ -527,6 +517,7 @@ PB.UI.Bookpage = {
 	}
 }
 function updatePlacement() {
+// This function is testing only
 	var placement = $("#sizing").val();
 	placement += " " + $("#rotate").val();
 	placement += " " + $("#align_left").val();

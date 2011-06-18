@@ -5,6 +5,8 @@
  * 
  * 
  */
+"use strict"
+
 PB.CommandQueue = {
 
 	completeQ: [],	// Already executed commands
@@ -293,8 +295,57 @@ PB.Commands.ModifyPageCSS.prototype = {
 	}
 }
 
+PB.Commands.ReplaceInnerHtml = function(pageId, dom, oldHtml, newHtml, oldWasDefault) {
+	this.pageId = pageId;
+	PB.guaranteeId(dom);
+	this.domId = $(dom).prop("id");
+	this.oldHtml = oldHtml;
+	this.newHtml = newHtml;
+	this.oldWasDefault = oldWasDefault;
+}
+
+PB.Commands.ReplaceInnerHtml.prototype = {
+	canUndo: function() {
+		return this.oldHtml != null;
+	},
+	canRedo: function() {
+		return this.newHtml != null;
+	},
+	redo: function() {
+		this.applyHtml(this.newHtml);
+	},
+	undo: function() {
+		this.applyHtml(this.oldHtml);
+	},
+	applyHtml: function(html) {
+		if (html == null) return;
+		var page = PB.book().getPageById(this.pageId);
+		var dom = $(page.getDom());
+		var el = dom.find("#" + this.domId)
+		el.prop("innerHTML", html);
+		if (html == this.oldHtml) {
+			if (this.oldWasDefault)
+				el.removeAttr("data-user_text");
+		}
+		else
+			el.attr("data-user_text", "true");
+		page.setModified();
+	}
+}
+
 PB.Manipulators = {
-	
+	makeDroppableImage: function(el) {
+		$(el).droppable({
+			  	'hoverClass': "drop-feedback",
+			  	'activeClass': 'drop-feedback',
+			  	'drop': function(event, ui) {
+			  		// when image drops, replace drop element with an image of the same size
+			  		var imageBroker = $(ui.draggable).data('imageBroker');
+			  		var pageId = $(this).parents(".page-enclosure").data("page_id");
+			  		var cmd = new PB.Commands.DropImage(pageId, imageBroker, this);
+			  		PB.CommandQueue.execute(cmd);
+			  }});
+	},	
 	createImageButton: function(kind, title, imageDiv, cursor) {
 		var html = "<button class='image-button deleteme " + kind + "'>" + title + "</button>";
 		var button = $(html).prependTo(imageDiv);
@@ -443,7 +494,7 @@ PB.Manipulators = {
 			height = width / data.imageWidth * data.imageHeight;
 		}
 		// move left/top proportionally
-		// left_new = left_old * (width_new - width_div)/(width_old - width_div)
+		// performs: left_new = left_old * (width_new - width_div)/(width_old - width_div)
 		var left = data.imageLeft - ( width - data.imageWidth) / 2;
 		left = PB.Manipulators.clamp(left, 
 			data.imageDivWidth - width, 0);
@@ -482,4 +533,68 @@ PB.Manipulators = {
 		}
 		this.setCss([{dom: data.imageDiv, style: css}]);
 	}
+}
+PB.Manipulators.Text = {
+	// Clicking on text field starts edit mode
+	// Clicking anywhere else in the document makes it 
+	makeEditable: function(el) {
+		el = $(el);
+		PB.guaranteeId(el);
+		console.log("Editing", el.prop("id"));
+		var textEvents = {
+			mousedown: function(ev) {
+				console.log("edit started");
+				// FF editing setup https://developer.mozilla.org/en/rich-text_editing_in_mozilla
+				document.execCommand("enableObjectResizing", false, false);
+				document.execCommand("insertBrOnReturn", false, false);
+				el.prop("contentEditable", true);
+				if (! ("oldHtml" in textEvents)) {
+					textEvents.oldHtml = el.prop("innerHTML");
+					if (textEvents.oldHtml.indexOf('<') == -1)
+						textEvents.oldHtml = "<p>" + textEvents.oldHtml + "</p>";
+					textEvents.oldIsDefault = ! el.attr("data-user_text");
+					if (textEvents.oldIsDefault) {
+						// Clearing text on mousedown prevents field from being editable.
+						// These are different workarounds.
+								window.setTimeout(function() {
+									var sel = window.getSelection();
+									sel.selectAllChildren(el.get(0));
+								}, 0);
+					}
+				}
+			},
+			keydown: function(ev) {
+				// we have to clear on first key down, because 
+				if ('clearContents' in textEvents) {
+					el.empty();
+					delete textEvents.clearContents;
+				}
+			},
+			blur: function(ev) {
+				el.removeAttr("contentEditable");
+				// Clean up the editing artifacts
+				el.find("*").removeAttr("_moz_dirty");
+				el.find("br").removeAttr("type");
+				// Clean up hazards of pasted html
+				el.find("*").removeAttr("id")
+					.removeAttr("class")
+					.removeAttr("data-ft")
+					.removeAttr("tabindex")
+					.removeAttr("data-hovercard")
+					.removeAttr("target");
+				var newHtml = el.prop("innerHTML");
+				if (newHtml != textEvents.oldHtml) {
+					if (textEvents.oldIsDefault)
+						el.attr("data-user_text", true);
+					var pageId = el.parents(".page-enclosure").data("page_id");
+					PB.book().getPageById(pageId).setModified();
+					// create a command, so we can undo
+					PB.CommandQueue.push(new PB.Commands.ReplaceInnerHtml(pageId, el, textEvents.oldHtml, newHtml, textEvents.oldIsDefault));
+				}
+				delete textEvents.oldHtml;
+				return true;
+			}
+		};
+		el.bind(textEvents);
+	},
 }

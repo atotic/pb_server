@@ -11,7 +11,9 @@ Mediawiki wrestling with SVG -> PNG conversion http://www.mediawiki.org/wiki/Man
 
 CSS
 Free web app developer resources: http://www.webappers.com/category/design/icons/
-http://www.css3.info/preview/border-image/
+Border image: http://www.css3.info/preview/border-image/
+Border image in depth: http://www.useragentman.com/blog/2011/03/29/pixel-perfect-css3-border-image-in-depth/
+Best border image overview: http://css-tricks.com/understanding-border-image/
 Nice way to do captions, HTML5 style http://css-tricks.com/slide-in-image-captions/
 http://www.trymyui.com/ great UI testing place
 Very neat background patterns: http://leaverou.me/css3patterns/#
@@ -40,6 +42,8 @@ Photo editing API: http://developers.aviary.com/effects-api
 JSFiddle, nice easing animations: http://jsfiddle.net/marcofucci/rRtAq/
 XPath for JSON http://jsonselect.org/#overview
 Ajax history design: http://tumbledry.org/2011/05/12/screw_hashbangs_building
+Javascript PDF renderer: http://andreasgal.com/2011/06/15/pdf-js/
+
 RUBY
 Ruby toolbox: what gem should I use for.....  http://ruby-toolbox.com/
 MD5 digests in ruby http://www.siaris.net/index.cgi/Programming/LanguageBits/Ruby/MD5.rdoc
@@ -60,8 +64,15 @@ https://www.crowdspring.com/post-a-project/, UI design referred from Michael LaG
 Survey of offline: http://www.html5rocks.com/tutorials/offline/whats-offline/#toc-compatibility
 Unicode geometric shapes: http://www.unicodemap.org/range/54/Geometric_Shapes/
 Firebug DOM member maps: http://www.google.com/codesearch/p?hl=en#BmTejM3fPxA/content/firebug/lib.js&q=viewbox%20lang:javascript&sa=N&cd=6&ct=rc&l=4314
+Branching strategy with git: http://betterexplained.com/articles/aha-moments-when-learning-git/
+Comet is a standard for long-lived HTTP
+
+TOUCH INTERFACES
+Sweet & short take on ipad html development http://mir.aculo.us/2010/06/04/making-an-ipad-html5-app-making-it-really-fast/
+jQuery touch http://jqtouch.com/
 
 BUSINESS
+Various business services: http://nat.org/blog/2011/06/instant-company/
 Photo book reviews: http://www.make-your-own-photobooks.com/about-us.html
 http://www.myphotocreations.com/
 http://blurb.com/

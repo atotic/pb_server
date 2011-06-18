@@ -314,8 +314,12 @@ PB.BookPage = function(json) {
 
 PB.BookPage.prototype = {
 	browserHtml: function() {
-		if (this._html)	// This will need fixing if we use other prefixed properties
-			return this._html.replace(/-webkit-transform/g, $.browserCssPrefix + "transform");
+		if (this._html)	{
+			// This will need fixing if we use other prefixed properties
+			var html =  this._html.replace(/-webkit-transform/g, $.browserCssPrefix + "transform");
+			html = html.replace(/-webkit-border-image/g, $.browserCssPrefix + "border-image");
+			return html;
+		}
 		else
 			return null;
 	},
@@ -425,7 +429,7 @@ PB.BookPage.prototype = {
 			var src = el.getAttribute("src");
 			var serverSrc = PB.book().getImageByFileUrl(src);
 			if (serverSrc != null)
-				el.setAttribute("src", serverSrc);
+				el.setAttribute("src", serverSrc.getServerUrl('display'));
 		});
 		// Remove display artifacts
 		$(dom).find(".deleteme").each(function(index, el) {

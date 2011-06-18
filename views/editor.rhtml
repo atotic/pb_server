@@ -182,13 +182,25 @@ body {
 	display:block;
 	position:relative;
 }
-.book-page * {
-	position: absolute;  /* book page elements are absolutely positioned by default */
-}
 .book-image {
+	position: absolute;
 	background-color:gray;
 	overflow:hidden;
 }
+.book-text {
+	position: absolute;
+	border: 1px solid transparent;
+	font-size: 12px;
+	height: auto;
+}
+.book-text:hover {
+	border: 1px solid Highlight;
+}
+
+.book-text[contentEditable=true] {
+	border: 1px dashed Highlight;
+}
+
 
 .image-button {
 	position: relative;
