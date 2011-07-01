@@ -28,7 +28,7 @@
 	background-color:gray;
 	overflow:hidden;
 }
-.image-button {
+.manipulator-button {
 	position: relative;
 	border: 1px none;
 	border-radius: 2px;
@@ -55,17 +55,17 @@
 	
 	function createButtons(imageDiv) {
 		var butHtml = '\
-		<button class="image-button move deleteme">move</button>\
-		<button class="image-button pan deleteme">pan</button>\
-		<button class="image-button zoom deleteme">zoom</button>\
-		<button class="image-button rotate deleteme">rotate</button>';
+		<button class="manipulator-button move deleteme">move</button>\
+		<button class="manipulator-button pan deleteme">pan</button>\
+		<button class="manipulator-button zoom deleteme">zoom</button>\
+		<button class="manipulator-button rotate deleteme">rotate</button>';
 		$(butHtml).appendTo(imageDiv);
 		var showHideEvents = {
 			mouseenter: function(ev) {
-				$(ev.currentTarget).find(".image-button").show();
+				$(ev.currentTarget).find(".manipulator-button").show();
 			},
 			mouseleave: function(ev) {
-				$(ev.currentTarget).find(".image-button").hide();				
+				$(ev.currentTarget).find(".manipulator-button").hide();				
 			}
 		}
 		imageDiv.bind(showHideEvents);

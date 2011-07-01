@@ -159,7 +159,7 @@ PB.ImageBroker.prototype = {
 	
 	getServerUrl: function(size) {
 		if ((typeof this._id == "string") && this._id.match(/temp/)) {
-			debugger; // Should throw deferred, so we can wait until image is created
+			throw new Error("Server url still not available"); // TODO
 		}
 		if (size) {
 			if (typeof size == 'number') {
@@ -201,7 +201,9 @@ PB.ImageBroker.prototype = {
 				}
 			})
 			xhr
-				.done(function() {
+				.done(function(json, status, xhr) {
+					THIS._id = json.id;
+					THIS._display_name = json.display_name;
 					PB.progress();
 					var filter = PB.DeferredFilter.getNetworkErrorFilter();
 					filter.setNetworkError(false);
@@ -213,7 +215,8 @@ PB.ImageBroker.prototype = {
 					filter.setNetworkError(true);
 					job.reject();			
 					THIS.saveOnServer(book_id, true);
-				});	
+				});
+				console.log("Upload started");
 		};
 		var job = PB.createDeferredJob("Save " + this.name(), startFn);
 		if (jumpQueue)
@@ -444,7 +447,7 @@ PB.BookPage.prototype = {
 
 	saveNow: function() {
 		this.readHtml();
-		PB.PageUploadQueue.saveNowIfNeeded(this);
+		PB.PageUploadQueue.saveNowIfNeeded(this); 
 		return this;
 	},
 	setDisplayDom: function(domEl) {

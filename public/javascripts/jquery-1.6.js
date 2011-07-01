@@ -3109,7 +3109,10 @@ var withinElement = function( event ) {
 		}
 
 	// assuming we've left the element since we most likely mousedover a xul element
-	} catch(e) { }
+	} catch(e) {
+		console.error(e.message);
+		debugger;
+	 }
 },
 
 // In case of event delegation, we only need to rename the event.type,

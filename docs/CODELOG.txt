@@ -15,17 +15,22 @@ Goals:
 - < 200MB pdf files?
 
 Next:
-text tools:
-- Tools: move, right margin resize
+Printing of text: hide default text
+Pages assets:
+pages:
+commands: add/delete
+default set of templates
+switching page/book layouts (template matching), use nokogiri for it
+page display: thumbnails, facing pages, etc.
+hash bangs for pages
+- assets css/js that comes with the book
+- assets css/js that comes with the page
+migrating albums: use nokogiri for html manipulation
 
-Page assets:
-- css that comes with the book
-- css that comes with the page
-
+July 15
+iPhoto style default images
 new cursors, and maybe consistent positioning of tools.
 image frame resize?
-pages: templates, thumbnails 
-hash bangs for pages July 15
 image metadata: sort date/rating/as-if, default text
 split image upload into 2 parts to prevent saving of pages pointing to local images (create/upload) July 21
 multiple editors?/
@@ -33,6 +38,13 @@ Deployment, multi-login, imports: august
 I wish I had a better Javascript test harness. Should I spend a few days developing one?
 Might be worth it, part of my book testbook? Once I have the themed javascript loading, I could
 create a test harness.
+
+June 30
+Text done. Looks off, but functional
+Reworked manipulators. Now they are only shown on mouseover.
+
+June 28
+Back from Sayulita, feeling happy
 
 June 17
 Undo/redo of text edits

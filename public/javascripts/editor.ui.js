@@ -331,30 +331,36 @@ PB.UI.Bookpage = {
 		});
 		return found;
 	},
-	updateImageControls: function(bookImage) {
+	attachImageManipulators: function(bookImage) {
 		bookImage = $(bookImage);
-		var img = bookImage.find(".actual-image");
-		if (img.length == 0)
-			bookImage.find(".image-button").remove();
-		else if (bookImage.find(".image-button").length == 0) {
-			PB.Manipulators.createImageButton("move", "move", bookImage, "move");
-			PB.Manipulators.createImageButton("pan", "pan", bookImage, "all-scroll");
-			PB.Manipulators.createImageButton("zoom", "zoom", bookImage, 'row-resize');
-			PB.Manipulators.createImageButton("rotate", "rotate", bookImage, 'nw-resize');
-		}
-		if (! bookImage.data("hasManipulatorShowHide")) {
-			bookImage.data("hasManipulatorShowHide", true);
-			var showHideEvents = {
-				mouseenter: function(ev) {
-					$(ev.currentTarget).find(".image-button").show();
-				},
-				mouseleave: function(ev) {
-					$(ev.currentTarget).find(".image-button").hide();				
-				}
+		var events = {
+			mouseenter: function(ev) {
+				if (bookImage.find(".actual-image").length == 0 || bookImage.data("hide-manipulators"))
+					return;	// nothing to show, no image
+				else
+					PB.Manipulators.createImageButtons(bookImage);
+			},
+			mouseleave: function(ev) {
+				bookImage.find(".manipulator-button").remove();				
 			}
-			bookImage.bind(showHideEvents);
 		}
-	}, 
+		bookImage.bind(events);
+	},
+	attachTextManipulators: function(bookText) {
+		bookText = $(bookText);
+		var events = {
+			mouseenter: function(ev) {
+				if (bookText.data("hide-manipulators"))
+					return;
+				PB.Manipulators.Text.createTextButtons(bookText);			
+			},
+			mouseleave: function(ev) {
+				if (! bookText.data("show-manipulators"))
+					bookText.find(".manipulator-button").remove();
+			}
+		}
+		bookText.bind(events);
+	},
 	// Loads page from model
 	createPageElement: function(page_id) {
 		var page = PB.book().getPageById(page_id);
@@ -371,10 +377,11 @@ PB.UI.Bookpage = {
 		el.find(".book-image").each( function() {
 		// this must come after we are inside the enclosing div
 				PB.Manipulators.makeDroppableImage(this);
-				PB.UI.Bookpage.updateImageControls(this);
+				PB.UI.Bookpage.attachImageManipulators(this);
 			});
 		el.find(".book-text").each( function() {
 			PB.Manipulators.Text.makeEditable(this);
+			PB.UI.Bookpage.attachTextManipulators(this);
 		});
 		page.setDisplayDom(enclosingDiv);
 		return enclosingDiv;
@@ -513,7 +520,6 @@ PB.UI.Bookpage = {
 				height: iHeight + "px"
 			});
 		}
-		PB.UI.Bookpage.updateImageControls(imgDiv);
 	}
 }
 function updatePlacement() {
