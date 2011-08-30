@@ -67,6 +67,9 @@ Unicode geometric shapes: http://www.unicodemap.org/range/54/Geometric_Shapes/
 Firebug DOM member maps: http://www.google.com/codesearch/p?hl=en#BmTejM3fPxA/content/firebug/lib.js&q=viewbox%20lang:javascript&sa=N&cd=6&ct=rc&l=4314
 Branching strategy with git: http://betterexplained.com/articles/aha-moments-when-learning-git/
 Comet is a standard for long-lived HTTP
+Use bcrypt to store passwords http://codahale.com/how-to-safely-store-a-password/
+WebIntents: case study is image editor http://paul.kinlan.me/web-intents-a-fresh-look
+Simple, cheap scalable site: http://highscalability.com/blog/2011/8/1/peecho-architecture-scalability-on-a-shoestring.html
 
 TOUCH INTERFACES
 Sweet & short take on ipad html development http://mir.aculo.us/2010/06/04/making-an-ipad-html5-app-making-it-really-fast/
@@ -80,7 +83,7 @@ http://blurb.com/
 http://online.wsj.com/article/SB10001424052748703509104576329272101144568.html
 smugmug: they are photo oriented
 hotprints: free cheap photo books
-
+picplum: mail best photos, http://paulstamatiou.com/picplum-automatic-photo-prints-parents
 nation's photo lab
 
 walmart & walgreens both use snapfish photo book creation software.
