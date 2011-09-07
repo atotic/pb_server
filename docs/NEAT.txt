@@ -70,6 +70,7 @@ Comet is a standard for long-lived HTTP
 Use bcrypt to store passwords http://codahale.com/how-to-safely-store-a-password/
 WebIntents: case study is image editor http://paul.kinlan.me/web-intents-a-fresh-look
 Simple, cheap scalable site: http://highscalability.com/blog/2011/8/1/peecho-architecture-scalability-on-a-shoestring.html
+Sinatra assets https://github.com/rstacruz/sinatra-assetpack
 
 TOUCH INTERFACES
 Sweet & short take on ipad html development http://mir.aculo.us/2010/06/04/making-an-ipad-html5-app-making-it-really-fast/

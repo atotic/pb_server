@@ -1,29 +1,26 @@
 # http://glu.ttono.us/articles/2005/10/30/why-and-how-ruby-and-rails-unit-testing
 # http://en.wikibooks.org/wiki/Ruby_Programming/Unit_testing
 
+# rake test:all TEST=test/book_page_test.rb
 ENV['RACK_ENV'] = 'test'
-
-require 'test/unit'
-require 'rack/test'
 require 'sveg'
-require 'model/user'
 
-Sinatra::Base.set :environment, :test
-
-class Test::Unit::TestCase
-  include Rack::Test::Methods
+module TestHelpers
 
 	def app
-		SvegApp.new
+		@app = SvegApp.new unless @app
+		return @app
 	end
 	
-	def login(user)
-		user = user || User.first
-		ENV['rack.session'].user_id = user.id
+	# logs in with given username. User created if does not exists
+	def create_user(username)
+		app
+		user = User.first(:display_name => username)
+		user = AuthLogin.create(username).user unless user
+		user
 	end
-	
-	# seed the database
-	def seed
+
+	def old_crap
 		# users
 		AuthLogin.create('atotic') if User.count < 1
 		user = User.first
@@ -50,5 +47,4 @@ class Test::Unit::TestCase
 			book.save
 		end
 	end
-
 end

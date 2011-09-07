@@ -1,17 +1,18 @@
 require 'rubygems'
+require 'ruby-debug'
+
 require 'sinatra/base'
 require 'erb'
 require 'logger'
 require 'json'
 require 'base64'
-require 'dm-validations'
+
 require 'dm-core'
+require 'dm-validations'
 require 'dm-migrations'
 require 'dm-transactions'
 require 'data_objects'
 require 'rack-flash'
-
-require 'ruby-debug'
 
 # sveg requires
 require 'model/book'
@@ -70,6 +71,11 @@ LOGGER = ColorLogger.new
 
 # Our sessions
 # Rolled my own to prevent cookie traffic on every response
+# SessionMiddleware saves/restores Session objects
+# Session object maintains 2 cookies:
+#  - flash cookie holds flash messages
+#  - user cookie holds user information
+
 class Session
 
 	attr_accessor :user_id
@@ -218,7 +224,8 @@ class SvegApp < Sinatra::Base
 		DataMapper::Model.raise_on_save_failure = true
 		# Use either the default Heroku database, or a local sqlite one for development
 		database_url = ENV['DATABASE_URL'] || "sqlite3://#{Dir.pwd}/development.sqlite";
-		database_url = "sqlite3://#{Dir.pwd}/test/test.sqlite" if settings.environment == :test
+#		database_url = "sqlite3://#{Dir.pwd}/test/test.sqlite" if settings.environment == :test
+		database_url = "sqlite3::memory:" if settings.environment == :test
 		DataMapper.setup(:default, database_url)
 		DataMapper.finalize
 		DataMapper.auto_upgrade! # extends tables to match model
@@ -332,10 +339,37 @@ class SvegApp < Sinatra::Base
 		redirect "/auth/login"
 	end
 	
+	# debugging methods
 	get '/debugger' do
 		debugger
+		
 	end
 	
+	# debugging methods
+	get '/routes' do
+		r = []
+		settings.routes.keys.each do |key| 
+			settings.routes[key].each do |route|
+				path, vars = route
+				path = path.to_s.sub("(?-mix:^\\", "").sub("$)", "").sub("\\", "")
+				vars.each { |var| path = path.sub("([^\\/?#]+)", ":" + var) }
+				path = path.gsub("\\", "")
+				x = { :path => path, 
+					:key => key,
+					:vars => vars}
+				r.push x
+			end
+		end
+		r.sort! { |x, y| 
+			x[:path] == y[:path] ? x[:key] <=> y[:key] : x[:path] <=> y[:path]
+		}
+		content_type "text/plain"
+		body = ""
+		r.each { |x| body += x[:key] + " " + x[:path] + " " + x[:vars].to_s + "\n"}
+		body
+	end
+	
+	# debugging methods
 	get '/test/:id' do
 		erb :"test/#{params[:id]}"	
 	end
@@ -487,16 +521,6 @@ class SvegApp < Sinatra::Base
 		send_file photo.file_path(params[:size])
 	end
 	
-	# find the photo with the hash -- unused
-	get '/photos/md5/:md5hash' do
-		user_must_be_logged_in
-		if (params[:md5hash])
-			photo = Photo.first(:user_id => current_user.id, :md5 => params[:md5hash])
-			return photo.to_json if photo
-		end
-		[404, "Photo not found"]
-	end
-	
 	# uploads the photo, returns photo.to_json
 	# if photo already exists, it discards current data, and returns original
 	post '/photos' do
@@ -542,6 +566,11 @@ class SvegApp < Sinatra::Base
 		page.update(params)
 		content_type "text/plain"
 		"Update successful"
+	end
+	
+	get '/assets/:template_name/:asset_file' do
+		user_must_be_logged_in
+		send_file BookTemplate.get(params[:template_name]).get_asset_path(params[:asset_file])
 	end
 	
 # setup & run	
