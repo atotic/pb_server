@@ -5,16 +5,19 @@ PB.Book = function(json) {
 	if (json) {
 		this.id = json.id;
 		this.title = json.title;
+		this._page_order = json.page_order;
 		this._images = [];
 		this._pages = [];
 		for (var i = 0; i < json.pages.length; i++)
 			this._pages.push(new PB.BookPage(json.pages[i]));
+		this.sortByPageOrder();
 		for (var i = 0; i < json.photos.length; i++)
 			this._images.push(new PB.ImageBroker(json.photos[i]))
 	}
 	else {
 		this.id = 0;
 		this.title = "";
+		this._page_order = "";
 		this._images = [];
 		this._pages = [];
 	}
@@ -31,13 +34,27 @@ PB.Book.prototype = {
 	pages: function() { // return BookPage[]
 		return this._pages;
 	},
-	
+	page_order: function() { // [1,4,5]
+		return this._page_order.split(",").map(function(x) { return parseInt(x)});
+	},	
 	firstPage: function() {
 		if (this._pages.length > 0)
 			return this._pages[0];
 		return null;
 	},
 	
+	sortByPageOrder: function() {
+		var pageOrder = this.page_order();
+		this._pages.sort(function(a, b) {
+			var a_pos = pageOrder.indexOf(a.id);
+			var b_pos = pageOrder.indexOf(b.id);
+			if (a_pos < b_pos)
+				return -1;
+			else if (a_pos > b_pos)
+				return 1;
+			return 0;
+		});
+	},
 	addLocalFileImage: function (file) {
 		// Check if it matches any already 
 		for (var i=0; i< this._images.length; i++)

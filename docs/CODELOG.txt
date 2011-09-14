@@ -39,8 +39,23 @@ hash bangs for pages
 - assets css/js that comes with the page
 migrating albums: use nokogiri for html manipulation
 
+Sep 13
+No dojo: read the book. I did not like the feel of the project. More enterprise, less modern than jquery
+Using qunit instead
+
+Sep 8
+Dojo work
+http://dojotoolkit.org/reference-guide/util/doh.html
+http://www.sitepen.com/blog/2008/04/15/unit-testing-custom-code-with-the-dojo-objective-harness/
+http://www.sitepen.com/blog/2010/11/15/from-jquery-to-large-applications/
+http://blog.rebeccamurphey.com/2009/11/12/dojo-confessions-or-how-i-gave-up-my-jquery-security-blanket-and-lived-to-tell-the-tale
+
 Sept 7
-Redid my testing code, first run was crap
+Redid my testing code, now works
+Page ordering: added new db field
+Implemented some js, and decided that I want a js unit testing framework.
+Dojo seems most mature.
+Ideally, I'd load tests, and load dojo from CDN
 
 Sept 1
 /assets/:template_name/:asset_file implemented

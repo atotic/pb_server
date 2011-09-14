@@ -1,0 +1,38 @@
+<script>
+$(document).ready(function(){
+
+module("PB.Book");
+
+Array.prototype.shuffle = function() {
+ 	var len = this.length;
+	var i = len;
+	 while (i--) {
+	 	var p = parseInt(Math.random()*len);
+		var t = this[i];
+  	this[i] = this[p];
+  	this[p] = t;
+ 	}
+};
+
+test("new PB.Book", function() {
+	var book_js = TestUtil.newBookJs( { title: "book 1" }, 35 , 35);
+	var book = new PB.Book(book_js);
+	ok(book, "Book created");	
+});
+
+test("sortByPageOrder", function() {
+	var book_js = TestUtil.newBookJs(null, 10, 10);
+	var book = new PB.Book(book_js);
+	ok(book, "Book created");
+	var pageOrder = book.page_order();
+	pageOrder.shuffle();
+	book._page_order = pageOrder.join();
+	book.sortByPageOrder();
+	pageOrder = book.page_order();
+	var pages = book.pages();
+	for (var i=0; i<pageOrder.length; i++)
+		equal(pageOrder[i], pages[i].id, "sorted ids match");
+});
+
+  }); 
+</script>

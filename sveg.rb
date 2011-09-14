@@ -273,7 +273,10 @@ class SvegApp < Sinatra::Base
 					retVal += "<script src='/javascripts/#{arg}'></script>\n"				
 				elsif arg.end_with?("css")
 					arg = "smoothness/jquery-ui-1.8.12.custom.css" if arg.eql? "jquery-ui.css"
-					retVal += "<link href='/stylesheets/#{arg}' rel='stylesheet' type='text/css' />"
+					retVal += "<link href='/stylesheets/#{arg}' rel='stylesheet' type='text/css' />\n"
+				elsif arg.eql? "qunit"
+					retVal += "<script src='http://code.jquery.com/qunit/qunit-git.js'></script>\n"
+					retVal += "<link href='http://code.jquery.com/qunit/qunit-git.css' rel='stylesheet' type='text/css' />\n"
 				else
 					raise "Unknown asset #{arg}"
 				end
@@ -322,10 +325,10 @@ class SvegApp < Sinatra::Base
 			end
 		end
 
-	end
+	end # helpers
 
 	after do
-		if request.xhr?
+		if request.xhr? # ajax requests get flash headers
 			headers({"X-FlashError" => flash[:error]}) if flash[:error]
 			headers({"X-FlashNotice" => flash[:notice]}) if flash[:notice]
 		end
@@ -335,43 +338,57 @@ class SvegApp < Sinatra::Base
 	# CONTROLLER METHODS
 	#
 
+
+	# development-only methods	
+	if settings.environment == :development
+		get '/debugger' do
+			debugger
+		end
+		
+		get '/routes' do
+			r = []
+			settings.routes.keys.each do |key| 
+				settings.routes[key].each do |route|
+					path, vars = route
+					path = path.to_s.sub("(?-mix:^\\", "").sub("$)", "").sub("\\", "")
+					vars.each { |var| path = path.sub("([^\\/?#]+)", ":" + var) }
+					path = path.gsub("\\", "")
+					x = { :path => path, 
+						:key => key,
+						:vars => vars}
+					r.push x
+				end
+			end
+			r.sort! { |x, y| 
+				x[:path] == y[:path] ? x[:key] <=> y[:key] : x[:path] <=> y[:path]
+			}
+			content_type "text/plain"
+			body = ""
+			r.each { |x| body += x[:key] + " " + x[:path] + " " + x[:vars].to_s + "\n"}
+			body
+		end
+		
+		get '/test/:id' do
+			erb :"test/#{params[:id]}"	
+		end
+		
+#		get 'test/qunit' do
+#			Dir[glob].sort.each do |node|
+#        stat = stat(node)
+#        next unless stat
+#			end
+#			run Rack::Directory.new("#{Dir.pwd}/views/test/qunit");
+#		end
+		
+		get '/test/qunit/:id' do
+			@filename = params[:id]
+			erb :"test/qunit/#{params[:id]}", {:layout => :'test/qunit/layout'}, {:locals => { :filename => params[:id] }}
+		end
+	
+	end	
+
 	get '/' do
 		redirect "/auth/login"
-	end
-	
-	# debugging methods
-	get '/debugger' do
-		debugger
-		
-	end
-	
-	# debugging methods
-	get '/routes' do
-		r = []
-		settings.routes.keys.each do |key| 
-			settings.routes[key].each do |route|
-				path, vars = route
-				path = path.to_s.sub("(?-mix:^\\", "").sub("$)", "").sub("\\", "")
-				vars.each { |var| path = path.sub("([^\\/?#]+)", ":" + var) }
-				path = path.gsub("\\", "")
-				x = { :path => path, 
-					:key => key,
-					:vars => vars}
-				r.push x
-			end
-		end
-		r.sort! { |x, y| 
-			x[:path] == y[:path] ? x[:key] <=> y[:key] : x[:path] <=> y[:path]
-		}
-		content_type "text/plain"
-		body = ""
-		r.each { |x| body += x[:key] + " " + x[:path] + " " + x[:vars].to_s + "\n"}
-		body
-	end
-	
-	# debugging methods
-	get '/test/:id' do
-		erb :"test/#{params[:id]}"	
 	end
 	
 	get '/account' do
