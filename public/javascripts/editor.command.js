@@ -130,11 +130,11 @@ PB.Commands.prototype = {
 	}
 }
 
-PB.Commands.DropImage = function(pageId, imageBroker, bookImage) {
+PB.Commands.DropImage = function(page, imageBroker, bookImage) {
 	PB.guaranteeId(bookImage);
 	this.bookImageId = $(bookImage).attr("id");
 	this.imageBroker = imageBroker;
-	this.pageId = pageId;
+	this.page = page;
 }
 
 PB.Commands.DropImage.prototype = {
@@ -146,8 +146,7 @@ PB.Commands.DropImage.prototype = {
 	},
 	redo: function() {
 		// Load in the dom
-		var page = PB.book().getPageById(this.pageId);
-		var dom = $(page.getDom());
+		var dom = $(this.page.getDom());
 		var bookImage = dom.find("#" + this.bookImageId);
 		var img = bookImage.find("img").get(0);
 		// Save for redo
@@ -169,13 +168,12 @@ PB.Commands.DropImage.prototype = {
 				PB.UI.Bookpage.imageLoaded(bookImage);
 				img.style.visibility = "visible";
 		};
-		page.setModified();
+		this.page.setModified();
 		img.src = this.imageBroker.getImageUrl('display');
 	},
 	undo: function() {
 		// Load in the dom
-		var page = PB.book().getPageById(this.pageId);
-		var dom = $(page.getDom());
+		var dom = $(this.page.getDom());
 		var bookImage = dom.find("#" + this.bookImageId);
 		// Set the old image
 		if (this.oldSrc != null)
@@ -183,7 +181,7 @@ PB.Commands.DropImage.prototype = {
 		else
 			bookImage.find("img").detach();
 		PB.UI.Bookpage.imageLoaded(bookImage);
-		page.setModified();
+		this.page.setModified();
 		delete this.oldSrc;
 	},
 	toString: function() {
@@ -210,7 +208,7 @@ Usage:
 	 cmd.setProps($("#el"), {position: 15px}).redo();
 	 PB.CommandQueue.push(cmd);
 */ 
-PB.Commands.ModifyPageCSS = function(pageId, newCss, oldCss) {
+PB.Commands.ModifyPageCSS = function(page, newCss, oldCss) {
 	// deep copy incoming styles
 	newCss = newCss.slice(0);
 	for (var i=0; i< newCss.length; i++) { 
@@ -229,7 +227,7 @@ PB.Commands.ModifyPageCSS = function(pageId, newCss, oldCss) {
 	}
 	this.newCss = newCss;
 	this.oldCss = oldCss;
-	this.pageId = pageId;
+	this.page = page;
 	this.animate = true;
 }
 
@@ -246,13 +244,13 @@ PB.Commands.ModifyPageCSS.prototype = {
 	undo: function() {
 		this.applyCss(this.oldCss, true);
 	},
-	saveCss: function(page) {
+	saveCss: function() {
 		if (this.oldCss)
 			return;
 		this.oldCss = [];
 		for (var i=0; i< this.newCss.length; i++) {
 			var oldStyle = {};
-			var dom = page.find(this.newCss[i].dom);
+			var dom = this.page.find(this.newCss[i].dom);
 			for (var pname in this.newCss[i].style) {
 				var pval = dom.css(pname);
 				if (pval === undefined)
@@ -264,9 +262,8 @@ PB.Commands.ModifyPageCSS.prototype = {
 	},
 	applyCss: function(css) {
 	 	if (css == null) return;
-		var page = PB.book().getPageById(this.pageId);
-		var dom = $(page.getDom());
-		this.saveCss(page);
+		var dom = $(this.page.getDom());
+		this.saveCss();
 		for (var i=0; i< css.length; i++) {
 			var el = dom.find(css[i].dom);
 			el.stop(true, true);
@@ -275,7 +272,7 @@ PB.Commands.ModifyPageCSS.prototype = {
 			else
 				el.css(css[i].style);
 		}
-		page.setModified();
+		this.page.setModified();
 	},
 	toStringCss: function(cssSpec) {
 		if (cssSpec == null)
@@ -295,8 +292,8 @@ PB.Commands.ModifyPageCSS.prototype = {
 	}
 }
 
-PB.Commands.ReplaceInnerHtml = function(pageId, dom, oldHtml, newHtml, oldWasDefault) {
-	this.pageId = pageId;
+PB.Commands.ReplaceInnerHtml = function(page, dom, oldHtml, newHtml, oldWasDefault) {
+	this.page = page;
 	PB.guaranteeId(dom);
 	this.domId = $(dom).prop("id");
 	this.oldHtml = oldHtml;
@@ -319,8 +316,7 @@ PB.Commands.ReplaceInnerHtml.prototype = {
 	},
 	applyHtml: function(html) {
 		if (html == null) return;
-		var page = PB.book().getPageById(this.pageId);
-		var dom = $(page.getDom());
+		var dom = $(this.page.getDom());
 		var el = dom.find("#" + this.domId)
 		el.prop("innerHTML", html);
 		if (html == this.oldHtml) {
@@ -329,7 +325,7 @@ PB.Commands.ReplaceInnerHtml.prototype = {
 		}
 		else
 			el.attr("data-user_text", "true");
-		page.setModified();
+		this.page.setModified();
 	}
 }
 
@@ -341,8 +337,8 @@ PB.Manipulators = {
 			  	'drop': function(event, ui) {
 			  		// when image drops, replace drop element with an image of the same size
 			  		var imageBroker = $(ui.draggable).data('imageBroker');
-			  		var pageId = $(this).parents(".page-enclosure").data("page_id");
-			  		var cmd = new PB.Commands.DropImage(pageId, imageBroker, this);
+			  		var page = $(this).parents(".page-enclosure").data("page");
+			  		var cmd = new PB.Commands.DropImage(page, imageBroker, this);
 			  		PB.CommandQueue.execute(cmd);
 			  }});
 	},
@@ -375,7 +371,7 @@ PB.Manipulators = {
 			this.newCss = newCss;
 			for ( var i=0; i< newCss.length; i++ )
 				$( newCss[i].dom ).css( newCss[i].style );
-			PB.book().getPageById(this.pageId).setModified();
+			this.page.setModified();
 		},
 		saveOldCss: function(newCss) {
 			if (this.oldCss)
@@ -399,7 +395,7 @@ PB.Manipulators = {
 	bindButtonEvents: function(button, bookImage, mouseCb, cursor) {
 		var docEvents = {
 			processMouse: mouseCb,
-			pageId: $(bookImage).parents(".page-enclosure").data("page_id"),
+			page: $(bookImage).parents(".page-enclosure").data("page"),
 			mousemove: function(ev) {
 				var moveX = ev.pageX - docEvents.data.mouseStartX;
 				var moveY = ev.pageY - docEvents.data.mouseStartY;
@@ -407,9 +403,9 @@ PB.Manipulators = {
 			},
 			mousedown: function(ev) {
 				console.log("mousedownDoc");
-				var pageId = docEvents.data.bookImage.parents(".page-enclosure").data("page_id");
+				var page = docEvents.data.bookImage.parents(".page-enclosure").data("page");
 				PB.CommandQueue.push(
-					new PB.Commands.ModifyPageCSS(pageId, docEvents.newCss, docEvents.oldCss));
+					new PB.Commands.ModifyPageCSS(page, docEvents.newCss, docEvents.oldCss));
 				$("body").css("cursor", "auto");
 				$(document).unbind("mousemove", docEvents.mousemove);
 				$(document).unbind("mousedown", docEvents.mousedown);
@@ -614,10 +610,10 @@ PB.Manipulators.Text = {
 				if (newHtml != textEvents.oldHtml) {
 					if (textEvents.oldIsDefault)
 						actualText.attr("data-user_text", true);
-					var pageId = actualText.parents(".page-enclosure").data("page_id");
-					PB.book().getPageById(pageId).setModified();
+					var page = actualText.parents(".page-enclosure").data("page");
+					page.setModified();
 					// create a command, so we can undo
-					PB.CommandQueue.push(new PB.Commands.ReplaceInnerHtml(pageId, actualText, textEvents.oldHtml, newHtml, textEvents.oldIsDefault));
+					PB.CommandQueue.push(new PB.Commands.ReplaceInnerHtml(page, actualText, textEvents.oldHtml, newHtml, textEvents.oldIsDefault));
 				}
 				delete textEvents.oldHtml;
 				return true;
@@ -643,7 +639,7 @@ PB.Manipulators.Text = {
 			left: "0px"
 		});
 		var docEvents = {
-			pageId: $(bookText).parents(".page-enclosure").data("page_id"),
+			page: $(bookText).parents(".page-enclosure").data("page"),
 			processMouse: function(data, moveX, moveY, ev) {
 				var top = data.textTop + moveY;
 				var left = data.textLeft + moveX;
@@ -664,9 +660,9 @@ PB.Manipulators.Text = {
 				docEvents.processMouse(docEvents.data, moveX, moveY, ev);
 			},
 			mousedown: function(ev) {
-				var pageId = docEvents.data.bookText.parents(".page-enclosure").data("page_id");
+				var page = docEvents.data.bookText.parents(".page-enclosure").data("page");
 				PB.CommandQueue.push(
-					new PB.Commands.ModifyPageCSS(pageId, docEvents.newCss, docEvents.oldCss));
+					new PB.Commands.ModifyPageCSS(page, docEvents.newCss, docEvents.oldCss));
 				$("body").css("cursor", "auto");
 				bookText.data("hide-manipulators", false);		
 				$(document).unbind("mousemove", docEvents.mousemove);
@@ -714,10 +710,10 @@ PB.Manipulators.Text = {
 		});
 		button.prependTo(bookText);
 		var docEvents = {
-			pageId: $(bookText).parents(".page-enclosure").data("page_id"),
+			page: $(bookText).parents(".page-enclosure").data("page"),
 			mouseup: function(ev) {
 				PB.CommandQueue.push(
-					new PB.Commands.ModifyPageCSS(docEvents.pageId, docEvents.newCss, docEvents.oldCss));
+					new PB.Commands.ModifyPageCSS(docEvents.page, docEvents.newCss, docEvents.oldCss));
 				$("body").css("cursor", "auto");
 				bookText.data("show-manipulators", false);
 				bookText.mouseleave();

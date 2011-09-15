@@ -15,13 +15,13 @@
 				var default_js = {
 					id: 1,
 					title: "book 1",
-					page_order: "",
+					page_order: [],
 					photos: [],
 					pages: []
 				};
 				var book_js = $.extend(default_js, attrs);
 				if (page_count > 0) {
-					book_js.page_order = "";
+					book_js.page_order = [];
 					book_js.pages = [];
 					for (var i=1; i<= page_count; i++)
 					{
@@ -29,9 +29,7 @@
 							id: i,
 							html: "Page " + i
 						}));
-						if (book_js.page_order != "")
-							book_js.page_order += ",";
-						book_js.page_order += i;
+						book_js.page_order.push(i);
 					}
 				}
 				if (image_count > 0) {

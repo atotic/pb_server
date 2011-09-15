@@ -35,14 +35,13 @@ PB.Book.prototype = {
 		return this._pages;
 	},
 	page_order: function() { // [1,4,5]
-		return this._page_order.split(",").map(function(x) { return parseInt(x)});
+		return this._page_order;
 	},	
 	firstPage: function() {
 		if (this._pages.length > 0)
 			return this._pages[0];
 		return null;
 	},
-	
 	sortByPageOrder: function() {
 		var pageOrder = this.page_order();
 		this._pages.sort(function(a, b) {
@@ -68,9 +67,9 @@ PB.Book.prototype = {
 		var pos = this._images.push(image);
 		image.saveOnServer(this.id, false);
 		this.send('imageAdded', image, pos);
-	},
-		
+	},		
 	getPageById: function(page_id) {
+		debugger;	// should not be used
 		for (var i=0; i<this._pages.length; i++)
 			if (this._pages[i].id == page_id)
 				return this._pages[i];

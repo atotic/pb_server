@@ -26,7 +26,6 @@ test("sortByPageOrder", function() {
 	ok(book, "Book created");
 	var pageOrder = book.page_order();
 	pageOrder.shuffle();
-	book._page_order = pageOrder.join();
 	book.sortByPageOrder();
 	pageOrder = book.page_order();
 	var pages = book.pages();

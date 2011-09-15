@@ -90,7 +90,7 @@ PB.UI = {
 				$("#main-container").html("<h1>Book is empty</h1>");
 		}
 		else
-			PB.UI.Pagetab.selectPage(book.firstPage().id);
+			PB.UI.Pagetab.selectPage(book.firstPage());
 	}
 };
 
@@ -258,16 +258,16 @@ PB.UI.Pagetab = {
 				}
 			});		
 	},
-	selectPage: function(page_id) {
+	selectPage: function(page) {
 		var self = this;
 		$('#page-list canvas').each(function() {
 			var c = $(this);
-			if (c.data('book_page_id') == page_id) {
+			if (c.data('book_page') == page) {
 				if (c.hasClass('selected'))
 					return;
 				else {
 					c.addClass('selected');
-					PB.UI.Bookpage.setCurrentPage(page_id);
+					PB.UI.Bookpage.setCurrentPage(page);
 				}
 			}
 			else {
@@ -283,9 +283,9 @@ PB.UI.Pagetab = {
 		$("#pages-tab .intro").hide();
 		// add new page
 		var canvas = $(page.toCanvas( { desiredHeight: 64 }));
-		canvas.data('book_page_id', page.id);
+		canvas.data('book_page', page);
 		canvas.click(function(ev) {
-			PB.UI.Pagetab.selectPage($(this).data('book_page_id'));
+			PB.UI.Pagetab.selectPage(page);
 		});
 		canvas.appendTo('#page-list');
 		// reflow when visible
@@ -317,20 +317,12 @@ PB.UI.Pagetab = {
  *
  * DOM structure:
  * #main-container
- *   div.page-enclosure data:page_id data:page(model)
+ *   div.page-enclosure data:page(model)
  * 		 div.book-page
  *       
  */
 PB.UI.Bookpage = {
 
-	getDomById: function(id) {
-		var found = null;
-		$(".page-enclosure").each( function(index, el) {
-			if ($(el).data("page_id") == id)
-				found = el;
-		});
-		return found;
-	},
 	attachImageManipulators: function(bookImage) {
 		bookImage = $(bookImage);
 		var events = {
@@ -362,8 +354,7 @@ PB.UI.Bookpage = {
 		bookText.bind(events);
 	},
 	// Loads page from model
-	createPageElement: function(page_id) {
-		var page = PB.book().getPageById(page_id);
+	createPageElement: function(page) {
 		var el = $(page.browserHtml());
 		el.addClass("book-page");
 		var enclosingDiv = $("<div></div>")
@@ -371,7 +362,6 @@ PB.UI.Bookpage = {
 			.css("position", "relative")
 			.css("width", el.css('width'))
 			.css("height", el.css('height'))
-			.data('page_id', page_id)
 			.data('page', page);
 		enclosingDiv.append(el);
 		el.find(".book-image").each( function() {
@@ -387,12 +377,12 @@ PB.UI.Bookpage = {
 		return enclosingDiv;
 	},
 	
-	setCurrentPage: function(page_id) {
+	setCurrentPage: function(page) {
 		// save the old page if possible
 		$("#main-container div.page-enclosure").each(function() {
 			$(this).data("page").saveNow().setDisplayDom(null);
 		});
-		var dom = this.createPageElement(page_id);
+		var dom = this.createPageElement(page);
 		dom.appendTo($("#main-container").empty());
 		PB.UI.MainContainer.fitContent();
 	},

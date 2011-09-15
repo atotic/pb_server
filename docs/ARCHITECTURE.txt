@@ -1,59 +1,78 @@
-Tricky parts:
+Building an editor for HTML-based photo books.
+Books are stored on server in SQL.
+Books are complex data structures:
+	- they are a set of interacting simple structures: book, page, image
+	- browser does not load the entire book at once. Images and pages are lazy-loaded
+	- modification to the book are saved continuously, there is no single save point
+	- we use sql ids for objects to point to each other => browser is aware of SQL structure
 
-Editor:
+Each addressable object needs to get an element id assigned at birth.
+SQL based objects have to have their id's assigned at server. Server cannot be always
+contacted immediately, which causes the problem of "offline ids"
 
-not happy with overall architecture, encapsulation sucks
-want better MVC separation
-
-PB
-	init
-	handleFiles
-	loadDocument
-	utility UI routines
-		notice
-		error
-		ajaxMessageReporting
-
-PB.UI
-	navigationTabs
-	resizing of widgets
-	
-PB.UI.Phototab
-	accepts drags
-	slider
-	image list addition/removal
-	
-PB.LoadImageQueue
-	loads image in a queue
-	
-Things I dislike: 
-image dropping:
-	- drop adds files to image list
-	- image list broadcasts image-added event
-	- phototab listens to image-added
-	- it asks pbimage to get the canvas with cb1
-	- pbimage places request on image-loading queue cb2
-	- queue executes cb2 sometime later
-	- cb2 creates the small image, calls cb1
-	- cb1 modifies the UI
-	
-what would ideal api look like
-imageAdded() {
-	canvas = image.toCanvas().then()
-}
-toCanvas() {
-	queue.push().then().fail()
-	
-}
-
-queue should be a jquery extension, or something.
-
-Models:
-PB.Model.Book
-	images: array(BookImage)
-	pages: array(BookPage)
-	
-When user drags images before the document is created, merge with existing images.
-toCanvas returns deffered
+PROBLEM: OFFLINE IDS
+we need to create and use an object before we got an id from the server.
+we will get an id from server eventually.
+use cases: 
+  - images before fully uploaded.
+  - page (if created in browser)
+  - offline (page/image creation), book creation
+SOLUTION: OFFLINE IDS
+  - on browser, never store id pointers. Always store pointer to an object (or a proxy) itself. Obtain
+  id from object/proxy when converting object to json for saving.
+  - when generating json for saving, get id's from object/proxies
+  - corner case is http links to user photos. These are stored in page.html, and use an id.
+    before image is uploaded, we point it to local file url, that has to be fixed before page is saved
+  - for this to work, objects have to be saved in order: 
+    if book(with id), points to page, and page points to image, and they've all been modified
+    we have to save image first, then page, then book
+    If id dependency is circular, some object will have to be saved multiple times until
+    no objects remain with multiple ids. (ex if we created
+    a book, then added 2 pages, we'd save book, page, page, book again.
 
 
+UNSOLVEABLE PROBLEMS:
+  - generation of page thumbnails
+    no way to convert html to bitmap on client
+    expensive to do on the server for every save
+    workaround: a) client: generate simple thumbnails on canvas (just images)
+                b) generate real thumbnails with the pdf conversion on server
+    
+- Sharing
+  multiple simulataneus editors?
+  
+- Saving changes
+  We edit 'document tree'. Document tree consists of book, pages, images
+
+	book belongs_to user (can be shared with others, special case?)
+  page belongs_to book
+  image belongs_to user, has_n books, appears on book pages
+  
+	each object goes through a cycle: create/update/delete
+
+	book:
+ 
+  page
+
+
+MODELS
+
+Book: 
+- book belongs_to user. If sharing, we'll need another layer of indirection
+	create menu: GET /books/new
+	creation: on a server POST /books
+  get: GET /books/:id, retrieves all the pages.
+	deletion: on a server DELETE /books/:id
+ 
+ 	pdf generation: POST /books/:id/pdf
+ 	pdf retrieval:  GET /books/:id/pdf
+
+- TODO
+  update: 
+  	page_order: simple
+	pdfs do not expire when books is updated
+  change book's style
+
+Page: 
+  creation when book is created: on server
+  	TODO we do not assign id's to significant elements when page is created.
