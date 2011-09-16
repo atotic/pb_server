@@ -32,28 +32,15 @@ SOLUTION: OFFLINE IDS
 
 
 UNSOLVEABLE PROBLEMS:
-  - generation of page thumbnails
-    no way to convert html to bitmap on client
-    expensive to do on the server for every save
-    workaround: a) client: generate simple thumbnails on canvas (just images)
-                b) generate real thumbnails with the pdf conversion on server
-    
+generation of page thumbnails
+	no way to convert html to bitmap on client
+	expensive to do on the server for every save
+	workaround: a) client: generate simple thumbnails on canvas (just images)
+	            b) generate real thumbnails with the pdf conversion on server
+
+FUTURE DIRECTIONS    
 - Sharing
   multiple simulataneus editors?
-  
-- Saving changes
-  We edit 'document tree'. Document tree consists of book, pages, images
-
-	book belongs_to user (can be shared with others, special case?)
-  page belongs_to book
-  image belongs_to user, has_n books, appears on book pages
-  
-	each object goes through a cycle: create/update/delete
-
-	book:
- 
-  page
-
 
 MODELS
 

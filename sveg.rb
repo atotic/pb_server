@@ -268,11 +268,11 @@ class SvegApp < Sinatra::Base
 			args.each do |arg|
 				arg = arg.to_s if arg.is_a?(Symbol)
 				if arg.end_with?("js")
-					arg = "jquery-1.6.js" if arg.eql? "jquery.js"
-					arg = "jquery-ui-1.8.12.custom.js" if arg.eql? "jquery-ui.js"
+					arg = "jquery-1.6.4.js" if arg.eql? "jquery.js"
+					arg = "jquery-ui-1.8.16.custom.js" if arg.eql? "jquery-ui.js"
 					retVal += "<script src='/javascripts/#{arg}'></script>\n"				
 				elsif arg.end_with?("css")
-					arg = "smoothness/jquery-ui-1.8.12.custom.css" if arg.eql? "jquery-ui.css"
+					arg = "smoothness/jquery-ui-1.8.16.custom.css" if arg.eql? "jquery-ui.css"
 					retVal += "<link href='/stylesheets/#{arg}' rel='stylesheet' type='text/css' />\n"
 				elsif arg.eql? "qunit"
 					retVal += "<script src='http://code.jquery.com/qunit/qunit-git.js'></script>\n"
