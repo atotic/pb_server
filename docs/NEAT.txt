@@ -27,6 +27,7 @@ CSS Fonts: http://www.w3.org/Style/Examples/007/fonts.en.html
 Experiment with font sizes: http://lamb.cc/typograph/ -- 
 http://www.dafont.com/my-underwood.font - just like an old typewriter font
 Font sizes with REM http://snook.ca/archives/html_and_css/font-size-with-rem
+Icon resource: http://www.iconseeker.com/
 
 JS
 HTML5 flipping pages animation: http://studio.html5rocks.com/#Flip
@@ -57,6 +58,8 @@ S3 command line https://github.com/pcorliss/s3cmd-modification
 
 HTML
 PDF converter: https://github.com/ento/wkpdf/network
+Use Chromium for PDF generation: http://www.chromium.org/developers/design-documents/print-preview
+http://chromestory.com/2010/10/learn-how-chromes-print-preview-will-work-the-pdf-deal-and-location-aware-printing/
 
 OTHER
 Look at duostack for deployment
@@ -71,6 +74,7 @@ Use bcrypt to store passwords http://codahale.com/how-to-safely-store-a-password
 WebIntents: case study is image editor http://paul.kinlan.me/web-intents-a-fresh-look
 Simple, cheap scalable site: http://highscalability.com/blog/2011/8/1/peecho-architecture-scalability-on-a-shoestring.html
 Sinatra assets https://github.com/rstacruz/sinatra-assetpack
+SLIPSUM: http://slipsum.com/
 
 TOUCH INTERFACES
 Sweet & short take on ipad html development http://mir.aculo.us/2010/06/04/making-an-ipad-html5-app-making-it-really-fast/

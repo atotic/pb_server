@@ -455,25 +455,25 @@ PB.UI.Bookpage = {
 					iHeight *= imageVScale;
 					dHeight = iHeight;
 					dWidth = iWidth;
-					console.log("flexing, vertical fill iWidth: " + iWidth + " iHeight:" + iHeight + " dHeight:" + dHeight);
+//					console.log("flexing, vertical fill iWidth: " + iWidth + " iHeight:" + iHeight + " dHeight:" + dHeight);
 				} else {
 					iWidth *= imageHScale;
 					iHeight *= imageHScale;
 					dWidth = iWidth;
 					dHeight = iHeight;
-					console.log("flexing, horizontal fill iWidth: " + iWidth + " iHeight:" + iHeight + " dHeight:" + dHeight);
+//					console.log("flexing, horizontal fill iWidth: " + iWidth + " iHeight:" + iHeight + " dHeight:" + dHeight);
 				}
 			} else {
 				// Fixed sizing, smallest image dimension fills div completely
 				if (imageVScale < imageHScale) {
 					iWidth *= imageHScale;
 					iHeight *= imageHScale;
-					console.log("fixed, horizontal iWidth: " + iWidth + " iHeight:" + iHeight);
+//					console.log("fixed, horizontal iWidth: " + iWidth + " iHeight:" + iHeight);
 				}
 				else {
 					iWidth *= imageVScale;
 					iHeight *= imageVScale;
-					console.log("fixed, vertical iWidth: ",iWidth, " iHeight:", iHeight);
+//					console.log("fixed, vertical iWidth: ",iWidth, " iHeight:", iHeight);
 				}
 			}
 			// All sizes determined, now position imageDiv
@@ -490,13 +490,13 @@ PB.UI.Bookpage = {
 				case "center": dTop = dTop + (imgDiv.height() / 2) - dHeight / 2; break;
 				case "end": dTop = dTop + (imgDiv.height()) - dHeight; break;
 			}
-			console.log("imageDiv top:",dTop, " left", dLeft);
+//			console.log("imageDiv top:",dTop, " left", dLeft);
 			// Position image
 			var iLeft = (dWidth - iWidth) / 2;
 			var iTop = (dHeight - iHeight) / 2;
-			console.log("orig top:", imgDiv.css("top"), " left", imgDiv.css("left"), "width:", imgDiv.width(), "height", imgDiv.height());
-			console.log("imgDiv top:", dTop, " left", dLeft, "width:", dWidth, "height", dHeight);
-			console.log("img top:", iTop, " left", iLeft, "width:", iWidth, "height", iHeight);
+//			console.log("orig top:", imgDiv.css("top"), " left", imgDiv.css("left"), "width:", imgDiv.width(), "height", imgDiv.height());
+//			console.log("imgDiv top:", dTop, " left", dLeft, "width:", dWidth, "height", dHeight);
+//			console.log("img top:", iTop, " left", iLeft, "width:", iWidth, "height", iHeight);
 			imgDiv.css({
 				top: dTop + "px",
 				left: dLeft + "px",
@@ -535,6 +535,16 @@ PB.UI.MainContainer = {
 		});
 		$("#undo-button").click(function() {
 			PB.CommandQueue.undo();
+		});
+		$("#add-page-tabs").tabs({
+			event: "click"
+		});
+		$( "#add-page-dialog" ).dialog({
+			autoOpen: false,
+			height: 800
+		});
+		$("#add-page-button").click(function() {
+			$("#add-page-dialog").dialog("open");
 		});
 		this.commandQueueChanged();
 	},

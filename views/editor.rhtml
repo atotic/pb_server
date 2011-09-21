@@ -8,6 +8,45 @@
 </head>
 <body>
 	<%= erb :'layout/header_bar' %>
+<div id="pages-slab" class="slab">
+	<div class="slab_top">
+		<div class="slab_title">
+			<span class="flippy" state="closed"></span>Book
+		</div>
+		<div class="slab_tools">
+			<button id="add-page-button">Add</button>
+			<div id="add-page-dialog" style="display:none">
+				<div>Add N pages to the end of the book/after last page</div>
+				<div id="add-page-tabs">
+					<ul>
+						<li><a href="#add-page-random-tab">Random</a></li>
+						<li><a href="#add-page-one-tab">One photo</a></li>
+						<li><a href="#add-page-two-tab">Two photos</a></li>
+						<li><a href="#add-page-three-tab">Three</a></li>
+						<li><a href="#add-page-four-tab">Four</a></li>
+						<li><a href="#add-page-five-tab">Five</a></li>
+						<li><a href="#add-page-six-tab">Six</a></li>
+					</ul>
+					<div id="add-page-random-tab">Random</div>
+					<div id="add-page-one-tab">One</div>
+					<div id="add-page-two-tab">Two</div>
+					<div id="add-page-three-tab">Three</div>
+					<div id="add-page-four-tab">Four</div>
+					<div id="add-page-five-tab">Five</div>
+					<div id="add-page-six-tab">Six</div>
+				</div>
+			</div>
+			<button id="delete-page-button">Delete</button>
+		</div>
+	</div>
+	<div id="pages-tab" class='slab_content'>
+		<div class="intro">Paging Dr. Guttenberg...</div>
+		<div id="page-list-slider"></div>
+		<div id="page-list-container">
+			<div id="page-list"></div>
+		</div>
+	</div>
+</div>
 <div id="photos-slab" class="slab">
 	<div class="slab_top">
 		<div class="slab_title">
@@ -22,22 +61,6 @@
 		<div id="photo-list-slider"></div>
 		<div id="photo-list-container">
 			<div id="photo-list"></div>
-		</div>
-	</div>
-</div>
-<div id="pages-slab" class="slab">
-	<div class="slab_top">
-		<div class="slab_title">
-			<span class="flippy" state="closed"></span>Book
-		</div>
-		<div class="slab_tools">
-		</div>
-	</div>
-	<div id="pages-tab" class='slab_content'>
-		<div class="intro">Paging Dr. Guttenberg...</div>
-		<div id="page-list-slider"></div>
-		<div id="page-list-container">
-			<div id="page-list"></div>
 		</div>
 	</div>
 </div>
@@ -210,5 +233,17 @@ body {
 	border-radius: 2px;
 	background-color: #D5D5D5;
 	z-index: 1;
+}
+
+#add-page-dialog{
+	position: absolute;
+	z-index: 2;
+}
+
+.ui-widget {
+	font-size: 100%;
+}
+.ui-tabs .ui-tabs-nav li a {
+	padding: 0px;
 }
 </style>

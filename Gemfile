@@ -4,6 +4,8 @@ gem "sinatra"
 gem "datamapper"
 gem 'json'
 gem 'rack-flash'
+gem 'nokogiri'
+gem 'css_parser'
 
 group :development do
 	gem 'sinatra-reloader'

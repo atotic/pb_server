@@ -39,6 +39,13 @@ hash bangs for pages
 - assets css/js that comes with the page
 migrating albums: use nokogiri for html manipulation
 
+Sept 16
+
+Sept 15
+Upgraded jquery
+Architected "ID problem"
+Refactoring of code to remove ID usage
+
 Sep 13
 No dojo: read the book. I did not like the feel of the project. More enterprise, less modern than jquery
 Using qunit instead

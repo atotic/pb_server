@@ -569,7 +569,7 @@ PB.Manipulators.Text = {
 			actualText.prop("innerHTML", "<p>" + actualText.prop("innerHTML") + "</p>");
 		PB.guaranteeId(bookText);
 		PB.guaranteeId(actualText);
-		console.log("Editing", bookText.prop("id"));
+//		console.log("Editing", bookText.prop("id"));
 		var textEvents = {
 			mousedown: function(ev) {
 				console.log("edit started");

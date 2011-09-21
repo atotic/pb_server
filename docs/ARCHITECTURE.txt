@@ -1,5 +1,12 @@
 Building an editor for HTML-based photo books.
 Books are stored on server in SQL.
+We are using jquery + jquery ui.
+UI theme is smoothness with mods: 
+Font settings: font-family: Arial, Helvetica, sans-serif;font-size: 1em;
+Modal screen for overlays: overlay opacity: 70%
+Header/Toolbar:background color 0%
+Content: background color 0%
+
 Books are complex data structures:
 	- they are a set of interacting simple structures: book, page, image
 	- browser does not load the entire book at once. Images and pages are lazy-loaded
@@ -30,6 +37,12 @@ SOLUTION: OFFLINE IDS
     no objects remain with multiple ids. (ex if we created
     a book, then added 2 pages, we'd save book, page, page, book again.
 
+PROBLEM: PAGE THUMBNAILS
+	no way to convert page html to a png page thumbnail on the client
+SOLUTION:
+  each page template also has thumbnail template
+  thumbnail template can reference elements of a real page through data-page attributes
+  
 
 UNSOLVEABLE PROBLEMS:
 generation of page thumbnails

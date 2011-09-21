@@ -18,8 +18,11 @@ require 'rack-flash'
 require 'model/book'
 require 'model/user'
 require 'model/photo'
+require 'model/book_template'
 require 'jobs/book2pdf'
 
+module PB
+	
 # logging
 class ColorLogger < Logger
 	def initialize()
@@ -347,7 +350,8 @@ class SvegApp < Sinatra::Base
 		
 		get '/routes' do
 			r = []
-			settings.routes.keys.each do |key| 
+			settings.routes.keys.each do |key|
+				next if key.eql? "HEAD"
 				settings.routes[key].each do |route|
 					path, vars = route
 					path = path.to_s.sub("(?-mix:^\\", "").sub("$)", "").sub("\\", "")
@@ -363,8 +367,10 @@ class SvegApp < Sinatra::Base
 				x[:path] == y[:path] ? x[:key] <=> y[:key] : x[:path] <=> y[:path]
 			}
 			content_type "text/plain"
+			response['Content-Disposition'] = "inline; filename=ROUTES.txt"
 			body = ""
-			r.each { |x| body += x[:key] + " " + x[:path] + " " + x[:vars].to_s + "\n"}
+			r.each { |x| body += x[:key] + " " + x[:path] + " " + "\n"}
+#			r.each { |x| body += x[:key] + " " + x[:path] + " " +  x[:vars].join(" ") + "\n"}
 			body
 		end
 		
@@ -595,5 +601,7 @@ class SvegApp < Sinatra::Base
 	use SessionMiddleware
 	use Rack::Flash
 	run! if $0 == __FILE__
+
+end
 
 end

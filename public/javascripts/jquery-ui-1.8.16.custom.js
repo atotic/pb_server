@@ -4301,6 +4301,1229 @@ $.extend($.ui.sortable, {
 
 })(jQuery);
 /*
+ * jQuery UI Accordion 1.8.16
+ *
+ * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Accordion
+ *
+ * Depends:
+ *	jquery.ui.core.js
+ *	jquery.ui.widget.js
+ */
+(function( $, undefined ) {
+
+$.widget( "ui.accordion", {
+	options: {
+		active: 0,
+		animated: "slide",
+		autoHeight: true,
+		clearStyle: false,
+		collapsible: false,
+		event: "click",
+		fillSpace: false,
+		header: "> li > :first-child,> :not(li):even",
+		icons: {
+			header: "ui-icon-triangle-1-e",
+			headerSelected: "ui-icon-triangle-1-s"
+		},
+		navigation: false,
+		navigationFilter: function() {
+			return this.href.toLowerCase() === location.href.toLowerCase();
+		}
+	},
+
+	_create: function() {
+		var self = this,
+			options = self.options;
+
+		self.running = 0;
+
+		self.element
+			.addClass( "ui-accordion ui-widget ui-helper-reset" )
+			// in lack of child-selectors in CSS
+			// we need to mark top-LIs in a UL-accordion for some IE-fix
+			.children( "li" )
+				.addClass( "ui-accordion-li-fix" );
+
+		self.headers = self.element.find( options.header )
+			.addClass( "ui-accordion-header ui-helper-reset ui-state-default ui-corner-all" )
+			.bind( "mouseenter.accordion", function() {
+				if ( options.disabled ) {
+					return;
+				}
+				$( this ).addClass( "ui-state-hover" );
+			})
+			.bind( "mouseleave.accordion", function() {
+				if ( options.disabled ) {
+					return;
+				}
+				$( this ).removeClass( "ui-state-hover" );
+			})
+			.bind( "focus.accordion", function() {
+				if ( options.disabled ) {
+					return;
+				}
+				$( this ).addClass( "ui-state-focus" );
+			})
+			.bind( "blur.accordion", function() {
+				if ( options.disabled ) {
+					return;
+				}
+				$( this ).removeClass( "ui-state-focus" );
+			});
+
+		self.headers.next()
+			.addClass( "ui-accordion-content ui-helper-reset ui-widget-content ui-corner-bottom" );
+
+		if ( options.navigation ) {
+			var current = self.element.find( "a" ).filter( options.navigationFilter ).eq( 0 );
+			if ( current.length ) {
+				var header = current.closest( ".ui-accordion-header" );
+				if ( header.length ) {
+					// anchor within header
+					self.active = header;
+				} else {
+					// anchor within content
+					self.active = current.closest( ".ui-accordion-content" ).prev();
+				}
+			}
+		}
+
+		self.active = self._findActive( self.active || options.active )
+			.addClass( "ui-state-default ui-state-active" )
+			.toggleClass( "ui-corner-all" )
+			.toggleClass( "ui-corner-top" );
+		self.active.next().addClass( "ui-accordion-content-active" );
+
+		self._createIcons();
+		self.resize();
+		
+		// ARIA
+		self.element.attr( "role", "tablist" );
+
+		self.headers
+			.attr( "role", "tab" )
+			.bind( "keydown.accordion", function( event ) {
+				return self._keydown( event );
+			})
+			.next()
+				.attr( "role", "tabpanel" );
+
+		self.headers
+			.not( self.active || "" )
+			.attr({
+				"aria-expanded": "false",
+				"aria-selected": "false",
+				tabIndex: -1
+			})
+			.next()
+				.hide();
+
+		// make sure at least one header is in the tab order
+		if ( !self.active.length ) {
+			self.headers.eq( 0 ).attr( "tabIndex", 0 );
+		} else {
+			self.active
+				.attr({
+					"aria-expanded": "true",
+					"aria-selected": "true",
+					tabIndex: 0
+				});
+		}
+
+		// only need links in tab order for Safari
+		if ( !$.browser.safari ) {
+			self.headers.find( "a" ).attr( "tabIndex", -1 );
+		}
+
+		if ( options.event ) {
+			self.headers.bind( options.event.split(" ").join(".accordion ") + ".accordion", function(event) {
+				self._clickHandler.call( self, event, this );
+				event.preventDefault();
+			});
+		}
+	},
+
+	_createIcons: function() {
+		var options = this.options;
+		if ( options.icons ) {
+			$( "<span></span>" )
+				.addClass( "ui-icon " + options.icons.header )
+				.prependTo( this.headers );
+			this.active.children( ".ui-icon" )
+				.toggleClass(options.icons.header)
+				.toggleClass(options.icons.headerSelected);
+			this.element.addClass( "ui-accordion-icons" );
+		}
+	},
+
+	_destroyIcons: function() {
+		this.headers.children( ".ui-icon" ).remove();
+		this.element.removeClass( "ui-accordion-icons" );
+	},
+
+	destroy: function() {
+		var options = this.options;
+
+		this.element
+			.removeClass( "ui-accordion ui-widget ui-helper-reset" )
+			.removeAttr( "role" );
+
+		this.headers
+			.unbind( ".accordion" )
+			.removeClass( "ui-accordion-header ui-accordion-disabled ui-helper-reset ui-state-default ui-corner-all ui-state-active ui-state-disabled ui-corner-top" )
+			.removeAttr( "role" )
+			.removeAttr( "aria-expanded" )
+			.removeAttr( "aria-selected" )
+			.removeAttr( "tabIndex" );
+
+		this.headers.find( "a" ).removeAttr( "tabIndex" );
+		this._destroyIcons();
+		var contents = this.headers.next()
+			.css( "display", "" )
+			.removeAttr( "role" )
+			.removeClass( "ui-helper-reset ui-widget-content ui-corner-bottom ui-accordion-content ui-accordion-content-active ui-accordion-disabled ui-state-disabled" );
+		if ( options.autoHeight || options.fillHeight ) {
+			contents.css( "height", "" );
+		}
+
+		return $.Widget.prototype.destroy.call( this );
+	},
+
+	_setOption: function( key, value ) {
+		$.Widget.prototype._setOption.apply( this, arguments );
+			
+		if ( key == "active" ) {
+			this.activate( value );
+		}
+		if ( key == "icons" ) {
+			this._destroyIcons();
+			if ( value ) {
+				this._createIcons();
+			}
+		}
+		// #5332 - opacity doesn't cascade to positioned elements in IE
+		// so we need to add the disabled class to the headers and panels
+		if ( key == "disabled" ) {
+			this.headers.add(this.headers.next())
+				[ value ? "addClass" : "removeClass" ](
+					"ui-accordion-disabled ui-state-disabled" );
+		}
+	},
+
+	_keydown: function( event ) {
+		if ( this.options.disabled || event.altKey || event.ctrlKey ) {
+			return;
+		}
+
+		var keyCode = $.ui.keyCode,
+			length = this.headers.length,
+			currentIndex = this.headers.index( event.target ),
+			toFocus = false;
+
+		switch ( event.keyCode ) {
+			case keyCode.RIGHT:
+			case keyCode.DOWN:
+				toFocus = this.headers[ ( currentIndex + 1 ) % length ];
+				break;
+			case keyCode.LEFT:
+			case keyCode.UP:
+				toFocus = this.headers[ ( currentIndex - 1 + length ) % length ];
+				break;
+			case keyCode.SPACE:
+			case keyCode.ENTER:
+				this._clickHandler( { target: event.target }, event.target );
+				event.preventDefault();
+		}
+
+		if ( toFocus ) {
+			$( event.target ).attr( "tabIndex", -1 );
+			$( toFocus ).attr( "tabIndex", 0 );
+			toFocus.focus();
+			return false;
+		}
+
+		return true;
+	},
+
+	resize: function() {
+		var options = this.options,
+			maxHeight;
+
+		if ( options.fillSpace ) {
+			if ( $.browser.msie ) {
+				var defOverflow = this.element.parent().css( "overflow" );
+				this.element.parent().css( "overflow", "hidden");
+			}
+			maxHeight = this.element.parent().height();
+			if ($.browser.msie) {
+				this.element.parent().css( "overflow", defOverflow );
+			}
+
+			this.headers.each(function() {
+				maxHeight -= $( this ).outerHeight( true );
+			});
+
+			this.headers.next()
+				.each(function() {
+					$( this ).height( Math.max( 0, maxHeight -
+						$( this ).innerHeight() + $( this ).height() ) );
+				})
+				.css( "overflow", "auto" );
+		} else if ( options.autoHeight ) {
+			maxHeight = 0;
+			this.headers.next()
+				.each(function() {
+					maxHeight = Math.max( maxHeight, $( this ).height( "" ).height() );
+				})
+				.height( maxHeight );
+		}
+
+		return this;
+	},
+
+	activate: function( index ) {
+		// TODO this gets called on init, changing the option without an explicit call for that
+		this.options.active = index;
+		// call clickHandler with custom event
+		var active = this._findActive( index )[ 0 ];
+		this._clickHandler( { target: active }, active );
+
+		return this;
+	},
+
+	_findActive: function( selector ) {
+		return selector
+			? typeof selector === "number"
+				? this.headers.filter( ":eq(" + selector + ")" )
+				: this.headers.not( this.headers.not( selector ) )
+			: selector === false
+				? $( [] )
+				: this.headers.filter( ":eq(0)" );
+	},
+
+	// TODO isn't event.target enough? why the separate target argument?
+	_clickHandler: function( event, target ) {
+		var options = this.options;
+		if ( options.disabled ) {
+			return;
+		}
+
+		// called only when using activate(false) to close all parts programmatically
+		if ( !event.target ) {
+			if ( !options.collapsible ) {
+				return;
+			}
+			this.active
+				.removeClass( "ui-state-active ui-corner-top" )
+				.addClass( "ui-state-default ui-corner-all" )
+				.children( ".ui-icon" )
+					.removeClass( options.icons.headerSelected )
+					.addClass( options.icons.header );
+			this.active.next().addClass( "ui-accordion-content-active" );
+			var toHide = this.active.next(),
+				data = {
+					options: options,
+					newHeader: $( [] ),
+					oldHeader: options.active,
+					newContent: $( [] ),
+					oldContent: toHide
+				},
+				toShow = ( this.active = $( [] ) );
+			this._toggle( toShow, toHide, data );
+			return;
+		}
+
+		// get the click target
+		var clicked = $( event.currentTarget || target ),
+			clickedIsActive = clicked[0] === this.active[0];
+
+		// TODO the option is changed, is that correct?
+		// TODO if it is correct, shouldn't that happen after determining that the click is valid?
+		options.active = options.collapsible && clickedIsActive ?
+			false :
+			this.headers.index( clicked );
+
+		// if animations are still active, or the active header is the target, ignore click
+		if ( this.running || ( !options.collapsible && clickedIsActive ) ) {
+			return;
+		}
+
+		// find elements to show and hide
+		var active = this.active,
+			toShow = clicked.next(),
+			toHide = this.active.next(),
+			data = {
+				options: options,
+				newHeader: clickedIsActive && options.collapsible ? $([]) : clicked,
+				oldHeader: this.active,
+				newContent: clickedIsActive && options.collapsible ? $([]) : toShow,
+				oldContent: toHide
+			},
+			down = this.headers.index( this.active[0] ) > this.headers.index( clicked[0] );
+
+		// when the call to ._toggle() comes after the class changes
+		// it causes a very odd bug in IE 8 (see #6720)
+		this.active = clickedIsActive ? $([]) : clicked;
+		this._toggle( toShow, toHide, data, clickedIsActive, down );
+
+		// switch classes
+		active
+			.removeClass( "ui-state-active ui-corner-top" )
+			.addClass( "ui-state-default ui-corner-all" )
+			.children( ".ui-icon" )
+				.removeClass( options.icons.headerSelected )
+				.addClass( options.icons.header );
+		if ( !clickedIsActive ) {
+			clicked
+				.removeClass( "ui-state-default ui-corner-all" )
+				.addClass( "ui-state-active ui-corner-top" )
+				.children( ".ui-icon" )
+					.removeClass( options.icons.header )
+					.addClass( options.icons.headerSelected );
+			clicked
+				.next()
+				.addClass( "ui-accordion-content-active" );
+		}
+
+		return;
+	},
+
+	_toggle: function( toShow, toHide, data, clickedIsActive, down ) {
+		var self = this,
+			options = self.options;
+
+		self.toShow = toShow;
+		self.toHide = toHide;
+		self.data = data;
+
+		var complete = function() {
+			if ( !self ) {
+				return;
+			}
+			return self._completed.apply( self, arguments );
+		};
+
+		// trigger changestart event
+		self._trigger( "changestart", null, self.data );
+
+		// count elements to animate
+		self.running = toHide.size() === 0 ? toShow.size() : toHide.size();
+
+		if ( options.animated ) {
+			var animOptions = {};
+
+			if ( options.collapsible && clickedIsActive ) {
+				animOptions = {
+					toShow: $( [] ),
+					toHide: toHide,
+					complete: complete,
+					down: down,
+					autoHeight: options.autoHeight || options.fillSpace
+				};
+			} else {
+				animOptions = {
+					toShow: toShow,
+					toHide: toHide,
+					complete: complete,
+					down: down,
+					autoHeight: options.autoHeight || options.fillSpace
+				};
+			}
+
+			if ( !options.proxied ) {
+				options.proxied = options.animated;
+			}
+
+			if ( !options.proxiedDuration ) {
+				options.proxiedDuration = options.duration;
+			}
+
+			options.animated = $.isFunction( options.proxied ) ?
+				options.proxied( animOptions ) :
+				options.proxied;
+
+			options.duration = $.isFunction( options.proxiedDuration ) ?
+				options.proxiedDuration( animOptions ) :
+				options.proxiedDuration;
+
+			var animations = $.ui.accordion.animations,
+				duration = options.duration,
+				easing = options.animated;
+
+			if ( easing && !animations[ easing ] && !$.easing[ easing ] ) {
+				easing = "slide";
+			}
+			if ( !animations[ easing ] ) {
+				animations[ easing ] = function( options ) {
+					this.slide( options, {
+						easing: easing,
+						duration: duration || 700
+					});
+				};
+			}
+
+			animations[ easing ]( animOptions );
+		} else {
+			if ( options.collapsible && clickedIsActive ) {
+				toShow.toggle();
+			} else {
+				toHide.hide();
+				toShow.show();
+			}
+
+			complete( true );
+		}
+
+		// TODO assert that the blur and focus triggers are really necessary, remove otherwise
+		toHide.prev()
+			.attr({
+				"aria-expanded": "false",
+				"aria-selected": "false",
+				tabIndex: -1
+			})
+			.blur();
+		toShow.prev()
+			.attr({
+				"aria-expanded": "true",
+				"aria-selected": "true",
+				tabIndex: 0
+			})
+			.focus();
+	},
+
+	_completed: function( cancel ) {
+		this.running = cancel ? 0 : --this.running;
+		if ( this.running ) {
+			return;
+		}
+
+		if ( this.options.clearStyle ) {
+			this.toShow.add( this.toHide ).css({
+				height: "",
+				overflow: ""
+			});
+		}
+
+		// other classes are removed before the animation; this one needs to stay until completed
+		this.toHide.removeClass( "ui-accordion-content-active" );
+		// Work around for rendering bug in IE (#5421)
+		if ( this.toHide.length ) {
+			this.toHide.parent()[0].className = this.toHide.parent()[0].className;
+		}
+
+		this._trigger( "change", null, this.data );
+	}
+});
+
+$.extend( $.ui.accordion, {
+	version: "1.8.16",
+	animations: {
+		slide: function( options, additions ) {
+			options = $.extend({
+				easing: "swing",
+				duration: 300
+			}, options, additions );
+			if ( !options.toHide.size() ) {
+				options.toShow.animate({
+					height: "show",
+					paddingTop: "show",
+					paddingBottom: "show"
+				}, options );
+				return;
+			}
+			if ( !options.toShow.size() ) {
+				options.toHide.animate({
+					height: "hide",
+					paddingTop: "hide",
+					paddingBottom: "hide"
+				}, options );
+				return;
+			}
+			var overflow = options.toShow.css( "overflow" ),
+				percentDone = 0,
+				showProps = {},
+				hideProps = {},
+				fxAttrs = [ "height", "paddingTop", "paddingBottom" ],
+				originalWidth;
+			// fix width before calculating height of hidden element
+			var s = options.toShow;
+			originalWidth = s[0].style.width;
+			s.width( parseInt( s.parent().width(), 10 )
+				- parseInt( s.css( "paddingLeft" ), 10 )
+				- parseInt( s.css( "paddingRight" ), 10 )
+				- ( parseInt( s.css( "borderLeftWidth" ), 10 ) || 0 )
+				- ( parseInt( s.css( "borderRightWidth" ), 10) || 0 ) );
+
+			$.each( fxAttrs, function( i, prop ) {
+				hideProps[ prop ] = "hide";
+
+				var parts = ( "" + $.css( options.toShow[0], prop ) ).match( /^([\d+-.]+)(.*)$/ );
+				showProps[ prop ] = {
+					value: parts[ 1 ],
+					unit: parts[ 2 ] || "px"
+				};
+			});
+			options.toShow.css({ height: 0, overflow: "hidden" }).show();
+			options.toHide
+				.filter( ":hidden" )
+					.each( options.complete )
+				.end()
+				.filter( ":visible" )
+				.animate( hideProps, {
+				step: function( now, settings ) {
+					// only calculate the percent when animating height
+					// IE gets very inconsistent results when animating elements
+					// with small values, which is common for padding
+					if ( settings.prop == "height" ) {
+						percentDone = ( settings.end - settings.start === 0 ) ? 0 :
+							( settings.now - settings.start ) / ( settings.end - settings.start );
+					}
+
+					options.toShow[ 0 ].style[ settings.prop ] =
+						( percentDone * showProps[ settings.prop ].value )
+						+ showProps[ settings.prop ].unit;
+				},
+				duration: options.duration,
+				easing: options.easing,
+				complete: function() {
+					if ( !options.autoHeight ) {
+						options.toShow.css( "height", "" );
+					}
+					options.toShow.css({
+						width: originalWidth,
+						overflow: overflow
+					});
+					options.complete();
+				}
+			});
+		},
+		bounceslide: function( options ) {
+			this.slide( options, {
+				easing: options.down ? "easeOutBounce" : "swing",
+				duration: options.down ? 1000 : 200
+			});
+		}
+	}
+});
+
+})( jQuery );
+/*
+ * jQuery UI Autocomplete 1.8.16
+ *
+ * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Autocomplete
+ *
+ * Depends:
+ *	jquery.ui.core.js
+ *	jquery.ui.widget.js
+ *	jquery.ui.position.js
+ */
+(function( $, undefined ) {
+
+// used to prevent race conditions with remote data sources
+var requestIndex = 0;
+
+$.widget( "ui.autocomplete", {
+	options: {
+		appendTo: "body",
+		autoFocus: false,
+		delay: 300,
+		minLength: 1,
+		position: {
+			my: "left top",
+			at: "left bottom",
+			collision: "none"
+		},
+		source: null
+	},
+
+	pending: 0,
+
+	_create: function() {
+		var self = this,
+			doc = this.element[ 0 ].ownerDocument,
+			suppressKeyPress;
+
+		this.element
+			.addClass( "ui-autocomplete-input" )
+			.attr( "autocomplete", "off" )
+			// TODO verify these actually work as intended
+			.attr({
+				role: "textbox",
+				"aria-autocomplete": "list",
+				"aria-haspopup": "true"
+			})
+			.bind( "keydown.autocomplete", function( event ) {
+				if ( self.options.disabled || self.element.propAttr( "readOnly" ) ) {
+					return;
+				}
+
+				suppressKeyPress = false;
+				var keyCode = $.ui.keyCode;
+				switch( event.keyCode ) {
+				case keyCode.PAGE_UP:
+					self._move( "previousPage", event );
+					break;
+				case keyCode.PAGE_DOWN:
+					self._move( "nextPage", event );
+					break;
+				case keyCode.UP:
+					self._move( "previous", event );
+					// prevent moving cursor to beginning of text field in some browsers
+					event.preventDefault();
+					break;
+				case keyCode.DOWN:
+					self._move( "next", event );
+					// prevent moving cursor to end of text field in some browsers
+					event.preventDefault();
+					break;
+				case keyCode.ENTER:
+				case keyCode.NUMPAD_ENTER:
+					// when menu is open and has focus
+					if ( self.menu.active ) {
+						// #6055 - Opera still allows the keypress to occur
+						// which causes forms to submit
+						suppressKeyPress = true;
+						event.preventDefault();
+					}
+					//passthrough - ENTER and TAB both select the current element
+				case keyCode.TAB:
+					if ( !self.menu.active ) {
+						return;
+					}
+					self.menu.select( event );
+					break;
+				case keyCode.ESCAPE:
+					self.element.val( self.term );
+					self.close( event );
+					break;
+				default:
+					// keypress is triggered before the input value is changed
+					clearTimeout( self.searching );
+					self.searching = setTimeout(function() {
+						// only search if the value has changed
+						if ( self.term != self.element.val() ) {
+							self.selectedItem = null;
+							self.search( null, event );
+						}
+					}, self.options.delay );
+					break;
+				}
+			})
+			.bind( "keypress.autocomplete", function( event ) {
+				if ( suppressKeyPress ) {
+					suppressKeyPress = false;
+					event.preventDefault();
+				}
+			})
+			.bind( "focus.autocomplete", function() {
+				if ( self.options.disabled ) {
+					return;
+				}
+
+				self.selectedItem = null;
+				self.previous = self.element.val();
+			})
+			.bind( "blur.autocomplete", function( event ) {
+				if ( self.options.disabled ) {
+					return;
+				}
+
+				clearTimeout( self.searching );
+				// clicks on the menu (or a button to trigger a search) will cause a blur event
+				self.closing = setTimeout(function() {
+					self.close( event );
+					self._change( event );
+				}, 150 );
+			});
+		this._initSource();
+		this.response = function() {
+			return self._response.apply( self, arguments );
+		};
+		this.menu = $( "<ul></ul>" )
+			.addClass( "ui-autocomplete" )
+			.appendTo( $( this.options.appendTo || "body", doc )[0] )
+			// prevent the close-on-blur in case of a "slow" click on the menu (long mousedown)
+			.mousedown(function( event ) {
+				// clicking on the scrollbar causes focus to shift to the body
+				// but we can't detect a mouseup or a click immediately afterward
+				// so we have to track the next mousedown and close the menu if
+				// the user clicks somewhere outside of the autocomplete
+				var menuElement = self.menu.element[ 0 ];
+				if ( !$( event.target ).closest( ".ui-menu-item" ).length ) {
+					setTimeout(function() {
+						$( document ).one( 'mousedown', function( event ) {
+							if ( event.target !== self.element[ 0 ] &&
+								event.target !== menuElement &&
+								!$.ui.contains( menuElement, event.target ) ) {
+								self.close();
+							}
+						});
+					}, 1 );
+				}
+
+				// use another timeout to make sure the blur-event-handler on the input was already triggered
+				setTimeout(function() {
+					clearTimeout( self.closing );
+				}, 13);
+			})
+			.menu({
+				focus: function( event, ui ) {
+					var item = ui.item.data( "item.autocomplete" );
+					if ( false !== self._trigger( "focus", event, { item: item } ) ) {
+						// use value to match what will end up in the input, if it was a key event
+						if ( /^key/.test(event.originalEvent.type) ) {
+							self.element.val( item.value );
+						}
+					}
+				},
+				selected: function( event, ui ) {
+					var item = ui.item.data( "item.autocomplete" ),
+						previous = self.previous;
+
+					// only trigger when focus was lost (click on menu)
+					if ( self.element[0] !== doc.activeElement ) {
+						self.element.focus();
+						self.previous = previous;
+						// #6109 - IE triggers two focus events and the second
+						// is asynchronous, so we need to reset the previous
+						// term synchronously and asynchronously :-(
+						setTimeout(function() {
+							self.previous = previous;
+							self.selectedItem = item;
+						}, 1);
+					}
+
+					if ( false !== self._trigger( "select", event, { item: item } ) ) {
+						self.element.val( item.value );
+					}
+					// reset the term after the select event
+					// this allows custom select handling to work properly
+					self.term = self.element.val();
+
+					self.close( event );
+					self.selectedItem = item;
+				},
+				blur: function( event, ui ) {
+					// don't set the value of the text field if it's already correct
+					// this prevents moving the cursor unnecessarily
+					if ( self.menu.element.is(":visible") &&
+						( self.element.val() !== self.term ) ) {
+						self.element.val( self.term );
+					}
+				}
+			})
+			.zIndex( this.element.zIndex() + 1 )
+			// workaround for jQuery bug #5781 http://dev.jquery.com/ticket/5781
+			.css({ top: 0, left: 0 })
+			.hide()
+			.data( "menu" );
+		if ( $.fn.bgiframe ) {
+			 this.menu.element.bgiframe();
+		}
+	},
+
+	destroy: function() {
+		this.element
+			.removeClass( "ui-autocomplete-input" )
+			.removeAttr( "autocomplete" )
+			.removeAttr( "role" )
+			.removeAttr( "aria-autocomplete" )
+			.removeAttr( "aria-haspopup" );
+		this.menu.element.remove();
+		$.Widget.prototype.destroy.call( this );
+	},
+
+	_setOption: function( key, value ) {
+		$.Widget.prototype._setOption.apply( this, arguments );
+		if ( key === "source" ) {
+			this._initSource();
+		}
+		if ( key === "appendTo" ) {
+			this.menu.element.appendTo( $( value || "body", this.element[0].ownerDocument )[0] )
+		}
+		if ( key === "disabled" && value && this.xhr ) {
+			this.xhr.abort();
+		}
+	},
+
+	_initSource: function() {
+		var self = this,
+			array,
+			url;
+		if ( $.isArray(this.options.source) ) {
+			array = this.options.source;
+			this.source = function( request, response ) {
+				response( $.ui.autocomplete.filter(array, request.term) );
+			};
+		} else if ( typeof this.options.source === "string" ) {
+			url = this.options.source;
+			this.source = function( request, response ) {
+				if ( self.xhr ) {
+					self.xhr.abort();
+				}
+				self.xhr = $.ajax({
+					url: url,
+					data: request,
+					dataType: "json",
+					autocompleteRequest: ++requestIndex,
+					success: function( data, status ) {
+						if ( this.autocompleteRequest === requestIndex ) {
+							response( data );
+						}
+					},
+					error: function() {
+						if ( this.autocompleteRequest === requestIndex ) {
+							response( [] );
+						}
+					}
+				});
+			};
+		} else {
+			this.source = this.options.source;
+		}
+	},
+
+	search: function( value, event ) {
+		value = value != null ? value : this.element.val();
+
+		// always save the actual value, not the one passed as an argument
+		this.term = this.element.val();
+
+		if ( value.length < this.options.minLength ) {
+			return this.close( event );
+		}
+
+		clearTimeout( this.closing );
+		if ( this._trigger( "search", event ) === false ) {
+			return;
+		}
+
+		return this._search( value );
+	},
+
+	_search: function( value ) {
+		this.pending++;
+		this.element.addClass( "ui-autocomplete-loading" );
+
+		this.source( { term: value }, this.response );
+	},
+
+	_response: function( content ) {
+		if ( !this.options.disabled && content && content.length ) {
+			content = this._normalize( content );
+			this._suggest( content );
+			this._trigger( "open" );
+		} else {
+			this.close();
+		}
+		this.pending--;
+		if ( !this.pending ) {
+			this.element.removeClass( "ui-autocomplete-loading" );
+		}
+	},
+
+	close: function( event ) {
+		clearTimeout( this.closing );
+		if ( this.menu.element.is(":visible") ) {
+			this.menu.element.hide();
+			this.menu.deactivate();
+			this._trigger( "close", event );
+		}
+	},
+	
+	_change: function( event ) {
+		if ( this.previous !== this.element.val() ) {
+			this._trigger( "change", event, { item: this.selectedItem } );
+		}
+	},
+
+	_normalize: function( items ) {
+		// assume all items have the right format when the first item is complete
+		if ( items.length && items[0].label && items[0].value ) {
+			return items;
+		}
+		return $.map( items, function(item) {
+			if ( typeof item === "string" ) {
+				return {
+					label: item,
+					value: item
+				};
+			}
+			return $.extend({
+				label: item.label || item.value,
+				value: item.value || item.label
+			}, item );
+		});
+	},
+
+	_suggest: function( items ) {
+		var ul = this.menu.element
+			.empty()
+			.zIndex( this.element.zIndex() + 1 );
+		this._renderMenu( ul, items );
+		// TODO refresh should check if the active item is still in the dom, removing the need for a manual deactivate
+		this.menu.deactivate();
+		this.menu.refresh();
+
+		// size and position menu
+		ul.show();
+		this._resizeMenu();
+		ul.position( $.extend({
+			of: this.element
+		}, this.options.position ));
+
+		if ( this.options.autoFocus ) {
+			this.menu.next( new $.Event("mouseover") );
+		}
+	},
+
+	_resizeMenu: function() {
+		var ul = this.menu.element;
+		ul.outerWidth( Math.max(
+			ul.width( "" ).outerWidth(),
+			this.element.outerWidth()
+		) );
+	},
+
+	_renderMenu: function( ul, items ) {
+		var self = this;
+		$.each( items, function( index, item ) {
+			self._renderItem( ul, item );
+		});
+	},
+
+	_renderItem: function( ul, item) {
+		return $( "<li></li>" )
+			.data( "item.autocomplete", item )
+			.append( $( "<a></a>" ).text( item.label ) )
+			.appendTo( ul );
+	},
+
+	_move: function( direction, event ) {
+		if ( !this.menu.element.is(":visible") ) {
+			this.search( null, event );
+			return;
+		}
+		if ( this.menu.first() && /^previous/.test(direction) ||
+				this.menu.last() && /^next/.test(direction) ) {
+			this.element.val( this.term );
+			this.menu.deactivate();
+			return;
+		}
+		this.menu[ direction ]( event );
+	},
+
+	widget: function() {
+		return this.menu.element;
+	}
+});
+
+$.extend( $.ui.autocomplete, {
+	escapeRegex: function( value ) {
+		return value.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+	},
+	filter: function(array, term) {
+		var matcher = new RegExp( $.ui.autocomplete.escapeRegex(term), "i" );
+		return $.grep( array, function(value) {
+			return matcher.test( value.label || value.value || value );
+		});
+	}
+});
+
+}( jQuery ));
+
+/*
+ * jQuery UI Menu (not officially released)
+ * 
+ * This widget isn't yet finished and the API is subject to change. We plan to finish
+ * it for the next release. You're welcome to give it a try anyway and give us feedback,
+ * as long as you're okay with migrating your code later on. We can help with that, too.
+ *
+ * Copyright 2010, AUTHORS.txt (http://jqueryui.com/about)
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * http://jquery.org/license
+ *
+ * http://docs.jquery.com/UI/Menu
+ *
+ * Depends:
+ *	jquery.ui.core.js
+ *  jquery.ui.widget.js
+ */
+(function($) {
+
+$.widget("ui.menu", {
+	_create: function() {
+		var self = this;
+		this.element
+			.addClass("ui-menu ui-widget ui-widget-content ui-corner-all")
+			.attr({
+				role: "listbox",
+				"aria-activedescendant": "ui-active-menuitem"
+			})
+			.click(function( event ) {
+				if ( !$( event.target ).closest( ".ui-menu-item a" ).length ) {
+					return;
+				}
+				// temporary
+				event.preventDefault();
+				self.select( event );
+			});
+		this.refresh();
+	},
+	
+	refresh: function() {
+		var self = this;
+
+		// don't refresh list items that are already adapted
+		var items = this.element.children("li:not(.ui-menu-item):has(a)")
+			.addClass("ui-menu-item")
+			.attr("role", "menuitem");
+		
+		items.children("a")
+			.addClass("ui-corner-all")
+			.attr("tabindex", -1)
+			// mouseenter doesn't work with event delegation
+			.mouseenter(function( event ) {
+				self.activate( event, $(this).parent() );
+			})
+			.mouseleave(function() {
+				self.deactivate();
+			});
+	},
+
+	activate: function( event, item ) {
+		this.deactivate();
+		if (this.hasScroll()) {
+			var offset = item.offset().top - this.element.offset().top,
+				scroll = this.element.scrollTop(),
+				elementHeight = this.element.height();
+			if (offset < 0) {
+				this.element.scrollTop( scroll + offset);
+			} else if (offset >= elementHeight) {
+				this.element.scrollTop( scroll + offset - elementHeight + item.height());
+			}
+		}
+		this.active = item.eq(0)
+			.children("a")
+				.addClass("ui-state-hover")
+				.attr("id", "ui-active-menuitem")
+			.end();
+		this._trigger("focus", event, { item: item });
+	},
+
+	deactivate: function() {
+		if (!this.active) { return; }
+
+		this.active.children("a")
+			.removeClass("ui-state-hover")
+			.removeAttr("id");
+		this._trigger("blur");
+		this.active = null;
+	},
+
+	next: function(event) {
+		this.move("next", ".ui-menu-item:first", event);
+	},
+
+	previous: function(event) {
+		this.move("prev", ".ui-menu-item:last", event);
+	},
+
+	first: function() {
+		return this.active && !this.active.prevAll(".ui-menu-item").length;
+	},
+
+	last: function() {
+		return this.active && !this.active.nextAll(".ui-menu-item").length;
+	},
+
+	move: function(direction, edge, event) {
+		if (!this.active) {
+			this.activate(event, this.element.children(edge));
+			return;
+		}
+		var next = this.active[direction + "All"](".ui-menu-item").eq(0);
+		if (next.length) {
+			this.activate(event, next);
+		} else {
+			this.activate(event, this.element.children(edge));
+		}
+	},
+
+	// TODO merge with previousPage
+	nextPage: function(event) {
+		if (this.hasScroll()) {
+			// TODO merge with no-scroll-else
+			if (!this.active || this.last()) {
+				this.activate(event, this.element.children(".ui-menu-item:first"));
+				return;
+			}
+			var base = this.active.offset().top,
+				height = this.element.height(),
+				result = this.element.children(".ui-menu-item").filter(function() {
+					var close = $(this).offset().top - base - height + $(this).height();
+					// TODO improve approximation
+					return close < 10 && close > -10;
+				});
+
+			// TODO try to catch this earlier when scrollTop indicates the last page anyway
+			if (!result.length) {
+				result = this.element.children(".ui-menu-item:last");
+			}
+			this.activate(event, result);
+		} else {
+			this.activate(event, this.element.children(".ui-menu-item")
+				.filter(!this.active || this.last() ? ":first" : ":last"));
+		}
+	},
+
+	// TODO merge with nextPage
+	previousPage: function(event) {
+		if (this.hasScroll()) {
+			// TODO merge with no-scroll-else
+			if (!this.active || this.first()) {
+				this.activate(event, this.element.children(".ui-menu-item:last"));
+				return;
+			}
+
+			var base = this.active.offset().top,
+				height = this.element.height();
+				result = this.element.children(".ui-menu-item").filter(function() {
+					var close = $(this).offset().top - base + height - $(this).height();
+					// TODO improve approximation
+					return close < 10 && close > -10;
+				});
+
+			// TODO try to catch this earlier when scrollTop indicates the last page anyway
+			if (!result.length) {
+				result = this.element.children(".ui-menu-item:first");
+			}
+			this.activate(event, result);
+		} else {
+			this.activate(event, this.element.children(".ui-menu-item")
+				.filter(!this.active || this.first() ? ":last" : ":first"));
+		}
+	},
+
+	hasScroll: function() {
+		return this.element.height() < this.element[ $.fn.prop ? "prop" : "attr" ]("scrollHeight");
+	},
+
+	select: function( event ) {
+		this._trigger("selected", event, { item: this.active });
+	}
+});
+
+}(jQuery));
+/*
  * jQuery UI Button 1.8.16
  *
  * Copyright 2011, AUTHORS.txt (http://jqueryui.com/about)
