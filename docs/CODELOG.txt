@@ -39,7 +39,16 @@ hash bangs for pages
 - assets css/js that comes with the page
 migrating albums: use nokogiri for html manipulation
 
-Sept 16
+Sept 22
+generate icon html
+resize asset images
+image count
+
+assets small size serving
+
+Sept 21
+Pages coming along. Working on rake tasts to generate icons
+
 
 Sept 15
 Upgraded jquery
