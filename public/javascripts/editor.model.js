@@ -512,7 +512,8 @@ PB.BookPage.prototype = {
 		});
 		return job;
 	},
-	// icon is a div with goodies
+	
+	// icon is a small div with images/etc
 	toIcon: function(options) {
 		$.extend({
 			desiredHeight: 128
@@ -524,27 +525,5 @@ PB.BookPage.prototype = {
 		div.css("width", Math.round(width * scale) + "px");
 		div.css("height", Math.round(height * scale) + "px");
 		return div;
-	},
-	toCanvas2: function(options) {
-		$.extend({
-			desiredHeight: 128
-		}, options);
-		var height = parseFloat(this._height);
-		var width = parseFloat(this._width);
-		var scale = options.desiredHeight / height;
-		var canvasWidth = Math.round(width * scale);
-		var canvasHeight = options.desiredHeight;
-		var canvas = $("<canvas />")
-			.attr('width', canvasWidth)
-			.attr('height', canvasHeight).get(0);
-		var c2d = canvas.getContext('2d');
-		c2d.fillStyle = 'blue';
-		c2d.rect(1,1, canvasWidth - 2, canvasHeight -2);
-		c2d.fill();
-		c2d.stroke();
-		c2d.rect(10,10,10,10);
-		c2d.rect(50,100,20,20);
-		c2d.stroke();
-		return canvas;
 	}
 };

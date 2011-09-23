@@ -282,12 +282,12 @@ PB.UI.Pagetab = {
 	pageAdded: function(page, index, noScroll) {
 		$("#pages-tab .intro").hide();
 		// add new page
-		var canvas = page.toIcon( { desiredHeight: 64 });
-		canvas.data('book_page', page);
-		canvas.click(function(ev) {
+		var icon = page.toIcon( { desiredHeight: 64 });
+		icon.data('book_page', page);
+		icon.click(function(ev) {
 			PB.UI.Pagetab.selectPage(page);
 		});
-		canvas.appendTo('#page-list');
+		icon.appendTo('#page-list');
 		// reflow when visible
 		$('#pages-tab').reflowVisible(function(immediate) {
 			// Resize the container

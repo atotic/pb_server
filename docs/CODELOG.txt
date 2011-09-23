@@ -39,15 +39,19 @@ hash bangs for pages
 - assets css/js that comes with the page
 migrating albums: use nokogiri for html manipulation
 
-Sept 26
+week of Sept 26
 templates listing
+listing of all assets of a particular template
+unify pageUploadQueue and imageQueue into objectUploadQueue
+uploadQueue should filter out duplicate requests (or shuffle them to the end?) - create a test page for this?
+update html icons when page is updated
+create a nice sample template: multiple images, images for whole page, frames
 
 Sept 23
 generate ids when BookPage is created - what elements need and id?
 convert guaranteeId to not create ids
 use html icons to display pages
 
-update html icons when page is updated
 
 Sept 22
 Further rake tasks
