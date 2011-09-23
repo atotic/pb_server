@@ -512,8 +512,20 @@ PB.BookPage.prototype = {
 		});
 		return job;
 	},
-
-	toCanvas: function(options) {
+	// icon is a div with goodies
+	toIcon: function(options) {
+		$.extend({
+			desiredHeight: 128
+		}, options);
+		var div = $(this._icon);
+		var height = parseInt(div.css("height"));
+		var width = parseInt(div.css("width"));
+		var scale = options.desiredHeight / height;
+		div.css("width", Math.round(width * scale) + "px");
+		div.css("height", Math.round(height * scale) + "px");
+		return div;
+	},
+	toCanvas2: function(options) {
 		$.extend({
 			desiredHeight: 128
 		}, options);

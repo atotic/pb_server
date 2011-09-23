@@ -39,10 +39,14 @@ hash bangs for pages
 - assets css/js that comes with the page
 migrating albums: use nokogiri for html manipulation
 
+Sept 26
+templates listing
+
 Sept 23
 generate ids when BookPage is created - what elements need and id?
 convert guaranteeId to not create ids
 use html icons to display pages
+
 update html icons when page is updated
 
 Sept 22

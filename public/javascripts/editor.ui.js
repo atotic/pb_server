@@ -260,7 +260,7 @@ PB.UI.Pagetab = {
 	},
 	selectPage: function(page) {
 		var self = this;
-		$('#page-list canvas').each(function() {
+		$('#page-list .page-icon').each(function() {
 			var c = $(this);
 			if (c.data('book_page') == page) {
 				if (c.hasClass('selected'))
@@ -277,12 +277,12 @@ PB.UI.Pagetab = {
 		});
 	},
 	revealNthPage: function(n) {
-		$("#page-list").revealByMarginLeft("canvas:nth-child(" + n+ ")");		
+		$("#page-list").revealByMarginLeft(".page-icon:nth-child(" + n+ ")");		
 	},
 	pageAdded: function(page, index, noScroll) {
 		$("#pages-tab .intro").hide();
 		// add new page
-		var canvas = $(page.toCanvas( { desiredHeight: 64 }));
+		var canvas = page.toIcon( { desiredHeight: 64 });
 		canvas.data('book_page', page);
 		canvas.click(function(ev) {
 			PB.UI.Pagetab.selectPage(page);
@@ -291,7 +291,7 @@ PB.UI.Pagetab = {
 		// reflow when visible
 		$('#pages-tab').reflowVisible(function(immediate) {
 			// Resize the container
-			var allPages = $('#page-list canvas');
+			var allPages = $('#page-list .page-icon');
 			var newWidth = allPages
 				.map(function() {return $(this).outerWidth()})
 				.get()
