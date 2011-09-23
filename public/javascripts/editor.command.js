@@ -131,7 +131,7 @@ PB.Commands.prototype = {
 }
 
 PB.Commands.DropImage = function(page, imageBroker, bookImage) {
-	PB.guaranteeId(bookImage);
+	PB.assertId(bookImage);
 	this.bookImageId = $(bookImage).attr("id");
 	this.imageBroker = imageBroker;
 	this.page = page;
@@ -159,7 +159,7 @@ PB.Commands.DropImage.prototype = {
 			if ('generatedId' in this)	// if we have to recreate the element, recreate with same id
 				img.id = this.generatedId;
 			else {
-				PB.guaranteeId(img);
+				PB.generateId(img);
 				this.generatedId = img.id;
 			}
 			bookImage.append(img);
@@ -213,7 +213,7 @@ PB.Commands.ModifyPageCSS = function(page, newCss, oldCss) {
 	newCss = newCss.slice(0);
 	for (var i=0; i< newCss.length; i++) { 
 		var dom = $(newCss[i].dom);	// convert dom elements to ids
-		PB.guaranteeId(dom);
+		PB.assertId(dom);
 		newCss[i] = {dom: "#" + dom.prop('id'), style: jQuery.extend({}, newCss[i].style)};
 		newCss[i].dom = "#" + dom.prop('id');
 	}
@@ -221,7 +221,7 @@ PB.Commands.ModifyPageCSS = function(page, newCss, oldCss) {
 			oldCss = oldCss.slice(0);
 			for (var i=0; i< oldCss.length; i++) {
 				var dom = $(oldCss[i].dom);
-				PB.guaranteeId(dom);
+				PB.assertId(dom);
 				oldCss[i] = {dom: "#" + dom.prop('id'), style: jQuery.extend({}, oldCss[i].style)} ;
 			}
 	}
@@ -294,7 +294,7 @@ PB.Commands.ModifyPageCSS.prototype = {
 
 PB.Commands.ReplaceInnerHtml = function(page, dom, oldHtml, newHtml, oldWasDefault) {
 	this.page = page;
-	PB.guaranteeId(dom);
+	PB.assertId(dom);
 	this.domId = $(dom).prop("id");
 	this.oldHtml = oldHtml;
 	this.newHtml = newHtml;
@@ -560,6 +560,7 @@ PB.Manipulators.Text = {
 			// If actual text does not exist, create and populate with current contents of bookText
 			// This allows template writers to create simple templates
 			var newActual = $("<div class='actual-text'></div>");
+			PB.generateId(newActual);
 			newActual.append(bookText.contents());
 			bookText.empty().append(newActual);
 			actualText = bookText.find('.actual-text');
@@ -567,8 +568,8 @@ PB.Manipulators.Text = {
 		// If actual text has no tags, wrap it up in a <p>
 		if (actualText.children().length == 0)
 			actualText.prop("innerHTML", "<p>" + actualText.prop("innerHTML") + "</p>");
-		PB.guaranteeId(bookText);
-		PB.guaranteeId(actualText);
+		PB.assertId(bookText);
+		PB.assertId(actualText);
 //		console.log("Editing", bookText.prop("id"));
 		var textEvents = {
 			mousedown: function(ev) {

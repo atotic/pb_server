@@ -623,16 +623,27 @@ $.extend(PB.PageUploadQueue, {
 	}
 });
 
-// Generates random id for an element
-PB.guaranteeId = function(el) {
+PB.generateId = function(el) {
 	el = $(el).get(0);
-	if (el.id)
-		return;
-	var id = "i" + Math.floor(Math.random() * 10000);
+	if (el.id) {
+		console.error("PB.generateId: id already exists " + el.id);
+		throw "PB.generateId: id already exists";
+	}
+	var id = "br" + Math.floor(Math.random() * 99999);
 	if (!document.getElementById(id))
 		el.id = id;
 	else
-		PB.generateRandomId(el);
+		PB.generateId(el);
+}
+
+// Generates random id for an element
+PB.assertId = function(el) {
+	el = $(el).get(0);
+	if (!el.id) {
+		console.error("No id found" + el);
+		debugger;
+		throw "PB.assertId failed";
+	}
 }
 
 /*

@@ -227,8 +227,8 @@ class SvegApp < Sinatra::Base
 		DataMapper::Model.raise_on_save_failure = true
 		# Use either the default Heroku database, or a local sqlite one for development
 		database_url = ENV['DATABASE_URL'] || "sqlite3://#{Dir.pwd}/development.sqlite";
-#		database_url = "sqlite3://#{Dir.pwd}/test/test.sqlite" if settings.environment == :test
-		database_url = "sqlite3::memory:" if settings.environment == :test
+		database_url = "sqlite3://#{Dir.pwd}/test/test.sqlite" if settings.environment == :test
+#		database_url = "sqlite3::memory:" if settings.environment == :test
 		DataMapper.setup(:default, database_url)
 		DataMapper.finalize
 		DataMapper.auto_upgrade! # extends tables to match model
@@ -593,7 +593,7 @@ class SvegApp < Sinatra::Base
 	
 	get '/assets/:template_name/:asset_file' do
 		user_must_be_logged_in
-		send_file BookTemplate.get(params[:template_name]).get_asset_path(params[:asset_file])
+		send_file BookTemplate.get(params[:template_name]).get_asset_path(params[:asset_file], params[:size] )
 	end
 	
 # setup & run	

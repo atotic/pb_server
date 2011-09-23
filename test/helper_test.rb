@@ -8,7 +8,7 @@ class HelperTest < Test::Unit::TestCase
 	
 	def test_create_user
 		create_user("atotic")
-		assert_not_nil User.first(:display_name => "atotic"), "Could not log in"
+		assert_not_nil PB::User.first(:display_name => "atotic"), "Could not log in"
 	end
 	
 end
