@@ -596,6 +596,10 @@ class SvegApp < Sinatra::Base
 		send_file BookTemplate.get(params[:template_name]).get_asset_path(params[:asset_file], params[:size] )
 	end
 	
+	get '/templates' do
+		erb :template_list
+	end
+
 # setup & run	
 	use SvegLogger
 	use SessionMiddleware
