@@ -46,7 +46,7 @@ PB.Manipulators = {
 			this.newCss = newCss;
 			for ( var i=0; i< newCss.length; i++ )
 				$( newCss[i].dom ).css( newCss[i].style );
-			this.page.setModified();
+			this.page.setDomModified();
 		},
 		saveOldCss: function(newCss) {
 			if (this.oldCss)
@@ -287,7 +287,7 @@ PB.Manipulators.Text = {
 					if (textEvents.oldIsDefault)
 						actualText.attr("data-user_text", true);
 					var page = actualText.parents(".page-enclosure").data("page");
-					page.setModified();
+					page.setDomModified();
 					// create a command, so we can undo
 					PB.CommandQueue.push(new PB.Commands.ReplaceInnerHtml(page, actualText, textEvents.oldHtml, newHtml, textEvents.oldIsDefault));
 				}

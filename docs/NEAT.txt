@@ -10,6 +10,7 @@ HOWTO for JS & SVG http://www.w3.org/Graphics/SVG/IG/resources/svgprimer.html
 Mediawiki wrestling with SVG -> PNG conversion http://www.mediawiki.org/wiki/Manual:$wgSVGConverters
 
 CSS
+Scalable/modular CSS howto: http://smacss.com/book/
 Free web app developer resources: http://www.webappers.com/category/design/icons/
 Border image: http://www.css3.info/preview/border-image/
 Border image in depth: http://www.useragentman.com/blog/2011/03/29/pixel-perfect-css3-border-image-in-depth/

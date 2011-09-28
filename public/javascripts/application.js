@@ -81,7 +81,7 @@ var PB = {
 };
 
 $(document).ready(function() {
-	$(document).ajaxComplete(PB.showXhrFlash)
+	$(document).ajaxComplete(PB.showXhrFlash);
 	$("#error, #notice").click(function(ev) {
 		// handle clicking on the close box
 		if (ev.pageX - $(ev.currentTarget).offset().left > (ev.currentTarget.offsetWidth - 35))

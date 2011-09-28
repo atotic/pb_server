@@ -380,7 +380,9 @@ PB.UI.Bookpage = {
 	setCurrentPage: function(page) {
 		// save the old page if possible
 		$("#main-container div.page-enclosure").each(function() {
-			$(this).data("page").saveNow().setDisplayDom(null);
+			var page = $(this).data('page');
+			page.saveNow();
+			page.setDisplayDom(null);
 		});
 		var dom = this.createPageElement(page);
 		dom.appendTo($("#main-container").empty());

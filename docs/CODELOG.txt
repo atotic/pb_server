@@ -40,12 +40,27 @@ hash bangs for pages
 migrating albums: use nokogiri for html manipulation
 
 week of Sept 26
+
 templates listing
 listing of all assets of a particular template
-unify pageUploadQueue and imageQueue into objectUploadQueue
-uploadQueue should filter out duplicate requests (or shuffle them to the end?) - create a test page for this?
 update html icons when page is updated
 create a nice sample template: multiple images, images for whole page, frames
+
+Sept 29
+integrate with UploadImages
+ - show progress for image uploads
+ - test xhr errors
+integrate with "Leaving page dialog"
+integrate with UploadPages
+give pages chance to upload every minute on a timer
+unify pageUploadQueue and imageQueue into objectUploadQueue
+
+Sept 28
+Making progress on the new UploadQueue.
+Anders got me up at 5, Ollie was doing badly at school, only late night hacking worked
+Implemented real tests for UploadQueue
+Will simplify lots of code
+uploadQueue should filter out duplicate requests (or shuffle them to the end?) - create a test page for this?
 
 Sept 23
 generate ids when BookPage is created - what elements need and id?

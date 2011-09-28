@@ -168,7 +168,7 @@ PB.Commands.DropImage.prototype = {
 				PB.UI.Bookpage.imageLoaded(bookImage);
 				img.style.visibility = "visible";
 		};
-		this.page.setModified();
+		this.page.setDomModified();
 		img.src = this.imageBroker.getImageUrl('display');
 	},
 	undo: function() {
@@ -181,7 +181,7 @@ PB.Commands.DropImage.prototype = {
 		else
 			bookImage.find("img").detach();
 		PB.UI.Bookpage.imageLoaded(bookImage);
-		this.page.setModified();
+		this.page.setDomModified();
 		delete this.oldSrc;
 	},
 	toString: function() {
@@ -272,7 +272,7 @@ PB.Commands.ModifyPageCSS.prototype = {
 			else
 				el.css(css[i].style);
 		}
-		this.page.setModified();
+		this.page.setDomModified();
 	},
 	toStringCss: function(cssSpec) {
 		if (cssSpec == null)
@@ -325,7 +325,7 @@ PB.Commands.ReplaceInnerHtml.prototype = {
 		}
 		else
 			el.attr("data-user_text", "true");
-		this.page.setModified();
+		this.page.setDomModified();
 	}
 }
 

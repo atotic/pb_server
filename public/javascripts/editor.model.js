@@ -57,15 +57,15 @@ PB.Book.prototype = {
 	addLocalFileImage: function (file) {
 		// Check if it matches any already 
 		for (var i=0; i< this._images.length; i++)
-			if (this._images[i].name() == file.fileName) 
+			if (this._images[i].name() == file.name) 
 			{
-				PB.notice(file.fileName + " is already in the book.");
+				PB.notice(file.name + " is already in the book.");
 				return;
 			};
 
 		var image = new PB.ImageBroker(file);
 		var pos = this._images.push(image);
-		image.saveOnServer(this.id, false);
+		image.saveOnServer(this.id);
 		this.send('imageAdded', image, pos);
 	},		
 	getPageById: function(page_id) {
@@ -134,7 +134,7 @@ PB.ImageBroker.prototype = {
 		if ('_display_name' in this)
 			return this._display_name;
 		else if ('_file' in this)
-			return this._file.fileName;
+			return this._file.name;
 		else
 			return "no title";
 	},
@@ -194,54 +194,43 @@ PB.ImageBroker.prototype = {
 		return url;	
 	},
 	
-	saveOnServer: function(book_id, jumpQueue) {
+	saveOnServer: function(book_id) {
+		this._book_id = book_id;
+		PB.uploadQueue.upload(this);
+	},
+	
+	createUploadDeferred: function() {
 		var fd = new FormData();
-		fd.append('display_name', this._file.fileName);
-		fd.append('book_id', book_id);
+		fd.append('display_name', this._file.name);
+		fd.append('book_id', this._book_id);
 		fd.append('photo_file', this._file);
 		var THIS = this;
-		var startFn = function() {
-			PB.progressSetup({message: "-> " + THIS.name(), show:true});
-			var xhr = $.ajax({
-				url: "/photos",
-				type: "POST",
-				data: fd,
-				processData: false,
-				contentType: false,
-				xhr: function() {
-					var xhr = new window.XMLHttpRequest();
-					xhr.upload.addEventListener("progress", function(evt) {
-						PB.progress( evt.lengthComputable ? evt.loaded * 100 / evt.total : -1);
-					}, false);
-					return xhr;
-				}
+		var xhr = $.ajax({
+			url: "/photos",
+			type: "POST",
+			data: fd,
+			processData: false,
+			contentType: false,
+			xhr: function() {
+				var xhr = new window.XMLHttpRequest();
+				xhr.upload.addEventListener("progress", function(evt) {
+					PB.progress( evt.lengthComputable ? evt.loaded * 100 / evt.total : -1);
+				}, false);
+				return xhr;
+			}
+		});
+		xhr
+			.done(function(json, status, xhr) {
+				THIS._id = json.id;
+				THIS._display_name = json.display_name;
+				PB.progress();
 			})
-			xhr
-				.done(function(json, status, xhr) {
-					THIS._id = json.id;
-					THIS._display_name = json.display_name;
-					PB.progress();
-					var filter = PB.DeferredFilter.getNetworkErrorFilter();
-					filter.setNetworkError(false);
-					job.resolve();
-				})
-				.fail(function() { 
-					PB.progress();
-					var filter = PB.DeferredFilter.getNetworkErrorFilter();
-					filter.setNetworkError(true);
-					job.reject();			
-					THIS.saveOnServer(book_id, true);
-				});
-				console.log("Upload started");
-		};
-		var job = PB.createDeferredJob("Save " + this.name(), startFn);
-		if (jumpQueue)
-			PB.ImageUploadQueue.unshift(job);
-		else
-			PB.ImageUploadQueue.push(job);
-		return job;
+			.always(function() { 
+				PB.progress();
+			});
+		return xhr;
 	},
-
+	
 	// md5 returns deferred as computing md5 from disk might take a while
 	getMd5: function() {
 		var deferred = new $.Deferred();
@@ -328,10 +317,27 @@ PB.ImageBroker.prototype = {
 PB.BookPage = function(json) {
 	for (var prop in json)	// make them all private
 		this["_" + prop] = json[prop];
-	this._dirty = null;
+	this._dirty = {
+		html: false,
+		icon: false
+	};
 };
 
+// Saves all dirty pages
+PB.BookPage.saveAll = function() {
+	PB.book.pages.forEach(function(page) {
+		page.saveNow();
+	});
+}
+
 PB.BookPage.prototype = {
+	get id() {
+		return this._id;
+	},
+	get dirty() {
+		return this._dirty.html || this._dirty.icon;
+	},
+
 	browserHtml: function() {
 		if (this._html)	{
 			// This will need fixing if we use other prefixed properties
@@ -342,10 +348,6 @@ PB.BookPage.prototype = {
 		else
 			return null;
 	},
-	get id() {
-		return this._id;
-	},
-
 	innerHtml: function (node) {
 		// Book editing needs prefixed CSS styles (-webkit-transform)
 		// Our pdf engine expects -webkit styles
@@ -461,56 +463,73 @@ PB.BookPage.prototype = {
 		this._html = this.innerHtml(dom);
 	},
 
-	saveNow: function() {
-		this.readHtml();
-		PB.PageUploadQueue.saveNowIfNeeded(this); 
-		return this;
-	},
+	// Sets dom element that is displaying the page
 	setDisplayDom: function(domEl) {
 		if (domEl && 'jquery' in domEl)
 			domEl = domEl.get(0);
+		if (domEl == null && this._displayDom && this._dirty.html)
+			this.readHtml();
 		this._displayDom = domEl;
-		return this;
 	},
+	// DOM must be set when modified
+	setDomModified: function() {
+		if (!this._displayDom)
+			console.error("Page must be displayed when setDomModified");
+		this._dirty.html = true;
+	},
+	// Returns DOM, and selects it in editor if necessary
 	getDom: function() {
 		if (this._displayDom == null)
-			PB.UI.Pagetab.selectPage(this.id);
+			PB.UI.Pagetab.selectPage(this);
 		if (this._displayDom == null) {
 			console.error("Cannot get dom for BookPage");
 			throw("No dom");
 		}
 		return this._displayDom;
-	},	
-	setModified: function() {
-		this.readHtml();
-		PB.PageUploadQueue.readyToSave(this);
-		return this;
 	},
 
-	// Creates Deferred that will save the page
-	getSaveDeferred: function() {
-		var THIS = this;
-		var job = PB.createDeferredJob("Save page " + this.id, function() {
-			var xhr = $.ajax("/book_page/" + THIS._id, {
-				data: { html: THIS._html },
-				type: "PUT"
-			});
-			xhr.done(function() {
-					var filter = PB.DeferredFilter.getNetworkErrorFilter();
-					filter.setNetworkError(false);
-					console.log("Page saved " + THIS.id);
-					job.resolve();
-				})
-				.fail(function() { 
-					var filter = PB.DeferredFilter.getNetworkErrorFilter();
-					filter.setNetworkError(true);
-					console.error("Page failed to save " + THIS.id);
-					job.reject();
-					// Try again
-					PB.PageUploadQueue.readyToSave(THIS).saveNowIfNeeded(THIS);
-				});
+	// call before dom is disconnected
+	saveNow: function() {
+		if (this.dirty)
+			PB.uploadQueue.upload(this);
+	},
+
+	createUploadDeferred: function() {
+		// Gather data to be saved
+		var savedHtml = false;
+		var savedIcon = false;
+		var data = {};
+		if (this._dirty.html) {
+			if (this._displayDom)
+				this.readHtml();
+			savedHtml = this._html;
+			data.html = savedHtml;
+		}
+		if (this._dirty.icon) {
+			debugger;
+		} 
+		
+		var xhr = $.ajax("/book_page/" + this._id, {
+			data: data,
+			type: "PUT"
 		});
-		return job;
+		var THIS = this;
+		
+		// Clear out the dirty flags on completion
+		// Take care not to clear them out if page was modified while saving
+		xhr.done(function(response, msg, jqXHR) {
+			if (jqXHR.status == 200) {
+				if (savedHtml) {
+					if (THIS._displayDom)
+						THIS.readHtml();
+					if (THIS._html == savedHtml || THIS._html == null)
+						THIS._dirty.html = false;
+					else
+						debugger;
+				}
+			}
+		});
+		return xhr;
 	},
 	
 	// icon is a small div with images/etc

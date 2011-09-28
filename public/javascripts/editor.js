@@ -129,70 +129,6 @@ function visualEvent(){
 	
 })(window.jQuery);
 
-/* Simple JavaScript Inheritance
- * By John Resig http://ejohn.org/
- * MIT Licensed.
- */
-// Inspired by base2 and Prototype
-(function(){
-  var initializing = false, fnTest = /xyz/.test(function(){xyz;}) ? /\b_super\b/ : /.*/;
-  // The base Class implementation (does nothing)
-  window.Class = function(){};
-  
-  // Create a new Class that inherits from this class
-  Class.extend = function(prop) {
-    var _super = this.prototype;
-    
-    // Instantiate a base class (but only create the instance,
-    // don't run the init constructor)
-    initializing = true;
-    var prototype = new this();
-    initializing = false;
-    
-    // Copy the properties over onto the new prototype
-    for (var name in prop) {
-      // Check if we're overwriting an existing function
-      prototype[name] = typeof prop[name] == "function" && 
-        typeof _super[name] == "function" && fnTest.test(prop[name]) ?
-        (function(name, fn){
-          return function() {
-            var tmp = this._super;
-            
-            // Add a new ._super() method that is the same method
-            // but on the super-class
-            this._super = _super[name];
-            
-            // The method only need to be bound temporarily, so we
-            // remove it when we're done executing
-            var ret = fn.apply(this, arguments);        
-            this._super = tmp;
-            
-            return ret;
-          };
-        })(name, prop[name]) :
-        prop[name];
-    }
-    
-    // The dummy class constructor
-    function Class() {
-      // All construction is actually done in the init method
-      if ( !initializing && this.init )
-        this.init.apply(this, arguments);
-    }
-    
-    // Populate our constructed prototype object
-    Class.prototype = prototype;
-    
-    // Enforce the constructor to be what we expect
-    Class.constructor = Class;
-
-    // And make this class extendable
-    Class.extend = arguments.callee;
-    
-    return Class;
-  };
-})();
-
 // Timer utility class
 PB.Timer = function(name) {
 	this.startMili = Date.now();
@@ -299,6 +235,31 @@ $.extend(PB.EventBroadcaster.prototype, {
 	}
 });
 
+$.extend(PB, {
+	// Generates random id for an element
+	generateId: function(el) {
+		el = $(el).get(0);
+		if (el.id) {
+			console.error("PB.generateId: id already exists " + el.id);
+			throw "PB.generateId: id already exists";
+		}
+		var id = "br" + Math.floor(Math.random() * 99999);
+		if (!document.getElementById(id))
+			el.id = id;
+		else
+			PB.generateId(el);
+	},
+	// Asserts element has an id
+	assertId: function(el) {
+		el = $(el).get(0);
+		if (!el.id) {
+			console.error("No id found" + el);
+			debugger;
+			throw "PB.assertId failed";
+		}
+	}
+});
+
 // DeferredFilter is part of DeferredQueue framework
 // filters are notified when job starts/completes
 // see prototype for callback function signatures
@@ -309,21 +270,21 @@ PB.DeferredFilter = function(callbacks) {
 };
 
 PB.DeferredFilter.prototype = {
-	ready: function(queue) {return true;},	// true means job allowed
-	jobStarted: function(deferredJob, queue) {},
-	jobCompleted: function(deferredJob, queue) {}
+	ready: function() {return true;},	// true means job allowed
+	jobStarted: function(deferredJob) {},
+	jobCompleted: function(deferredJob) {}
 }
 
 // Concurrent filter limits number of simultaneous operations
 PB.DeferredFilter.getConcurrentFilter = function(maxConcurrent) {
 	var filter = new PB.DeferredFilter({
-		ready: function( queue) {
+		ready: function( ) {
 			return this.jobCount < this.jobLimit;
 		},
-		jobStarted: function(job, queue) {
+		jobStarted: function(job) {
 			this.jobCount += 1;
 		},
-		jobCompleted: function(job, queue) {
+		jobCompleted: function(job) {
 			this.jobCount -= 1;
 		}
 	});	
@@ -335,7 +296,7 @@ PB.DeferredFilter.getConcurrentFilter = function(maxConcurrent) {
 // MemorySize filter limits memory used during ttl. Used for loading images
 PB.DeferredFilter.getMemorySizeFilter = function(maxSize, ttl) { // bytes, milis
 	var filter = new PB.DeferredFilter({
-		ready: function(queue) {
+		ready: function() {
 			// Remove expired elements
 			var tooOld = Date.now() - this.ttl;
 			this.jobTotals = this.jobTotals.filter(function(el) {
@@ -347,9 +308,9 @@ PB.DeferredFilter.getMemorySizeFilter = function(maxSize, ttl) { // bytes, milis
 			}, 0);
 			return total < this.maxSize;
 		},
-		jobStarted: function(job, queue) {
+		jobStarted: function(job) {
 		},
-		jobCompleted: function(job, queue) {
+		jobCompleted: function(job) {
 			if ('memory_size' in job)
 				filter.jobTotals.push({ endTime: Date.now(), size: job.memory_size });
 			else
@@ -371,9 +332,9 @@ PB.DeferredFilter.getNetworkErrorFilter = function() {
 		ready: function(queue) {
 			return this._netDown == false || this._secondsLeft == 0;
 		},
-		jobStarted: function(job, queue) {			
+		jobStarted: function(job) {			
 		},
-		jobCompleted: function(job, queue) {
+		jobCompleted: function(job) {
 			this.setNetworkError(job.isRejected());
 		}
 	});
@@ -382,6 +343,12 @@ PB.DeferredFilter.getNetworkErrorFilter = function() {
 		_netDown: false,	// Network is down?
 		_timeoutId: false, // window.setTimeout id
 		_initialDelay: 5,
+	
+		// xhrFailure is called every time xhr fails
+		xhrFailure: function(jqXHR, status, ex) {
+			// Detect if it is network down type error, 
+			debugger;
+		},
 		setNetworkError : function(err) {
 			if (err)
 			{
@@ -500,12 +467,12 @@ PB.DeferredQueue.prototype = {
 		var THIS = this;
 		// Notify filters that job is starting
 		this._filters.forEach(function(filter) {
-			filter.jobStarted(deferredJob, THIS);
+			filter.jobStarted(deferredJob);
 		});
 		// Notify filters when job completes
 		deferredJob.always(function() {
 			THIS._filters.forEach(function(filter) {
-				filter.jobCompleted(deferredJob, THIS);
+				filter.jobCompleted(deferredJob);
 			});
 				THIS._activeJobs.splice(THIS._activeJobs.indexOf(deferredJob), 1);
 			THIS.process();
@@ -532,136 +499,117 @@ PB.ImageLoadQueue = new PB.DeferredQueue([
 		)
 ]);
 
-PB.ImageUploadQueue = new PB.DeferredQueue([
-	PB.DeferredFilter.getConcurrentFilter(1),
-	PB.DeferredFilter.getNetworkErrorFilter()
-]);
+// Uploads pages/images/books to the server
 
-PB.ImageUploadQueue.displayStatus = function() {
-	var notice = PB.getMessageBar("image_upload_notice");
-	if (PB.ImageUploadQueue.length > 0) {
-		$(notice).show();
-		notice.innerHTML = this.length + " images are uploading.";
-		window.setTimeout(PB.ImageUploadQueue.displayStatus, 300);
-	}
-	else
-		$(notice).remove();
-};
+PB.UploadQueue = function(name) {
+	this._name = name;
+	this._waitJobs = [];
+	this._timeout = null;
+	this._verbose = false;
+	this._networkErrorFilter = PB.DeferredFilter.getNetworkErrorFilter();
+	this._concurrentFilter = PB.DeferredFilter.getConcurrentFilter(1);
+	this._filters = [ 
+		this._networkErrorFilter,this._concurrentFilter ];
+}
 
-PB.PageUploadQueue = new PB.DeferredQueue([
-	PB.DeferredFilter.getConcurrentFilter(1),
-	PB.DeferredFilter.getNetworkErrorFilter()
-]);
-
-// Page upload queue saves pages at most once every 60 seconds
-// Or immediately if saveNow is called
-$.extend(PB.PageUploadQueue, {
-	_timedQueue: {}, // hash page_id => [page, saveTime]
-	_uploadTimeout: null,	
-	countPageQueue: function() {
-		var i = 0;
-		for ( var page_id in this._timedQueue )
-			i++;
-		return i;
-	},
-	extraLength : function() {
-		return this.length + this.countPageQueue();
-	},
-	readyToSave: function(page)
-	{
-		if ( page.id in this._timedQueue )
+$.extend(PB.UploadQueue.prototype, {
+	
+	// Queue items need to implement createUploadDeferred() method
+	upload: function(item) {
+		if (this._waitJobs.indexOf(item) != -1)
 			return;
-		console.log("PageQueue readyToSave ", page.id);
-		this._timedQueue[page.id] = [page, Date.now() + 60 * 1000]
-		this.processPageQueue();
-		return this;
+		this._waitJobs.push(item);
+		this.process();
 	},
-	saveNowIfNeeded: function(page)
-	{
-		console.log("PageQueue saveNowIfNeeded ", page.id);
-		if (!(page.id in this._timedQueue))	// No need to save if not in queue
-			return;
-		this._timedQueue[page.id] = [page, 0];
-		this.processPageQueue();
-		return this;
+	
+	// Process picks a job to be executed
+	process: function() {
+		var THIS = this;
+		while (this._waitJobs.length > 0 
+			&& this._filters.every(function(el) { return el.ready();})
+			) {
+			this.execute(this._waitJobs.shift());
+		}
+		// Set up heartbeat if there are outstanding jobs
+		if (this._waitJobs.length > 0 && this._timeout == null) {
+			var THIS = this;
+			this._timeout = window.setTimeout(function() {
+//				console.log("DeferredQueue timeout fired");
+				THIS._timeout = null;
+				THIS.process();
+			}, 1000);
+//			console.log("DeferredQueue timeout set" + this.timeout);
+		}
+		else
+			;//console.warn("DefferedQueue timeout not empty " + this.timeout);
 	},
-	processPageQueue: function() {
-		var now = Date.now();
-		var haveWaitingPages = false;
-		var log = "";
-		// Move pages to pageQueue->waitQueue
-		for ( var page_id in this._timedQueue ) {
-			log += " " + page_id;
-			if (this._timedQueue[page_id][1] <= now) {
-				console.log("PageQueue -> DeferredQueue " + page_id);
-				this.push(this._timedQueue[page_id][0].getSaveDeferred());
-				delete this._timedQueue[page_id];
-			}
-			else
-				haveWaitingPages = true;
-		}
-		// console.log("PageQueue process " + log);
-		// Wake ourselves up with a timeout
-		if (haveWaitingPages && this._uploadTimeout == null)
-		{
-				var THIS = this;
-				this._uploadTimeout = window.setTimeout(function() {
-					//console.log("PageQueue timeout fired");
-					THIS._uploadTimeout = null;
-					THIS.processPageQueue();
-				}, 1000);
-			//	console.log("PageQueue timeout set" + this._uploadTimeout);
+	
+	// Starts the upload of the item. Retries in case of network down error
+	execute: function(item) {
+	//		console.log("Execute " + deferredJob.name);
+		var THIS = this;
+		var isImage = item instanceof PB.ImageBroker;
+		var isPage = item instanceof PB.BookPage;
+		var job  = item.createUploadDeferred();
+		if (isImage)
+			PB.progressSetup({message: "-> " + item.name(), show:true});
+		else
+			PB.progressSetup({message: "Saving page " + item.id});
+		// Notify filters that job is starting
+		this._filters.forEach(function(filter) { filter.jobStarted(job); });
+		this.display_verbose();
+		// Retry item if job fails with network error
+		job.fail( function(jqXHR, status, ex) {
+			// notify the network error
+			THIS._networkErrorFilter.xhrFailure(jqXHR, status, ex);
+			// put job back in front
+			THIS._waitJobs.unshift(item);
+		});
+
+		// Notify filters when job completes
+		job.always(function() {
+			PB.progress();
+			THIS._filters.forEach(function(filter) { filter.jobCompleted(job); });
+			THIS.process();
+		});
+	},
+	
+	hasJobs: function() {
+		return this._concurrentFilter.jobCount > 0 ||
+			this._waitJobs.length > 0;
+	},
+	
+	display_verbose: function() {
+		if (this._verbose) {
+			var imgCount = this._waitJobs.filter(function(e) { e instanceof PB.ImageBroker}).length;
+			var pageCount = this._waitJobs.filter(function(e) { e instanceof PB.BookPage}).length;
+			var status = "Uploading ";
+			if (imgCount) status += imgCount + " images, ";
+			if (pageCount) status += pageCount + " pages";
+			// TODO switch to custom message div
+			PB.notice(status);
 		}
 	},
-	saveAllNow: function()
-	{
-		for ( var page_id in this._timedQueue ) {
-			this.push(this._timedQueue[page_id][0].getSaveDeferred());
-			delete this._timedQueue[page_id];
-		}
-		return this;
+	
+	set verbose(val) {
+		this._verbose = val;
+		this.display_verbose();
 	}
 });
 
-PB.generateId = function(el) {
-	el = $(el).get(0);
-	if (el.id) {
-		console.error("PB.generateId: id already exists " + el.id);
-		throw "PB.generateId: id already exists";
-	}
-	var id = "br" + Math.floor(Math.random() * 99999);
-	if (!document.getElementById(id))
-		el.id = id;
-	else
-		PB.generateId(el);
-}
+PB.uploadQueue = new PB.UploadQueue("Pages and Images");
 
-// Generates random id for an element
-PB.assertId = function(el) {
-	el = $(el).get(0);
-	if (!el.id) {
-		console.error("No id found" + el);
-		debugger;
-		throw "PB.assertId failed";
-	}
-}
-
+// Save modified pages every minute.
+window.setInterval(function() {
+	PB.BookPage.saveAll();
+}, 60*1000);
 /*
  * Give user a chance to save changes before navigating away
  */
 window.onbeforeunload = function(e) {
-	var haveChanges = false;
-	if (PB.ImageUploadQueue.length > 0) {
-		haveChanges = true;
-		PB.ImageUploadQueue.displayStatus();
-	}
-	if (PB.PageUploadQueue.extraLength() > 0)
-	{
-		haveChanges = true;
-		PB.PageUploadQueue.saveAllNow();
-		PB.notice("Saving pages.");
-	}
-	if (haveChanges) {
+	PB.BookPage.saveAll();
+	if (PB.uploadQueue.hasJobs()) {
+		PB.uploadQueue.verbose = true;
 		if (e)
 			e.returnValue = "You have unsaved changes. Are you sure that you want to leave the page?";
 		return "You have unsaved changes. Are you sure that you want to leave the page?"

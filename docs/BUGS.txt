@@ -2,3 +2,4 @@ Images are not automatically rotated
 Sessions need to be protected against forgery (sig with secret)
 Removal of duplicate photos
 If page is saved before photos on the page are saved, we do not have local urls
+Better testing of XHR errors on upload
