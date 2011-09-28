@@ -1,0 +1,27 @@
+<h2>Book templates</h2>
+<% PB::BookTemplate.all.each do |template| %>
+<h3 class="title"><%= h template.style %></h3>
+<div class="icons">
+	<% template.get_all_pages.each do |page| %>
+		<div class="icon-container">
+			<%= page.icon %>
+			<p><%= page.template_id %></p>
+		</div>
+	<% end %>
+</div>
+<% end %>
+<style type="text/css">
+	.title {
+		border-top: 1px solid gray;
+	}
+	.icon-container {
+		display: inline-block;
+	}
+	.page-icon {
+		border: 1px solid #9F9;
+		position: relative;
+	}
+	.page-icon img {
+		position: absolute;
+	}
+</style>

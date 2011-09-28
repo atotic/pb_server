@@ -22,7 +22,7 @@
 <h1>Your account</h1>
 <hr>
 <p>Username: <%= locals[:user].display_name %></p>
-<h2>Books <a href='/books/new'>[new]</a></h2>
+<h2>Books [<a href='/books/new'>new</a>|<a href="/templates">templates</a>]</h2>
 <hr>
 <% books = current_user.books %>
 <% if books.size == 0 %>

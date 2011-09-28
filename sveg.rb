@@ -597,7 +597,7 @@ class SvegApp < Sinatra::Base
 	end
 	
 	get '/templates' do
-		erb :template_list
+		erb :template_list, {:layout => :'layout/plain'}
 	end
 
 # setup & run	
