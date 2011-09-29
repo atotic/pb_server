@@ -256,7 +256,19 @@ PB.UI.Pagetab = {
 				slide: function(e, ui) {
 					PB.UI.Pagetab.revealNthPage(ui.value + 1);
 				}
-			});		
+			});
+		// Update page icons by replacing them
+		PB.BookPage.bind("pageIconUpdated", function(page) {
+			$("#page-list .page-icon").each(function(index) {
+				var el = $(this);
+				if (el.data('book_page') == page) {
+					var newIcon = PB.UI.Pagetab.getIconForPage(page);
+					if (el.hasClass("selected"))
+						newIcon.addClass("selected");
+					el.replaceWith(newIcon);
+				}
+			});
+		});	
 	},
 	selectPage: function(page) {
 		var self = this;
@@ -279,14 +291,18 @@ PB.UI.Pagetab = {
 	revealNthPage: function(n) {
 		$("#page-list").revealByMarginLeft(".page-icon:nth-child(" + n+ ")");		
 	},
-	pageAdded: function(page, index, noScroll) {
-		$("#pages-tab .intro").hide();
-		// add new page
+	getIconForPage: function(page) {
 		var icon = page.toIcon( { desiredHeight: 64 });
 		icon.data('book_page', page);
 		icon.click(function(ev) {
 			PB.UI.Pagetab.selectPage(page);
 		});
+		return icon;
+	},
+	pageAdded: function(page, index, noScroll) {
+		$("#pages-tab .intro").hide();
+		// add new page
+		var icon = this.getIconForPage(page);
 		icon.appendTo('#page-list');
 		// reflow when visible
 		$('#pages-tab').reflowVisible(function(immediate) {

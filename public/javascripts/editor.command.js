@@ -168,8 +168,9 @@ PB.Commands.DropImage.prototype = {
 				PB.UI.Bookpage.imageLoaded(bookImage);
 				img.style.visibility = "visible";
 		};
-		this.page.setDomModified();
 		img.src = this.imageBroker.getImageUrl('display');
+		this.page.updateIcon(bookImage);
+		this.page.setDomModified();
 	},
 	undo: function() {
 		// Load in the dom
@@ -181,6 +182,7 @@ PB.Commands.DropImage.prototype = {
 		else
 			bookImage.find("img").detach();
 		PB.UI.Bookpage.imageLoaded(bookImage);
+		this.page.updateIcon(bookImage);
 		this.page.setDomModified();
 		delete this.oldSrc;
 	},

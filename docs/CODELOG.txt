@@ -39,8 +39,6 @@ hash bangs for pages
 - assets css/js that comes with the page
 migrating albums: use nokogiri for html manipulation
 
-week of Sept 26
-
 Sept 30
 update html icons when page is updated
 create a nice sample template: multiple images, images for whole page, frames

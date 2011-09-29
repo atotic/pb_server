@@ -323,12 +323,14 @@ PB.BookPage = function(json) {
 	};
 };
 
-// Saves all dirty pages
+// Saves all dirty pages -- class method
 PB.BookPage.saveAll = function() {
-	PB.book.pages.forEach(function(page) {
+	PB.book().pages().forEach(function(page) {
 		page.saveNow();
 	});
 }
+
+$.extend(PB.BookPage, new PB.EventBroadcaster("pageIconUpdated"));
 
 PB.BookPage.prototype = {
 	get id() {
@@ -494,6 +496,37 @@ PB.BookPage.prototype = {
 			PB.uploadQueue.upload(this);
 	},
 
+	// Call when a photo on a page has been changed
+	// book_image_div contains the changed photo
+	updateIcon: function(book_image_div) {
+		// to update, need dom index, and img src
+		book_image_div = $(book_image_div);
+		var imageIndex = book_image_div.parents(".book-page").first()
+			.find(".book-image")
+			.toArray().indexOf(book_image_div.get(0));
+		var img_tag = book_image_div.find(".actual-image");
+		var img_src = img_tag.attr("src");
+		if (img_src == undefined) {
+			if (book_image_div.height() > book_image_div.width())
+				img_src = "/assets/common/v1.jpg";
+			else
+				img_src = "/assets/common/h1.jpg";
+		}
+		// update the icon dom
+		var icon_dom = $(this._icon);
+		img_tag = icon_dom.find("img[data-img-pos="+imageIndex+"]");
+		if (img_tag.length == 0) {
+			console.error("updateIcon could not find matching image"); 
+			return;
+		}
+		img_src = img_src.replace(/\?size=.*$/g, "");
+		img_tag.attr("src", img_src + "?size=icon");
+		
+		// save changes
+		this._icon = this.innerHtml($("<div/>").append(icon_dom).get(0));
+		this._dirty.icon = true;
+		PB.BookPage.send('pageIconUpdated', this);
+	},
 	createUploadDeferred: function() {
 		// Gather data to be saved
 		var savedHtml = false;
@@ -506,7 +539,8 @@ PB.BookPage.prototype = {
 			data.html = savedHtml;
 		}
 		if (this._dirty.icon) {
-			debugger;
+			data.icon = this._icon;
+			savedIcon = this._icon;
 		} 
 		
 		var xhr = $.ajax("/book_page/" + this._id, {
@@ -526,6 +560,10 @@ PB.BookPage.prototype = {
 						THIS._dirty.html = false;
 					else
 						debugger;
+				}
+				if (savedIcon) {
+					if (savedIcon == THIS._icon)
+						THIS._dirty.icon = false;
 				}
 			}
 		});
