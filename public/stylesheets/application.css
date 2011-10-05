@@ -201,3 +201,21 @@ a:visited {
 .admin {
 	background-color: #80ff00;
 }
+
+/* icons */
+
+.page-icon {
+	border: 1px solid #9F9;
+	position: relative;
+	overflow: hidden;
+}
+.page-icon img {
+	position: absolute;
+}
+.page-icon div {
+	position: absolute;
+}
+.page-title {
+	text-align: center;
+	margin-bottom: 16px;
+}

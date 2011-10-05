@@ -5,7 +5,7 @@
 	<% template.get_all_pages.each do |page| %>
 		<div class="icon-container">
 			<%= page.icon %>
-			<p><%= page.template_id %></p>
+			<p class="page-title"><%= page.template_id %></p>
 		</div>
 	<% end %>
 </div>
@@ -13,6 +13,9 @@
 <style type="text/css">
 	.title {
 		border-top: 1px solid gray;
+		margin-top: 16px;
+		padding-bottom: 4px;
+		padding-top: 2px;
 	}
 	.icon-container {
 		display: inline-block;
@@ -20,8 +23,16 @@
 	.page-icon {
 		border: 1px solid #9F9;
 		position: relative;
+		overflow: hidden;
 	}
 	.page-icon img {
 		position: absolute;
+	}
+	.page-icon div {
+		position: absolute;
+	}
+	.page-title {
+		text-align: center;
+		margin-bottom: 16px;
 	}
 </style>

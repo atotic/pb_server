@@ -39,9 +39,20 @@ hash bangs for pages
 - assets css/js that comes with the page
 migrating albums: use nokogiri for html manipulation
 
+Oct 4
+Finshed cloning modern_lines apple photo book. It took about 10 hours.
+Full-featured photo books will need much more interesting CSS, there are no frames,
+rotated images, lines, text is generic.
+
+Oct 3
+represent text in default icons
+
+Oct 1
+Nanny quitting, days blown
+create a nice sample template: multiple images, images for whole page, frames
+
 Sept 30
 update html icons when page is updated
-create a nice sample template: multiple images, images for whole page, frames
 
 Sept 29
 integrate with UploadImages
