@@ -24,12 +24,12 @@ $.extend(PB, {
 			this._book.addLocalFileImage(files.item(i));
 		}
 	},
-	
+
 	// Loads the book
 	load: function(id) {
 		$("#main-container").html("<h1>Loading...</h1>");
 		var self = this;
-		$.ajax({url: "/books/" + id})
+		PB.Book.get(id)
 			.success( function(json, status, jqXHR) {
 					try {
 						self._book=  new PB.Book(json);

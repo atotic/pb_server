@@ -1,6 +1,6 @@
 <h2>Book templates</h2>
 <% PB::BookTemplate.all.each do |template| %>
-<h3 class="title"><%= h template.style %></h3>
+<h3 class="title"><%= h template.name %></h3>
 <div class="icons">
 	<% template.get_all_pages.each do |page| %>
 		<div class="icon-container">
@@ -22,14 +22,6 @@
 	}
 	.page-icon {
 		border: 1px solid #9F9;
-		position: relative;
-		overflow: hidden;
-	}
-	.page-icon img {
-		position: absolute;
-	}
-	.page-icon div {
-		position: absolute;
 	}
 	.page-title {
 		text-align: center;

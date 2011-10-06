@@ -62,6 +62,7 @@ HTML
 PDF converter: https://github.com/ento/wkpdf/network
 Use Chromium for PDF generation: http://www.chromium.org/developers/design-documents/print-preview
 http://chromestory.com/2010/10/learn-how-chromes-print-preview-will-work-the-pdf-deal-and-location-aware-printing/
+Chrome based javascript browser, has PDF generation capability: http://code.google.com/p/phantomjs/
 
 MOBILE
 Viewport scoller https://github.com/zynga/scroller

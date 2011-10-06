@@ -205,7 +205,6 @@ a:visited {
 /* icons */
 
 .page-icon {
-	border: 1px solid #9F9;
 	position: relative;
 	overflow: hidden;
 }
@@ -214,8 +213,4 @@ a:visited {
 }
 .page-icon div {
 	position: absolute;
-}
-.page-title {
-	text-align: center;
-	margin-bottom: 16px;
 }

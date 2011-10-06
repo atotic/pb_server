@@ -4,6 +4,7 @@ require 'test/unit'
 require 'rack/test'
 require "test/helper"
 require "model/book"
+require "model/book_template"
 
 class BookTest < Test::Unit::TestCase
 	include Rack::Test::Methods
@@ -13,7 +14,7 @@ class BookTest < Test::Unit::TestCase
 		Dir.foreach(PB::SvegApp.templates) do |template_name|
 			next if template_name.start_with? "."
 			next unless File.directory?( File.join(PB::SvegApp.templates, template_name));
-			t = PB::BookTemplate.new( { "style" => template_name })
+			t = PB::BookTemplate.new(template_name)
 			assert_not_nil t
 			t.get_default_pages
 		end
@@ -21,10 +22,22 @@ class BookTest < Test::Unit::TestCase
 
 	def test_book_creation
 		user = create_user "book_owner"
-		book = PB::Book.new(user, { "title" => "test book"}, { "style" => "6x6"});
-		assert_not_nil book
-		book.init_from_template
+		params = { "title" => "test book", "template" => {"template_name" => "6x6" } }
+		template = PB::BookTemplate.get(params["template"]);
+		book = template.create_book(user, params);
 		book.save
+		assert_not_nil book
 		assert_not_nil(PB::Book.first);
+		
+	end
+	
+	def test_book_properties
+		user = create_user "blah"
+		params = { "title" => "test book" }
+		b = PB::Book.new(user, params);
+		b.save
+		params["template"] = { "a" => "b", "c" => "d"}
+		b = PB::Book.new(user, params)
+		b.save
 	end
 end

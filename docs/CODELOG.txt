@@ -39,6 +39,15 @@ hash bangs for pages
 - assets css/js that comes with the page
 migrating albums: use nokogiri for html manipulation
 
+Oct 5
+Add page|delete|change layout
+  template REST API: GET /template/:id
+  adding pages in the right place
+  filter as text/images/etc
+  add N pages, at random
+Book pane: scrolling, page padding
+
+
 Oct 4
 Finshed cloning modern_lines apple photo book. It took about 10 hours.
 Full-featured photo books will need much more interesting CSS, there are no frames,

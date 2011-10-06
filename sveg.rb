@@ -250,7 +250,7 @@ class SvegApp < Sinatra::Base
 		alias_method :h, :escape_html
 		
 		def show_error(object, prop)
-			"<span class=\"error_message\">#{object.errors[prop]}</span>" if (object.errors[prop])
+			"<span class=\"error_message\">#{object.errors[prop]}</span>" if (object && object.errors[prop])
 		end
 		
 		def print_datetime(dt)
@@ -476,7 +476,7 @@ class SvegApp < Sinatra::Base
 		
 	get '/books/new' do
 		user_must_be_logged_in
-		@book = Book.new(current_user, {}, {})
+		@book = Book.new(current_user, {})
 		erb :book_new, {:layout => :'layout/plain'}
 	end
 
@@ -501,8 +501,8 @@ class SvegApp < Sinatra::Base
 		user_must_be_logged_in
 		begin
 			Book.transaction do |t|
-				@book = Book.new(current_user, params[:book], params[:template])
-				@book.init_from_template
+				template = BookTemplate.new(params["template"])
+				@book = template.create_book(current_user, params);
 				if request.xhr?
 					content_type :json
 					"{ \"id\" : #{@book.id} }"
@@ -511,6 +511,7 @@ class SvegApp < Sinatra::Base
 				end
 			end
 		rescue => ex
+			debugger
 			LOGGER.error(ex.message)
 			flash.now[:error]= "Errors prevented the book from being created. Please fix them and try again."
 			erb :book_new, {:layout => :'layout/plain'}
@@ -600,6 +601,11 @@ class SvegApp < Sinatra::Base
 		erb :template_list, {:layout => :'layout/plain'}
 	end
 
+	get '/templates/:id' do
+		content_type (request.xhr? ? :json : "text/plain")
+		BookTemplate.get(params[:id]).to_json
+	end
+	
 # setup & run	
 	use SvegLogger
 	use SessionMiddleware

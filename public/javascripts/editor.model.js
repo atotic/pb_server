@@ -8,6 +8,8 @@ PB.Book = function(json) {
 		this._page_order = json.page_order;
 		this._images = [];
 		this._pages = [];
+		this._template_id = json.template_id;
+		PB.BookTemplate.get(this._template_id);	// Preload template
 		for (var i = 0; i < json.pages.length; i++)
 			this._pages.push(new PB.BookPage(json.pages[i]));
 		this.sortByPageOrder();
@@ -22,6 +24,11 @@ PB.Book = function(json) {
 		this._pages = [];
 	}
 	$.extend(this, new PB.EventBroadcaster("imageAdded imageRemoved pageAdded"));
+};
+
+// Returns ajax XHR that loads the book
+PB.Book.get = function(book_id) {
+	return $.ajax({url: "/books/" + book_id})
 };
 
 // Book represents the photo book
@@ -92,6 +99,45 @@ PB.Book.prototype = {
 		return null;
 	}
 };
+
+PB.BookTemplate = function(json) {
+	var THIS = this;
+	["id", "width", "height", "initial_pages"].forEach(function(x) { THIS["_" + x] = json.x });
+	this._pages = [];
+	json.pages.forEach(function(x) { THIS._pages.push(new PB.PageTemplate(x)) }); 
+}
+
+// GET BookTemplate xhr
+// Returns deferred that promises BookTemplate. Results are cached
+// Usage:
+// PB.BookTemplate.get("modern_lines")
+//   .success( function(template) { console.log("got template " template.id) })
+//   .error( function(template_id) { console.log("failed on " template_id) });
+PB.BookTemplate.get = function(template_id) {
+	if (PB.BookTemplate._cached == undefined) 
+		PB.BookTemplate._cached = {};
+	if (template_id in PB.BookTemplate._cached)
+		return $.Deferred().resolve( PB.BookTemplate._cached[template_id] );
+	var xhr = $.ajax( { url: "/templates/"+ template_id });
+	var retVal = $.Deferred();
+	xhr.success(function(data, textStatus, jqXHR) {
+		PB.BookTemplate._cached[template_id] = new PB.BookTemplate(data);
+		retVal.resolve( PB.BookTemplate._cached[template_id] );
+	});
+	xhr.error( function( jqXHR, textStatus, errorThrown) {
+		console.log("BookTemplate " + template_id + " failed to load");
+		retVal.reject(template_id);
+	});
+	return retVal;	
+}; 
+
+PB.PageTemplate = function(json) {
+	var THIS = this;
+	["id", "width", "height", 
+		"page_position", "image_count", "text_count", "middle_style",
+		"html", "icon"]
+		.forEach(function(x) { THIS["_" + x] = json.x});
+}
 
 // ImageBrooker
 PB.ImageBroker = function(jsonOrFile) {

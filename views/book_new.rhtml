@@ -3,17 +3,17 @@
 <form id="new_photo_book" method="post" data-remote="true" action="/books">
 	<%= show_error @book, :pages %>
 	<p><label for='title'>What is the name of your book?<label>
-		<input type="text" name="book[title]" value="<%= @book.title || "Test" %>">
+		<input type="text" name="title" value="<%= @book.title || "Test" %>">
 		<%= show_error @book, :title %>
 	</p>
 	<p>Size of your book?
-		<input type='radio' name="template[style]" value="6x6" id="6x6">
+		<input type='radio' name="template[name]" value="6x6" id="6x6">
 		<label for="6x6">6x6</label>
-		<input type='radio' name="template[style]" value="test" id="test" checked >
+		<input type='radio' name="template[name]" value="test" id="test" checked >
 		<label for="test">test</label>
-		<input type='radio' name="template[style]" value="11x8.5" id="11x8.5">
+		<input type='radio' name="template[name]" value="11x8.5" id="11x8.5">
 		<label for="11x8.5">11x8.5</label>
-		<input type='radio' name="template[style]" value="modern_lines" id="modern_lines">
+		<input type='radio' name="template[name]" value="modern_lines" id="modern_lines">
 		<label for="modern_lines">modern lines</label>
 		<%= show_error @book, :template_attributes %>
 	</p>
