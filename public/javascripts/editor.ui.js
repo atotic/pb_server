@@ -9,12 +9,12 @@ $.extend(PB, {
 
 	// Load the book on startup
 	init: function () {
-		var match = window.location.pathname.match(/editor\/(\d+)/);
+		var match = window.location.pathname.match(/books\/(\d+)/);
 		if (match != null)
 			this.load(match[1]);
 	},
 
-	book: function() {
+	 book: function() {
 		return this._book;
 	},
 	

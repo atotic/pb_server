@@ -40,7 +40,7 @@
 	</thead>
 <% books.each do |book| %>
 	<tr>
-		<td><a href="/editor/<%= book.id %>"><%= h book.title %></a></td>
+		<td><a href="/books/<%= book.id %>"><%= h book.title %></a></td>
 		<td><%= print_datetime book.created_at %></td>
 		<td><%= print_datetime book.updated_at %></td>
 		<td>

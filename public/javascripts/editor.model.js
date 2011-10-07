@@ -103,8 +103,8 @@ PB.Book.prototype = {
 PB.BookTemplate = function(json) {
 	var THIS = this;
 	["id", "width", "height", "initial_pages"].forEach(function(x) { THIS["_" + x] = json.x });
-	this._pages = [];
-	json.pages.forEach(function(x) { THIS._pages.push(new PB.PageTemplate(x)) }); 
+	this.pages = [];
+	json.pages.forEach(function(x) { THIS.pages.push(new PB.PageTemplate(x)) }); 
 }
 
 // GET BookTemplate xhr
@@ -129,14 +129,54 @@ PB.BookTemplate.get = function(template_id) {
 		retVal.reject(template_id);
 	});
 	return retVal;	
-}; 
+};
+
+// Convenience method for fetching templates we know are loaded
+PB.BookTemplate.getNow = function(template_id) {
+	if (PB.BookTemplate._cached && template_id in PB.BookTemplate._cached)
+		return PB.BookTemplate._cached[template_id];
+	throw "Template not loaded: " + template_id;
+}
+
+PB.BookTemplate.prototype = {
+	
+}
 
 PB.PageTemplate = function(json) {
 	var THIS = this;
 	["id", "width", "height", 
-		"page_position", "image_count", "text_count", "middle_style",
+		"position", "image_count", "text_count", "position_type",
 		"html", "icon"]
-		.forEach(function(x) { THIS["_" + x] = json.x});
+		.forEach(function(x) { THIS[x] = json[x]});
+}
+
+// sort order: photos first (ordered by number of photos. Other pages in alphabetical by 
+PB.PageTemplate.sortFunction = function(a, b) {
+	if (a.position_type == "photo") {
+		if (b.position_type == "photo")
+			return a.image_count - b.image_count;
+		else
+			return 1;
+	}
+	else if (b.position_type == "photo")
+		return -1;
+	else 
+		return a.position_type.localeCompare(b.position_type);
+}
+
+PB.PageTemplate.prototype = {
+	toIcon: function(options) {
+		$.extend({
+			desiredHeight: 128
+		}, options);
+		var div = $(this.icon);
+		var height = parseInt(div.css("height"));
+		var width = parseInt(div.css("width"));
+		var scale = options.desiredHeight / height;
+		div.css("width", Math.round(width * scale) + "px");
+		div.css("height", Math.round(height * scale) + "px");
+		return div;
+	}
 }
 
 // ImageBrooker
@@ -371,9 +411,9 @@ PB.BookPage = function(json) {
 
 // Saves all dirty pages -- class method
 PB.BookPage.saveAll = function() {
-	PB.book().pages().forEach(function(page) {
-		page.saveNow();
-	});
+	var book = PB.book ? PB.book() : null;
+	if (book)
+		book.pages().forEach(function(page) { page.saveNow(); });
 }
 
 $.extend(PB.BookPage, new PB.EventBroadcaster("pageIconUpdated"));
@@ -429,7 +469,7 @@ PB.BookPage.prototype = {
 		
 		function serializeAttribute(a) {
 			var output = a.localName.toLowerCase() + '="';
-			var value = a.nodeValue;
+			var value = a.value;
 			if (a.localName.toLowerCase() == "style")
 				value = styleToWebkit(value);
 			output += value.replace(/"/g, "&quot;");

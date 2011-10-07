@@ -39,13 +39,17 @@ hash bangs for pages
 - assets css/js that comes with the page
 migrating albums: use nokogiri for html manipulation
 
-Oct 5
 Add page|delete|change layout
-  template REST API: GET /template/:id
+Book pane: scrolling, page padding
+
+Oct 7
   adding pages in the right place
   filter as text/images/etc
   add N pages, at random
-Book pane: scrolling, page padding
+
+Oct 6
+  template REST API: GET /template/:id
+  sample "pick a template dialog" showed up
 
 
 Oct 4

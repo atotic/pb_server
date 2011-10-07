@@ -1,4 +1,4 @@
-// "use strict"; could not do it with jResig 
+"use strict"; // could not do it with jResig 
 
 // Debug only, shows all event handlers
 function visualEvent(){ 

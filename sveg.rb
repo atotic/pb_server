@@ -280,7 +280,11 @@ class SvegApp < Sinatra::Base
 				elsif arg.eql? "qunit"
 					retVal += "<script src='http://code.jquery.com/qunit/qunit-git.js'></script>\n"
 					retVal += "<link href='http://code.jquery.com/qunit/qunit-git.css' rel='stylesheet' type='text/css' />\n"
-				else
+				elsif arg.eql? "editor-base"
+					retVal += asset_link("editor.js", "editor.model.js", "editor.command.js");
+				elsif arg.eql? "editor-all"
+					retVal += asset_link("editor-base", "editor.manipulators.js", "editor.ui.js");
+				else					
 					raise "Unknown asset #{arg}"
 				end
 			end
@@ -461,19 +465,7 @@ class SvegApp < Sinatra::Base
 			redirect to("/account")
 		end
 	end
-
-	get '/editor' do
-		user_must_be_logged_in
-		erb :editor
-	end
-	
-	get '/editor/:book_id' do
-		user_must_be_logged_in
-		book = Book.get(params[:book_id])
-		user_must_own book
-		erb :editor
-	end
-		
+			
 	get '/books/new' do
 		user_must_be_logged_in
 		@book = Book.new(current_user, {})
@@ -487,14 +479,17 @@ class SvegApp < Sinatra::Base
 		flash[:notice] = "Book " + book.title + " was deleted";
 		book.destroy
 		content_type "text/plain"
-		
 	end
 	
 	get '/books/:id' do
 		book = Book.get(params[:id])
 		user_must_own book
-		content_type :json
-		book.to_json()
+		if (request.xhr?)
+			content_type :json
+			book.to_json()
+		else
+			erb :book_editor
+		end
 	end
 
 	post '/books' do
@@ -507,11 +502,10 @@ class SvegApp < Sinatra::Base
 					content_type :json
 					"{ \"id\" : #{@book.id} }"
 				else
-					redirect to("/editor/#{@book.id}")
+					redirect to("/books/#{@book.id}")
 				end
 			end
 		rescue => ex
-			debugger
 			LOGGER.error(ex.message)
 			flash.now[:error]= "Errors prevented the book from being created. Please fix them and try again."
 			erb :book_new, {:layout => :'layout/plain'}
@@ -536,8 +530,7 @@ class SvegApp < Sinatra::Base
 			[200, "PDF generation in progress..."]
 		end
 	end
-	
-	# get photo
+
 	get '/photo/:id' do
 		user_must_be_logged_in
 		photo = Photo.first(:user_id => current_user.id, :id => params[:id])
