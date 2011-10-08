@@ -150,18 +150,28 @@ PB.PageTemplate = function(json) {
 		.forEach(function(x) { THIS[x] = json[x]});
 }
 
-// sort order: photos first (ordered by number of photos. Other pages in alphabetical by 
+// sort order: cover|flap|middle|back, same sorted by image_count
+// middle sort order: photo|<rest alphabetically
 PB.PageTemplate.sortFunction = function(a, b) {
-	if (a.position_type == "photo") {
-		if (b.position_type == "photo")
-			return a.image_count - b.image_count;
-		else
-			return 1;
-	}
-	else if (b.position_type == "photo")
+	var positions = ["cover", "flap", "middle", "back"]
+	var a_position = positions.indexOf(a.position);
+	var b_position = positions.indexOf(b.position);
+	if (a_position != b_position)
+		return b_position - a_position;
+	
+	if (a.position_type == b.position_type)
+		return a.image_count - b.image_count;
+		
+	if (a.position_type == "photo")
+		return 1;
+	if (b.position_type == "photo")
 		return -1;
-	else 
-		return a.position_type.localeCompare(b.position_type);
+		
+	var cmp = a.position_type.localeCompare(b.position_type);
+	if (cmp == 0)
+		return a.image_count - b.image_count;
+	else
+		return cmp;
 }
 
 PB.PageTemplate.prototype = {
