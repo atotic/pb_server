@@ -268,7 +268,28 @@ PB.UI.Pagetab = {
 					el.replaceWith(newIcon);
 				}
 			});
-		});	
+		});
+		PB.UI.Pagetab.initButtons();
+	},
+	initButtons: function() {
+		// Hook up the buttons
+		$("#add-page-button").click(function() {
+			var options = PageDialog.addPageOptions();
+			options.ok = function(pages) {
+				pages.forEach(function(page) {
+					console.log("Adding " + page.id);
+				});
+			};
+			PageDialog.show(options);
+		});
+		$("#layout-page-button").click(function() {
+			var selection = PB.UI.Pagetab.selection();
+			if (!selection.length)
+				return;
+			var page = selection[0].data("book_page");
+			var options = PageDialog.changeLayoutOptions( PB.book().getPagePosition(page) );
+			PageDialog.show(options);			
+		});
 	},
 	selectPage: function(page) {
 		var self = this;
@@ -324,6 +345,15 @@ PB.UI.Pagetab = {
 			var sliderWidth = Math.min(maxWidth, allPages.size() * 20);
 			$("#page-list-slider").css("width", sliderWidth).show();
 		});
+	},
+	selection: function() {
+		var selection = [];
+		$('#page-list .page-icon').each(function() {
+			var c = $(this);
+			if (c.hasClass("selected"))
+				selection.push(c);
+		});
+		return selection;
 	}
 }
 
@@ -553,16 +583,6 @@ PB.UI.MainContainer = {
 		});
 		$("#undo-button").click(function() {
 			PB.CommandQueue.undo();
-		});
-		$("#add-page-tabs").tabs({
-			event: "click"
-		});
-		$( "#add-page-dialog" ).dialog({
-			autoOpen: false,
-			height: 800
-		});
-		$("#add-page-button").click(function() {
-			$("#add-page-dialog").dialog("open");
 		});
 		this.commandQueueChanged();
 	},

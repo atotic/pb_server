@@ -3,7 +3,7 @@
 <head>
 	<title>Photobook</title>
 	<%= asset_link("jquery.js", "jquery-ui.js", "transform.js", "application.js" ) %>
-	<%= asset_link("editor.js", "editor.command.js", "editor.manipulators.js", "editor.model.js", "editor.ui.js" ) %>
+	<%= asset_link("editor-all" ) %>
 	<%= asset_link("jquery-ui.css", "application.css") %>
 </head>
 <body>
@@ -14,29 +14,9 @@
 			<span class="flippy" state="closed"></span>Book
 		</div>
 		<div class="slab_tools">
-			<button id="add-page-button">Add</button>
-			<div id="add-page-dialog" style="display:none">
-				<div>Add N pages to the end of the book/after last page</div>
-				<div id="add-page-tabs">
-					<ul>
-						<li><a href="#add-page-random-tab">Random</a></li>
-						<li><a href="#add-page-one-tab">One photo</a></li>
-						<li><a href="#add-page-two-tab">Two photos</a></li>
-						<li><a href="#add-page-three-tab">Three</a></li>
-						<li><a href="#add-page-four-tab">Four</a></li>
-						<li><a href="#add-page-five-tab">Five</a></li>
-						<li><a href="#add-page-six-tab">Six</a></li>
-					</ul>
-					<div id="add-page-random-tab">Random</div>
-					<div id="add-page-one-tab">One</div>
-					<div id="add-page-two-tab">Two</div>
-					<div id="add-page-three-tab">Three</div>
-					<div id="add-page-four-tab">Four</div>
-					<div id="add-page-five-tab">Five</div>
-					<div id="add-page-six-tab">Six</div>
-				</div>
-			</div>
+			<button id="add-page-button">Add...</button>
 			<button id="delete-page-button">Delete</button>
+			<button id="layout-page-button">Layout...</button>
 		</div>
 	</div>
 	<div id="pages-tab" class='slab_content'>
@@ -65,6 +45,26 @@
 	</div>
 </div>
 <input type="file" id="file-dialog" multiple="true" accept="image/*" style="display:none">
+
+<div id="pick-page-dialog" style="display:none">
+	<div id="pick-page-filter">
+		<input id="pick-page-text" type="checkbox" ><label for='pick-page-text'> with text</label>
+		| <label for='pick-page-count'>pages to add</label> <select id='pick-page-count'>
+			<option value="1" checked>1</option>
+			<option value="2">2</option>
+			<option value="3">3</option>
+			<option value="4">4</option>
+			<option value="5">5</option>
+			<option value="10">10</option>
+		</select>
+		<div style="float:right">
+			<button id="pick-page-ok" >ok</button>
+			<button id="pick-page-cancel">cancel</button>
+		</div>
+	</div>
+	<div id="pick-page-icons"></div>
+</div>
+
 <div id="content-slab">
 	<div class="slab_top">
 		<div class="slab_title" style="padding-left:32px">
@@ -248,14 +248,62 @@ body {
 	z-index: 1;
 }
 
-#add-page-dialog {
-	position: absolute;
-	z-index: 2;
-}
-
 .actual-image {
 	top: 0px;
 	left: 0px;
+}
+
+/* Pick page dialog */
+
+#pick-page-dialog {
+	height: 500px;
+	width: 900px
+}
+
+#pick-page-filter {
+	margin: 4px 4px 8px 8px;
+}
+#pick-page-icons .page-icon, #pick-page-icons .pick-page-numbers {
+	display: inline-block;
+	border: 1px solid #ccc;
+	vertical-align: top;
+	margin:4px;
+}
+
+#pick-page-icons *.selected {
+	border: 1px solid yellow;
+}
+#pick-page-count {
+	font-size: 80%;
+}
+#add-random {
+	width: 64px;
+	height: 64px;
+	background-image: url(/images/surprise.png);
+	background-size: 64px 64px;
+	background-position: 0 -4px;
+	background-repeat: no-repeat;
+}
+#add-random p {
+	position: relative;
+	font-size: 80%;
+	top: 48px;
+	text-align:center;
+}
+
+.pick-page-numbers {
+	border: 1px solid #ccc;
+	border-radius: 32px;
+	position: relative;
+	width: 64px;
+	height: 64px;
+	font-size: 60px;
+	overflow:hidden;
+	text-align:center;
+	color:#ccc;
+}
+.pick-page-numbers p {
+	margin-top: -6px;
 }
 
 </style>

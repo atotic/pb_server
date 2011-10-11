@@ -74,7 +74,22 @@ PB.Book.prototype = {
 		var pos = this._images.push(image);
 		image.saveOnServer(this.id);
 		this.send('imageAdded', image, pos);
-	},		
+	},
+	getPagePosition: function(page) {
+		var pos = this._pages.indexOf(page);
+		if (pos == -1) {
+			console.log("Page without a position " + page);
+			throw "No such position error";
+		}
+		if (pos == 0)
+			return "cover";
+		else if (pos == 1 || (pos == this._pages.length - 2))
+			return "flap";
+		else if (pos == this._pages.length - 1)
+			return "back";
+		else
+			return "middle";
+	},
 	getPageById: function(page_id) {
 		debugger;	// should not be used
 		for (var i=0; i<this._pages.length; i++)
@@ -114,18 +129,22 @@ PB.BookTemplate = function(json) {
 //   .success( function(template) { console.log("got template " template.id) })
 //   .error( function(template_id) { console.log("failed on " template_id) });
 PB.BookTemplate.get = function(template_id) {
+//	console.log("requesting " + template_id + " " + Date.now());
 	if (PB.BookTemplate._cached == undefined) 
 		PB.BookTemplate._cached = {};
-	if (template_id in PB.BookTemplate._cached)
+	if (template_id in PB.BookTemplate._cached) {
+//		console.log("returning cached " + Date.now());
 		return $.Deferred().resolve( PB.BookTemplate._cached[template_id] );
+	}
 	var xhr = $.ajax( { url: "/templates/"+ template_id });
 	var retVal = $.Deferred();
 	xhr.success(function(data, textStatus, jqXHR) {
 		PB.BookTemplate._cached[template_id] = new PB.BookTemplate(data);
+//		console.log("returning resolved " + Date.now());
 		retVal.resolve( PB.BookTemplate._cached[template_id] );
 	});
 	xhr.error( function( jqXHR, textStatus, errorThrown) {
-		console.log("BookTemplate " + template_id + " failed to load");
+		console.error("BookTemplate " + template_id + " failed to load");
 		retVal.reject(template_id);
 	});
 	return retVal;	

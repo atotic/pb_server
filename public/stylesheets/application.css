@@ -214,3 +214,18 @@ a:visited {
 .page-icon div {
 	position: absolute;
 }
+
+/* jQueryUI dialogs */
+.ui-widget-overlay {
+	background: none repeat scroll 0 0 #030303;
+	opacity: 0.5; /* background fade */
+}
+.ui-dialog .ui-dialog-content {
+	padding: 0px;
+}
+.ui-dialog {
+	padding: 0px;
+}
+.ui-widget-content {
+	border: 0px none;
+}

@@ -283,8 +283,8 @@ class SvegApp < Sinatra::Base
 				elsif arg.eql? "editor-base"
 					retVal += asset_link("editor.js", "editor.model.js", "editor.command.js");
 				elsif arg.eql? "editor-all"
-					retVal += asset_link("editor-base", "editor.manipulators.js", "editor.ui.js");
-				else					
+					retVal += asset_link("editor-base", "editor.manipulators.js", "editor.ui.js", "editor.page-dialog.js");
+				else
 					raise "Unknown asset #{arg}"
 				end
 			end

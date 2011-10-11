@@ -29,6 +29,8 @@ Experiment with font sizes: http://lamb.cc/typograph/ --
 http://www.dafont.com/my-underwood.font - just like an old typewriter font
 Font sizes with REM http://snook.ca/archives/html_and_css/font-size-with-rem
 Icon resource: http://www.iconseeker.com/
+Patterns resource: http://subtlepatterns.com/
+Pure CSS drawing library: https://github.com/dnewcome/Donatello
 
 JS
 Javascript p2p event broadcaster: http://peerbind.com/
@@ -46,6 +48,7 @@ JSFiddle, nice easing animations: http://jsfiddle.net/marcofucci/rRtAq/
 XPath for JSON http://jsonselect.org/#overview
 Ajax history design: http://tumbledry.org/2011/05/12/screw_hashbangs_building
 Javascript PDF renderer: http://andreasgal.com/2011/06/15/pdf-js/
+await javascript primitive, helps with async events https://github.com/maxtaco/tamejs
 
 RUBY
 Ruby toolbox: what gem should I use for.....  http://ruby-toolbox.com/
