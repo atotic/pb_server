@@ -322,7 +322,7 @@ class SvegApp < Sinatra::Base
 					redirect_back
 				end
 			end
-			if current_user.id != resource.user_id && !current_user.is_administrator
+			if !current_user || (current_user.id != resource.user_id && !current_user.is_administrator)
 				flash[:error]="Access not allowed."
 				if request.xhr?
 					halt 401
