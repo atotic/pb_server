@@ -221,7 +221,7 @@ class SvegApp < Sinatra::Base
 	set :templates, File.join(settings.root, "book-templates"); # book template directory
 
 	set :show_exceptions, true
-
+#	set :static_cache_control, "max-age=3600" # serve stuff from public with expiry date
 	def initialize(*args)
 		super(args)
 		DataMapper::Model.raise_on_save_failure = true
@@ -482,11 +482,11 @@ class SvegApp < Sinatra::Base
 	end
 	
 	get '/books/:id' do
-		book = Book.get(params[:id])
-		user_must_own book
+		@book = Book.get(params[:id])
+		user_must_own @book
 		if (request.xhr?)
 			content_type :json
-			book.to_json()
+			@book.to_json()
 		else
 			erb :book_editor
 		end

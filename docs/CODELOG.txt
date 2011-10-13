@@ -42,13 +42,20 @@ migrating albums: use nokogiri for html manipulation
 Add page|delete|change layout
 Book pane: scrolling, page padding
 
-Oct 10
+Oct 12
+	Load book json inside the template, skip ajax
+	
+	Add page.position to BookPage object (rb/js)
 	Look into cache control. We do not need to get template twice, should be cached. Max-age is set by browser
+	Load initial book inside the template
 	
   adding pages in the right place
-  filter as text/images/etc
   add N pages, at random
   change page layout
+  
+Oct 11
+	implemented prev/next on arrows
+  filter as text/images/etc
 
 Oct 7
 	still working on "pick a template dialog". Like the result so far

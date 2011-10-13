@@ -75,21 +75,6 @@ PB.Book.prototype = {
 		image.saveOnServer(this.id);
 		this.send('imageAdded', image, pos);
 	},
-	getPagePosition: function(page) {
-		var pos = this._pages.indexOf(page);
-		if (pos == -1) {
-			console.log("Page without a position " + page);
-			throw "No such position error";
-		}
-		if (pos == 0)
-			return "cover";
-		else if (pos == 1 || (pos == this._pages.length - 2))
-			return "flap";
-		else if (pos == this._pages.length - 1)
-			return "back";
-		else
-			return "middle";
-	},
 	getPageById: function(page_id) {
 		debugger;	// should not be used
 		for (var i=0; i<this._pages.length; i++)
@@ -454,7 +439,9 @@ PB.BookPage.prototype = {
 	get dirty() {
 		return this._dirty.html || this._dirty.icon;
 	},
-
+	get position() {
+		return this._position;
+	},
 	browserHtml: function() {
 		if (this._html)	{
 			// This will need fixing if we use other prefixed properties
@@ -577,6 +564,9 @@ PB.BookPage.prototype = {
 		$(dom).find(".ui-droppable").each( function(index, el) {
 				$(el).removeClass("ui-droppable");	
 		});
+		// Remove other artifactss
+		$(dom).find("br[_moz_dirty]").removeAttr("_moz_dirty");
+		$(dom).find("*[contenteditable]").removeAttr("contenteditable");
 		this._html = this.innerHtml(dom);
 	},
 
@@ -673,8 +663,7 @@ PB.BookPage.prototype = {
 						THIS.readHtml();
 					if (THIS._html == savedHtml || THIS._html == null)
 						THIS._dirty.html = false;
-					else
-						debugger;
+					// else there were changes since the save, so we are still dirty
 				}
 				if (savedIcon) {
 					if (savedIcon == THIS._icon)

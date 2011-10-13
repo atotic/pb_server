@@ -85,6 +85,7 @@ Simple, cheap scalable site: http://highscalability.com/blog/2011/8/1/peecho-arc
 Sinatra assets https://github.com/rstacruz/sinatra-assetpack
 SLIPSUM: http://slipsum.com/
 BrowserID authentication: https://github.com/mozilla/browserid/wiki/How-to-Use-BrowserID-on-Your-Site
+Stripe payments system: cheap way to accept credit cards
 
 TOUCH INTERFACES
 Sweet & short take on ipad html development http://mir.aculo.us/2010/06/04/making-an-ipad-html5-app-making-it-really-fast/
@@ -101,7 +102,7 @@ smugmug: they are photo oriented
 hotprints: free cheap photo books
 picplum: mail best photos, http://paulstamatiou.com/picplum-automatic-photo-prints-parents
 nation's photo lab
-
+Menlo Park photo book focussed place: http://www.keepsy.com/main/about_us
 walmart & walgreens both use snapfish photo book creation software.
 
 What I'd like:

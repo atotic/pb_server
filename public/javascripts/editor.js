@@ -188,9 +188,12 @@ PB.ShowForMeasure.prototype = {
 //		...your init code here ....
 //   $.extend(this, new PB.EventBroadcaster("docLoaded"));
 // }
-// Listeners can bind & unbind.
-// Send events:
+//
+// Broadcaster sends events:
 // this.send('docLoaded', doc);
+//
+// Listeners can bind & unbind.
+// myBroadcaster.bind("docLoaded", function(doc) {})
 
 PB.EventBroadcaster = function(eventList) {
 	this.listeners = {};

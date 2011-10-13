@@ -81,14 +81,11 @@
 </div>
 <script type="text/javascript">
 "use strict"
+
 $(document).ready( function() {
-		$(".slab").each( function() {
-			var slab = $(this); 
-			var slab_content = slab.find('.slab_content');
-			var flippy = slab.find('.flippy');
-			var slab_click = slab.find('.slab_title');
-			$(flippy).flippy('open', slab_content, slab_click);
-		});
+
+		// Load the book
+		PB.setBookFromJson(<%= @book.to_json %>);
 });
 </script>
 <style type="text/css" contenteditable style="display:none;white-space:pre; font-size: 13px; font-family:Monaco, Mono-Space;border-top: 5px solid gray">
@@ -181,25 +178,30 @@ body {
 	margin-bottom: 4px;
 }
 
-#page-list canvas {
-	border: 2px solid transparent;
-}
-#page-list canvas.selected {
-	border: 2px solid yellow;
-}
-
 .page-icon img {
 	position: absolute;
 }
 
 #page-list .page-icon {
-	border: 2px solid black;
 	display: inline-block;
 	position: relative;
 }
+#page-list .left-page-icon {
+	border: 2px solid white;
+	border-right: 1px solid #DDD;
+	margin-left: 6px;
+	box-shadow:-2px 0px 4px #B3B3B3;
+}
+
+#page-list .right-page-icon {
+	border: 2px solid white;
+	border-left: 1px solid #DDD;
+	margin-right: 10px;
+	box-shadow: 2px 0px 4px #B3B3B3;
+}
 
 #page-list .page-icon.selected {
-	border: 2px solid yellow;
+	border-color: yellow;
 }
 
 

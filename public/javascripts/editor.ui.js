@@ -7,14 +7,27 @@ $.extend(PB, new PB.EventBroadcaster("docLoaded"));
 $.extend(PB, {
 	_init: $(document).ready(function() { PB.init() }),
 
-	// Load the book on startup
 	init: function () {
-		var match = window.location.pathname.match(/books\/(\d+)/);
+/*		var match = window.location.pathname.match(/books\/(\d+)/);
 		if (match != null)
 			this.load(match[1]);
+*/
+		$(".slab").each( function() {
+			var slab = $(this); 
+			var slab_content = slab.find('.slab_content');
+			var flippy = slab.find('.flippy');
+			var slab_click = slab.find('.slab_title');
+			$(flippy).flippy('open', slab_content, slab_click);
+		});
+		$(window).keypress(function(ev) {
+			switch(ev.keyCode) {
+				case 39: PB.UI.Pagetab.next(); break;
+				case 37: PB.UI.Pagetab.prev(); break;
+			}
+		});
 	},
 
-	 book: function() {
+	book: function() {
 		return this._book;
 	},
 	
@@ -25,19 +38,23 @@ $.extend(PB, {
 		}
 	},
 
+	setBookFromJson: function(json) {
+		try {
+			this._book=  new PB.Book(json);
+		}
+		catch(e) {
+			console.error("Unexpected error creating book from JSON" + e);
+		}
+		PB.UI.bookLoaded(this._book);
+	},
+	
 	// Loads the book
 	load: function(id) {
 		$("#main-container").html("<h1>Loading...</h1>");
 		var self = this;
 		PB.Book.get(id)
 			.success( function(json, status, jqXHR) {
-					try {
-						self._book=  new PB.Book(json);
-					}
-					catch(e) {
-						console.error("Unexpected error creating book from JSON" + e);
-					}
-					PB.UI.bookLoaded(self._book);
+				PB.setBookFromJson(json);
 			})
 			.error( function(jqXHR, textStatus, errorThrown) {
 				PB.error("Unexpected network error loading book." + textStatus);
@@ -245,7 +262,10 @@ PB.UI.Phototab = {
 	}
 }
 
-
+/*
+ * Pagetab shows page icons.
+ * It broadcasts pageSelectionChanged event
+ */ 
 PB.UI.Pagetab = {
 	_init: $(document).ready(function() { PB.UI.Pagetab.init() }),
 	init: function() {
@@ -287,12 +307,34 @@ PB.UI.Pagetab = {
 			if (!selection.length)
 				return;
 			var page = selection[0].data("book_page");
-			var options = PageDialog.changeLayoutOptions( PB.book().getPagePosition(page) );
+			var options = PageDialog.changeLayoutOptions( page.position );
 			PageDialog.show(options);			
 		});
+		this.bind("pageSelectionChanged", this.pageSelectionChanged);
+		this.pageSelectionChanged(this.selection()); // Initializes buttons
+	},
+	// Select next pages
+	next: function() {
+		var sel = this.selection();
+		if (sel.length == 0)
+			return; 
+		var children = sel[0].parent().children(".page-icon");
+		var next = children.get(children.index(sel[0]) + 1);
+		if (next)
+			this.selectPage($(next).data("book_page"));
+	},
+	prev: function() {
+		var sel = this.selection();
+		if (sel.length == 0)
+			return;
+		var children = sel[0].parent().children(".page-icon");
+		var prev = children.index(sel[0]) - 1;
+		if (prev >= 0)
+			this.selectPage($(children.get(prev)).data("book_page"));
 	},
 	selectPage: function(page) {
 		var self = this;
+		var changed = false;
 		$('#page-list .page-icon').each(function() {
 			var c = $(this);
 			if (c.data('book_page') == page) {
@@ -300,14 +342,22 @@ PB.UI.Pagetab = {
 					return;
 				else {
 					c.addClass('selected');
+					changed = true;
 					PB.UI.Bookpage.setCurrentPage(page);
 				}
 			}
 			else {
-				if (c.hasClass('selected'))
+				if (c.hasClass('selected')) {
 					c.removeClass('selected');
+					changed = true;
+				}
 			}
 		});
+		if (changed)
+			this.send('pageSelectionChanged', this.selection());
+	},
+	pageSelectionChanged: function(sel) {
+		$("#layout-page-button").attr("disabled", sel.length == 0);
 	},
 	revealNthPage: function(n) {
 		$("#page-list").revealByMarginLeft(".page-icon:nth-child(" + n+ ")");		
@@ -320,19 +370,30 @@ PB.UI.Pagetab = {
 		});
 		return icon;
 	},
+	updatePageStyles: function() {
+		var icons = $("#page-list .page-icon");
+		icons.each(function(i, el) {
+			if (i % 2 == 0)
+				$(el).addClass("left-page-icon").removeClass("right-page-icon");
+			else
+				$(el).addClass("right-page-icon").removeClass("left-page-icon");
+		});
+	},
 	pageAdded: function(page, index, noScroll) {
 		$("#pages-tab .intro").hide();
 		// add new page
 		var icon = this.getIconForPage(page);
+		// TODO append in right place
 		icon.appendTo('#page-list');
+		this.updatePageStyles(); 
 		// reflow when visible
 		$('#pages-tab').reflowVisible(function(immediate) {
 			// Resize the container
 			var allPages = $('#page-list .page-icon');
 			var newWidth = allPages
-				.map(function() {return $(this).outerWidth()})
+				.map(function() {return $(this).outerWidth(true)})
 				.get()
-				.reduce( function(sum, prop) { return sum + prop;});
+				.reduce( function(sum, prop) { return sum + prop;}) + 2;
 			$('#page-list').css("width", newWidth + "px");
 			// Resize the slider
 			$("#page-list-slider").slider("option", {
@@ -346,6 +407,7 @@ PB.UI.Pagetab = {
 			$("#page-list-slider").css("width", sliderWidth).show();
 		});
 	},
+	// Returns an array of page-icon divs. div.data("book_page") gets you real page
 	selection: function() {
 		var selection = [];
 		$('#page-list .page-icon').each(function() {
@@ -356,6 +418,8 @@ PB.UI.Pagetab = {
 		return selection;
 	}
 }
+
+$.extend(PB.UI.Pagetab, new PB.EventBroadcaster("pageSelectionChanged"));
 
 /* Page in a book
  * Main page element contains data:
