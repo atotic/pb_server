@@ -6,7 +6,7 @@ PB.Book = function(json) {
 		this.id = json.id;
 		this.title = json.title;
 		this._page_order = json.page_order;
-		this._images = [];
+		this._photos = [];
 		this._pages = [];
 		this._template_id = json.template_id;
 		PB.BookTemplate.get(this._template_id);	// Preload template
@@ -14,13 +14,13 @@ PB.Book = function(json) {
 			this._pages.push(new PB.BookPage(json.pages[i]));
 		this.sortByPageOrder();
 		for (var i = 0; i < json.photos.length; i++)
-			this._images.push(new PB.ImageBroker(json.photos[i]))
+			this._photos.push(new PB.PhotoBroker(json.photos[i]))
 	}
 	else {
 		this.id = 0;
 		this.title = "";
 		this._page_order = "";
-		this._images = [];
+		this._photos = [];
 		this._pages = [];
 	}
 	$.extend(this, new PB.EventBroadcaster("imageAdded imageRemoved pageAdded"));
@@ -35,8 +35,8 @@ PB.Book.get = function(book_id) {
 // Look at constructor for the list of events
 PB.Book.prototype = {
 	
-	images: function() {
-		return this._images;	// return ImageBroker[]
+	photos: function() {
+		return this._photos;	// return PhotoBroker[]
 	},
 	pages: function() { // return BookPage[]
 		return this._pages;
@@ -63,15 +63,15 @@ PB.Book.prototype = {
 	},
 	addLocalFileImage: function (file) {
 		// Check if it matches any already 
-		for (var i=0; i< this._images.length; i++)
-			if (this._images[i].name() == file.name) 
+		for (var i=0; i< this._photos.length; i++)
+			if (this._photos[i].name() == file.name) 
 			{
 				PB.notice(file.name + " is already in the book.");
 				return;
 			};
 
-		var image = new PB.ImageBroker(file);
-		var pos = this._images.push(image);
+		var image = new PB.PhotoBroker(file);
+		var pos = this._photos.push(image);
 		image.saveOnServer(this.id);
 		this.send('imageAdded', image, pos);
 	},
@@ -84,18 +84,18 @@ PB.Book.prototype = {
 	},
 	
 	getImageById: function(image_id) {
-		for (var i=0; i< this._images.length; i++)
-			if (this._images[i].id() == image_id)
-				return this._images[i];
+		for (var i=0; i< this._photos.length; i++)
+			if (this._photos[i].id() == image_id)
+				return this._photos[i];
 		console.warn("no such image id " + image_id);
 		return undefined;
 	},
 	getImageByFileUrl: function(url) {
 		if (url == null)
 			return null;
-		for (var i=0; i< this._images.length; i++)
-			if (this._images[i].getFileUrl() == url)
-				return this._images[i];
+		for (var i=0; i< this._photos.length; i++)
+			if (this._photos[i].getFileUrl() == url)
+				return this._photos[i];
 		return null;
 	}
 };
@@ -194,7 +194,7 @@ PB.PageTemplate.prototype = {
 }
 
 // ImageBrooker
-PB.ImageBroker = function(jsonOrFile) {
+PB.PhotoBroker = function(jsonOrFile) {
 	if ('display_name' in jsonOrFile) {
 		this.initFromJson(jsonOrFile);
 	}
@@ -204,8 +204,8 @@ PB.ImageBroker = function(jsonOrFile) {
 	}
 }
 
-// ImageBroker represents an image.
-PB.ImageBroker.prototype = {
+// PhotoBroker represents an image.
+PB.PhotoBroker.prototype = {
 
 	tempId: 1,
 	_file: null, // on-disk file
@@ -248,7 +248,7 @@ PB.ImageBroker.prototype = {
 	},
 	
 	getTempId: function() {
-		return "temp-" + PB.ImageBroker.prototype.tempId++;
+		return "temp-" + PB.PhotoBroker.prototype.tempId++;
 	},
 	
 	// size is 'icon', 'display', 'full'

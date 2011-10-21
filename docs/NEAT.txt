@@ -31,13 +31,12 @@ Font sizes with REM http://snook.ca/archives/html_and_css/font-size-with-rem
 Icon resource: http://www.iconseeker.com/
 Patterns resource: http://subtlepatterns.com/
 Pure CSS drawing library: https://github.com/dnewcome/Donatello
+Excellent CSS effects: bounce, rotate, etc. If I ever need visual candy http://blackberry.github.com/Alice/demos.html
+LoremPixel: placeholder images: http://lorempixel.com/
 
 JS
-Javascript p2p event broadcaster: http://peerbind.com/
 HTML5 flipping pages animation: http://studio.html5rocks.com/#Flip
-graph visualization library http://arborjs.org/ - 
 How to resume a file upload http://hacks.mozilla.org/2011/04/resumeupload/
-JS unit tests http://railscasts.com/episodes/261-testing-javascript-with-jasmine
 Javascript crypto: http://code.google.com/p/crypto-js/
 File upload with js, the nitty gritty details: http://igstan.ro/posts/2009-01-11-ajax-file-upload-with-pure-javascript.html
 jQuery HTML5 upload: http://code.google.com/p/jquery-html5-upload/
@@ -49,7 +48,8 @@ XPath for JSON http://jsonselect.org/#overview
 Ajax history design: http://tumbledry.org/2011/05/12/screw_hashbangs_building
 Javascript PDF renderer: http://andreasgal.com/2011/06/15/pdf-js/
 await javascript primitive, helps with async events https://github.com/maxtaco/tamejs
-
+javascript serializations: http://blog.maxaller.name/2011/01/javascript-serialization/
+JS streaming http://code.google.com/p/jquery-stream/
 RUBY
 Ruby toolbox: what gem should I use for.....  http://ruby-toolbox.com/
 MD5 digests in ruby http://www.siaris.net/index.cgi/Programming/LanguageBits/Ruby/MD5.rdoc

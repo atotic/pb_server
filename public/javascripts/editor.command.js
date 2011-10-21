@@ -11,6 +11,7 @@ PB.CommandQueue = {
 
 	completeQ: [],	// Already executed commands
 	undoneQ: [], // Commands that have been undone
+	historyLogQ: [], // log of all commands executed. Used for saving
 	
 	trace: function(f) {
 		return;
@@ -108,6 +109,14 @@ PB.CommandQueue = {
 		var s = "CommandQueue:\nComplete:\n" + this.toStringQueue(this.completeQ);
 		s += "Undone:\n" + this.toStringQueue(this.undoneQ);
 		return s;
+	},
+	logHistory: function(cmd, opCode) {
+		this.logHistory.push([kind, cmd]);
+	},
+	getSerializedLogHistory: function(opCode) {
+		retVal = [];
+		this.logHistory.forEach(function(x) {
+		});
 	}
 }
 $.extend(PB.CommandQueue, new PB.EventBroadcaster("commandQueueChanged"));
@@ -130,10 +139,10 @@ PB.Commands.prototype = {
 	}
 }
 
-PB.Commands.DropImage = function(page, imageBroker, bookImage) {
+PB.Commands.DropImage = function(page, photoBroker, bookImage) {
 	PB.assertId(bookImage);
 	this.bookImageId = $(bookImage).attr("id");
-	this.imageBroker = imageBroker;
+	this.photoBroker = photoBroker;
 	this.page = page;
 }
 
@@ -168,7 +177,7 @@ PB.Commands.DropImage.prototype = {
 				PB.UI.Bookpage.imageLoaded(bookImage);
 				img.style.visibility = "visible";
 		};
-		img.src = this.imageBroker.getImageUrl('display');
+		img.src = this.photoBroker.getImageUrl('display');
 		this.page.updateIcon(bookImage);
 		this.page.setDomModified();
 	},
@@ -187,19 +196,19 @@ PB.Commands.DropImage.prototype = {
 		delete this.oldSrc;
 	},
 	toString: function() {
-		return "dropImage:" + this.imageBroker.id() + "=>" + this.bookImageId;
+		return "dropImage:" + this.photoBroker.id() + "=>" + this.bookImageId;
 	}
 }
 /* 
     Page CSS manipulation within command framework
 
 Constructors:
-	ModifyPageCSS(newCss, oldCss)
+	SetCSS(newCss, oldCss)
 	newCss is an array of selector -> style:map
 	oldCss is optional, just like newCss, but contains original values
    
 Usage:
-   cmd = new ModifyPageCSS([$("#el"), { position: 5px}]);
+   cmd = new SetCSS([$("#el"), { position: 5px}]);
 
 	 if command is to be executed once:
 	 PB.CommandQueue.execute(cmd);
@@ -210,7 +219,7 @@ Usage:
 	 cmd.setProps($("#el"), {position: 15px}).redo();
 	 PB.CommandQueue.push(cmd);
 */ 
-PB.Commands.ModifyPageCSS = function(page, newCss, oldCss) {
+PB.Commands.SetCSS = function(page, newCss, oldCss) {
 	// deep copy incoming styles
 	newCss = newCss.slice(0);
 	for (var i=0; i< newCss.length; i++) { 
@@ -233,7 +242,7 @@ PB.Commands.ModifyPageCSS = function(page, newCss, oldCss) {
 	this.animate = true;
 }
 
-PB.Commands.ModifyPageCSS.prototype = {
+PB.Commands.SetCSS.prototype = {
 	canUndo: function() {
 		return this.oldCss != null;
 	},
@@ -294,7 +303,7 @@ PB.Commands.ModifyPageCSS.prototype = {
 	}
 }
 
-PB.Commands.ReplaceInnerHtml = function(page, dom, oldHtml, newHtml, oldWasDefault) {
+PB.Commands.SetInnerHtml = function(page, dom, oldHtml, newHtml, oldWasDefault) {
 	this.page = page;
 	PB.assertId(dom);
 	this.domId = $(dom).prop("id");
@@ -303,7 +312,7 @@ PB.Commands.ReplaceInnerHtml = function(page, dom, oldHtml, newHtml, oldWasDefau
 	this.oldWasDefault = oldWasDefault;
 }
 
-PB.Commands.ReplaceInnerHtml.prototype = {
+PB.Commands.SetInnerHtml.prototype = {
 	canUndo: function() {
 		return this.oldHtml != null;
 	},

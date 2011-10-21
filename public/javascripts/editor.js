@@ -296,7 +296,7 @@ PB.DeferredFilter.getConcurrentFilter = function(maxConcurrent) {
 	return filter;
 }
 
-// MemorySize filter limits memory used during ttl. Used for loading images
+// MemorySize filter limits memory used during ttl. Used for loading photos
 PB.DeferredFilter.getMemorySizeFilter = function(maxSize, ttl) { // bytes, milis
 	var filter = new PB.DeferredFilter({
 		ready: function() {
@@ -487,13 +487,13 @@ PB.DeferredQueue.prototype = {
 }
 
 // Image loading for display queue
-// Limits how many images:
+// Limits how many photos:
 // - can be downloaded simultaneusly
 // - can be downloaded in a 10 second window. This is to prevent
 //	 memory trashing, FF keeps all images in used memory for 10 seconds, 
-//   unused for 25. When loading images off local disk, single image can be
+//   unused for 25. When loading photos off local disk, single image can be
 //   4928 x 3264 x 4 = 60MB undecoded.
-// 	 TestPix loads 100 images in 64s
+// 	 TestPix loads 100 photos in 64s
 // gfx/surface/image cache can still grow to 1.X
 PB.ImageLoadQueue = new PB.DeferredQueue([
 	PB.DeferredFilter.getConcurrentFilter(2),
@@ -502,7 +502,7 @@ PB.ImageLoadQueue = new PB.DeferredQueue([
 		)
 ]);
 
-// Uploads pages/images/books to the server
+// Uploads pages/photos/books to the server
 
 PB.UploadQueue = function(name) {
 	this._name = name;
@@ -551,7 +551,7 @@ $.extend(PB.UploadQueue.prototype, {
 	execute: function(item) {
 	//		console.log("Execute " + deferredJob.name);
 		var THIS = this;
-		var isImage = item instanceof PB.ImageBroker;
+		var isImage = item instanceof PB.PhotoBroker;
 		var isPage = item instanceof PB.BookPage;
 		var job  = item.createUploadDeferred();
 		if (isImage)
@@ -584,10 +584,10 @@ $.extend(PB.UploadQueue.prototype, {
 	
 	display_verbose: function() {
 		if (this._verbose) {
-			var imgCount = this._waitJobs.filter(function(e) { e instanceof PB.ImageBroker}).length;
+			var imgCount = this._waitJobs.filter(function(e) { e instanceof PB.PhotoBroker}).length;
 			var pageCount = this._waitJobs.filter(function(e) { e instanceof PB.BookPage}).length;
 			var status = "Uploading ";
-			if (imgCount) status += imgCount + " images, ";
+			if (imgCount) status += imgCount + " photos, ";
 			if (pageCount) status += pageCount + " pages";
 			// TODO switch to custom message div
 			PB.notice(status);

@@ -80,7 +80,7 @@ PB.Manipulators = {
 				console.log("mousedownDoc");
 				var page = docEvents.data.bookImage.parents(".page-enclosure").data("page");
 				PB.CommandQueue.push(
-					new PB.Commands.ModifyPageCSS(page, docEvents.newCss, docEvents.oldCss));
+					new PB.Commands.SetCSS(page, docEvents.newCss, docEvents.oldCss));
 				$("body").css("cursor", "auto");
 				$(document).unbind("mousemove", docEvents.mousemove);
 				$(document).unbind("mousedown", docEvents.mousedown);
@@ -289,7 +289,7 @@ PB.Manipulators.Text = {
 					var page = actualText.parents(".page-enclosure").data("page");
 					page.setDomModified();
 					// create a command, so we can undo
-					PB.CommandQueue.push(new PB.Commands.ReplaceInnerHtml(page, actualText, textEvents.oldHtml, newHtml, textEvents.oldIsDefault));
+					PB.CommandQueue.push(new PB.Commands.SetInnerHtml(page, actualText, textEvents.oldHtml, newHtml, textEvents.oldIsDefault));
 				}
 				delete textEvents.oldHtml;
 				return true;
@@ -338,7 +338,7 @@ PB.Manipulators.Text = {
 			mousedown: function(ev) {
 				var page = docEvents.data.bookText.parents(".page-enclosure").data("page");
 				PB.CommandQueue.push(
-					new PB.Commands.ModifyPageCSS(page, docEvents.newCss, docEvents.oldCss));
+					new PB.Commands.SetCSS(page, docEvents.newCss, docEvents.oldCss));
 				$("body").css("cursor", "auto");
 				bookText.data("hide-manipulators", false);		
 				$(document).unbind("mousemove", docEvents.mousemove);
@@ -389,7 +389,7 @@ PB.Manipulators.Text = {
 			page: $(bookText).parents(".page-enclosure").data("page"),
 			mouseup: function(ev) {
 				PB.CommandQueue.push(
-					new PB.Commands.ModifyPageCSS(docEvents.page, docEvents.newCss, docEvents.oldCss));
+					new PB.Commands.SetCSS(docEvents.page, docEvents.newCss, docEvents.oldCss));
 				$("body").css("cursor", "auto");
 				bookText.data("show-manipulators", false);
 				bookText.mouseleave();

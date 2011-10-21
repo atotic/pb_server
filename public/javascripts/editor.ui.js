@@ -90,7 +90,7 @@ PB.UI = {
 		});
 		// Load in the document data
 		PB.UI.Phototab.clear();
-		var images = book.images();
+		var images = book.photos();
 		for (var i=0; i < images.length; i++)
 			PB.UI.Phototab.imageAdded(images[i], i, true);
 		var pages = book.pages();
@@ -140,11 +140,6 @@ PB.UI.Phototab = {
 		// accept dragged images
 		$("#photos-tab").bind(imageTabDragEvents);
 
-		// click to select files
-/*		$("#photos-tab").click(function(e) {
-			$("#file-dialog").click();
-			e.stopPropagation();
-		});*/
 		$("#file-dialog").click(function(e) {
 			e.stopPropagation();
 		});
@@ -161,9 +156,14 @@ PB.UI.Phototab = {
 				PB.UI.Phototab.revealNthImage(ui.value + 1);
 			}
 		});
+		this.initButtons();
 		$(window).resize(this.restyleSlider);
 	},
-	
+	initButtons: function() {
+		$("#add-image-file-button").click(function() {
+			$("#file-dialog").click();
+		});
+	},
 	clear: function() {
 		$("#photo-list canvas").detach();
 		this.restyleSlider();
@@ -383,8 +383,17 @@ PB.UI.Pagetab = {
 		$("#pages-tab .intro").hide();
 		// add new page
 		var icon = this.getIconForPage(page);
-		// TODO append in right place
-		icon.appendTo('#page-list');
+		if (index == 0)
+			icon.prependTo('#page-list');
+		else {
+			var prevIcon = $("#page-list .page-icon:eq(" + (index - 1) + ")");
+			if (prevIcon.length > 0)
+				icon.insertAfter(prevIcon);
+			else {
+				debugger;
+				icon.appendTo('#page-list');
+			}
+		}
 		this.updatePageStyles(); 
 		// reflow when visible
 		$('#pages-tab').reflowVisible(function(immediate) {

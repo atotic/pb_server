@@ -42,7 +42,7 @@ PROBLEM: PAGE THUMBNAILS
 SOLUTION:
   each page template also has thumbnail template
   thumbnail template can reference elements of a real page through data-page attributes
-  
+
 
 UNSOLVEABLE PROBLEMS:
 generation of page thumbnails
