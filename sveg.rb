@@ -1,5 +1,7 @@
 require 'rubygems'
 require 'ruby-debug'
+#Debugger.settings[:autoeval] = true
+#Debugger.settings[:autolist] = true
 
 require 'sinatra/base'
 require 'erb'
@@ -19,15 +21,30 @@ require 'model/book'
 require 'model/user'
 require 'model/photo'
 require 'model/book_template'
+require 'model/command_stream'
 require 'jobs/book2pdf'
 
+# Quick and dirty shutdown
+# EventMachine takes about 10s to close my local streaming connection, too long for dev cycle
+module Sinatra
+	class Base
+		class << self
+			alias old_quit! quit!
+			def quit!(server, handler_name)
+				old_quit!(server, handler_name)
+				Kernel.abort("Sveg's quick exit")
+			end
+		end
+	end
+end
+
 module PB
-	
+
 # logging
 class ColorLogger < Logger
 	def initialize()
 		super(STDOUT)
-		self.datetime_format = ""
+		self.datetime_format = "%H:%M:%S"
 	end
 
 	def warn(msg)
@@ -57,7 +74,8 @@ class SvegLogger
 		now = Time.now
 
 		logger = @logger || env['rack.errors']
-#		return if env['sinatra.static_file']
+		return if env['sinatra.static_file']
+		return if /photo|assets/ =~ env["PATH_INFO"] 
 		STDERR.write "HTTP ERROR" if status >= 400
 		logger.write FORMAT % [
 			env["REMOTE_USER"] || "-",
@@ -190,7 +208,7 @@ class SessionMiddleware
 		request = Rack::Request.new(env)
 		load_session(env, request)
 		status, headers, body = @app.call(env)
-		save_session(env, headers, request)
+		save_session(env, headers, request) if status != -1
 		[status, headers, body]
 	end
 	
@@ -241,7 +259,7 @@ class SvegApp < Sinatra::Base
 			SvegApp.set :book2pdf_dir, File.join(File.dirname(settings.book2pdf_dir), "test", File.basename(settings.book2pdf_dir))
 		end
 	end
-	
+		
 	helpers do
 		include Rack::Utils
 		
@@ -281,7 +299,7 @@ class SvegApp < Sinatra::Base
 					retVal += "<script src='http://code.jquery.com/qunit/qunit-git.js'></script>\n"
 					retVal += "<link href='http://code.jquery.com/qunit/qunit-git.css' rel='stylesheet' type='text/css' />\n"
 				elsif arg.eql? "editor-base"
-					retVal += asset_link("editor.js", "editor.model.js", "editor.command.js");
+					retVal += asset_link("editor.js", "editor.model.js", "editor.command.js", "jquery.stream-1.2.js", "editor.streaming.js");
 				elsif arg.eql? "editor-all"
 					retVal += asset_link("editor-base", "editor.manipulators.js", "editor.ui.js", "editor.page-dialog.js");
 				else
@@ -591,14 +609,39 @@ class SvegApp < Sinatra::Base
 	end
 	
 	get '/templates' do
+		CmdStreamBroadcaster.send("templates", nil)
 		erb :template_list, {:layout => :'layout/plain'}
 	end
 
 	get '/templates/:id' do
 		content_type (request.xhr? ? :json : "text/plain")
+		CmdStreamBroadcaster.send("templates/id", nil)
 		BookTemplate.get(params[:id]).to_json
 	end
 	
+	get '/sinatra-style/cmd/stream/:id' do # async
+		response["Content-Type"] = "text/plain"
+		id = params['id'] || ("stream" +rand(36**5).to_s(36))
+		s = stream(:keep_open) { |out| CmdStreamBroadcaster.bind(out,id) }
+		env['async.close'].callback { CmdStreamBroadcaster.unbind(s) }
+		s
+	end
+	
+	AsyncResponse = [-1, {}, []].freeze
+	
+	get '/cmd/stream/:id' do # async
+		id = params['id'] || ("stream" +rand(36**5).to_s(36))
+		body = DeferrableBody.new
+		# send out headers right away
+		EM.next_tick { env['async.callback'].call [200, {'Content-Type' => 'text/plain'}, body] }
+		# bind to command broadcaster
+		EM.next_tick { CmdStreamBroadcaster.bind(body, id) }
+		# unbind on close
+		env['async.close'].callback { CmdStreamBroadcaster.unbind(body) }
+		# returning AsyncResponse dies in sinatra/base.rb:874 (can't modify frozen array)
+		throw :async
+	end
+
 # setup & run	
 	use SvegLogger
 	use SessionMiddleware

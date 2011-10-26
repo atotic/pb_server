@@ -14,7 +14,7 @@ Goals:
 - deploy
 - < 200MB pdf files?
 
-July 15ƒ
+July 15
 iPhoto style default images
 new cursors, and maybe consistent positioning of tools.
 image frame resize?
@@ -42,9 +42,38 @@ migrating albums: use nokogiri for html manipulation
 Add page|delete|change layout
 Book pane: scrolling, page padding
 
+Oct 26
+Understand the right way to do streaming
+- avoid Sinatra stream. It does not implement close callbacks, long-lived connections
+- how to send headers: thin example differs from Sinatra
+- how to send body
+- contact Thin guys with my patch
+- examine my middleware
+
+Examining Thin examples:
+- ran into trouble with Lint middleware. Rack has default middleware. Turned off with
+rackup -s thin -E none async_app.ru
+Thin examples timeout just like mine
+
+Oct 25
+CommandStreaming work, got 2 clients hooked up, working through bugs
+- our connection gets closed after 30 seconds
+- Thin by default closes connections after 30 secs of inactivity
+- I want to change connection timeout on all async connections to infinity
+- This cannot be done in sinatra (API does not allow access to connection)
+- It can only be done on thin: lib/thin/connection.rb:120
+    if @response.body.respond_to?(:callback) && @response.body.respond_to?(:errback)
+        self.comm_inactivity_timeout= 43200
+
+
+streaming to the clients using jquery libraries
+UploadImage broadcast
+
 Oct 21
 Sharing/Offline framework took a lot longer than expected. It is still incomplete,
 but it is feasible.
+The hatching of server streaming framework
+Sinatra 1.3 has streaming support built in.
 
 Oct 13
 	updating to Lion
