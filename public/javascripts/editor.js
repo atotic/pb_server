@@ -502,8 +502,9 @@ PB.ImageLoadQueue = new PB.DeferredQueue([
 		)
 ]);
 
-// Uploads pages/photos/books to the server
-
+// Uploads book model changes to the server (pages/photos/books)
+// Jobs are uploaded one at a time.
+// 
 PB.UploadQueue = function(name) {
 	this._name = name;
 	this._waitJobs = [];
@@ -568,7 +569,11 @@ $.extend(PB.UploadQueue.prototype, {
 			// put job back in front
 			THIS._waitJobs.unshift(item);
 		});
-
+		job.done(function( data, textStatus, jqXHR) {
+			var cmd_id = jqXHR.getResponseHeader("X-Sveg-LastCommandId");
+			if (cmd_id)
+				PB.book().last_server_cmd_id = cmd_id;
+		});
 		// Notify filters when job completes
 		job.always(function() {
 			PB.progress();
@@ -576,7 +581,7 @@ $.extend(PB.UploadQueue.prototype, {
 			THIS.process();
 		});
 	},
-	
+
 	hasJobs: function() {
 		return this._concurrentFilter.jobCount > 0 ||
 			this._waitJobs.length > 0;

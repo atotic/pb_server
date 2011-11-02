@@ -1,14 +1,19 @@
 "use strict"
-// Book class
 
+//
+// Book class
+//
 PB.Book = function(json) {
+	this._stream = null;	// server socket stream
 	if (json) {
-		this.id = json.id;
+		this._id = json.id;
 		this.title = json.title;
 		this._page_order = json.page_order;
 		this._photos = [];
 		this._pages = [];
 		this._template_id = json.template_id;
+		this._last_server_cmd_id = json.last_server_cmd_id; // last command in server socket stream
+		
 		PB.BookTemplate.get(this._template_id);	// Preload template
 		for (var i = 0; i < json.pages.length; i++)
 			this._pages.push(new PB.BookPage(json.pages[i]));
@@ -17,7 +22,7 @@ PB.Book = function(json) {
 			this._photos.push(new PB.PhotoBroker(json.photos[i]))
 	}
 	else {
-		this.id = 0;
+		this._id = 0;
 		this.title = "";
 		this._page_order = "";
 		this._photos = [];
@@ -34,7 +39,9 @@ PB.Book.get = function(book_id) {
 // Book represents the photo book
 // Look at constructor for the list of events
 PB.Book.prototype = {
-	
+	get id() {
+		return this._id;
+	},
 	photos: function() {
 		return this._photos;	// return PhotoBroker[]
 	},
@@ -43,11 +50,37 @@ PB.Book.prototype = {
 	},
 	page_order: function() { // [1,4,5]
 		return this._page_order;
-	},	
+	},
+	get stream() {
+		return this._stream;
+	},
+	get stream_id() {
+		if (this._stream)
+			return this._stream.id;
+		return 0;
+	},
+	set stream(s) {
+		if (this._stream != null)
+			throw "Book can have ony one command stream";
+		this._stream = s;
+	},
 	firstPage: function() {
 		if (this._pages.length > 0)
 			return this._pages[0];
 		return null;
+	},
+	get last_server_cmd_id() {
+		return this._last_server_cmd_id;
+	},
+	set last_server_cmd_id(id) {
+		if (typeof id == "string")
+			id = parseInt(id);
+		if (id < this.last_server_cmd_id) {
+			console.error("last_server_cmd_id too low");
+			debugger;
+		}
+		else 
+			this._last_server_cmd_id = id;
 	},
 	sortByPageOrder: function() {
 		var pageOrder = this.page_order();
@@ -61,19 +94,11 @@ PB.Book.prototype = {
 			return 0;
 		});
 	},
-	addLocalFileImage: function (file) {
-		// Check if it matches any already 
-		for (var i=0; i< this._photos.length; i++)
-			if (this._photos[i].name() == file.name) 
-			{
-				PB.notice(file.name + " is already in the book.");
-				return;
-			};
-
-		var image = new PB.PhotoBroker(file);
-		var pos = this._photos.push(image);
-		image.saveOnServer(this.id);
-		this.send('imageAdded', image, pos);
+	addPhoto: function(photo) {
+		if (this.getPhotoById(photo.id))
+			return;	// Photo already exists
+		var pos = this._photos.push(photo);
+		this.send('imageAdded', photo, pos);
 	},
 	getPageById: function(page_id) {
 		debugger;	// should not be used
@@ -83,14 +108,13 @@ PB.Book.prototype = {
 		console.warn("no such page id " + page_id);
 	},
 	
-	getImageById: function(image_id) {
+	getPhotoById: function(photo_id) {
 		for (var i=0; i< this._photos.length; i++)
-			if (this._photos[i].id() == image_id)
+			if (this._photos[i].id == photo_id)
 				return this._photos[i];
-		console.warn("no such image id " + image_id);
 		return undefined;
 	},
-	getImageByFileUrl: function(url) {
+	getPhotoByFileUrl: function(url) {
 		if (url == null)
 			return null;
 		for (var i=0; i< this._photos.length; i++)
@@ -220,6 +244,10 @@ PB.PhotoBroker.prototype = {
 		this._display_name = json.display_name;
 	},
 	
+	get id() {
+		return this._id;
+	},
+
 	destroy: function() {
 		if (this._fileUrl) {
 			if ('URL' in window)
@@ -238,11 +266,7 @@ PB.PhotoBroker.prototype = {
 		else
 			return "no title";
 	},
-	
-	id: function() {
-		return this._id;
-	},
-	
+		
 	getFile: function() {
 		return _file;
 	},
@@ -552,7 +576,7 @@ PB.BookPage.prototype = {
 		$(dom).find("img").each(function(index, el) {
 			// TODO we might not know server location until file is saved.
 			var src = el.getAttribute("src");
-			var serverSrc = PB.book().getImageByFileUrl(src);
+			var serverSrc = PB.book().getPhotoByFileUrl(src);
 			if (serverSrc != null)
 				el.setAttribute("src", serverSrc.getServerUrl('display'));
 		});

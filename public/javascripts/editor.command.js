@@ -196,7 +196,7 @@ PB.Commands.DropImage.prototype = {
 		delete this.oldSrc;
 	},
 	toString: function() {
-		return "dropImage:" + this.photoBroker.id() + "=>" + this.bookImageId;
+		return "dropImage:" + this.photoBroker.id + "=>" + this.bookImageId;
 	}
 }
 /* 

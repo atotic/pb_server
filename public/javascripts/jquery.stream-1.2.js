@@ -358,14 +358,19 @@
 						
 						if (stream.readyState < 3) {
 							// Pseudo MessageEvent
-							trigger(stream, "message", {
-								// Converts the data type
-								data: stream.options.converters[stream.options.dataType](message.data), 
-								origin: "", 
-								lastEventId: "", 
-								source: null, 
-								ports: null
-							});
+							try {
+								trigger(stream, "message", {
+									// Converts the data type
+									data: stream.options.converters[stream.options.dataType](message.data), 
+									origin: "", 
+									lastEventId: "", 
+									source: null, 
+									ports: null
+								});
+							}
+							catch(e) {
+								console.error("jquery-stream: Error parsing message data" + message.data);
+							}
 						}
 						
 						// Resets the data

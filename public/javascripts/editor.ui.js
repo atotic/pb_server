@@ -33,14 +33,14 @@ $.extend(PB, {
 	
 	// Call when files are dropped or added
 	handleFiles: function (files) {
-		for (var i=0; i<files.length; i++) {
-			this._book.addLocalFileImage(files.item(i));
-		}
+		for (var i=0; i<files.length; i++)
+			PB.Model.Util.addLocalPhotoToBook(this._book, files.item(i));
 	},
 
 	setBookFromJson: function(json) {
 		try {
 			this._book=  new PB.Book(json);
+			PB.ServerStream.connect(this._book);
 		}
 		catch(e) {
 			console.error("Unexpected error creating book from JSON" + e);

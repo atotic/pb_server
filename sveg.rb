@@ -299,7 +299,8 @@ class SvegApp < Sinatra::Base
 					retVal += "<script src='http://code.jquery.com/qunit/qunit-git.js'></script>\n"
 					retVal += "<link href='http://code.jquery.com/qunit/qunit-git.css' rel='stylesheet' type='text/css' />\n"
 				elsif arg.eql? "editor-base"
-					retVal += asset_link("editor.js", "editor.model.js", "editor.command.js", "jquery.stream-1.2.js", "editor.streaming.js");
+					retVal += asset_link("editor.js", "editor.model.js", "editor.model.util.js", "editor.command.js", \
+					"jquery.stream-1.2.js", "editor.streaming.js", "editor.server.js");
 				elsif arg.eql? "editor-all"
 					retVal += asset_link("editor-base", "editor.manipulators.js", "editor.ui.js", "editor.page-dialog.js");
 				else
@@ -350,6 +351,23 @@ class SvegApp < Sinatra::Base
 			end
 		end
 
+		def get_last_command_info(request)
+			stream_id = book_id = last_command_id = nil
+			stream_header = request.env['HTTP_X_SVEGSTREAM']
+			last_command_id = request.env['HTTP_X_SVEG_LASTCOMMANDID']
+			last_command_id = Integer(last_command_id) if last_command_id
+			if stream_header
+				stream_id, book_id = stream_header.split(";")
+				book_id = Integer(book_id) if book_id
+			end
+			[stream_id, book_id, last_command_id]
+		end
+		
+		def assert_last_command_up_to_date(request)
+			stream_id, book_id, last_command_id = get_last_command_info(request)
+			halt 412, {'Content-Type' => 'text/plain'}, "You must supply last command" if last_command_id.nil?
+			halt 412, {'Content-Type' => 'text/plain'}, "Your last command is not up to date" if last_command_id != ServerCommand.last_command_id(book_id)
+		end
 	end # helpers
 
 	after do
@@ -560,11 +578,15 @@ class SvegApp < Sinatra::Base
 	# if photo already exists, it discards current data, and returns original
 	post '/photos' do
 		user_must_be_logged_in
+		assert_last_command_up_to_date(request)
+		book_id = params.delete('book_id')	
+		book = Book.get(book_id)
+		user_must_own(book)		
+
 		begin
 			destroy_me = nil	# destroy must be outside the transaction
 			photo_file = params.delete('photo_file')
-			book_id = params.delete('book_id')
-		
+			
 			photo = Photo.new(params);
 			photo.user_id = current_user.id
 			Photo.transaction do |t|
@@ -586,8 +608,14 @@ class SvegApp < Sinatra::Base
 				end
 			end # transaction
 			destroy_me.destroy if destroy_me
+			
+			# broadcast cmd
+			stream_id, tmp, last_command_id = get_last_command_info(request)
+			new_last_id = ServerCommand.createAddPhotoCmd(book.id, photo, stream_id)
+			headers "X-Sveg-LastCommandId" => String(new_last_id)
+			# response
 			content_type :json
-			photo.to_json				
+			body photo.to_json
 		rescue => ex
 			[500, "Unexpected server error" + ex.message]
 		end
@@ -609,35 +637,26 @@ class SvegApp < Sinatra::Base
 	end
 	
 	get '/templates' do
-		CmdStreamBroadcaster.send("templates", nil)
 		erb :template_list, {:layout => :'layout/plain'}
 	end
 
 	get '/templates/:id' do
 		content_type (request.xhr? ? :json : "text/plain")
-		CmdStreamBroadcaster.send("templates/id", nil)
 		BookTemplate.get(params[:id]).to_json
 	end
+		
+	# AsyncResponse = [-1, {}, []].freeze
 	
-	get '/sinatra-style/cmd/stream/:id' do # async
-		response["Content-Type"] = "text/plain"
-		id = params['id'] || ("stream" +rand(36**5).to_s(36))
-		s = stream(:keep_open) { |out| CmdStreamBroadcaster.bind(out,id) }
-		env['async.close'].callback { CmdStreamBroadcaster.unbind(s) }
-		s
-	end
-	
-	AsyncResponse = [-1, {}, []].freeze
-	
-	get '/cmd/stream/:id' do # async
-		id = params['id'] || ("stream" +rand(36**5).to_s(36))
+	get '/cmd/stream/:book_id' do # async
+		book_id = params[:book_id];
+		last_cmd_id = params['last_cmd_id']
 		body = DeferrableBody.new
 		# send out headers right away
 		EM.next_tick { env['async.callback'].call [200, {'Content-Type' => 'text/plain'}, body] }
 		# bind to command broadcaster
-		EM.next_tick { CmdStreamBroadcaster.bind(body, id) }
+		EM.next_tick { CmdStreamBroadcaster.bind(body, book_id, last_cmd_id) }
 		# unbind on close
-		env['async.close'].callback { CmdStreamBroadcaster.unbind(body) }
+		env['async.close'].callback { CmdStreamBroadcaster.unbind(book_id, body) }
 		# returning AsyncResponse dies in sinatra/base.rb:874 (can't modify frozen array)
 		throw :async
 	end

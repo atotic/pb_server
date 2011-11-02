@@ -33,6 +33,8 @@ Patterns resource: http://subtlepatterns.com/
 Pure CSS drawing library: https://github.com/dnewcome/Donatello
 Excellent CSS effects: bounce, rotate, etc. If I ever need visual candy http://blackberry.github.com/Alice/demos.html
 LoremPixel: placeholder images: http://lorempixel.com/
+3D CSS transforms http://www.webkit.org/blog-files/3d-transforms/poster-circle.html
+CSS Patterns, might use in book backgrounds: http://leaverou.me/css3patterns/#
 
 JS
 HTML5 flipping pages animation: http://studio.html5rocks.com/#Flip
