@@ -454,6 +454,7 @@
 						if (handleSend("close", options, stream) !== false) {
 							// Notifies the server
 							$.ajax(options);
+							debugger;
 						}
 
 						// Prevents reconnecting

@@ -39,8 +39,9 @@ $.extend(PB, {
 
 	setBookFromJson: function(json) {
 		try {
-			this._book=  new PB.Book(json);
-			PB.ServerStream.connect(this._book);
+			this._book = new PB.Book(json);
+	//		this._book.connectServerStream(false);
+			this._book.bind("serverStreamUpToDate", function(book) {PB.QueueFilter.ServerStreamUpdate.serverStreamUpToDate(book)})
 		}
 		catch(e) {
 			console.error("Unexpected error creating book from JSON" + e);

@@ -53,6 +53,7 @@ await javascript primitive, helps with async events https://github.com/maxtaco/t
 javascript serializations: http://blog.maxaller.name/2011/01/javascript-serialization/
 JS streaming http://code.google.com/p/jquery-stream/
 Canvas graphics effects in js: http://evanw.github.com/glfx.js/demo/
+Taking apps offline walkthrogh by Sencha: http://www.sencha.com/learn/taking-sencha-touch-apps-offline
 
 RUBY
 Ruby toolbox: what gem should I use for.....  http://ruby-toolbox.com/
@@ -90,6 +91,9 @@ Sinatra assets https://github.com/rstacruz/sinatra-assetpack
 SLIPSUM: http://slipsum.com/
 BrowserID authentication: https://github.com/mozilla/browserid/wiki/How-to-Use-BrowserID-on-Your-Site
 Stripe payments system: cheap way to accept credit cards
+Graphic designers: http://www.artisantalent.com/find-talent/print-talent/graphic-designers/
+OAuth2: http://googlecode.blogspot.com/2011/11/oauth-20-playground-open-to-developers.html
+
 
 TOUCH INTERFACES
 Sweet & short take on ipad html development http://mir.aculo.us/2010/06/04/making-an-ipad-html5-app-making-it-really-fast/

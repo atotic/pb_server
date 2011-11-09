@@ -42,6 +42,13 @@ migrating albums: use nokogiri for html manipulation
 Add page|delete|change layout
 Book pane: scrolling, page padding
 
+Nov 9
+412 failure handling works
+cmd_stream restarts
+
+Nov 2
+First successful streaming of AddLocalImage. Lots of little details, it was a struggle all the way
+
 Oct 26
 Understand the right way to do streaming
 - avoid Sinatra stream. It does not implement close callbacks, long-lived connections

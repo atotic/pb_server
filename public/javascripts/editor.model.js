@@ -28,7 +28,7 @@ PB.Book = function(json) {
 		this._photos = [];
 		this._pages = [];
 	}
-	$.extend(this, new PB.EventBroadcaster("imageAdded imageRemoved pageAdded"));
+	$.extend(this, new PB.EventBroadcaster("imageAdded imageRemoved pageAdded serverStreamUpToDate"));
 };
 
 // Returns ajax XHR that loads the book
@@ -60,9 +60,16 @@ PB.Book.prototype = {
 		return 0;
 	},
 	set stream(s) {
-		if (this._stream != null)
+		if (this._stream != null && s != null)
 			throw "Book can have ony one command stream";
 		this._stream = s;
+	},
+	connectServerStream: function(forceReconnect) {
+		if (this._stream && !forceReconnect)
+			return;
+		if (this._stream)
+			this._stream.close();
+		this.stream = PB.ServerStream.connect(this);
 	},
 	firstPage: function() {
 		if (this._pages.length > 0)
@@ -70,9 +77,11 @@ PB.Book.prototype = {
 		return null;
 	},
 	get last_server_cmd_id() {
+		console.log("Returing last id ", this._last_server_cmd_id);
 		return this._last_server_cmd_id;
 	},
 	set last_server_cmd_id(id) {
+		console.log("Setting last id" , id);
 		if (typeof id == "string")
 			id = parseInt(id);
 		if (id < this.last_server_cmd_id) {

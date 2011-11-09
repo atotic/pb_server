@@ -10,6 +10,9 @@
 	- each client can modify server document only if it is up-to-date with server commands
 	- if client is not up-to-date, it must process all server commands before proceeding
 	- client keeps track of last_cmd_id, which is the last command executed on the book
+	
+	
+	
 */ 
 PB.ServerStream = {
 
@@ -27,26 +30,33 @@ PB.ServerStream = {
 	},
 
 	url: function(book) {
-		return "http://" + window.location.host + "/cmd/stream/" + book.id + "?last_cmd_id=" + (book ? book.last_server_cmd_id : 0);
+		return "/cmd/stream/" + book.id + "?last_cmd_id=" + (book ? book.last_server_cmd_id : 0);
 	},
 	
 	connect: function(book) {
 		var stream = $.stream(this.url(book), {
-			close: function(ev) {
-				PB.warn("server connection closed");
-				book.stream = null;
-			},
 			context: this,
 			dataType: 'json',
-			error: function(ev) {
-				console.log("ServerStream error , possible closure");
+			type: 'http',
+			reconnect: false,	// we'll handle reconnect
+			handleSend: function() { // no talking back to the server 
+				return false; 
+			}, 
+			// Lifecycle callbacks
+			open: function(event, stream) {
 			},
 			message: function(ev) {
 				PB.ServerCmd.create(ev.data);
 			},
-			reconnect: false	// we'll handle reconnect
+			error: function(ev) {
+				console.log("ServerStream error , possible closure");
+			},
+			close: function(ev) {
+				PB.warn("server connection closed");
+				book.stream = null;
+			}
 		});
-		book.stream = stream;
+		return stream;
 	}
 }
 
@@ -62,17 +72,20 @@ PB.ServerCmd = {
 			return;
 		}
 		else
-			console.log("Processing server cmd" + json);
+			console.log("Processing server cmd " + json.type);
 		var cmd;
 		switch(json.type) {
 			case "AddPhoto":
-				cmd = new PB.ServerCmd.AddImage(json); break;
+				cmd = new PB.ServerCmd.AddPhoto(json); break;
+			case "StreamUpToDate":
+				cmd = new PB.ServerCmd.StreamUpToDate(json); break;
 			default:
 				throw "Unknown server command";
 		};
 		try {
 			cmd.doIt();
-			PB.book().last_server_cmd_id = cmd.cmd_id;
+			if (cmd.cmd_id)
+				PB.book().last_server_cmd_id = cmd.cmd_id;
 		}
 		catch(e) {
 			console.error("Error ServerCmd: " + e);
@@ -81,11 +94,12 @@ PB.ServerCmd = {
 	}
 }
 
-PB.ServerCmd.AddImage = function(json) {
+// AddPhoto adds photo to the document
+PB.ServerCmd.AddPhoto = function(json) {
 	this.initServerCmd(json);
 }
 
-PB.ServerCmd.AddImage.prototype = {
+PB.ServerCmd.AddPhoto.prototype = {
 	initServerCmd: function(json) {
 		this.cmd_id = json.id;
 		this.book_id = json.book_id;
@@ -101,3 +115,18 @@ PB.ServerCmd.AddImage.prototype = {
 			book.addPhoto(photo);
 	}
 };
+
+// StreamUpToDate broadcasts serverStreamUpToDate event
+PB.ServerCmd.StreamUpToDate = function(json) {
+	this.book_id = json.book_id;
+}
+
+PB.ServerCmd.StreamUpToDate.prototype = {
+	doIt: function() {
+		var book = PB.book();
+		if (book.id != this.book_id)
+			throw "Book id mismatch in ServerCmd.doIt";
+		book.send("serverStreamUpToDate", book);
+	}
+	
+}

@@ -43,6 +43,7 @@ SOLUTION:
   each page template also has thumbnail template
   thumbnail template can reference elements of a real page through data-page attributes
 
+PROBLEM: SERVER STREAMING
 
 UNSOLVEABLE PROBLEMS:
 generation of page thumbnails

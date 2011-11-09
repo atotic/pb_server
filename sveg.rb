@@ -75,7 +75,7 @@ class SvegLogger
 
 		logger = @logger || env['rack.errors']
 		return if env['sinatra.static_file']
-		return if /photo|assets/ =~ env["PATH_INFO"] 
+		return if /assets/ =~ env["PATH_INFO"] 
 		STDERR.write "HTTP ERROR" if status >= 400
 		logger.write FORMAT % [
 			env["REMOTE_USER"] || "-",
@@ -300,7 +300,7 @@ class SvegApp < Sinatra::Base
 					retVal += "<link href='http://code.jquery.com/qunit/qunit-git.css' rel='stylesheet' type='text/css' />\n"
 				elsif arg.eql? "editor-base"
 					retVal += asset_link("editor.js", "editor.model.js", "editor.model.util.js", "editor.command.js", \
-					"jquery.stream-1.2.js", "editor.streaming.js", "editor.server.js");
+					"jquery.stream-1.2.js", "editor.streaming.js");
 				elsif arg.eql? "editor-all"
 					retVal += asset_link("editor-base", "editor.manipulators.js", "editor.ui.js", "editor.page-dialog.js");
 				else
@@ -355,6 +355,8 @@ class SvegApp < Sinatra::Base
 			stream_id = book_id = last_command_id = nil
 			stream_header = request.env['HTTP_X_SVEGSTREAM']
 			last_command_id = request.env['HTTP_X_SVEG_LASTCOMMANDID']
+#			LOGGER.info("request " + request.env.object_id.to_s + " " + last_command_id.to_s)
+			debugger if (last_command_id.nil? || last_command_id == "undefined")
 			last_command_id = Integer(last_command_id) if last_command_id
 			if stream_header
 				stream_id, book_id = stream_header.split(";")

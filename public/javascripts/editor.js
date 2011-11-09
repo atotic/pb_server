@@ -263,147 +263,163 @@ $.extend(PB, {
 	}
 });
 
-// DeferredFilter is part of DeferredQueue framework
+// QueueFilter is part of DeferredQueue framework
 // filters are notified when job starts/completes
-// see prototype for callback function signatures
-PB.DeferredFilter = function(callbacks) {
-	this.ready = callbacks.ready;
-	this.jobStarted = callbacks.jobStarted;
-	this.jobCompleted = callbacks.jobCompleted;
-};
+// each filter has to implement ready/jobStarted/jobCompleted
+PB.QueueFilter = {};
 
-PB.DeferredFilter.prototype = {
-	ready: function() {return true;},	// true means job allowed
-	jobStarted: function(deferredJob) {},
-	jobCompleted: function(deferredJob) {}
+// Limits the number of concurrent requests
+PB.QueueFilter.ConcurrentFilter = function(maxConcurrent) {
+	this.jobCount = 0;
+	this.jobLimit = maxConcurrent;
 }
 
-// Concurrent filter limits number of simultaneous operations
-PB.DeferredFilter.getConcurrentFilter = function(maxConcurrent) {
-	var filter = new PB.DeferredFilter({
-		ready: function( ) {
-			return this.jobCount < this.jobLimit;
-		},
-		jobStarted: function(job) {
-			this.jobCount += 1;
-		},
-		jobCompleted: function(job) {
-			this.jobCount -= 1;
-		}
-	});	
-	filter.jobCount = 0;
-	filter.jobLimit = maxConcurrent;
-	return filter;
+PB.QueueFilter.ConcurrentFilter.prototype = {
+	ready: function( ) {
+		return this.jobCount < this.jobLimit;
+	},
+	jobStarted: function(job) {
+		this.jobCount += 1;
+	},
+	jobCompleted: function(job) {
+		this.jobCount -= 1;
+	}
 }
 
-// MemorySize filter limits memory used during ttl. Used for loading photos
-PB.DeferredFilter.getMemorySizeFilter = function(maxSize, ttl) { // bytes, milis
-	var filter = new PB.DeferredFilter({
-		ready: function() {
-			// Remove expired elements
-			var tooOld = Date.now() - this.ttl;
-			this.jobTotals = this.jobTotals.filter(function(el) {
-				return el.endTime > tooOld;
-			});
-			// Calculate the total
-			var total = this.jobTotals.reduce(function(prev, curr, index, arry) {
-				return prev + curr.size;
-			}, 0);
-			return total < this.maxSize;
-		},
-		jobStarted: function(job) {
-		},
-		jobCompleted: function(job) {
-			if ('memory_size' in job)
-				filter.jobTotals.push({ endTime: Date.now(), size: job.memory_size });
-			else
-				console.warn("job without memory size");
-		}
-	});
-	filter.jobTotals = []; // array of { completed: Time(), size: int }]
-	filter.maxSize = maxSize;
-	filter.ttl = ttl;
-	return filter;
+// Limits the amount of memory taken up by images
+PB.QueueFilter.MemorySizeFilter = function(maxSize, ttl) {
+	this.jobTotals = []; // array of { completed: Time(), size: int }]
+	this.maxSize = maxSize;
+	this.ttl = ttl;
 }
 
-// NetworkError filter 
-PB.DeferredFilter.getNetworkErrorFilter = function() {
-	if (this.networkErrorFilter)	// singleton
-		return this.networkErrorFilter;
-		
-	var filter = new PB.DeferredFilter({
-		ready: function(queue) {
-			return this._netDown == false || this._secondsLeft == 0;
-		},
-		jobStarted: function(job) {			
-		},
-		jobCompleted: function(job) {
-			this.setNetworkError(job.isRejected());
-		}
-	});
+PB.QueueFilter.MemorySizeFilter.prototype = {
+	ready: function() {
+		// Remove expired elements
+		var tooOld = Date.now() - this.ttl;
+		this.jobTotals = this.jobTotals.filter(function(el) {
+			return el.endTime > tooOld;
+		});
+		// Calculate the total
+		var total = this.jobTotals.reduce(function(prev, curr, index, arry) {
+			return prev + curr.size;
+		}, 0);
+		return total < this.maxSize;
+	},
+	jobStarted: function(job) {
+	},
+	jobCompleted: function(job) {
+		if ('memory_size' in job)
+			this.jobTotals.push({ endTime: Date.now(), size: job.memory_size });
+		else
+			console.warn("job without memory size");
+	}
+}
+
+// NetworkError filter copes with network errors
+// On error, Queue strategy is to retry command immediately
+// NetworkError filter delays retries with increasing delay
+PB.QueueFilter.NetworkErrorFilter = {
+	_netDown: false,	// Network is down?
+	_timeoutId: false, // window.setTimeout id
+	_initialDelay: 5,
+
+	ready: function(queue) {
+		return this._netDown == false || this._secondsLeft == 0;
+	},
+	jobStarted: function(job) {
+	},
+	jobCompleted: function(job) {
+		if (!job.isRejected())
+			this.setNetworkError(0);
+	},
 	
-	var networkErrorPrototype = {
-		_netDown: false,	// Network is down?
-		_timeoutId: false, // window.setTimeout id
-		_initialDelay: 5,
-	
-		// xhrFailure is called every time xhr fails
-		xhrFailure: function(jqXHR, status, ex) {
-			// Detect if it is network down type error, 
-			debugger;
-		},
-		setNetworkError : function(err) {
-			if (err)
+	// xhrFailure is called every time xhr fails
+	xhrFail: function(jqXHR, status, ex) {
+		console.log("Network error: " + jqXHR.status);
+		switch(jqXHR.status) {
+			case 0:	// Network is down 
+				this.setNetworkError(-1); break;
+			case 412:
+				break;
+			default:
+				this.setNetworkError(jqXHR.status);
+				debugger;
+				break;
+		};
+	},
+	setNetworkError : function(err) {
+		if (err)
+		{
+			if(!this._netDown) 
 			{
-				if(!this._netDown) 
-				{
-					this._netDown = true;
-					this._initialDelay = 5;	// seconds
+				this._netDown = true;
+				this._initialDelay = 1;	// seconds
+				this._secondsLeft = this._initialDelay;
+				this.setTimeoutIf();
+			}
+			else if (this._secondsLeft == 0) {
+				// timer already fired, double time, and retry again
+					this._initialDelay = Math.min(this._initialDelay * 2, 60);
 					this._secondsLeft = this._initialDelay;
 					this.setTimeoutIf();
-				}
-				else if (this._secondsLeft == 0) {
-					// timer already fired, double time, and retry again
-						this._initialDelay = Math.min(this._initialDelay * 2, 60);
-						this._secondsLeft = this._initialDelay;
-						this.setTimeoutIf();
-				}
 			}
-			else
-				if (this._netDown)
-				{
-					this._netDown = false;
-					if (this._timeoutId)
-						window.clearTimeout(this._timeoutId);
-					this._timeoutId = false;
-					$(PB.getMessageBar("network_retry")).remove();
-				}
-		},
-		setTimeoutIf: function() {
-			if (this._timeoutId == false && this._netDown) {
-				var THIS = this;
-				this._timeoutId = window.setTimeout(function() { THIS.windowTimer()} , 1000);
+		}
+		else
+			if (this._netDown)
+			{
+				this._netDown = false;
+				if (this._timeoutId)
+					window.clearTimeout(this._timeoutId);
+				this._timeoutId = false;
+				$(PB.getMessageBar("network_retry")).remove();
 			}
-		},
-		windowTimer: function() {
-			this._secondsLeft = Math.max(0, this._secondsLeft - 1);
-			this.displayDelayMessage();
-			this._timeoutId = false;
+	},
+	setTimeoutIf: function() {
+		if (this._timeoutId == false && this._netDown) {
+			var THIS = this;
+			this._timeoutId = window.setTimeout(function() { THIS.windowTimer()} , 1000);
+		}
+	},
+	windowTimer: function() {
+		this._secondsLeft = Math.max(0, this._secondsLeft - 1);
+		this.displayDelayMessage();
+		this._timeoutId = false;
+		this.setTimeoutIf();
+		if (this._netDown && this._delayTimer > 0)
 			this.setTimeoutIf();
-			if (this._netDown && this._delayTimer > 0)
-				this.setTimeoutIf();
-		},
-		displayDelayMessage: function() {
-			var bar = PB.getMessageBar("network_retry");
-			$(bar).show();
-			bar.innerHTML = "A network error has occured. Retry in " + this._secondsLeft;
+	},
+	displayDelayMessage: function() {
+		var bar = PB.getMessageBar("network_retry");
+		$(bar).show();
+		bar.innerHTML = "A network error has occured. Retry in " + this._secondsLeft;
+	}
+}
+
+// ServerStreamUpdate processes "ServerStream not up to date" errors
+PB.QueueFilter.ServerStreamUpdate = {
+	_waitingForUpdate: false,
+	
+	ready: function(queue) {
+		return ! this._waitingForUpdate;
+	},
+	jobStarted: function(job) {
+	},
+	jobCompleted: function(job) {
+	},
+	serverStreamUpToDate: function(book) {
+		console.log("serverStreamUpToDate");
+		this._waitingForUpdate = false;
+	},
+	// xhrFail is called every time xhr fails
+	xhrFail: function(jqXHR, status, ex) {
+		if (jqXHR.status == 412) {
+			console.log("412, reconnecting");
+			this._waitingForUpdate = true;
+			PB.book().connectServerStream(true);	// Force stream reconnect
 		}
 	}
-	
-	$.extend(filter, networkErrorPrototype);
-	this.networkErrorFilter = filter;
-	return filter;
-}
+};
 
 // DeferredJob is part of DeferredQueue framework
 // just like deferred, except it does not execute until start is called
@@ -496,24 +512,24 @@ PB.DeferredQueue.prototype = {
 // 	 TestPix loads 100 photos in 64s
 // gfx/surface/image cache can still grow to 1.X
 PB.ImageLoadQueue = new PB.DeferredQueue([
-	PB.DeferredFilter.getConcurrentFilter(2),
-	PB.DeferredFilter.getMemorySizeFilter(600 * 1048576, // 600MB
+	new PB.QueueFilter.ConcurrentFilter(2),
+	new PB.QueueFilter.MemorySizeFilter(600 * 1048576, // 600MB
 		10 * 1000 // 10seconds
 		)
 ]);
 
 // Uploads book model changes to the server (pages/photos/books)
 // Jobs are uploaded one at a time.
+// UploadQueue used to inherit from deferred queue, but became its own class as design diverged.
 // 
 PB.UploadQueue = function(name) {
 	this._name = name;
 	this._waitJobs = [];
 	this._timeout = null;
 	this._verbose = false;
-	this._networkErrorFilter = PB.DeferredFilter.getNetworkErrorFilter();
-	this._concurrentFilter = PB.DeferredFilter.getConcurrentFilter(1);
+	this._concurrentFilter = new PB.QueueFilter.ConcurrentFilter(1);
 	this._filters = [ 
-		this._networkErrorFilter,this._concurrentFilter ];
+		PB.QueueFilter.NetworkErrorFilter, this._concurrentFilter, PB.QueueFilter.ServerStreamUpdate ];
 }
 
 $.extend(PB.UploadQueue.prototype, {
@@ -565,7 +581,7 @@ $.extend(PB.UploadQueue.prototype, {
 		// Retry item if job fails with network error
 		job.fail( function(jqXHR, status, ex) {
 			// notify the network error
-			THIS._networkErrorFilter.xhrFailure(jqXHR, status, ex);
+			THIS._filters.forEach( function(filter) { if (filter.xhrFail) filter.xhrFail(jqXHR, status, ex) });
 			// put job back in front
 			THIS._waitJobs.unshift(item);
 		});
