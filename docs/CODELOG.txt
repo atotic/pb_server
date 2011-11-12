@@ -42,6 +42,9 @@ migrating albums: use nokogiri for html manipulation
 Add page|delete|change layout
 Book pane: scrolling, page padding
 
+Nov 10
+Make PUT /pages work with server streams!
+
 Nov 9
 412 failure handling works
 cmd_stream restarts

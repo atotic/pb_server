@@ -231,6 +231,9 @@ $.extend(PB.EventBroadcaster.prototype, {
 			case 3:
 				f.call(null, arguments[1], arguments[2]); 
 				break;
+			case 4:
+				f.call(null, arguments[1], arguments[2], arguments[3]); 
+				break;
 			default:
 				throw("Cannot send this many arguments: " +(arguments.length - 1));
 			}
@@ -571,10 +574,13 @@ $.extend(PB.UploadQueue.prototype, {
 		var isImage = item instanceof PB.PhotoBroker;
 		var isPage = item instanceof PB.BookPage;
 		var job  = item.createUploadDeferred();
+		if (!job) {  // job no longer needed
+			return;
+		}
 		if (isImage)
 			PB.progressSetup({message: "-> " + item.name(), show:true});
 		else
-			PB.progressSetup({message: "Saving page " + item.id});
+			PB.progressSetup({message: "Saving page " + (item.id || "new")});
 		// Notify filters that job is starting
 		this._filters.forEach(function(filter) { filter.jobStarted(job); });
 		this.display_verbose();
@@ -626,7 +632,7 @@ PB.uploadQueue = new PB.UploadQueue("Pages and Images");
 // Save modified pages every minute.
 window.setInterval(function() {
 	PB.BookPage.saveAll();
-}, 60*1000);
+}, 1*1000);	// TODO change to once a minute
 /*
  * Give user a chance to save changes before navigating away
  */

@@ -340,3 +340,117 @@ PB.Commands.SetInnerHtml.prototype = {
 	}
 }
 
+PB.Commands.AddPages = function(book, selectedPages, selectedTemplates, pageCount) {
+	this.book = book;
+	this.selectedPages = selectedPages;
+	this.selectedTemplates = selectedTemplates;
+	this.pageCount = pageCount;
+	this.addedPages = [];
+}
+
+PB.Commands.AddPages.prototype = {
+	canUndo: function() {
+		return this.pageCount > 0;
+	},
+	canRedo: function() {
+		return 'newPages' in this && this.newPages.length > 0;
+	},
+	getInsertionPoint: function() {
+		var pages = this.book.pages;
+		// Where do we insert the pages?
+		var insertAfter = -1;
+		if (this.selectedPages.length == 0) {	// no selection, at the end
+			insertAfter = pages.length - 1;
+		}
+		else { // there is selection, insert after last page in selection, if possible
+			insertAfter = pages.indexOf(this.selectedPages[this.selectedPages.length -1]);
+		}
+		if (pages[insertAfter].position != 'middle') {
+			if (insertAfter <= 2) // before cover/flap/inner
+				while (pages[insertAfter].position != 'middle' && insertAfter < pages.length)
+					insertAfter++;
+			else
+				while (pages[insertAfter].position != 'middle' && pos > 0)
+					insertAfter--;
+		}
+		if (pages[insertAfter].position != 'middle') // handle degenerate case
+			insertAfter = Math.floor(pages.length / 2);
+		return insertAfter;
+	},
+	getTemplates: function() {
+		if ('templates' in this)
+			return this.templates;
+		this.templates = [];
+		
+		var book_template = this.book.template;
+		for (var i=0; i<this.pageCount; i++) {
+			var template = i < this.selectedTemplates.length ? this.selectedTemplates[i] 
+						: this.selectedTemplates[Math.floor(Math.random() * this.selectedTemplates.length)];
+			if (template == "random")
+				template = book_template.getRandomPage('middle');
+			this.templates.push(template);
+		}
+		return this.templates;
+	},
+	// creates pages from templates
+	// for undo/redo, we want to make sure we generate exactly the same pages
+	// so we keep a copy, and return clones
+	makePages: function(templates) {
+		if ('newPages' in this) {
+			var clone = [];
+			this.newPages.forEach(function(page) { clone.push(Object.create(page)); });
+			return clone;
+		}
+		this.newPages = [];
+		for (var i=0; i< this.pageCount; i++)
+			this.newPages.push(templates[i].makePage());
+		return this.makePages(templates);	// call this again, and it will return clones
+	},
+	getExtraPage: function() {
+		if ('extraPage' in this)
+		{
+			if (this.extraPage != null)
+				return Object.create(this.extraPage);
+			else
+				return null;
+		}
+		if (this.book.hasOddPages()) {
+			this.extraPage =  this.book.template.getRandomPage('middle').makePage();
+			var pages = this.book.pages;
+			var i = pages.length -1;
+			while (i > 0 && pages[i].position != 'middle')
+				i--;
+			if (i != 0)
+				this.extraInsertionPoint = i;
+			else
+				this.extraInsertionPoint = Math.floor(pages.length / 2);
+		}
+		else
+			this.extraPage = null;
+		return this.getExtraPage();
+	},
+	getExtraInsertionPoint: function() {
+		return this.extraInsertionPoint;
+	},
+	redo: function() {
+		var insertAfter = this.getInsertionPoint();
+		var templates = this.getTemplates();
+		var pages = this.makePages(templates);
+		var THIS = this;
+		pages.forEach(function(page) {
+			THIS.book.addPage(page, insertAfter++);
+		});
+		var extraPage = this.getExtraPage();
+		if (extraPage) 
+			this.book.addPage(extraPage, this.getExtraInsertionPoint());
+		PB.UI.Pagetab.selectPage(pages[0]);
+	},
+	undo: function() {
+		var extraPage = this.getExtraPage();
+		if (extraPage)
+			this.book.deletePage(this.getExtraInsertionPoint()).deleteOnServer();
+		var insertAfter = this.getInsertionPoint();
+		for (var i=0; i< this.newPages.length; i++)
+			this.book.deletePage(insertAfter).deleteOnServer();
+	}
+}

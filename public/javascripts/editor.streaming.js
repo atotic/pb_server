@@ -24,6 +24,9 @@ PB.ServerStream = {
 			if (book == null)
 				return;
 			ajaxOptions.headers = ajaxOptions.headers || {};
+			var stream_id = book.stream_id;
+			if (!stream_id)
+				stream_id = "0";
 			jsXHR.setRequestHeader('X-SvegStream', book.stream_id + ";" + book.id);
 			jsXHR.setRequestHeader('X-Sveg-LastCommandId', book.last_server_cmd_id);
 		});
@@ -79,6 +82,12 @@ PB.ServerCmd = {
 				cmd = new PB.ServerCmd.AddPhoto(json); break;
 			case "StreamUpToDate":
 				cmd = new PB.ServerCmd.StreamUpToDate(json); break;
+			case "ReplacePage":
+				cmd = new PB.ServerCmd.ReplacePage(json);break;
+			case "AddPage":
+				cmd = new PB.ServerCmd.AddPage(json); break;
+			case "DeletePage":
+				cmd = new PB.ServerCmd.DeletePage(json);break;
 			default:
 				throw "Unknown server command";
 		};
@@ -91,6 +100,11 @@ PB.ServerCmd = {
 			console.error("Error ServerCmd: " + e);
 			console.error(json);
 		}
+	},
+	initServerCmd: function(json) {
+		this.cmd_id = json.id;
+		this.book_id = json.book_id;
+		this.payload = json.payload;
 	}
 }
 
@@ -100,11 +114,7 @@ PB.ServerCmd.AddPhoto = function(json) {
 }
 
 PB.ServerCmd.AddPhoto.prototype = {
-	initServerCmd: function(json) {
-		this.cmd_id = json.id;
-		this.book_id = json.book_id;
-		this.payload = json.payload;
-	},
+	initServerCmd: PB.ServerCmd.initServerCmd,
 	doIt: function() {
 		var photo = new PB.PhotoBroker(this.payload);
 		var book = PB.book();
@@ -123,10 +133,52 @@ PB.ServerCmd.StreamUpToDate = function(json) {
 
 PB.ServerCmd.StreamUpToDate.prototype = {
 	doIt: function() {
-		var book = PB.book();
-		if (book.id != this.book_id)
-			throw "Book id mismatch in ServerCmd.doIt";
+		var book = PB.bookById(this.book_id);
 		book.send("serverStreamUpToDate", book);
 	}
+}
+
+PB.ServerCmd.ReplacePage = function(json) {
+	this.initServerCmd(json);
+}
+
+PB.ServerCmd.ReplacePage.prototype = {
+	initServerCmd: PB.ServerCmd.initServerCmd,
+	doIt: function() {
+		var book = PB.bookById(this.book_id);
+		var newPage = new PB.BookPage(this.payload);
+		book.replacePage(newPage);
+	}
+}
+
+PB.ServerCmd.AddPage = function(json) {
+	this.initServerCmd(json);
+	this.previous_page = this.payload["previous_page"];
+	delete this.payload["previous_page"]
+}
+
+PB.ServerCmd.AddPage.prototype = {
+	initServerCmd: PB.ServerCmd.initServerCmd,
 	
+	doIt: function() {
+		var page = new PB.BookPage(this.payload);
+		var book = PB.bookById(this.book_id);
+		book.addPage(page, this.previous_page);
+	}
+}
+
+PB.ServerCmd.DeletePage = function(json) {
+	this.initServerCmd(json);
+}
+
+PB.ServerCmd.DeletePage.prototype = {
+	initServerCmd: PB.ServerCmd.initServerCmd,
+	
+	doIt: function() {
+		var book = PB.bookById(this.book_id);
+		var pages = book.pages;
+		for (var i=0; i<pages.length; i++)
+			if (pages[i].id == this.payload.page_id)
+				book.deletePage(i-1);
+	}
 }

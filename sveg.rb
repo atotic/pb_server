@@ -289,7 +289,7 @@ class SvegApp < Sinatra::Base
 			args.each do |arg|
 				arg = arg.to_s if arg.is_a?(Symbol)
 				if arg.end_with?("js")
-					arg = "jquery-1.6.4.js" if arg.eql? "jquery.js"
+					arg = "jquery-1.7.js" if arg.eql? "jquery.js"
 					arg = "jquery-ui-1.8.16.custom.js" if arg.eql? "jquery-ui.js"
 					retVal += "<script src='/javascripts/#{arg}'></script>\n"				
 				elsif arg.end_with?("css")
@@ -299,7 +299,7 @@ class SvegApp < Sinatra::Base
 					retVal += "<script src='http://code.jquery.com/qunit/qunit-git.js'></script>\n"
 					retVal += "<link href='http://code.jquery.com/qunit/qunit-git.css' rel='stylesheet' type='text/css' />\n"
 				elsif arg.eql? "editor-base"
-					retVal += asset_link("editor.js", "editor.model.js", "editor.model.util.js", "editor.command.js", \
+					retVal += asset_link("editor.js", "editor.model.js", "editor.model.page.js", "editor.model.util.js", "editor.command.js", \
 					"jquery.stream-1.2.js", "editor.streaming.js");
 				elsif arg.eql? "editor-all"
 					retVal += asset_link("editor-base", "editor.manipulators.js", "editor.ui.js", "editor.page-dialog.js");
@@ -333,6 +333,7 @@ class SvegApp < Sinatra::Base
 		end
 		
 		def user_must_own(resource)
+			user_must_be_logged_in
 			unless resource
 				flash[:error] = "Resource not found."
 				if (request.xhr?)
@@ -351,6 +352,12 @@ class SvegApp < Sinatra::Base
 			end
 		end
 
+		def get_stream(request)
+			stream_header = request.env['HTTP_X_SVEGSTREAM']
+			stream_id, book_id = stream_header.split(";") if stream_header
+			stream_id
+		end
+		
 		def get_last_command_info(request)
 			stream_id = book_id = last_command_id = nil
 			stream_header = request.env['HTTP_X_SVEGSTREAM']
@@ -511,7 +518,6 @@ class SvegApp < Sinatra::Base
 	end
 
 	delete '/books/:id' do
-		user_must_be_logged_in
 		book = Book.get(params[:id])
 		user_must_own book
 		flash[:notice] = "Book " + book.title + " was deleted";
@@ -612,8 +618,7 @@ class SvegApp < Sinatra::Base
 			destroy_me.destroy if destroy_me
 			
 			# broadcast cmd
-			stream_id, tmp, last_command_id = get_last_command_info(request)
-			new_last_id = ServerCommand.createAddPhotoCmd(book.id, photo, stream_id)
+			new_last_id = ServerCommand.createAddPhotoCmd(book.id, photo, get_stream(request))
 			headers "X-Sveg-LastCommandId" => String(new_last_id)
 			# response
 			content_type :json
@@ -623,12 +628,52 @@ class SvegApp < Sinatra::Base
 		end
 	end
 
+	post '/book_page' do
+		book = Book.get(params.delete('book_id'))
+		user_must_own(book)
+		assert_last_command_up_to_date(request)
+		begin
+			page = nil
+			Book.transaction do |t|
+				page_number = params.delete('page_number_in_book')
+				page = PB::BookPage.new(params);
+				book.insertPage(page, page_number)
+				new_last_id = ServerCommand.createAddPageCmd(page, page_number, get_stream(request))
+				response.headers['X-Sveg-LastCommandId'] = String(new_last_id)
+			end
+			content_type :json
+			page.to_json
+		rescue => ex
+			LOGGER.error("Book validation failed " + book.errors) if ex.is_a? DataMapper::SaveFailureError
+			LOGGER.error(ex.message)
+			flash.now[:error]= "Errors prevented page from being saved. Contact the web site owner."
+			halt 500, "Unexpected server error"
+		end
+	end
+	
+	delete '/book_page/:id' do
+		user_must_be_logged_in
+		page = BookPage.get(params.delete("id"))
+		halt [404, "Book page not found"] unless page
+		user_must_own(page.book)
+		assert_last_command_up_to_date(request)
+		page.destroy
+		new_last_id = ServerCommand.createDeletePageCmd(page, get_stream(request))
+		response.headers['X-Sveg-LastCommandId'] = String(new_last_id)
+		page.destroy
+		content_type "text/plain"
+		"Delete successful"
+	end
+	
 	put '/book_page/:id' do
 		user_must_be_logged_in
 		page = BookPage.get(params.delete("id"))
 		halt [404, "Book page not found"] unless page
 		user_must_own(page.book)
+		assert_last_command_up_to_date(request)
 		page.update(params)
+		new_last_id = ServerCommand.createReplacePageCmd(page, get_stream(request))
+		response.headers['X-Sveg-LastCommandId'] = String(new_last_id)
 		content_type "text/plain"
 		"Update successful"
 	end

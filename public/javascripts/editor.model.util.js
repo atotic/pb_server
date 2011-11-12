@@ -2,7 +2,7 @@
 PB.Model = {};
 PB.Model.Util = {
 	addLocalPhotoToBook: function(book, file) {  // file is a js File object
-		var photos  = book.photos();
+		var photos  = book.photos;
 		for (var i=0; i< photos.length; i++)
 			if (photos[i].name() == file.name) 
 			{
@@ -13,5 +13,12 @@ PB.Model.Util = {
 		book.addPhoto(photo);
 		// Save on server
 		photo.saveOnServer(book.id);
-	}
+	},
+	
+		// Call when files are dropped or added
+	addFilesToBook: function (book, files) {
+		for (var i=0; i<files.length; i++)
+			PB.Model.Util.addLocalPhotoToBook(book, files.item(i));
+	},
+
 }

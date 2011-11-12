@@ -166,7 +166,7 @@ PageDialog = {
 	close: function(ok) {
 		var d = $("#pick-page-dialog");
 		if (ok) {
-			d.data("options").ok(PageDialog.selection());
+			d.data("options").ok(PageDialog.selection(), $('#pick-page-count').val());
 		}
 		$("#pick-page-dialog").dialog("close");
 	},
