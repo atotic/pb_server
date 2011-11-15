@@ -37,10 +37,25 @@ page display: thumbnails, facing pages, etc.
 hash bangs for pages
 - assets css/js that comes with the book
 - assets css/js that comes with the page
-migrating albums: use nokogiri for html manipulation
+samigrating albums: use nokogiri for html manipulation
 
 Add page|delete|change layout
 Book pane: scrolling, page padding
+
+Asset permission architecture
+
+Next:
+Switching page layouts
+Bugs: Bookpage pane needs awareness of page deletion/replacement
+Page pane scrolling
+Page pane sorting, show only not placed, show comments as hidden text
+Warning if two people are editing the same page, and your changes are blown away
+
+Nov 14
+Add/removing of pages done. Tested undo/redo, sharing
+
+Nov 11
+Massive checkin, implemented adding of pages. 488 insertions(+)
 
 Nov 10
 Make PUT /pages work with server streams!

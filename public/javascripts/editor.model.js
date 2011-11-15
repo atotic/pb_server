@@ -77,11 +77,9 @@ PB.Book.prototype = {
 		return null;
 	},
 	get last_server_cmd_id() {
-		console.log("Returing last id ", this._last_server_cmd_id);
 		return this._last_server_cmd_id;
 	},
 	set last_server_cmd_id(id) {
-		console.log("Setting last id" , id);
 		if (typeof id == "string")
 			id = parseInt(id);
 		if (id < this._last_server_cmd_id) {
@@ -125,6 +123,25 @@ PB.Book.prototype = {
 				return this._photos[i];
 		return null;
 	},
+		// Range of legal positions for inserting pages
+		// Returns { start:3, end: last_page - 3 }
+	getPageInsertionRange: function() {
+		var range = { start: -1, end: -1 };
+		var foundMiddle = false;
+		for (var i=0; i< this._pages.length - 1; i++) {	// determine insertion range (no cover, etc)
+			if (this._pages[i].position == 'middle')
+				foundMiddle = true;
+			if (this._pages[range.start + 1].position != 'middle')
+				range.start = i;
+			if (this._pages[i].position == 'middle')
+				range.end = i;
+		}
+		if (!foundMiddle) // No middle pages, insert after cover
+			range.start = range.end = Math.floor(this._pages.length / 2) -1;
+		console.log("insertionRange ", range.start, " ", range.end);
+		return range;
+	},
+
 	addPhoto: function(photo) {
 		if (this.getPhotoById(photo.id))
 			return;	// Photo already exists
@@ -140,12 +157,18 @@ PB.Book.prototype = {
 			}
 	},
 	addPage: function(page, insertAfter) {
-		this._pages.splice(insertAfter, 0, page);
-		this.send('pageAdded', page, insertAfter, true);
+		console.log("addPage ", insertAfter);
+		this._pages.splice(insertAfter + 1, 0, page);
+		this.send('pageAdded', page, insertAfter + 1, true);
 	},
-	deletePage: function(deleteAfter) {
-		var page = this._pages.splice(deleteAfter, 1)[0];
-		this.send('pageDeleted', page, deleteAfter);
+	deletePage: function(indexOrPage, deleteOnServer) {
+		var index = (typeof indexOrPage == 'object') ? this._pages.indexOf(indexOrPage) : indexOrPage;
+		var page = this._pages[index];
+		console.log("deletePage ", index);
+		if (deleteOnServer)
+			page.deleteOnServer();
+		this._pages.splice(index, 1)[0];
+		this.send('pageDeleted', page, index);
 		return page;
 	},
 	// If book has odd number of pages, it is inconsistent 

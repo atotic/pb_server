@@ -242,6 +242,16 @@ $.extend(PB.EventBroadcaster.prototype, {
 });
 
 $.extend(PB, {
+	
+	randomString: function (len, charSet) {
+	  charSet = charSet || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	  var randomString = '';
+	  for (var i = 0; i < len; i++) {
+	      var randomPoz = Math.floor(Math.random() * charSet.length);
+	      randomString += charSet.substring(randomPoz,randomPoz+1);
+	  }
+	  return randomString;
+	},
 	// Generates random id for an element
 	generateId: function(el) {
 		el = $(el).get(0);
@@ -249,7 +259,7 @@ $.extend(PB, {
 			console.error("PB.generateId: id already exists " + el.id);
 			throw "PB.generateId: id already exists";
 		}
-		var id = "br" + Math.floor(Math.random() * 99999);
+		var id = "br" + PB.randomString(5);
 		if (!document.getElementById(id))
 			el.id = id;
 		else

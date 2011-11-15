@@ -635,10 +635,10 @@ class SvegApp < Sinatra::Base
 		begin
 			page = nil
 			Book.transaction do |t|
-				page_number = params.delete('page_number_in_book')
+				page_position = Integer(params.delete('page_position'))
 				page = PB::BookPage.new(params);
-				book.insertPage(page, page_number)
-				new_last_id = ServerCommand.createAddPageCmd(page, page_number, get_stream(request))
+				book.insertPage(page, page_position)
+				new_last_id = ServerCommand.createAddPageCmd(page, page_position, get_stream(request))
 				response.headers['X-Sveg-LastCommandId'] = String(new_last_id)
 			end
 			content_type :json

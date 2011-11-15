@@ -46,15 +46,7 @@ PB.PageTemplate.prototype = {
 		return div;
 	},
 	
-	randomString: function (len, charSet) {
-    charSet = charSet || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    var randomString = '';
-    for (var i = 0; i < len; i++) {
-        var randomPoz = Math.floor(Math.random() * charSet.length);
-        randomString += charSet.substring(randomPoz,randomPoz+1);
-    }
-    return randomString;
-	},
+
 	
 	// This method is based upon ruby method PB::PageTemplate.make_page
 	// These two methods have to be in sync
@@ -65,7 +57,7 @@ PB.PageTemplate.prototype = {
 		// Assign unique id's to all elements
 		var THIS = this;
 		idNodes.each(function(index) {
-			this.id = THIS.randomString(5) + (this.id || "");
+			this.id = PB.randomString(5) + (this.id || "");
 		});
 		var json = {
 			'width': this.width,
@@ -86,10 +78,7 @@ PB.PageTemplate.prototype = {
 PB.BookPage = function(json) {
 	for (var prop in json)	// make them all private
 		this["_" + prop] = json[prop];
-	this._dirty = {
-		html: false,
-		icon: false
-	};
+	this._dirty = this.dirty_default;
 	this._deleted = false;
 };
 
@@ -103,8 +92,17 @@ PB.BookPage.saveAll = function() {
 $.extend(PB.BookPage, new PB.EventBroadcaster("pageIconUpdated"));
 
 PB.BookPage.prototype = {
+	_fakeid: 0,
+	LOG: function(msg) {
+		if (! ('fakeid' in this))
+			this.fakeid = ++PB.BookPage.prototype._fakeid;
+		console.warn(this.fakeid, " ", msg, " ", this.id);
+	},
 	get id() {
 		return this._id;
+	},
+	set id(val) {
+		this._id = val;
 	},
 	get dirty() {
 		if (this._dirty.html || this._dirty.icon || this.id == null || this._deleted)
@@ -113,6 +111,19 @@ PB.BookPage.prototype = {
 	},
 	get position() {
 		return this._position;
+	},
+	get dirty_default() {
+		return { 
+			html: false,
+			icon: false
+		}
+	},
+	clone: function() {
+		var newPage = Object.create(this);
+		newPage._id = null;
+		newPage._dirty = newPage.dirty_default;
+		newPage._deleted = false;
+		return newPage;
 	},
 	browserHtml: function() {
 		if (this._html)	{
@@ -252,6 +263,7 @@ PB.BookPage.prototype = {
 	},
 	// DOM must be set when modified
 	setDomModified: function() {
+		this.LOG("setDomModified");
 		if (!this._displayDom)
 			console.error("Page must be displayed when setDomModified");
 		this._dirty.html = true;
@@ -269,12 +281,14 @@ PB.BookPage.prototype = {
 
 	// call before dom is disconnected
 	saveNow: function() {
-		if (this.dirty)
+		if (this.dirty) {
+			this.LOG("saveNow");
 			PB.uploadQueue.upload(this);
+		}
 	},
 	
-	//
 	deleteOnServer: function() {
+		this.LOG("deleteOnServer");
 		this._deleted = true;
 		if (this._id)
 			PB.uploadQueue.upload(this);
@@ -312,6 +326,9 @@ PB.BookPage.prototype = {
 		PB.BookPage.send('pageIconUpdated', this);
 	},
 	createNewPageDeferred: function() {
+		if (this._deleted)
+			return null;
+		this.LOG("AjaxNewPage");
 		var html;
 		var data = {
 			'width': this._width,
@@ -320,36 +337,50 @@ PB.BookPage.prototype = {
 			'icon': this._icon,
 			'position': this._position,
 			'book_id': PB.book().id,
-			'page_number_in_book': PB.book().pages.indexOf(this)
+			'page_position': PB.book().pages.indexOf(this)
 		};
+		if (PB.book().pages.indexOf(this) == -1)
+			debugger;
 		var xhr = $.ajax("/book_page", {
 			data: data,
 			type: "POST"
 		});
 		var THIS = this;
-		xhr.success(function(data, textStatus, jqXHR) {
+		xhr.done(function(data, textStatus, jqXHR) {
 			console.log("Book page saved successfully " + data.id);
 			THIS._id = data.id;
+			THIS.LOG("AjaxNewPage complete");
+			if (THIS._deleted)	// In case we were deleted during uploading
+				THIS.deleteOnServer();
 		});
 		return xhr;
 	},
 	createDeleteDeferred: function() {
-		if (this._id == null)
+		this.LOG("AjaxDeleteDeferred");
+		if (this._id == null) {
+			this.LOG("AjaxDeleteDeferred not executed, page no longer on server");
 			return null;
+		}
 		var xhr = $.ajax("/book_page/" + this._id, {
 			type: "DELETE"
 		});
-		xhr.success(function(data, textStatus, jqXHR) {
-			console.log("Page deleted " + this._id);
+		var THIS = this;
+		xhr.done(function(data, textStatus, jqXHR) {
+			THIS._id = null;
+			THIS.LOG("AjaxDeleteDeferred complete");
 		});
 		return xhr;
 	},
+	// Careful logic for saving page changes to server
+	// Timing errors occur if we change the order
 	createUploadDeferred: function() {
-		if (this._id == null)
-			return this.createNewPageDeferred();
-		else if (this._deleted)
+		if (this._deleted)	// page marked for deletion
 			return this.createDeleteDeferred();
+		else if (this._id == null) // page never saved
+			return this.createNewPageDeferred();
+		// else just a page update
 		// Gather data to be saved
+		this.LOG("AjaxUploadDeferred");
 		var savedHtml = false;
 		var savedIcon = false;
 		var data = {};
@@ -373,6 +404,7 @@ PB.BookPage.prototype = {
 		// Clear out the dirty flags on completion
 		// Take care not to clear them out if page was modified while saving
 		xhr.done(function(response, msg, jqXHR) {
+			THIS.LOG("AjaxUploadDeferred complete");
 			if (jqXHR.status == 200) {
 				if (savedHtml) {
 					if (THIS._displayDom)

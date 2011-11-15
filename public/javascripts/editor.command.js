@@ -358,24 +358,17 @@ PB.Commands.AddPages.prototype = {
 	getInsertionPoint: function() {
 		var pages = this.book.pages;
 		// Where do we insert the pages?
-		var insertAfter = -1;
-		if (this.selectedPages.length == 0) {	// no selection, at the end
-			insertAfter = pages.length - 1;
-		}
-		else { // there is selection, insert after last page in selection, if possible
-			insertAfter = pages.indexOf(this.selectedPages[this.selectedPages.length -1]);
-		}
-		if (pages[insertAfter].position != 'middle') {
-			if (insertAfter <= 2) // before cover/flap/inner
-				while (pages[insertAfter].position != 'middle' && insertAfter < pages.length)
-					insertAfter++;
-			else
-				while (pages[insertAfter].position != 'middle' && pos > 0)
-					insertAfter--;
-		}
-		if (pages[insertAfter].position != 'middle') // handle degenerate case
-			insertAfter = Math.floor(pages.length / 2);
-		return insertAfter;
+		var range = this.book.getPageInsertionRange();
+		var insertPoint = -1;
+		if (this.selectedPages.length == 0)	// no selection, at the end
+			insertPoint = range.end;
+		else
+			insertPoint = pages.indexOf(this.selectedPages[this.selectedPages.length -1]);
+		if (insertPoint < range.start)
+			insertPoint = range.start;
+		if (insertPoint > range.end)
+			insertPoint = range.end;
+		return insertPoint;
 	},
 	getTemplates: function() {
 		if ('templates' in this)
@@ -397,9 +390,9 @@ PB.Commands.AddPages.prototype = {
 	// so we keep a copy, and return clones
 	makePages: function(templates) {
 		if ('newPages' in this) {
-			var clone = [];
-			this.newPages.forEach(function(page) { clone.push(Object.create(page)); });
-			return clone;
+			var clones = [];
+			this.newPages.forEach(function(page) { clones.push(page.clone()); });
+			return clones;
 		}
 		this.newPages = [];
 		for (var i=0; i< this.pageCount; i++)
@@ -414,43 +407,92 @@ PB.Commands.AddPages.prototype = {
 			else
 				return null;
 		}
-		if (this.book.hasOddPages()) {
+		if (this.book.hasOddPages())
 			this.extraPage =  this.book.template.getRandomPage('middle').makePage();
-			var pages = this.book.pages;
-			var i = pages.length -1;
-			while (i > 0 && pages[i].position != 'middle')
-				i--;
-			if (i != 0)
-				this.extraInsertionPoint = i;
-			else
-				this.extraInsertionPoint = Math.floor(pages.length / 2);
-		}
 		else
 			this.extraPage = null;
 		return this.getExtraPage();
 	},
 	getExtraInsertionPoint: function() {
-		return this.extraInsertionPoint;
+		return this.book.getPageInsertionRange().end;
 	},
 	redo: function() {
 		var insertAfter = this.getInsertionPoint();
 		var templates = this.getTemplates();
-		var pages = this.makePages(templates);
+		this.insertedPages = this.makePages(templates);
 		var THIS = this;
-		pages.forEach(function(page) {
+		this.insertedPages.forEach(function(page) {
 			THIS.book.addPage(page, insertAfter++);
 		});
 		var extraPage = this.getExtraPage();
-		if (extraPage) 
+		if (extraPage) {
+			this.insertedPages.push(extraPage);
 			this.book.addPage(extraPage, this.getExtraInsertionPoint());
-		PB.UI.Pagetab.selectPage(pages[0]);
+		}
+		if (this.insertedPages.length > 0)
+			PB.UI.Pagetab.selectPage(this.insertedPages[0]);
 	},
 	undo: function() {
+		var THIS = this;
+		this.insertedPages.forEach( function(page) {
+			THIS.book.deletePage(page, true);
+		});
+	}
+}
+
+PB.Commands.DeletePages = function(book, pagesForDeletion) {
+	this.book = book;
+	this.pagesForDeletion = pagesForDeletion.filter(function(page) { return page.position == 'middle'}); // only delete middle pages
+}
+
+PB.Commands.DeletePages.prototype = {
+	canUndo: function() {
+		return this.pagesForDeletion.length > 0;
+	},
+	canRedo: function() {
+		return this.pagesForDeletion.length > 0;
+	},
+	getExtraPage: function() {
+		if ('extraPage' in this)
+		{
+			if (this.extraPage != null)
+				return Object.create(this.extraPage);
+			else
+				return null;
+		}
+		if (this.book.hasOddPages())
+			this.extraPage =  this.book.template.getRandomPage('middle').makePage();
+		else
+			this.extraPage = null;
+		return this.getExtraPage();
+	},
+	redo: function() {
+		var THIS = this;
+		this.pageInsertionPoints = [];
+		var pages = this.book.pages;
+		// Delete all the pages
+		this.pagesForDeletion.forEach(function(page) {
+			THIS.pageInsertionPoints.push(pages.indexOf(page) - 1);
+		});
+		this.pagesForDeletion.forEach(function(page) {
+			THIS.book.deletePage(page, true);
+		});
+		// Clean up the book
 		var extraPage = this.getExtraPage();
-		if (extraPage)
-			this.book.deletePage(this.getExtraInsertionPoint()).deleteOnServer();
-		var insertAfter = this.getInsertionPoint();
-		for (var i=0; i< this.newPages.length; i++)
-			this.book.deletePage(insertAfter).deleteOnServer();
+		if (extraPage) {
+			this.pageAdded = extraPage;
+			this.book.addPage(extraPage, this.book.getPageInsertionRange().end);
+		}
+		else
+			this.pageAdded = null;
+	},
+	undo: function() {
+		var THIS = this;
+		for (var i=0; i< this.pagesForDeletion.length; i++) {
+			this.pagesForDeletion[i] = this.pagesForDeletion[i].clone();
+			THIS.book.addPage(this.pagesForDeletion[i], this.pageInsertionPoints[i]);
+		}
+		if (this.pageAdded)
+			this.book.deletePage(this.pageAdded, true);
 	}
 }

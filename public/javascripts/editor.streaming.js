@@ -163,6 +163,7 @@ PB.ServerCmd.AddPage.prototype = {
 	doIt: function() {
 		var page = new PB.BookPage(this.payload);
 		var book = PB.bookById(this.book_id);
+		console.log("Adding page " + page.id);
 		book.addPage(page, this.previous_page);
 	}
 }
@@ -177,8 +178,11 @@ PB.ServerCmd.DeletePage.prototype = {
 	doIt: function() {
 		var book = PB.bookById(this.book_id);
 		var pages = book.pages;
+		console.log("Trying to delete " + this.payload.page_id);
 		for (var i=0; i<pages.length; i++)
-			if (pages[i].id == this.payload.page_id)
-				book.deletePage(i-1);
+			if (pages[i].id == this.payload.page_id) {
+				console.log("Deleting " + this.payload.page_id);
+				book.deletePage(i);
+			}
 	}
 }

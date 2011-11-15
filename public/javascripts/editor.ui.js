@@ -312,6 +312,10 @@ PB.UI.Pagetab = {
 			};
 			PageDialog.show(options);
 		});
+		$("#delete-page-button").click(function() {
+			var cmd = new PB.Commands.DeletePages(PB.book(), PB.UI.Pagetab.selectionAsPages());
+			PB.CommandQueue.execute(cmd);
+		});
 		$("#layout-page-button").click(function() {
 			var selection = PB.UI.Pagetab.selection();
 			if (!selection.length)
@@ -378,6 +382,10 @@ PB.UI.Pagetab = {
 	},
 	pageSelectionChanged: function(sel) {
 		$("#layout-page-button").attr("disabled", sel.length == 0);
+		$("#add-page-button").attr("disabled", false);
+		$("#delete-page-button").attr("disabled", !sel.some(function(el) {
+			return el.data("book_page").position == 'middle';
+		}));
 	},
 	revealNthPage: function(n) {
 		$("#page-list").revealByMarginLeft(".page-icon:nth-child(" + n+ ")");		
@@ -451,6 +459,7 @@ PB.UI.Pagetab = {
 			else
 				this.selectPage($(pages.get(pages.size() - 1)).data('book_page'));
 		}
+		this.updatePageStyles();
 	},
 	pageReplaced: function(new_page) {
 		var THIS = this;
@@ -552,7 +561,6 @@ PB.UI.Bookpage = {
 		// save the old page if possible
 		$("#main-container div.page-enclosure").each(function() {
 			var page = $(this).data('page');
-			page.saveNow();
 			page.setDisplayDom(null);
 		});
 		var dom = this.createPageElement(page);
