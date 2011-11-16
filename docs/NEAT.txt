@@ -35,6 +35,7 @@ Excellent CSS effects: bounce, rotate, etc. If I ever need visual candy http://b
 LoremPixel: placeholder images: http://lorempixel.com/
 3D CSS transforms http://www.webkit.org/blog-files/3d-transforms/poster-circle.html
 CSS Patterns, might use in book backgrounds: http://leaverou.me/css3patterns/#
+3D Photo rollover: http://thewebrocks.com/demos/3D-photo-rollover/
 
 JS
 HTML5 flipping pages animation: http://studio.html5rocks.com/#Flip
@@ -100,6 +101,8 @@ Sweet & short take on ipad html development http://mir.aculo.us/2010/06/04/makin
 jQuery touch http://jqtouch.com/
 
 BUSINESS
+Wholesale photo book printing: http://www.provenpictures.com/history.html
+More wholesale photo book printing: http://flexbind.com/how-to-buy/photographers/
 First on google search for photo books: San Jose startup http://www.mixbook.com/careers
 Various business services: http://nat.org/blog/2011/06/instant-company/
 Photo book reviews: http://www.make-your-own-photobooks.com/about-us.html

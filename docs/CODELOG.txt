@@ -45,11 +45,12 @@ Book pane: scrolling, page padding
 Asset permission architecture
 
 Next:
-Switching page layouts
-Bugs: Bookpage pane needs awareness of page deletion/replacement
 Page pane scrolling
-Page pane sorting, show only not placed, show comments as hidden text
-Warning if two people are editing the same page, and your changes are blown away
+Full book view for Book pane
+Image pane sorting, show only not placed, show comments as hidden text
+Switching page layouts
+
+Compression of page logs (need object_id in schema)
 
 Nov 14
 Add/removing of pages done. Tested undo/redo, sharing
