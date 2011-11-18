@@ -45,12 +45,14 @@ Book pane: scrolling, page padding
 Asset permission architecture
 
 Next:
-Page pane scrolling
+Switching page layouts
 Full book view for Book pane
 Image pane sorting, show only not placed, show comments as hidden text
-Switching page layouts
 
 Compression of page logs (need object_id in schema)
+
+Nov 16
+Page pane scrolling
 
 Nov 14
 Add/removing of pages done. Tested undo/redo, sharing

@@ -100,7 +100,21 @@ a:visited {
 	background-color: #61A326 !important;
 	background-color: Highlight !important;
 }
+.no-selection {
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-o-user-select: none;
+	user-select: none;
+}
 
+.no-selection * {
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-o-user-select: none;
+	user-select: none;
+}
 /* HEADER */
 #header_bar {
 	background-color: #777;

@@ -29,6 +29,7 @@ PB.UI.Pagetab = {
 			PB.UI.Pagetab.updatePageStyles();
 		});
 		PB.UI.Pagetab.initButtons();
+		this.dragScroll();
 	},
 	initButtons: function() {
 		// Hook up the buttons
@@ -54,6 +55,36 @@ PB.UI.Pagetab = {
 		});
 		this.bind("pageSelectionChanged", this.pageSelectionChanged);
 		this.pageSelectionChanged(this.selection()); // Initializes buttons
+	},
+	dragScroll: function() {
+		var handler = {
+			lastX: -1,
+			delta: 0,
+			lastTime: 0,
+			speed: 0,	// in pixels per milisecond
+			mousedown: function(ev) {
+				ev.preventDefault();
+				handler.lastX = ev.pageX;
+				handler.speed = 0;
+				handler.lastSeen = ev.timeStamp;
+				$(document).one("mouseup" ,function(ev) {
+					// Try 
+					$("#page-list").scrollMarginLeft(handler.speed * 100, true);
+					handler.lastX = -1;
+				});
+			},
+			mousemove: function(ev) {
+				if (handler.lastX != -1) {
+					ev.preventDefault();
+					handler.delta = ev.pageX - handler.lastX;
+					$("#page-list").scrollMarginLeft(handler.delta);
+					handler.speed = handler.delta / (ev.timeStamp - handler.lastTime);
+					handler.lastTime = ev.timeStamp;
+					handler.lastX = ev.pageX;
+				}
+			}
+		}
+		$("#page-list-container").bind(handler);
 	},
 	// Select next pages
 	next: function() {

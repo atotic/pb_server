@@ -101,6 +101,7 @@ Sweet & short take on ipad html development http://mir.aculo.us/2010/06/04/makin
 jQuery touch http://jqtouch.com/
 
 BUSINESS
+Adorama: seems to have their own book solution based upon flash 
 Wholesale photo book printing: http://www.provenpictures.com/history.html
 More wholesale photo book printing: http://flexbind.com/how-to-buy/photographers/
 First on google search for photo books: San Jose startup http://www.mixbook.com/careers

@@ -21,7 +21,6 @@
 	</div>
 	<div id="pages-tab" class='slab_content'>
 		<div class="intro">Paging Dr. Guttenberg...</div>
-		<div id="page-list-slider"></div>
 		<div id="page-list-container">
 			<div id="page-list"></div>
 		</div>
@@ -67,7 +66,7 @@
 
 <div id="content-slab">
 	<div class="slab_top">
-		<div class="slab_title" style="padding-left:32px">
+		<div class="slab_title" style="padding-left:32px;width:118px">
 			Page
 		</div>
 		<div class="slab_tools">
@@ -116,13 +115,15 @@ body {
 .slab_top {
 	background-color: #BBB;
 	font-family: arial, serif;
-	padding: 2px 0 2px;
+	padding: 0 0 4px;
+	border-bottom: 1px solid #999;
 }
 .slab_title {
 	display: inline-block;
 	font-size: 100%;
 	font-weight: bold;
 	width: 150px;
+	height: 20px;
 }
 .slab_tools {
 	display: inline-block;
@@ -173,15 +174,22 @@ body {
 	margin-left:0px;
 }
 
-#page-list-slider {
-	display:none;
-	margin-bottom: 4px;
-}
-
 .page-icon img {
 	position: absolute;
 }
 
+#pages-tab {
+	padding-right: 1px;
+}
+#page-list-container {
+	margin-top: 8px;
+	overflow-y: hidden;
+	overflow-x: hidden;
+	position: relative;
+}
+#page-list {
+	cursor: move;
+}
 #page-list .page-icon {
 	display: inline-block;
 	position: relative;

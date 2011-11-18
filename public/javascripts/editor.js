@@ -1,23 +1,5 @@
 "use strict"; // could not do it with jResig 
 
-// Debug only, shows all event handlers
-function visualEvent(){ 
-	if (typeof VisualEvent!='undefined') { 
-		if (document.getElementById('Event_display')) {
-			VisualEvent.fnClose();
-		}
-		else {
-			VisualEvent.fnInit();
-		}
-	}
-	else
-	{
-		var n=document.createElement('script');
-		n.setAttribute('language','JavaScript');
-		n.setAttribute('src','http://www.sprymedia.co.uk/design/event/media/js/event-loader.js');
-		document.body.appendChild(n);
-	}
-}
 // jQuery extensions
 (function(jQuery){
 
@@ -63,7 +45,7 @@ function visualEvent(){
  * Sliders scroll by making left margin negative
  * This code will reveal the child element by fixing the margin
  */
-	jQuery.fn.revealByMarginLeft = function(childFilter, animate) {
+	jQuery.fn.revealByMarginLeft = function(childFilter) {
 		var child = this.contents().filter(childFilter);
 		if (child.size() == 0) {
 			console.warn("No child to reveal");
@@ -72,7 +54,7 @@ function visualEvent(){
 		var lastChild = this.children().last();
 		var rightmostEdge = lastChild.position().left + lastChild.outerWidth() 
 				+ Math.abs(parseInt(this.css("margin-left")));
-		// Limit scrolling to now show empty space on the right
+		// Limit scrolling to not show empty space on the right
 		var leftLimit = rightmostEdge - this.parent().width();
 		leftLimit = Math.max(0, leftLimit);
 		
@@ -84,7 +66,19 @@ function visualEvent(){
 			}, {
 				duration: 200
 			});	
-	};
+	}
+	
+	// Scroll by val amount
+	jQuery.fn.scrollMarginLeft = function(val, animate) {
+		var min = - (this.width() - this.parent().width());
+		var max = 0;
+		var cur = parseInt( this.css("margin-left") || 0) + val;
+		cur = Math.min( Math.max(cur, min), max);	// clamp
+		if (animate)
+			this.clearQueue().animate( {"margin-left": cur + "px"}, 500, 'easeOutExpo');
+		else
+			this.css("margin-left", cur + "px");
+	}
 	
 	// Creates a "flippy" UI element
 	// state: 'open'|'closed'
@@ -95,7 +89,7 @@ function visualEvent(){
 			return;
 		var flippy = $(this[0]);
 		// set up initial conditions
-		flippy.addClass('flippy');
+		flippy.addClass('flippy').addClass('no-selection');
 		flippy.attr('state', state);
 		if (state == 'open')
 			flippyContent.show();
@@ -107,13 +101,12 @@ function visualEvent(){
 			var timing = 100;
 			if (flippy.attr('state') == 'closed') {
 				flippy.attr('state', 'open');
-				flippyContent.show();	// FIXME jQuery bug, does not hide when has timing
+				flippyContent.clearQueue().show(100,PB.UI.MainContainer.resize );	// FIXME jQuery bug, does not hide when has timing
 			}
 			else {
 				flippy.attr('state', 'closed');
-				flippyContent.hide();
+				flippyContent.clearQueue().hide(100, PB.UI.MainContainer.resize);
 			}
-			PB.UI.MainContainer.resize();
 			e.stopPropagation();
 			e.preventDefault();
 		})

@@ -156,13 +156,14 @@ PB.UI.MainContainer = {
 			this._mainEl = $("#main-container");
 		return this._mainEl;
 	},
+	// Can be called as a callback, and 'this' is invalid. Do not refer to 'this' in this function
 	resize: function() {
-		var newHeight = Math.floor(window.innerHeight - this.mainEl.offset().top - 3);
+		var newHeight = Math.floor(window.innerHeight - PB.UI.MainContainer.mainEl.offset().top - 3);
 		// As a precaution, we call resize a lot, so it is good to optimize it out if not needed
-		if ((newHeight + "px"  == this.mainEl.css("height")))
+		if ((newHeight + "px"  == PB.UI.MainContainer.mainEl.css("height")))
 			return;
 		$("#main-container").css("height", newHeight + "px");
-		this.fitContent();
+		PB.UI.MainContainer.fitContent();
 	},
 	fitContent: function() {
 		var page = $("#main-container .book-page");
