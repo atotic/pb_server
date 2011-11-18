@@ -230,14 +230,18 @@ PB.BookPage.prototype = {
 			this._html = null;
 			return;
 		}
+		var THIS = this;
 		var dom = this._displayDom.cloneNode(true);
 		// Our src might be local files, change to server location
 		$(dom).find("img").each(function(index, el) {
 			// TODO we might not know server location until file is saved.
 			var src = el.getAttribute("src");
 			var serverSrc = PB.book().getPhotoByFileUrl(src);
-			if (serverSrc != null)
+			if (serverSrc != null) {
+				console.log("UPDATING ICON");
 				el.setAttribute("src", serverSrc.getServerUrl('display'));
+				THIS.updateIcon(el.parentNode);
+			}
 		});
 		// Remove display artifacts
 		$(dom).find(".deleteme").each(function(index, el) {

@@ -93,9 +93,9 @@ PB.UI.Bookpage = {
 	// rotate|norotate means that box can rotate
 	parseImagePlacement: function(imgDiv) {
 		var placement = {
-			sizing: "flex",
+			sizing: "fixed",	// flex|fixed
 			align: "center",
-			rotate: "true",
+			rotate: "false",
 			align_top: 'center',
 			align_left: 'center'
 		}

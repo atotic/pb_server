@@ -51,6 +51,12 @@ Image pane sorting, show only not placed, show comments as hidden text
 
 Compression of page logs (need object_id in schema)
 
+Nov 18
+Saw Keepsy. These guys are awesome. I love decoupling of image placement from 
+layout details. I think I need to sell my project
+Things I did not like: Flash: it'll get harder as time goes on. Inability to
+start the album immediately. Image import should be fluid.
+
 Nov 16
 Page pane scrolling
 
