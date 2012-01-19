@@ -11,9 +11,9 @@ class BookTest < Test::Unit::TestCase
 	include TestHelpers
 	
 	def test_book_templates
-		Dir.foreach(PB::SvegApp.templates) do |template_name|
+		Dir.foreach(SvegSettings.templates) do |template_name|
 			next if template_name.start_with? "."
-			next unless File.directory?( File.join(PB::SvegApp.templates, template_name));
+			next unless File.directory?( File.join(SvegSettings.templates, template_name));
 			t = PB::BookTemplate.new(template_name)
 			assert_not_nil t
 			t.get_default_pages

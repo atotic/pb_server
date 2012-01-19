@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'settings'))
+require 'delayed/command'
+# put process ids in tmp
+ARGV.push("--pid-dir=#{SvegSettings.tmp_dir}") unless ARGV.index { |item| (item.start_with? "--pid-dir")  }
+# process name. Use  ps -A | grep sveg_delays
+ARGV.push("--prefix", "sveg_delay") unless ARGV.index { |item| (item.start_with? "--prefix") || (item.eql? "-p") }
+Delayed::Command.new(ARGV).daemonize
+
+# DEBUG
+#ARGV.push("--sleep-delay", "5")
+#Delayed::Command.new(ARGV).run_process("MY1STJOB", SvegSettings.root_dir)

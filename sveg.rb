@@ -1,5 +1,4 @@
-require 'rubygems'
-require 'ruby-debug'
+require 'settings'
 #Debugger.settings[:autoeval] = true
 #Debugger.settings[:autolist] = true
 
@@ -8,20 +7,9 @@ require 'erb'
 require 'logger'
 require 'json'
 require 'base64'
-
-require 'dm-core'
-require 'dm-validations'
-require 'dm-migrations'
-require 'dm-transactions'
-require 'data_objects'
 require 'rack-flash'
 
 # sveg requires
-require 'model/book'
-require 'model/user'
-require 'model/photo'
-require 'model/book_template'
-require 'model/command_stream'
 require 'jobs/book2pdf'
 
 # Quick and dirty shutdown
@@ -235,29 +223,11 @@ end
 class SvegApp < Sinatra::Base
 
 	set :root, File.dirname(__FILE__)
-	set :test_root, File.join(settings.root, "test")
-	set :templates, File.join(settings.root, "book-templates"); # book template directory
-
 	set :show_exceptions, true
+	
 #	set :static_cache_control, "max-age=3600" # serve stuff from public with expiry date
 	def initialize(*args)
 		super(args)
-		DataMapper::Model.raise_on_save_failure = true
-		# Use either the default Heroku database, or a local sqlite one for development
-		database_url = ENV['DATABASE_URL'] || "sqlite3://#{Dir.pwd}/development.sqlite";
-		database_url = "sqlite3://#{Dir.pwd}/test/test.sqlite" if settings.environment == :test
-#		database_url = "sqlite3::memory:" if settings.environment == :test
-		DataMapper.setup(:default, database_url)
-		DataMapper.finalize
-		DataMapper.auto_upgrade! # extends tables to match model
-		#DataMapper.auto_migrate!  # blows up database
-		SvegApp.set :photo_dir, File.join(settings.root, "photo-storage"); # photo storage directory
-		SvegApp.set :book2pdf_dir, File.join(settings.root, "pdf-books"); # generated books
-		# Testing setup
-		if settings.environment == :test
-			SvegApp.set :photo_dir, File.join(File.dirname(settings.photo_dir), "test", File.basename(settings.photo_dir))
-			SvegApp.set :book2pdf_dir, File.join(File.dirname(settings.book2pdf_dir), "test", File.basename(settings.book2pdf_dir))
-		end
 	end
 		
 	helpers do
@@ -553,6 +523,7 @@ class SvegApp < Sinatra::Base
 			end
 		rescue => ex
 			LOGGER.error(ex.message)
+			LOGGER.error(ex.backtrace[0..5] )
 			flash.now[:error]= "Errors prevented the book from being created. Please fix them and try again."
 			erb :book_new, {:layout => :'layout/plain'}
 		end
@@ -669,11 +640,11 @@ class SvegApp < Sinatra::Base
 	
 	put '/book_page/:id' do
 		user_must_be_logged_in
-		page = BookPage.get(params.delete("id"))
+		page = BookPage.get(params['id'])
 		halt [404, "Book page not found"] unless page
 		user_must_own(page.book)
 		assert_last_command_up_to_date(request)
-		page.update(params)
+		page.update(request.params)
 		new_last_id = ServerCommand.createReplacePageCmd(page, get_stream(request))
 		response.headers['X-Sveg-LastCommandId'] = String(new_last_id)
 		content_type "text/plain"

@@ -10,6 +10,9 @@ HOWTO for JS & SVG http://www.w3.org/Graphics/SVG/IG/resources/svgprimer.html
 Mediawiki wrestling with SVG -> PNG conversion http://www.mediawiki.org/wiki/Manual:$wgSVGConverters
 
 CSS
+Pure CSS progress bars http://dipperstove.com/design/css3-progress-bars.html
+Get value of rotation from transform matrix: http://css-tricks.com/get-value-of-css-rotation-through-javascript/
+Fun CSS generators: http://www.awcore.com/html/news/14/25-Time-saving-Generators_en
 Scalable/modular CSS howto: http://smacss.com/book/
 Free web app developer resources: http://www.webappers.com/category/design/icons/
 Border image: http://www.css3.info/preview/border-image/
@@ -36,6 +39,7 @@ LoremPixel: placeholder images: http://lorempixel.com/
 3D CSS transforms http://www.webkit.org/blog-files/3d-transforms/poster-circle.html
 CSS Patterns, might use in book backgrounds: http://leaverou.me/css3patterns/#
 3D Photo rollover: http://thewebrocks.com/demos/3D-photo-rollover/
+CSS Fonts as icons: fun icon effects with fonts http://css-tricks.com/15099-using-fonts-for-icons/
 
 JS
 HTML5 flipping pages animation: http://studio.html5rocks.com/#Flip
@@ -55,6 +59,7 @@ javascript serializations: http://blog.maxaller.name/2011/01/javascript-serializ
 JS streaming http://code.google.com/p/jquery-stream/
 Canvas graphics effects in js: http://evanw.github.com/glfx.js/demo/
 Taking apps offline walkthrogh by Sencha: http://www.sencha.com/learn/taking-sencha-touch-apps-offline
+Firefox JS tools http://hacks.mozilla.org/2011/11/firefox-tons-of-tools-for-web-developers/
 
 RUBY
 Ruby toolbox: what gem should I use for.....  http://ruby-toolbox.com/
@@ -68,15 +73,20 @@ http://hacks.mozilla.org/2011/03/the-shortest-image-uploader-ever/
 S3 command line https://github.com/pcorliss/s3cmd-modification
 
 HTML
+Context menus in firefox, HTML5 menu markup: http://hacks.mozilla.org/2011/11/html5-context-menus-in-firefox-screencast-and-code/
 PDF converter: https://github.com/ento/wkpdf/network
 Use Chromium for PDF generation: http://www.chromium.org/developers/design-documents/print-preview
 http://chromestory.com/2010/10/learn-how-chromes-print-preview-will-work-the-pdf-deal-and-location-aware-printing/
 Chrome based javascript browser, has PDF generation capability: http://code.google.com/p/phantomjs/
+http://www.exiv2.org/?utm_source=dlvr.it&utm_medium=twitter
 
 MOBILE
 Viewport scoller https://github.com/zynga/scroller
+Developing a nice mobile site: http://davidbcalhoun.com/2011/mobile-performance-manifesto
 
 OTHER
+PlentyOfFish website run by one guy, 10M page views a month. http://highscalability.com/blog/2011/12/27/plentyoffish-update-6-billion-pageviews-and-32-billion-image.html
+ssh tips, useful for Amazon: http://shebang.brandonmintern.com/tips-for-remote-unix-work-ssh-screen-and-vnc
 Look at duostack for deployment
 How to deploy custom binaries on Heroku: http://blog.mattgornick.com/using-pdfkit-on-heroku
 https://www.crowdspring.com/post-a-project/, UI design referred from Michael LaGuardia
@@ -101,6 +111,8 @@ Sweet & short take on ipad html development http://mir.aculo.us/2010/06/04/makin
 jQuery touch http://jqtouch.com/
 
 BUSINESS
+Designer fund: funds for designers, maybe find me a co-founder here http://designerfund.com/
+Minted: they are designer focused, my solution would be a great fit
 Adorama: seems to have their own book solution based upon flash 
 Wholesale photo book printing: http://www.provenpictures.com/history.html
 More wholesale photo book printing: http://flexbind.com/how-to-buy/photographers/

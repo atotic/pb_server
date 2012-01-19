@@ -51,11 +51,47 @@ Image pane sorting, show only not placed, show comments as hidden text
 
 Compression of page logs (need object_id in schema)
 
+Next:
+Deployment:
+- put something up there first
+- logging in via Facebook/Twitter/Google
+- Chromium PDF conversion
+
+
+Jan 16
+working on deployment. Use 
+Jan 10, 2012
+PDF generation is complete. I've extended Chrome 18 with pageCapture.saveAsPDF extension.
+The commercial potential seems weaker, everyone is trying to do books. Interestingly, no
+one is doing HTML.
+I will continue pursuing the project as a learning experience. The best outcome would be
+a hobby project that starts small, and grows into digiprints.
+Next: make the project visible:
+Github for the server
+Chrome patch
+Migrate to Amazon:
+
+Dec 22
+ChromePDFSaver: my extension runs and returns the blob.
+
+Dec 16
+Created Chrome extension autopdfsave:
+- automatically generates PDF files for every window loaded
+- stores PDF on server
+PDFSaver rack-based server, stores 
+Dec 13
+PDF generation via Chrome
+PDF generation is part of Chrome, not of WebKit's test shell
+Best approach would be to get Chrome to generate the PDFs. 
+Write an extension that does this?
+There is no API for extension to print to PDF. Can I create one?
+
 Nov 18
 Saw Keepsy. These guys are awesome. I love decoupling of image placement from 
 layout details. I think I need to sell my project
 Things I did not like: Flash: it'll get harder as time goes on. Inability to
 start the album immediately. Image import should be fluid.
+Do not know the book dimensions/quality
 
 Nov 16
 Page pane scrolling
