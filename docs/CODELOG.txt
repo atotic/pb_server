@@ -49,14 +49,17 @@ Switching page layouts
 Full book view for Book pane
 Image pane sorting, show only not placed, show comments as hidden text
 
-Compression of page logs (need object_id in schema)
 
 Next:
+PDF generation as delayed_job
+Image resize as delayed_job
 Deployment:
 - put something up there first
 - logging in via Facebook/Twitter/Google
 - Chromium PDF conversion
 
+Jan 18
+Got delayed_job daemon working. No jobs yet.
 
 Jan 16
 working on deployment. Use 
