@@ -1,7 +1,17 @@
 script/delayed_job starts the delayed_job. It logs (hardcoded) into log/delayed_job.log
 Moved all common settings into settings.rb
 
-nginx to rule them all?
+LOGGING: needs to be unified, differs between :deploy and :development
+see http://stackoverflow.com/questions/2239240/use-rackcommonlogger-in-sinatra on how to unify Sinatra and stdout logging
+Rack has a logger with API incompatible with Ruby::Logger
+DelayedJob has a RubyLogger
+sveg.rb has a LOGGER
+
+CHROME deployment:
+install extension from command line
+http://code.google.com/chrome/extensions/external_extensions.html
+running multiple instances of chrome
+https://sites.google.com/a/yarina.org/dougs-notes/home/mac-os-x/multiple-instances-of-chrome
 
 Need strategy how things work on my Mac, vs how they work on Linux
 Q: How do I start my server on different ports?

@@ -17,6 +17,13 @@ Each addressable object needs to get an element id assigned at birth.
 SQL based objects have to have their id's assigned at server. Server cannot be always
 contacted immediately, which causes the problem of "offline ids"
 
+TOPIC: APPLICATION CONFIGURATION
+
+TOPIC: LOGGING FRAMEWORK
+2 types of loggers: 
+	- url_loggers log server access
+	- print_logger log error/warn/info messages
+
 PROBLEM: OFFLINE IDS
 we need to create and use an object before we got an id from the server.
 we will get an id from server eventually.

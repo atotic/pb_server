@@ -4,13 +4,13 @@ require 'settings'
 
 require 'sinatra/base'
 require 'erb'
-require 'logger'
 require 'json'
 require 'base64'
 require 'rack-flash'
+require 'logutils'
 
 # sveg requires
-require 'jobs/book2pdf'
+require 'app/book2pdf_job'
 
 # Quick and dirty shutdown
 # EventMachine takes about 10s to close my local streaming connection, too long for dev cycle
@@ -28,55 +28,43 @@ end
 
 module PB
 
-# logging
-class ColorLogger < Logger
-	def initialize()
-		super(STDOUT)
-		self.datetime_format = "%H:%M:%S"
-	end
 
-	def warn(msg)
-		printf STDOUT, "\033[33m";super;printf STDOUT, "\033[0m"
-	end
-
-	def error(msg)
-		printf STDOUT, "\033[31m";super;printf STDOUT, "\033[0m"
-	end
-end
+LOGGER = Log4r::Logger.new 'svegapp'
+Log4r::Outputter.stdout.formatter= Log4r::PatternFormatter.new(:pattern => '%l %m')
+LOGGER.add Log4r::Outputter.stdout
+LOGGER.add Log4r::FileOutputter.new("debug.log", :filename => File.join(SvegSettings.log_dir, 'debug.log'))
+LOGGER.add Log4r::GrowlOutputter.new('growlout')
 
 class SvegLogger
-	FORMAT = %{ %s"%s %s%s %s" %s %0.4f\n}
+	FORMAT = %{ %s"%s %s%s %s" %s %0.4f}
 	def initialize(app)
 		@app = app
-		@logger = STDERR
+		@logger = Log4r::Logger['svegapp']
 	end
 
 	def call(env)
-		began_at = Time.now
+		start_time = Time.now
 		status, header, body = @app.call(env)
-		log(env, status, began_at)
+		log(env, status, Time.now - start_time)
 		[status, header, body]
 	end
 
-	def log(env, status,began_at)
+	def log(env, status, time_taken)
 		now = Time.now
-
-		logger = @logger || env['rack.errors']
 		return if env['sinatra.static_file']
 		return if /assets/ =~ env["PATH_INFO"] 
-		STDERR.write "HTTP ERROR" if status >= 400
-		logger.write FORMAT % [
+		@logger.error "HTTP ERROR" if status >= 400
+		@logger.info FORMAT % [
 			env["REMOTE_USER"] || "-",
 			env["REQUEST_METHOD"],
 			env["PATH_INFO"],
 			env["QUERY_STRING"].empty? ? "" : "?"+env["QUERY_STRING"],
 			env["HTTP_VERSION"],
 			status.to_s[0..3],
-			now - began_at ]
+			time_taken ]
 	end
 end
 
-LOGGER = ColorLogger.new
 
 # Our sessions
 # Rolled my own to prevent cookie traffic on every response
@@ -232,8 +220,6 @@ class SvegApp < Sinatra::Base
 		
 	helpers do
 		include Rack::Utils
-		
-		# Utils
 		
 		alias_method :h, :escape_html
 		
@@ -412,6 +398,27 @@ class SvegApp < Sinatra::Base
 			erb :"test/qunit/#{params[:id]}", {:layout => :'test/qunit/layout'}, {:locals => { :filename => params[:id] }}
 		end
 	
+	  get '/jobs' do
+	    jobs = Delayed::Backend::DataMapper::Job.all
+	    content_type "text/html"
+      body = "<html><head><title>jobs</title></head><body>"
+#	    body = "<html><head><title>jobs</title><meta http-equiv='Refresh' content='5' /></head><body>"
+	    body += "<p>Jobs table</p><table border='1'><thead><td>Id</td><td>Time</td><td>Handler</td><td>Failed</td><td>Error</td>"
+	    if jobs.nil?
+	      body += "<tr><td>No jobs</td></tr></table>"
+	    else
+  	    jobs.each do |job|
+  	      body += "<tr>"
+  	      body += "<td>" + job.id.to_s + "</td>"
+  	      body += "<td>" + job.run_at.to_s + "</td>"
+  	      body += "<td>" + job.handler.to_s + "</td>"
+  	      body += "<td>" + job.failed_at.to_s + "</td>"
+  	      body += "<td>" + job.last_error.to_s + "</td>"
+  	      body += "</tr>"
+        end
+      end
+      body
+    end
 	end	
 
 	get '/' do
@@ -539,9 +546,9 @@ class SvegApp < Sinatra::Base
 	post '/books/:id/pdf' do
 		book = Book.get(params[:id])
 		user_must_own book
-		BookToPdf.new.process(book.id)
+		status = book.generate_pdf
 		if request.xhr?
-			flash.now[:notice] = "<a href='/books/#{book.id}/pdf'>PDF</a> being generated"
+			flash.now[:notice] = "<a href='/books/#{book.id}/pdf'>PDF</a> conversion in progress..."
 			200
 		else
 			[200, "PDF generation in progress..."]
@@ -681,8 +688,9 @@ class SvegApp < Sinatra::Base
 		throw :async
 	end
 
-# setup & run	
-	use SvegLogger
+# setup & run
+  use SvegLogger
+	use Rack::CommonLogger, Logger.new(File.join(SvegSettings.log_dir, "sveg.log"))
 	use SessionMiddleware
 	use Rack::Flash
 	run! if $0 == __FILE__

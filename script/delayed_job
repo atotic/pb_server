@@ -2,6 +2,8 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..', 'settings'))
 require 'delayed/command'
+require 'app/book2pdf_job'
+
 # put process ids in tmp
 ARGV.push("--pid-dir=#{SvegSettings.tmp_dir}") unless ARGV.index { |item| (item.start_with? "--pid-dir")  }
 # process name. Use  ps -A | grep sveg_delays

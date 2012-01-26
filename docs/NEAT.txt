@@ -60,6 +60,8 @@ JS streaming http://code.google.com/p/jquery-stream/
 Canvas graphics effects in js: http://evanw.github.com/glfx.js/demo/
 Taking apps offline walkthrogh by Sencha: http://www.sencha.com/learn/taking-sencha-touch-apps-offline
 Firefox JS tools http://hacks.mozilla.org/2011/11/firefox-tons-of-tools-for-web-developers/
+Custom font metrics in JS http://badassjs.com/post/16355968400/font-js-a-powerful-font-toolkit-for-javascript
+FileAPI resumable uploads https://github.com/23/resumable.js
 
 RUBY
 Ruby toolbox: what gem should I use for.....  http://ruby-toolbox.com/
@@ -104,7 +106,7 @@ BrowserID authentication: https://github.com/mozilla/browserid/wiki/How-to-Use-B
 Stripe payments system: cheap way to accept credit cards
 Graphic designers: http://www.artisantalent.com/find-talent/print-talent/graphic-designers/
 OAuth2: http://googlecode.blogspot.com/2011/11/oauth-20-playground-open-to-developers.html
-
+Image resizing: GraphicsMagick
 
 TOUCH INTERFACES
 Sweet & short take on ipad html development http://mir.aculo.us/2010/06/04/making-an-ipad-html5-app-making-it-really-fast/

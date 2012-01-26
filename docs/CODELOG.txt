@@ -52,7 +52,15 @@ Image pane sorting, show only not placed, show comments as hidden text
 
 Next:
 PDF generation as delayed_job
+	Generate the job
+	Post the notification that the book has been completed
 Image resize as delayed_job
+have strategies for debugging:
+- view all logs at once
+- get notified of errors in delayed_jobs|comet
+Chrome PDF generation (pain)
+Comet
+nginx on my Mac
 Deployment:
 - put something up there first
 - logging in via Facebook/Twitter/Google

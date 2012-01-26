@@ -3,14 +3,14 @@
 require 'test/unit'
 require 'rack/test'
 require "test/helper"
-require "model/book"
-require "model/book_template"
+require "app/book"
+require "app/book_template"
 
 class BookTest < Test::Unit::TestCase
 	include Rack::Test::Methods
 	include TestHelpers
 	
-	def test_book_templates
+	def test_book_templates_dir
 		Dir.foreach(SvegSettings.templates) do |template_name|
 			next if template_name.start_with? "."
 			next unless File.directory?( File.join(SvegSettings.templates, template_name));
