@@ -44,8 +44,14 @@
 		<td><%= print_datetime book.created_at %></td>
 		<td><%= print_datetime book.updated_at %></td>
 		<td>
-<% if book.pdf_path %>
-				<a href="/books/<%= book.id %>/pdf">view pdf</a>
+<% if (book.pdf_location) %>
+	<a href="/books/<%= book.id %>/pdf">view pdf</a>
+<% end %>
+<% if (book.pdf_generate_in_progress) %>
+	book generation in progress
+<% end %>
+<% if (book.pdf_generate_error) %>
+	<span class='error'>pdf could not be created.(<%= book.pdf_generate_error %>)</span>
 <% end %>
 				<a href="javascript:generatePdf(<%= book.id %>)">generate pdf</a>
 				<a href="javascript:deleteBook(<%= book.id %>)">delete</a>

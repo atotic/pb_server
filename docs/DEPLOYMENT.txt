@@ -1,3 +1,8 @@
+Binaries required:
+chromium -- chromium built with pageCapture.saveAsPDF patch
+pdftk -- pdf toolkit, for converting to pdf
+growl, growlnotify -- development only, growl errors in logs
+
 script/delayed_job starts the delayed_job. It logs (hardcoded) into log/delayed_job.log
 Moved all common settings into settings.rb
 

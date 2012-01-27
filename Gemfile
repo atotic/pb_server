@@ -13,6 +13,7 @@ gem 'log4r'
 gem 'delayed_job'
 gem 'delayed_job_data_mapper', :git => "git://github.com/collectiveidea/delayed_job_data_mapper.git"
 gem 'daemons'
+gem 'rake'
 
 group :development do
 	gem "ruby-debug"
