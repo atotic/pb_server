@@ -62,6 +62,7 @@ Taking apps offline walkthrogh by Sencha: http://www.sencha.com/learn/taking-sen
 Firefox JS tools http://hacks.mozilla.org/2011/11/firefox-tons-of-tools-for-web-developers/
 Custom font metrics in JS http://badassjs.com/post/16355968400/font-js-a-powerful-font-toolkit-for-javascript
 FileAPI resumable uploads https://github.com/23/resumable.js
+Fullscreen: http://hacks.mozilla.org/2012/01/using-the-fullscreen-api-in-web-browsers/
 
 RUBY
 Ruby toolbox: what gem should I use for.....  http://ruby-toolbox.com/

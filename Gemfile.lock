@@ -139,6 +139,7 @@ DEPENDENCIES
   nokogiri
   rack (< 1.4)
   rack-flash
+  rack-test
   rake
   ruby-debug
   sinatra

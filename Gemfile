@@ -22,3 +22,7 @@ group :development do
 	gem "wkpdf"
 	gem "growl"
 end
+
+group :test do
+  gem "rack-test"
+end
