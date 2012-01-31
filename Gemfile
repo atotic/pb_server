@@ -1,5 +1,6 @@
 source :rubygems
 
+gem 'rake'
 gem "sinatra"
 gem "datamapper"
 gem 'json'
@@ -13,7 +14,6 @@ gem 'log4r'
 gem 'delayed_job'
 gem 'delayed_job_data_mapper', :git => "git://github.com/collectiveidea/delayed_job_data_mapper.git"
 gem 'daemons'
-gem 'rake'
 
 group :development do
 	gem "ruby-debug"
@@ -24,5 +24,6 @@ group :development do
 end
 
 group :test do
+  gem "sfl" # spawn on ruby 1.8.7
   gem "rack-test"
 end

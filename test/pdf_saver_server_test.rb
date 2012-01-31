@@ -1,5 +1,4 @@
 # bundle exec rake test:all TEST=test/pdf_saver_server_test.rb
-
 require 'ruby-debug'
 Debugger.settings[:autoeval] = true
 
@@ -10,6 +9,7 @@ require "rack/test"
 require "pdf_saver_server"
 require 'json'
 
+# Exercises http API for pdf_saver_server.rb
 class PDFSaverServerTest < Test::Unit::TestCase
   include Rack::Test::Methods
 

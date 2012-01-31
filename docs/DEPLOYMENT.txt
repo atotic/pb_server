@@ -6,6 +6,10 @@ growl, growlnotify -- development only, growl errors in logs
 script/delayed_job starts the delayed_job. It logs (hardcoded) into log/delayed_job.log
 Moved all common settings into settings.rb
 
+- Setup:
+bundle install --binstubs creates bundle binaries inside bin
+
+
 LOGGING: needs to be unified, differs between :deploy and :development
 see http://stackoverflow.com/questions/2239240/use-rackcommonlogger-in-sinatra on how to unify Sinatra and stdout logging
 Rack has a logger with API incompatible with Ruby::Logger

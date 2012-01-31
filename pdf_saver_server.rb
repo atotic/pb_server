@@ -2,6 +2,8 @@
 #require 'ruby-debug'
 
 #https://github.com/rack/rack/wiki/(tutorial)-rackup-howto
+# bundle exec rake test:all TEST=test/pdf_saver_server_test.rb
+
 require 'settings'
 require 'logutils'
 require 'app/book2pdf_job'
