@@ -40,7 +40,7 @@ LoremPixel: placeholder images: http://lorempixel.com/
 CSS Patterns, might use in book backgrounds: http://leaverou.me/css3patterns/#
 3D Photo rollover: http://thewebrocks.com/demos/3D-photo-rollover/
 CSS Fonts as icons: fun icon effects with fonts http://css-tricks.com/15099-using-fonts-for-icons/
-
+Use box sizing for width/padding: http://paulirish.com/2012/box-sizing-border-box-ftw/
 JS
 HTML5 flipping pages animation: http://studio.html5rocks.com/#Flip
 How to resume a file upload http://hacks.mozilla.org/2011/04/resumeupload/
@@ -63,6 +63,8 @@ Firefox JS tools http://hacks.mozilla.org/2011/11/firefox-tons-of-tools-for-web-
 Custom font metrics in JS http://badassjs.com/post/16355968400/font-js-a-powerful-font-toolkit-for-javascript
 FileAPI resumable uploads https://github.com/23/resumable.js
 Fullscreen: http://hacks.mozilla.org/2012/01/using-the-fullscreen-api-in-web-browsers/
+Image to canvas: http://hacks.mozilla.org/2012/02/creating-thumbnails-with-drag-and-drop-and-html5-canvas/
+Operational Transformation is an official name for type of editor I am building  http://sharejs.org/
 
 RUBY
 Ruby toolbox: what gem should I use for.....  http://ruby-toolbox.com/
@@ -108,6 +110,7 @@ Stripe payments system: cheap way to accept credit cards
 Graphic designers: http://www.artisantalent.com/find-talent/print-talent/graphic-designers/
 OAuth2: http://googlecode.blogspot.com/2011/11/oauth-20-playground-open-to-developers.html
 Image resizing: GraphicsMagick
+Sending email: http://37signals.com/svn/posts/3096-behind-the-scenes-giving-away-the-secrets-of-email-delivery
 
 TOUCH INTERFACES
 Sweet & short take on ipad html development http://mir.aculo.us/2010/06/04/making-an-ipad-html5-app-making-it-really-fast/

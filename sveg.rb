@@ -33,7 +33,7 @@ module PB
 LOGGER = Log4r::Logger.new 'svegapp'
 Log4r::Outputter.stdout.formatter= Log4r::PatternFormatter.new(:pattern => '%l %m')
 LOGGER.add Log4r::Outputter.stdout
-LOGGER.add Log4r::FileOutputter.new("debug.log", :filename => File.join(SvegSettings.log_dir, 'debug.log'))
+LOGGER.add Log4r::FileOutputter.new("debug.log", :filename => File.join(SvegSettings.log_dir, 'sveg_debug.log'))
 LOGGER.add Log4r::GrowlOutputter.new('growlout')
 
 class SvegLogger
@@ -691,7 +691,7 @@ class SvegApp < Sinatra::Base
 
 # setup & run
   use SvegLogger
-	use Rack::CommonLogger, Logger.new(File.join(SvegSettings.log_dir, "sveg.log"))
+	use Rack::CommonLogger, Logger.new(File.join(SvegSettings.log_dir, "sveg_access.log"))
 	use SessionMiddleware
 	use Rack::Flash
 	run! if $0 == __FILE__

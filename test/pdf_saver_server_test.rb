@@ -1,4 +1,4 @@
-# bundle exec rake test:all TEST=test/pdf_saver_server_test.rb
+# bin/rake test:all TEST=test/pdf_saver_server_test.rb
 require 'ruby-debug'
 Debugger.settings[:autoeval] = true
 
@@ -36,19 +36,20 @@ class PDFSaverServerTest < Test::Unit::TestCase
     task
   end
 
-  def test_get_pdf_work
-    get "/get_pdf_work" # empty work queue
+  def test_poll_pdf_work
+    PB::ChromeHTMLToPDFTask.destroy
+    get "/poll_pdf_work" # empty work queue
     # no work
     assert last_response.status == 204
     # create work
     task = make_task
-    get "/get_pdf_work" # one task in queue
+    get "/poll_pdf_work" # one task in queue
     assert last_response.ok?
     json = JSON.parse(last_response.body)
     assert json['id'] = task.id
     task.reload
     assert task.processing_stage == PB::ChromeHTMLToPDFTask::STAGE_DISPATCHED_TO_CHROME
-    get "/get_pdf_work" # one task, but not availiable
+    get "/poll_pdf_work" # one task, but not availiable
     assert last_response.status == 204
     File.delete(task.pdf_file) if File.exist?(task.pdf_file)
     # test /pdf_done
@@ -72,10 +73,10 @@ class PDFSaverServerTest < Test::Unit::TestCase
     task.reload
     assert task.processing_stage == PB::ChromeHTMLToPDFTask::STAGE_DONE
     assert task.error_message.eql? fail_str
-    assert task.has_error = true
+    assert task.has_error == true
   end
   
-  def test_get_pdf_work_bad_requests
+  def test_poll_pdf_work_bad_requests
     post ("/pdf_done")
     assert last_response.status == 400, "id required"
     post ("/pdf_done?id=100000")
