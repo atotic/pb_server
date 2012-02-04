@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+# starts chrome process
+require 'settings'
+require 'daemons'
+require 'ruby-debug'
+require 'svegutils'
+
+PB::CommandLine.launch_chrome
+# 
+# myARGV = [ARGV, [
+#     "--", 
+#     "--user-data-dir=#{SvegSettings.chrome_profile_dir}",
+#     "--no-sandbox" 
+#     ]].flatten
+# 
+# 
+# Daemons.run(SvegSettings.chrome_binary, {
+#   :app_name => "chromepdf",
+#   :ARGV => myARGV,
+#   :dir_mode => :normal,
+#   :dir => SvegSettings.tmp_dir,
+#   :backtrace => true,
+#   :monitor => false,
+#   :log_dir => SvegSettings.log_dir,
+#   :log_output => true,
+# })

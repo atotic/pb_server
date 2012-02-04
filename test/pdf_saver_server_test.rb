@@ -23,7 +23,7 @@ class PDFSaverServerTest < Test::Unit::TestCase
   end
 
   def make_task
-    task = PB::ChromeHTMLToPDFTask.new({
+    task = PB::ChromePDFTask.new({
       :html_file => "test.html",
     	:pdf_file => File.join(SvegSettings.data_dir,"pdf_saver_server_test.pdf"),
     	:book_id => 1,
@@ -37,7 +37,7 @@ class PDFSaverServerTest < Test::Unit::TestCase
   end
 
   def test_poll_pdf_work
-    PB::ChromeHTMLToPDFTask.destroy
+    PB::ChromePDFTask.destroy
     get "/poll_pdf_work" # empty work queue
     # no work
     assert last_response.status == 204
@@ -48,7 +48,7 @@ class PDFSaverServerTest < Test::Unit::TestCase
     json = JSON.parse(last_response.body)
     assert json['id'] = task.id
     task.reload
-    assert task.processing_stage == PB::ChromeHTMLToPDFTask::STAGE_DISPATCHED_TO_CHROME
+    assert task.processing_stage == PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME
     get "/poll_pdf_work" # one task, but not availiable
     assert last_response.status == 204
     File.delete(task.pdf_file) if File.exist?(task.pdf_file)
@@ -57,7 +57,7 @@ class PDFSaverServerTest < Test::Unit::TestCase
     post("/pdf_done?id=#{task.id}", {}, {'rack.input' => StringIO.new(pdf_load) })
     assert last_response.ok?
     task.reload
-    assert task.processing_stage == PB::ChromeHTMLToPDFTask::STAGE_DONE
+    assert task.processing_stage == PB::ChromePDFTask::STAGE_DONE
     File.open(task.pdf_file, 'r') do |f|
       x = f.read
       assert pdf_load.eql? x
@@ -66,12 +66,12 @@ class PDFSaverServerTest < Test::Unit::TestCase
     assert  last_response.status == 405
     File.delete(task.pdf_file) if File.exist? task.pdf_file
     # test /pdf_fail
-    task.processing_stage = PB::ChromeHTMLToPDFTask::STAGE_DISPATCHED_TO_CHROME
+    task.processing_stage = PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME
     task.save
     fail_str = "pdf could not be generated"
     post("/pdf_fail?id=#{task.id}", {}, { 'rack.input' => StringIO.new(fail_str) })
     task.reload
-    assert task.processing_stage == PB::ChromeHTMLToPDFTask::STAGE_DONE
+    assert task.processing_stage == PB::ChromePDFTask::STAGE_DONE
     assert task.error_message.eql? fail_str
     assert task.has_error == true
   end

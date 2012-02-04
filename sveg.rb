@@ -8,10 +8,7 @@ require 'erb'
 require 'json'
 require 'base64'
 require 'rack-flash'
-require 'logutils'
-
-# sveg requires
-require 'app/book2pdf_job'
+require 'svegutils'
 
 # Quick and dirty shutdown
 # EventMachine takes about 10s to close my local streaming connection, too long for dev cycle

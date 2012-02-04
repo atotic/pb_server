@@ -5,14 +5,14 @@
 # bin/rake test:all TEST=test/pdf_saver_server_test.rb
 
 require 'settings'
-require 'logutils'
+require 'svegutils'
 require 'app/book2pdf_job'
 require 'ruby-debug'
 require 'rack'
 
 LOGGER = Log4r::Logger.new 'saver'
 LOGGER.add Log4r::FileOutputter.new("debug.log", :filename => File.join(SvegSettings.log_dir, 'pdf_saver_server_debug.log'))
-LOGGER.add Log4r::Outputter.stdout
+LOGGER.add Log4r::Outputter.stdout if SvegSettings.environment == :development
 #LOGGER.add Log4r::GrowlOutputter.new('growlout')
 
 $response = {
@@ -37,16 +37,14 @@ def handle_poll_work(env)
   # find a job, return 200 on success
   task = PB::ChromePDFTask.first(:processing_stage => PB::ChromePDFTask::STAGE_WAITING)
 
-  total_count = PB::ChromePDFTask.count
-  waiting = PB::ChromePDFTask.count(:processing_stage => PB::ChromePDFTask::STAGE_WAITING)
+#  PB::ChromePDFTask.all.each do |t|
+#    LOGGER.info "Task #{t.id} #{t.processing_stage}"
+#  end if task.nil?
+#total_count = PB::ChromePDFTask.count
+#waiting = PB::ChromePDFTask.count(:processing_stage => PB::ChromePDFTask::STAGE_WAITING)  
+# LOGGER.info "tasks total: #{total_count}, waiting: #{waiting}"
 
-  PB::ChromePDFTask.all.each do |t|
-    LOGGER.info "Task #{t.id} #{t.processing_stage}"
-  end if task.nil?
-  
   dispatched_count = PB::ChromePDFTask.count(:processing_stage => PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME)
-  LOGGER.info "tasks total: #{total_count}, waiting: #{waiting}"
-
   return $response[:no_work_available] unless task && dispatched_count < MAX_CONCURRENT_WORK
    
   task.processing_stage = PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME
