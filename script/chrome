@@ -1,11 +1,49 @@
 #!/usr/bin/env ruby
 # starts chrome process
+# TODO daemonize script/chrome with xvfd, taskless gem for Linux
+
 require 'settings'
 require 'daemons'
 require 'ruby-debug'
 require 'svegutils'
 
-PB::CommandLine.launch_chrome
+def usage
+  $stdout.puts "usage: chrome start|stop"; exit
+end
+
+def get_chromium_pid
+  ps = `ps -A -o pid,comm`.split("\n")
+  ids = ps.collect do |i| 
+    if i.include? SvegSettings.chrome_binary then
+      m = i.match(/(\d+)/)
+      m.length > 0 ? m[0].to_i : nil
+    else
+      nil
+    end
+  end
+  ids.compact!
+  ids.sort
+  ids.length > 0 ? ids[0] : false
+end
+
+def start
+  puts "starting chromium"
+  PB::CommandLine.launch_chrome
+end
+
+def stop
+  pid  = get_chromium_pid
+  (Process.kill("TERM", pid);puts "stopping chromium") if pid
+end
+
+usage unless ARGV.length == 1
+case 
+  when ARGV[0].eql?("start") then start
+  when ARGV[0].eql?("stop") then stop
+  else "usage"
+end
+
+# OBSOLETE CODE
 # 
 # myARGV = [ARGV, [
 #     "--", 
