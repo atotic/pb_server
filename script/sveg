@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+# starts chrome process
+# TODO daemonize script/chrome with xvfd, taskless gem for Linux
+
+require 'config/settings'
+require 'svegutils'
+
+def usage
+  puts "invalid option #{ARGV[0]}"
+  $stdout.puts "usage: #{__FILE__} start|stop|restart|config [thin options]"
+  exit
+end
+
+usage unless ARGV.length >= 1 && ARGV[0].match(/start|stop|restart|config/)
+cmd_line_args = "bin/thin --config config/sveg.yml --log #{File.join(SvegSettings.log_dir, 'sveg.stdout')} --pid #{File.join(SvegSettings.tmp_dir, 'sveg.pid')} "
+cmd_line_args += ARGV[1,100].join(" ") + " " + ARGV[0]
+out = `#{cmd_line_args} 2>&1`
+puts out unless out.empty?
+puts "Error in sveg" unless $?.success?
+

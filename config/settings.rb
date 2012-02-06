@@ -26,7 +26,7 @@ ENV['RAILS_ENV'] = ENV['RACK_ENV']
 
 class SvegSettings
   
-  @root_dir = File.dirname(File.expand_path(__FILE__))
+  @root_dir = File.dirname(File.dirname(File.expand_path(__FILE__)))
   @environment = ( ENV['RACK_ENV'] || :development ).to_sym # :production :development :test
   @book_templates_dir = File.join(@root_dir, "book-templates")
   @test_dir = File.join(@root_dir, "test")
@@ -40,7 +40,7 @@ class SvegSettings
 	
 	@chrome_binary = "/Users/atotic/chromium/src/out/Release/Chromium.app/Contents/MacOS/Chromium"
 	@chrome_dir = "/Users/atotic/chromium/src/out/Release/Chromium.app"
-	@chrome_profile_dir = File.join(@root_dir, "chrome_profile")
+	@chrome_profile_dir = File.join(@root_dir, "chromium_profile")
 	@pdf_toolkit_binary = "/usr/local/bin/pdftk"
 	
   class << self
@@ -63,19 +63,19 @@ class SvegSettings
   	database_url ="sqlite3://#{@data_dir}/#{@environment}.sqlite"
   	DataMapper.setup(:default, database_url)
   	DataMapper.finalize
+  	
+  	# delayed_job initialization
   	Delayed::Worker.destroy_failed_jobs = false
   	Delayed::Worker.backend.auto_upgrade!
   end
 end
-
-
 
 # delayed_job initialization
 # it depends on rails globals, we fake Rails object
 class Rails 
   @root = SvegSettings.data_dir
   require 'log4r'
-  @logger = Log4r::Logger.new 'rails_logger'
+  @logger = Log4r::Logger.new 'delayed_job_logger'
   class << self
     attr_accessor :root, :logger
   end

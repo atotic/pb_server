@@ -1,19 +1,26 @@
-#bin/thin start -C pdf_saver_server.yml
-#require 'ruby-debug'
+#bin/thin start -C config/pdf_saver_server.yml
 
+# simple test 
 #https://github.com/rack/rack/wiki/(tutorial)-rackup-howto
 # bin/rake test:all TEST=test/pdf_saver_server_test.rb
 
-require 'settings'
+require 'config/settings'
 require 'svegutils'
 require 'app/book2pdf_job'
-require 'ruby-debug'
 require 'rack'
+require 'ruby-debug'
 
-LOGGER = Log4r::Logger.new 'saver'
-LOGGER.add Log4r::FileOutputter.new("debug.log", :filename => File.join(SvegSettings.log_dir, 'pdf_saver_server_debug.log'))
+# logging setup
+LOGGER = Log4r::Logger.new 'pdf_saver_server'
+LOGGER.add Log4r::FileOutputter.new("pdf_saver_server.info", :filename => File.join(SvegSettings.log_dir, 'pdf_saver_server.info'))
 LOGGER.add Log4r::Outputter.stdout if SvegSettings.environment == :development
-#LOGGER.add Log4r::GrowlOutputter.new('growlout')
+
+
+if (SvegSettings.environment == :production) then
+  stdoutFile = File.new(File.join(SvegSettings.log_dir, "pdf_saver_server.stdout"), "w")
+  $stdout = stdoutFile
+  $stderr = stdoutFile
+end
 
 $response = {
   :success => [  200, 
@@ -37,12 +44,12 @@ def handle_poll_work(env)
   # find a job, return 200 on success
   task = PB::ChromePDFTask.first(:processing_stage => PB::ChromePDFTask::STAGE_WAITING)
 
-#  PB::ChromePDFTask.all.each do |t|
-#    LOGGER.info "Task #{t.id} #{t.processing_stage}"
-#  end if task.nil?
-#total_count = PB::ChromePDFTask.count
-#waiting = PB::ChromePDFTask.count(:processing_stage => PB::ChromePDFTask::STAGE_WAITING)  
-# LOGGER.info "tasks total: #{total_count}, waiting: #{waiting}"
+  PB::ChromePDFTask.all.each do |t|
+    LOGGER.info "Task #{t.id} #{t.processing_stage}"
+  end if task.nil?
+total_count = PB::ChromePDFTask.count
+waiting = PB::ChromePDFTask.count(:processing_stage => PB::ChromePDFTask::STAGE_WAITING)  
+ LOGGER.info "tasks total: #{total_count}, waiting: #{waiting}"
 
   dispatched_count = PB::ChromePDFTask.count(:processing_stage => PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME)
   return $response[:no_work_available] unless task && dispatched_count < MAX_CONCURRENT_WORK
@@ -96,7 +103,7 @@ end
 
 # rackup looks for app in variable named Pdf_saver_server
 Pdf_saver_server = Rack::Builder.new do
-  use Rack::CommonLogger, Logger.new(File.join(SvegSettings.log_dir, "pdf_saver_server_access.log"))
+  use Rack::CommonLogger, Logger.new(File.join(SvegSettings.log_dir, "pdf_saver_server.log"))
   map "/test" do
     run lambda { |env| handle_test(env) }
   end
@@ -110,6 +117,7 @@ Pdf_saver_server = Rack::Builder.new do
     run lambda { |env| handle_pdf_fail(env) }
   end
 end.to_app
+
 LOGGER.info "pdf_saver_server started #{SvegSettings.environment.to_s} #{Time.now.to_s}"
 tasks_available = PB::ChromePDFTask.count
 LOGGER.info "tasks available: #{PB::ChromePDFTask.count}"

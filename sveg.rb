@@ -1,4 +1,4 @@
-require 'settings'
+require 'config/settings'
 
 #Debugger.settings[:autoeval] = true
 #Debugger.settings[:autolist] = true
@@ -29,9 +29,11 @@ module PB
 
 LOGGER = Log4r::Logger.new 'svegapp'
 Log4r::Outputter.stdout.formatter= Log4r::PatternFormatter.new(:pattern => '%l %m')
-LOGGER.add Log4r::Outputter.stdout
-LOGGER.add Log4r::FileOutputter.new("debug.log", :filename => File.join(SvegSettings.log_dir, 'sveg_debug.log'))
-LOGGER.add Log4r::GrowlOutputter.new('growlout')
+if (SvegSettings.environment == :development) then
+  LOGGER.add Log4r::Outputter.stdout
+  LOGGER.add Log4r::GrowlOutputter.new('growlout')
+end
+LOGGER.add Log4r::FileOutputter.new("sveg_debug.log", :filename => File.join(SvegSettings.log_dir, 'sveg_debug.log'))
 
 class SvegLogger
 	FORMAT = %{ %s"%s %s%s %s" %s %0.4f}
@@ -691,8 +693,8 @@ class SvegApp < Sinatra::Base
 	use Rack::CommonLogger, Logger.new(File.join(SvegSettings.log_dir, "sveg_access.log"))
 	use SessionMiddleware
 	use Rack::Flash
-	run! if $0 == __FILE__
-
 end
 
 end
+
+Sveg = PB::SvegApp.new

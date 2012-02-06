@@ -1,26 +1,57 @@
-Binaries required:
-chromium -- chromium built with pageCapture.saveAsPDF patch
-pdftk -- pdf toolkit, for converting to pdf
-growl, growlnotify -- development only, growl errors in logs
 
-script/delayed_job starts the delayed_job. It logs (hardcoded) into log/delayed_job.log
-Moved all common settings into settings.rb
+Binaries required:
+
 
 - Setup:
 bundle install --binstubs creates bundle binaries inside bin
 
+BINARIES
+chromium -- chromium built with pageCapture.saveAsPDF patch
+pdftk -- pdf toolkit, for converting to pdf
+growl, growlnotify -- development only, growl errors in logs
+xvfd -- for running headless chrome
 
-LOGGING: needs to be unified, differs between :deploy and :development
-see http://stackoverflow.com/questions/2239240/use-rackcommonlogger-in-sinatra on how to unify Sinatra and stdout logging
-Rack has a logger with API incompatible with Ruby::Logger
-DelayedJob has a RubyLogger
-sveg.rb has a LOGGER
+SERVERS
+sveg -- main application server
+delayed_job -- pdf generation, image resizing, etc
+chromium -- custom chromium, converts html -> pdf
+pdf_saver_server -- interface to custom chromium
+comet -- broadcast protocol
+nginx -- front end server
+database -- sqlite on development
+
+SERVER DETAILS
+	all servers start/stop with script/<server_name> start|stop
+	pids are in data_dir/tmp
+
+chromium:
+	profile dir is <root>/chromium_profile
+	runs pdf_saver_extension that polls pdf_saver_server for work. Turns HTML to PDFs
+
+delayed_job:
+	does pdf generation, image resizing
+	logs to delayed_job.log
+
+LOGGING
+  Logs are in data_dir/log
+	Each server has up to three logs:
+		<server_name>.log: http access log
+		<server_name>.info: LOGGER.info|error|warn output
+		<server_name>.stdout: stdout|stderr redirects
+	
+	
+	
+TODO
+chromium:
+	restart when crashes
+	run in xvdf on production
+	redirect stdout 
+
+NEAT:
+http://mediumexposure.com/how-i-setup-sinatra-rake-thin-server-and-deployed-it-capistrano-github/
+My recipe for Sinatra/Thin/Rack .... http://www.isnorcreative.com/blogs/29
 
 CHROME deployment:
-install extension from command line
-http://code.google.com/chrome/extensions/external_extensions.html
-running multiple instances of chrome
-https://sites.google.com/a/yarina.org/dougs-notes/home/mac-os-x/multiple-instances-of-chrome
 
 Need strategy how things work on my Mac, vs how they work on Linux
 Q: How do I start my server on different ports?

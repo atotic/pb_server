@@ -1,6 +1,6 @@
 # bin/rake test:all TEST=test/chrome_saver_test.rb
-require 'ruby-debug'
-Debugger.settings[:autoeval] = true
+#require 'ruby-debug'
+#Debugger.settings[:autoeval] = true
 
 require "settings"
 require 'test/unit'

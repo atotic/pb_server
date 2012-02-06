@@ -65,6 +65,7 @@ FileAPI resumable uploads https://github.com/23/resumable.js
 Fullscreen: http://hacks.mozilla.org/2012/01/using-the-fullscreen-api-in-web-browsers/
 Image to canvas: http://hacks.mozilla.org/2012/02/creating-thumbnails-with-drag-and-drop-and-html5-canvas/
 Operational Transformation is an official name for type of editor I am building  http://sharejs.org/
+Page turning in JS: http://www.turnjs.com/#usage
 
 RUBY
 Ruby toolbox: what gem should I use for.....  http://ruby-toolbox.com/

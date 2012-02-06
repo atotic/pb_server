@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+
+require 'config/settings'
+require 'svegutils'
+require 'ruby-debug'
+
+def usage
+  puts "invalid option #{ARGV[0]}"
+  $stdout.puts "main script, controls all servers"
+  $stdout.puts "usage: #{__FILE__} start|stop|status"
+  exit
+end
+
+def status_one(process_name)
+  pid_file = File.join(SvegSettings.tmp_dir, process_name + ".pid")
+  if File.exists?(pid_file) then
+    puts "#{process_name.ljust(16)}: " + `ps -A | grep '^ *#{File.read(pid_file).chomp}'`[1..60]
+  else
+    puts "#{process_name.ljust(16)}: DOWN"
+  end
+end
+
+def status
+  status_one "sveg"
+  status_one "delayed_job"
+  status_one "pdf_saver_server"
+  pid = PB::CommandLine.get_chromium_pid
+  if pid then 
+    puts "#{"chromium".ljust(16)}: " + `ps -A | grep '^ *#{pid}'`[1..60]
+  else
+    puts "chromium".ljust(16) + ": DOWN"
+  end
+end
+
+def start
+  puts `script/sveg start`
+  puts `script/delayed_job start`
+  puts `script/pdf_saver_server start`
+  puts `script/chrome start`
+end
+
+def stop
+  puts `script/sveg stop`
+  puts `script/delayed_job stop`
+  puts `script/pdf_saver_server stop`
+  puts `script/chrome stop`
+end
+
+usage unless ARGV.length >= 1 && ARGV[0].match(/start|stop|status/)
+
+case
+when ARGV[0].eql?("status") then status
+when ARGV[0].eql?("start") then start
+when ARGV[0].eql?("stop") then stop
+else usage
+end
