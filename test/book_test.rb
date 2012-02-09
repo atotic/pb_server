@@ -1,8 +1,10 @@
-# rake test:all TEST=test/book_test.rb
+# bin/rake test:all TEST=test/book_test.rb
+ENV['RACK_ENV'] = 'test'
 
 require 'test/unit'
 require 'rack/test'
 require "test/helper"
+require 'config/settings'
 require "app/book"
 require "app/book_template"
 
@@ -11,6 +13,10 @@ class BookModelTest < Test::Unit::TestCase
 	include Rack::Test::Methods
 	include TestHelpers
 	
+	def setup
+	  ::DataMapper.auto_migrate!
+  end
+  
 	def test_book_templates_dir
 		Dir.foreach(SvegSettings.book_templates_dir) do |template_name|
 			next if template_name.start_with? "."

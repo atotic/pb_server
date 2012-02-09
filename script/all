@@ -14,7 +14,13 @@ end
 def status_one(process_name)
   pid_file = File.join(SvegSettings.tmp_dir, process_name + ".pid")
   if File.exists?(pid_file) then
-    puts "#{process_name.ljust(16)}: " + `ps -A | grep '^ *#{File.read(pid_file).chomp}'`[1..60]
+    pid = File.read(pid_file).to_s.chomp
+    status = `ps -A | grep '^ *#{pid}'`[0..60]
+    if (status.empty?) then
+      `rm #{pid_file}`
+      status = "process not found. pid file removed"
+    end
+    puts "#{process_name.ljust(16)}: " + status
   else
     puts "#{process_name.ljust(16)}: DOWN"
   end
@@ -46,11 +52,12 @@ def stop
   puts `script/chrome stop`
 end
 
-usage unless ARGV.length >= 1 && ARGV[0].match(/start|stop|status/)
+usage unless ARGV.length >= 1 && ARGV[0].match(/start|stop|status|restart/)
 
 case
 when ARGV[0].eql?("status") then status
 when ARGV[0].eql?("start") then start
 when ARGV[0].eql?("stop") then stop
+when ARGV[0].eql?("restart") then stop;start
 else usage
 end

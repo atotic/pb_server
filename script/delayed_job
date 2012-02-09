@@ -1,10 +1,51 @@
 #!/usr/bin/env ruby
 
+require 'dm-validations'
 require 'config/settings'
-require 'delayed/command'
+require 'config/delayed_job'
 require 'app/book2pdf_job'
+require 'daemons'
+require 'delayed_job_data_mapper'
+require 'delayed/worker'
 
-# process ids in tmp
-ARGV.push("--pid-dir=#{SvegSettings.tmp_dir}") unless ARGV.index { |item| (item.start_with? "--pid-dir")  }
-# process name. Use  ps -A | grep sveg_delayed_job
-Delayed::Command.new(ARGV).daemonize
+def usage
+  puts "invalid option #{ARGV[0]}"
+  $stdout.puts "usage: #{__FILE__} start|stop|restart|debug [thin options]"
+  exit
+end
+
+def run_worker
+  require File.join(SvegSettings.root_dir,'config/db')
+  DataMapper.finalize
+  Delayed::Job.enqueue PB::TestJob.new("script/delayed_job")
+  worker_options = {
+    :quiet => false,
+    :sleep_delay => 5
+  }
+  Delayed::Worker.logger = Logger.new(File.join(Rails.root, 'log', 'delayed_job.info'))
+  worker = Delayed::Worker.new(worker_options)
+  worker.name_prefix = "WORKA WORKA";
+  worker.start
+end
+
+usage unless ARGV.length >= 1 && ARGV[0].match(/start|stop|restart|debug/)
+
+daemon_options = {
+  :ARGV => ARGV,
+  :dir_mode => :normal,
+  :dir => SvegSettings.tmp_dir,
+  :backtrace => true,
+  :monitor => true,
+  :log_dir => SvegSettings.log_dir,
+  :log_output => true
+}
+debug = ARGV.index("debug")
+if debug then
+  require 'ruby-debug'
+  ARGV[debug] = 'start'
+  run_worker
+else
+  Daemons.run_proc "delayed_job", daemon_options do
+    run_worker
+  end
+end

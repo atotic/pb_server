@@ -30,7 +30,7 @@ chromium:
 
 delayed_job:
 	does pdf generation, image resizing
-	logs to delayed_job.log
+	logs to delayed_job.log (hardcoded in gem)
 
 LOGGING
   Logs are in data_dir/log
@@ -42,6 +42,9 @@ LOGGING
 	
 	
 TODO
+refactor streaming
+image resizing
+nginx
 chromium:
 	restart when crashes
 	run in xvdf on production

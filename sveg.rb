@@ -1,3 +1,4 @@
+#! bin/thin -C config/sveg.yml start
 require 'config/settings'
 
 #Debugger.settings[:autoeval] = true
@@ -8,7 +9,18 @@ require 'erb'
 require 'json'
 require 'base64'
 require 'rack-flash'
+require 'config/settings'
+require 'config/db'
 require 'svegutils'
+
+require 'app/book'
+require 'app/user'
+require 'app/photo'
+require 'app/book_template'
+require 'app/command_stream'
+require 'app/book2pdf_job'
+
+DataMapper.finalize()
 
 # Quick and dirty shutdown
 # EventMachine takes about 10s to close my local streaming connection, too long for dev cycle
@@ -18,7 +30,7 @@ module Sinatra
 			alias old_quit! quit!
 			def quit!(server, handler_name)
 				old_quit!(server, handler_name)
-				Kernel.abort("Sveg's quick exit")
+#				Kernel.abort("Sveg's quick exit")
 			end
 		end
 	end
@@ -33,7 +45,7 @@ if (SvegSettings.environment == :development) then
   LOGGER.add Log4r::Outputter.stdout
   LOGGER.add Log4r::GrowlOutputter.new('growlout')
 end
-LOGGER.add Log4r::FileOutputter.new("sveg_debug.log", :filename => File.join(SvegSettings.log_dir, 'sveg_debug.log'))
+LOGGER.add Log4r::FileOutputter.new("sveg.info", :filename => File.join(SvegSettings.log_dir, 'sveg.info'))
 
 class SvegLogger
 	FORMAT = %{ %s"%s %s%s %s" %s %0.4f}
@@ -413,7 +425,7 @@ class SvegApp < Sinatra::Base
   	      body += "<td>" + job.run_at.to_s + "</td>"
   	      body += "<td>" + job.handler.to_s + "</td>"
   	      body += "<td>" + job.failed_at.to_s + "</td>"
-  	      body += "<td>" + job.last_error.to_s + "</td>"
+  	      body += "<td><pre>" + job.last_error.to_s + "</pre></td>"
   	      body += "</tr>"
         end
       end
@@ -690,7 +702,7 @@ class SvegApp < Sinatra::Base
 
 # setup & run
   use SvegLogger
-	use Rack::CommonLogger, Logger.new(File.join(SvegSettings.log_dir, "sveg_access.log"))
+	use Rack::CommonLogger, Logger.new(File.join(SvegSettings.log_dir, "sveg.log"))
 	use SessionMiddleware
 	use Rack::Flash
 end

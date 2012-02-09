@@ -1,8 +1,9 @@
 # bin/rake test:all TEST=test/pdf_saver_server_test.rb
-require 'ruby-debug'
-Debugger.settings[:autoeval] = true
+ENV['RACK_ENV'] = 'test'
+#require 'ruby-debug'
+#Debugger.settings[:autoeval] = true
 
-require "settings"
+require 'config/settings'
 require 'test/unit'
 
 require "rack/test"

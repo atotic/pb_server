@@ -1,4 +1,6 @@
-require "settings"
+#! bin/rake test:all TEST=test/binaries_test.rb
+ENV['RACK_ENV'] = 'test'
+require 'config/settings'
 require 'test/unit'
 
 class BinarySettingsTest < Test::Unit::TestCase

@@ -11,7 +11,14 @@ end
 
 def start
   puts "starting chromium"
-  PB::CommandLine.launch_chrome
+  pid = Kernel.spawn(SvegSettings.chrome_binary,
+                     "--user-data-dir=#{SvegSettings.chrome_profile_dir}",
+                     "--no-sandbox",
+                     :chdir => SvegSettings.chrome_profile_dir,
+                     :out => File.join(SvegSettings.log_dir, "chromepdf.stdout"),
+                     :err => File.join(SvegSettings.log_dir, "chromepdf.stdout"))
+   Process.detach(pid)
+   pid
 end
 
 def stop
@@ -25,23 +32,3 @@ case
   when ARGV[0].eql?("stop") then stop
   else "usage"
 end
-
-# OBSOLETE CODE
-# 
-# myARGV = [ARGV, [
-#     "--", 
-#     "--user-data-dir=#{SvegSettings.chrome_profile_dir}",
-#     "--no-sandbox" 
-#     ]].flatten
-# 
-# 
-# Daemons.run(SvegSettings.chrome_binary, {
-#   :app_name => "chromepdf",
-#   :ARGV => myARGV,
-#   :dir_mode => :normal,
-#   :dir => SvegSettings.tmp_dir,
-#   :backtrace => true,
-#   :monitor => false,
-#   :log_dir => SvegSettings.log_dir,
-#   :log_output => true,
-# })
