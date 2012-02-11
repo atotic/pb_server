@@ -36,10 +36,10 @@ class ChromeSaverTest < Test::Unit::TestCase
     @task2.destroy if @task2
   end
 
-  def make_task(pdf_file=nil, html_file=nil)
-    pdf_file = File.join(SvegSettings.data_dir,"chrome_saver_page1.pdf") unless pdf_file
-    html_file = File.join(SvegSettings.test_dir, "public", "page1.html" ) unless html_file
+  def make_task(pdf_file, html_file, book_pdf)
     task = PB::ChromePDFTask.new({
+      :book_dir => "",
+      :book_pdf => book_pdf,
       :html_file => html_file,
     	:pdf_file => pdf_file,
     	:book_id => 1,
@@ -61,8 +61,9 @@ class ChromeSaverTest < Test::Unit::TestCase
     File.delete(pdf2) if File.exist?(pdf2)
     html1 = File.join(SvegSettings.test_dir, "public", "page1.html" )
     html2 = File.join(SvegSettings.test_dir, "public", "page2.html" )
-    @task = make_task(pdf1, html1)
-    @task2 = make_task(pdf2, html2)
+    book_pdf = File.join(SvegSettings.data_dir, "book.pdf")
+    @task = make_task(pdf1, html1, book_pdf)
+    @task2 = make_task(pdf2, html2, book_pdf)
     assert !PB::ChromePDFTask.all.empty?, "The task is not there"
     # task will be served by pdf_saver_server, converted by chrome, and saved by pdf_saver_server
     timeout = 600
@@ -95,8 +96,7 @@ class ChromeSaverTest < Test::Unit::TestCase
     assert @task2.processing_stage == PB::ChromePDFTask::STAGE_DONE, "task not done #{@task2.processing_stage}"
     assert @task.has_error == false, "Task did not convert to PDF, #{@task.error_message}"
     assert @task2.has_error == false, "Task2 did not convert to PDF, #{@task2.error_message}"
-    book_file = File.join(SvegSettings.data_dir, "book.pdf")
-    cmd_line = PB::CommandLine.get_merge_pdfs(book_file, [pdf1, pdf2])
+    cmd_line = PB::CommandLine.get_merge_pdfs(book_pdf, [pdf1, pdf2])
     success = Kernel.system cmd_line
     assert success, "Failed to merge PDF files"
    end

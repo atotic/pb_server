@@ -51,6 +51,7 @@ chromium:
 	redirect stdout 
 
 NEAT:
+Nginx howto https://calomel.org/nginx.html
 http://mediumexposure.com/how-i-setup-sinatra-rake-thin-server-and-deployed-it-capistrano-github/
 My recipe for Sinatra/Thin/Rack .... http://www.isnorcreative.com/blogs/29
 

@@ -30,5 +30,6 @@ usage unless ARGV.length == 1
 case 
   when ARGV[0].eql?("start") then start
   when ARGV[0].eql?("stop") then stop
-  else "usage"
+  when ARGV[0].eql?("restart") then stop;start
+  else usage
 end

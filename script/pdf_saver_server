@@ -23,9 +23,11 @@ if (ARGV[0].eql? 'debug') then
   Kernel.exec cmd_line_args
 end
 
-cmd_line_args += " --log #{File.join(SvegSettings.log_dir, 'pdf_saver_server.stdout')}"
-cmd_line_args += " --pid #{File.join(SvegSettings.tmp_dir, 'pdf_saver_server.pid')} "
-cmd_line_args += "--daemonize" 
+cmd_line_args += " --log #{File.join(SvegSettings.log_dir, 'pdf_saver_server.info')}"
+cmd_line_args += " --pid #{File.join(SvegSettings.tmp_dir, 'pdf_saver_server.pid')}"
+cmd_line_args += " --daemonize" 
+# need to force quit because constant polling keeps connection open forever
+cmd_line_args += " --force" if ARGV[0].eql?("stop") 
 cmd_line_args += ARGV[1,100].join(" ") + " " + ARGV[0]
 puts cmd_line_args
 out = `#{cmd_line_args} 2>&1`

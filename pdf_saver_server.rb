@@ -1,22 +1,30 @@
 #! bin/thin start -C config/pdf_saver_server.yml
 # bin/rake test:all TEST=test/pdf_saver_server_test.rb
 
+
 require 'config/settings'
 require 'config/db'
 require 'svegutils'
 require 'app/book2pdf_job'
 require 'rack'
+require 'config/delayed_job'
 
 DataMapper.finalize
 
 # logging setup
-LOGGER = Log4r::Logger.new 'pdf_saver_server'
-LOGGER.add Log4r::FileOutputter.new("pdf_saver_server.info", :filename => File.join(SvegSettings.log_dir, 'pdf_saver_server.info'))
+LOGGER = Log4r::Logger.new 'pdf_s_s'
+outputter = Log4r::FileOutputter.new("pdf_saver_server.info", :filename => File.join(SvegSettings.log_dir, 'pdf_saver_server.info'))
+formatter = Log4r::PatternFormatter.new(
+  :pattern => "%d %l %c %m",
+  :date_pattern => "%-m/%e %I:%M:%S"
+)
+outputter.formatter = formatter
+LOGGER.add outputter
 # LOGGER.add Log4r::Outputter.stdout if SvegSettings.environment == :development
 
 
 if (SvegSettings.environment == :production) then
-  stdoutFile = File.new(File.join(SvegSettings.log_dir, "pdf_saver_server.stdout"), "w")
+  stdoutFile = File.new(File.join(SvegSettings.log_dir, "pdf_saver_server.info"), "w")
   $stdout = stdoutFile
   $stderr = stdoutFile
 end
@@ -33,117 +41,142 @@ $response = {
   :bad_request_task_not_found => [404, {}, ["Task not found}"]]
 }
 
-def handle_test(env)
-  $response[:success]
+class PdfSaver
+
+  @@last_poll = Time.now
+  MAX_CONCURRENT_WORK = 2
+  
+  def self.log(env, msg="")
+  	LOGGER.info env["REQUEST_METHOD"] + " " + env["REQUEST_URI"] + " " + msg
+  end
+
+  def self.last_poll 
+    return @@last_poll
+  end
+  
+  def self.handle_test(env)
+    log(env)
+    $response[:success]
+  end
+
+  def self.handle_poll_work(env)
+    @@last_poll = Time.now
+    # find a job, return 200 on success
+    task = PB::ChromePDFTask.first(:processing_stage => PB::ChromePDFTask::STAGE_WAITING)
+    dispatched_count = 
+      PB::ChromePDFTask.count(:processing_stage => PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME)
+    return $response[:no_work_available] unless task && dispatched_count < MAX_CONCURRENT_WORK
+    self.log(env, "task " + task.id.to_s)
+    task.processing_stage = PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME
+    task.save
+    [200, {'Content-Type' => 'application/json'}, task.to_json]
+  end
+
+  # If save fails, retry after a couple of seconds
+  def self.saveTask(task)
+    done = false
+    begin
+      task.save
+    rescue => ex
+      Kernel.sleep(2)
+      LOGGER.warn("Database busy, retrying to save task #{task[:id]}")
+      task.save
+    end
+  end
+
+  def self.handle_pdf_done(env)
+    query = Rack::Utils.parse_query(env['QUERY_STRING'])
+    return $response[:bad_request_no_id] unless query['id']
+    task = PB::ChromePDFTask.get(query['id'])
+    unless task
+      LOGGER.error("handle_pdf_done failed to find task " + query['id'])
+      return $response[:bad_request_task_not_found]
+    end
+    unless (task.processing_stage == PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME)
+      LOGGER.error("handle_pdf_done received, task in wrong processing stage #{task.processing_stage}")
+      return $response[:bad_request_task_stage]
+    end
+    begin
+      File.open(task.pdf_file, "wb") do |f|
+        f.write(env['rack.input'].read)
+        f.flush
+      end
+      task.processing_stage = PB::ChromePDFTask::STAGE_DONE
+      task.has_error = false
+      task.save # can fail with locked database for sqlite
+      Delayed::Job.enqueue PB::BookToPdfCompleteJob.new(task.book_id)
+    rescue => ex
+      Kernel.sleep(1)
+      task.processing_stage = PB::ChromePDFTask::STAGE_DONE
+      task.has_error = true
+      task.error_message = ex.message[0..127]
+      task.save
+      Delayed::Job.enqueue PB::BookToPdfCompleteJob.new(task.book_id)
+    end    
+    self.log(env, "task " + task.id.to_s)
+    $response[:success]
+  end
+
+  def self.handle_pdf_fail(env)
+    query = Rack::Utils.parse_query(env['QUERY_STRING'])
+    return $response[:bad_request_no_id] unless query['id']
+    task = PB::ChromePDFTask.get(query['id'])
+    unless task
+      LOGGER.error("handle_pdf_fail failed to find task " + query['id'])
+      return $response[:bad_request_task_stage]
+    end
+    unless (task.processing_stage == PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME)
+      LOGGER.error("handle_pdf_fail received, but task is in wrong processing stage #{task.processing_stage}")
+      return $response[:bad_request_task_stage]
+    end
+    task.has_error = true
+    err =  env['rack.input'].read
+    LOGGER.error("Task #{task.id} failed to generate pdf. #{err}")
+    task.processing_stage = PB::ChromePDFTask::STAGE_DONE  
+    task.error_message = err[0..127] # trunc for safety
+    task.save
+    Delayed::Job.enqueue PB::BookToPdfCompleteJob.new(task.book_id)
+    self.log(env, "task " + task.id.to_s)
+    $response[:success]
+  end
 end
 
-
-MAX_CONCURRENT_WORK = 1
-def handle_poll_work(env)
-  # find a job, return 200 on success
-  task = PB::ChromePDFTask.first(:processing_stage => PB::ChromePDFTask::STAGE_WAITING)
-
-#  PB::ChromePDFTask.all.each do |t|
-#    LOGGER.info "Task #{t.id} #{t.processing_stage}"
-#  end if task.nil?
-#total_count = PB::ChromePDFTask.count
-#waiting = PB::ChromePDFTask.count(:processing_stage => PB::ChromePDFTask::STAGE_WAITING)  
-# LOGGER.info "tasks total: #{total_count}, waiting: #{waiting}"
-
-  dispatched_count = PB::ChromePDFTask.count(:processing_stage => PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME)
-  return $response[:no_work_available] unless task && dispatched_count < MAX_CONCURRENT_WORK
-   
-  task.processing_stage = PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME
-  task.save
-  [200, {'Content-Type' => 'application/json'}, task.to_json]
-end
-
-def handle_pdf_done(env)
-  query = Rack::Utils.parse_query(env['QUERY_STRING'])
-  return $response[:bad_request_no_id] unless query['id']
-  task = PB::ChromePDFTask.get(query['id'])
-  unless task
-    LOGGER.error("handle_pdf_done failed to find task " + query['id'])
-    return $response[:bad_request_task_not_found]
+# Monitor chromium. 
+# Restart if it has not contacted us in a while
+Thread.new {
+  chromium_timer = 5
+  while true do
+    Kernel.sleep(chromium_timer)
+    if Time.now > (PdfSaver.last_poll + chromium_timer) then
+      LOGGER.error("Chromium did not GET /poll_pdf_work for more than #{chromium_timer} seconds. Restarting chromium")
+      orphans = PB::ChromePDFTask.all(:processing_stage => PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME)
+      orphans.each do |t|
+        LOGGER.warn("Task #{t.id} was orphaned. Resetting.")
+        o.processing_stage = PB::ChromePDFTask::STAGE_WAITING;
+        o.save
+      end
+      LOGGER.info(`#{File.join(SvegSettings.root_dir, 'script/chrome')} restart`)
+    end
   end
-  unless (task.processing_stage == PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME)
-    LOGGER.error("handle_pdf_done received, task in wrong processing stage #{task.processing_stage}")
-    return $response[:bad_request_task_stage]
-  end
-  File.open(task.pdf_file, "wb") do |f|
-    f.write(env['rack.input'].read)
-    f.flush
-  end
-  task.processing_stage = PB::ChromePDFTask::STAGE_DONE
-  task.has_error = false
-  task.save
-  $response[:success]
-end
-
-def handle_pdf_fail(env)
-  query = Rack::Utils.parse_query(env['QUERY_STRING'])
-  return $response[:bad_request_no_id] unless query['id']
-  task = PB::ChromePDFTask.get(query['id'])
-  unless task
-    LOGGER.error("handle_pdf_fail failed to find task " + query['id'])
-    return $response[:bad_request_task_stage]
-  end
-  unless (task.processing_stage == PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME)
-    LOGGER.error("handle_pdf_fail received, but task is in wrong processing stage #{task.processing_stage}")
-    return $response[:bad_request_task_stage]
-  end
-  task.has_error = true
-  err =  env['rack.input'].read
-  LOGGER.error("Task #{task.id} failed to generate pdf. #{err}")
-  task.processing_stage = PB::ChromePDFTask::STAGE_DONE  
-  task.error_message = err[0..127] # trunc for safety
-  task.save
-  $response[:success]
-end
+}
 
 # rackup looks for app in variable named Pdf_saver_server
 Pdf_saver_server = Rack::Builder.new do
-  use Rack::CommonLogger, Logger.new(File.join(SvegSettings.log_dir, "pdf_saver_server.log"))
   map "/test" do
-    run lambda { |env| handle_test(env) }
+    run lambda { |env| PdfSaver.handle_test(env) }
   end
   map "/poll_pdf_work" do
-    run lambda { |env| handle_poll_work(env) }
+    run lambda { |env| PdfSaver.handle_poll_work(env) }
   end
   map "/pdf_done" do
-    run lambda { |env| handle_pdf_done(env) }
+    run lambda { |env| PdfSaver.handle_pdf_done(env) }
   end
   map "/pdf_fail" do
-    run lambda { |env| handle_pdf_fail(env) }
+    run lambda { |env| PdfSaver.handle_pdf_fail(env) }
   end
 end.to_app
 
-LOGGER.info "pdf_saver_server started #{SvegSettings.environment.to_s} #{Time.now.to_s}"
-tasks_available = PB::ChromePDFTask.count
+LOGGER.info "started #{SvegSettings.environment.to_s} #{Time.now.to_s}"
 LOGGER.info "tasks available: #{PB::ChromePDFTask.count}"
 
-# declare global to make it visible to tests
 $Pdf_saver_server = Pdf_saver_server
-# def make_task
-#   pdf_file = File.join(SvegSettings.data_dir,"chrome_saver_test_page1.pdf")
-#   html_file =  File.join(SvegSettings.test_dir, "public", "page1.html" )
-#   task = PB::ChromePDFTask.new({
-#     :html_file => html_file,
-#     :pdf_file => pdf_file,
-#     :book_id => 1,
-#     :html_file_url => "file://" + html_file,
-#     :pageWidth => 600,
-#     :pageHeight => 600
-#   })
-#   task.save
-#   task
-# end
-# 
-# DataMapper.auto_migrate!
-# make_task
-# make_task
-# make_task
-# make_task
-# make_task
-# make_task
-# make_task

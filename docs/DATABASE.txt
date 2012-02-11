@@ -1,0 +1,14 @@
+DataMapper sqlite3 dies often with Database busy error. Fix in
+
+dm-do-adapter/adapter.rb:193
+
+      with_connection do |connection|
+        begin
+          connection.create_command(statement).execute_non_query(*bind_values)
+        rescue
+          Kernel.sleep(1)
+          DataMapper.logger.warn("atotic fix: retry after an error")
+          connection.create_command(statement).execute_non_query(*bind_values)
+        end
+      end.affected_rows
+    end
