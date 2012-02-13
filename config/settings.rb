@@ -4,8 +4,9 @@ ENV['RACK_ENV'] = 'development' unless ENV.has_key? 'RACK_ENV'
 ENV['RAILS_ENV'] = ENV['RACK_ENV']
 
 # gem requires
-require 'rubygems'
-require "bundler/setup"
+require 'bundler/setup'
+require 'ruby-debug'
+Debugger.settings[:autoeval] = true
 
 # server code
 

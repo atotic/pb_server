@@ -25,6 +25,7 @@ class PDFSaverServerTest < Test::Unit::TestCase
 
   def make_task
     task = PB::ChromePDFTask.new({
+      :book_pdf => "NOT A FILE.pdf",
       :html_file => "test.html",
     	:pdf_file => File.join(SvegSettings.data_dir,"pdf_saver_server_test.pdf"),
     	:book_id => 1,

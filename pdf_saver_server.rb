@@ -12,17 +12,7 @@ require 'config/delayed_job'
 DataMapper.finalize
 
 # logging setup
-LOGGER = Log4r::Logger.new 'pdf_s_s'
-outputter = Log4r::FileOutputter.new("pdf_saver_server.info", :filename => File.join(SvegSettings.log_dir, 'pdf_saver_server.info'))
-formatter = Log4r::PatternFormatter.new(
-  :pattern => "%d %l %c %m",
-  :date_pattern => "%-m/%e %I:%M:%S"
-)
-outputter.formatter = formatter
-LOGGER.add outputter
-# LOGGER.add Log4r::Outputter.stdout if SvegSettings.environment == :development
-
-
+LOGGER = PB.get_logger("pdf_saver_server")
 if (SvegSettings.environment == :production) then
   stdoutFile = File.new(File.join(SvegSettings.log_dir, "pdf_saver_server.info"), "w")
   $stdout = stdoutFile
@@ -47,7 +37,7 @@ class PdfSaver
   MAX_CONCURRENT_WORK = 2
   
   def self.log(env, msg="")
-  	LOGGER.info env["REQUEST_METHOD"] + " " + env["REQUEST_URI"] + " " + msg
+  	LOGGER.info env["REQUEST_METHOD"] + " " + env["SCRIPT_NAME"] + " " + msg
   end
 
   def self.last_poll 

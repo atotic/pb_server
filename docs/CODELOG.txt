@@ -1,5 +1,3 @@
-Next
-Bug fixes:
 
 PLAN:
 Goals:
@@ -9,10 +7,6 @@ Goals:
 
 - can create interesting books and templates
   interesting features: colored books, backgrounds, text, rotation
-- background jobs - realistic api: image resizing after upload, pdf generation in background
-- implement google/fb logins
-- deploy
-- < 200MB pdf files?
 
 July 15
 iPhoto style default images
@@ -51,20 +45,20 @@ Image pane sorting, show only not placed, show comments as hidden text
 
 
 Next:
-PDF generation as delayed_job
-	Generate the job
-	Post the notification that the book has been completed
 Image resize as delayed_job
 have strategies for debugging:
 - view all logs at once
 - get notified of errors in delayed_jobs|comet
-Chrome PDF generation (pain)
 Comet
 nginx on my Mac
 Deployment:
 - put something up there first
 - logging in via Facebook/Twitter/Google
 - Chromium PDF conversion
+
+Feb 11
+PDF generation works.
+All servers are nicely controlled via scrips
 
 Jan 18
 Got delayed_job daemon working. No jobs yet.

@@ -4,7 +4,6 @@
 
 require 'config/settings'
 require 'svegutils'
-require 'ruby-debug'
 
 def usage
   puts "invalid option #{ARGV[0]}"
@@ -16,13 +15,14 @@ usage unless ARGV.length >= 1 && ARGV[0].match(/start|stop|restart|debug/)
 cmd_line_args = "bin/thin --port 4000 --rackup sveg.rb "
 
 if (ARGV[0].eql? 'debug') then
+  require 'ruby-debug'
   ARGV[0] = 'start'
   cmd_line_args += " --debug"
   cmd_line_args += ARGV[1,100].join(" ") + " " + ARGV[0]
   Kernel.exec cmd_line_args
 end
 
-cmd_line_args += "--log #{File.join(SvegSettings.log_dir, 'sveg.stdout')}"
+cmd_line_args += "--log #{File.join(SvegSettings.log_dir, 'sveg.info')}"
 cmd_line_args += " --pid #{File.join(SvegSettings.tmp_dir, 'sveg.pid')} "
 cmd_line_args += " --daemonize"
 cmd_line_args += ARGV[1,100].join(" ") + " " + ARGV[0]

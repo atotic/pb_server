@@ -1,7 +1,3 @@
-
-Binaries required:
-
-
 - Setup:
 bundle install --binstubs creates bundle binaries inside bin
 
@@ -18,7 +14,7 @@ chromium -- custom chromium, converts html -> pdf
 pdf_saver_server -- interface to custom chromium
 comet -- broadcast protocol
 nginx -- front end server
-database -- sqlite on development
+database -- sqlite on development,mysql on production
 
 SERVER DETAILS
 	all servers start/stop with script/<server_name> start|stop
@@ -31,6 +27,9 @@ chromium:
 delayed_job:
 	does pdf generation, image resizing
 	logs to delayed_job.log (hardcoded in gem)
+	
+pdf_saver_server:
+	
 
 LOGGING
   Logs are in data_dir/log
@@ -42,6 +41,7 @@ LOGGING
 	
 	
 TODO
+delayed job logger, do the same as pdf_server_saver
 refactor streaming
 image resizing
 nginx
@@ -60,9 +60,6 @@ CHROME deployment:
 Need strategy how things work on my Mac, vs how they work on Linux
 Q: How do I start my server on different ports?
 A: Command line for thin http://stackoverflow.com/questions/4389181/passing-options-to-rackup-via-a-sinatra-application
-
-A: Fixed the bundling....
-bundle update
 
 run nginx as a load balancer, have only 1 app server in the back
 http://markmaunder.com/2009/12/01/how-to-handle-1000s-of-concurrent-users-on-a-360mb-vps/
@@ -92,12 +89,3 @@ sveg app server
 comet: comet server?
 delayed_job server. Resizing of images, generating pdfs.
 should comet server be another delayed_job server?
-
-
-delayed_job
-comet
-app
-
-
-
-Clean up file serving, storage

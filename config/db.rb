@@ -1,6 +1,5 @@
 # gem requires
 require 'config/settings'
-require 'ruby-debug'
 #require 'dm-core'
 #require 'dm-validations'
 #require 'dm-migrations'
@@ -20,3 +19,4 @@ adapter = DataMapper.setup(:default, database_url)
 # i would love to set busy timeout, but it is impossible with DataMapper.
 # datamapper uses data_objects uses do_sqlite3, which is a binary extension that provides no facilities for busy_timeout
 # sqlite3_busy_timeout( db, 100 );
+# instead, patch dataobjects to retry updates on failure

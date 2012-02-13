@@ -17,6 +17,7 @@ cmd_line_args = "bin/thin"
 cmd_line_args += " --port 20011 --rackup pdf_saver_server.rb"
 
 if (ARGV[0].eql? 'debug') then
+  require 'ruby-debug'
   ARGV[0] = 'start'
   cmd_line_args += " --debug"
   cmd_line_args += ARGV[1,100].join(" ") + " " + ARGV[0]
