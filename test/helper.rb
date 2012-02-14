@@ -2,7 +2,6 @@
 # http://en.wikibooks.org/wiki/Ruby_Programming/Unit_testing
 
 # rake test:all TEST=test/book_page_test.rb
-ENV['RACK_ENV'] = 'test'
 require 'sveg'
 
 module TestHelpers

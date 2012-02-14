@@ -9,6 +9,7 @@ require 'app/book2pdf_job'
 require 'rack'
 require 'config/delayed_job'
 
+DataMapper::Logger.set_log(StringIO.new, :fatal) # /dev/null logger, we access db continuously
 DataMapper.finalize
 
 # logging setup

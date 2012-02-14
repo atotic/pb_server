@@ -511,8 +511,9 @@ class SvegApp < Sinatra::Base
 	delete '/books/:id' do
 		book = Book.get(params[:id])
 		user_must_own book
-		flash[:notice] = "Book " + book.title + " was deleted";
-		book.destroy
+		book.destroy_dependents
+		success = book.destroy
+		flash[:notice] = success ? "Book " + book.title + " was deleted" : "Book could not be deleted."
 		content_type "text/plain"
 	end
 	
