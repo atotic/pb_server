@@ -40,7 +40,7 @@ module PB
 
 
 LOGGER = Log4r::Logger.new 'svegapp'
-Log4r::Outputter.stdout.formatter= Log4r::PatternFormatter.new(:pattern => '%l %m')
+Log4r::Outputter.stdout.formatter= PB::SVEG_FORMATTER
 if (SvegSettings.environment == :development) then
   LOGGER.add Log4r::Outputter.stdout
   LOGGER.add Log4r::GrowlOutputter.new('growlout')
@@ -664,8 +664,10 @@ class SvegApp < Sinatra::Base
 		halt [404, "Book page not found"] unless page
 		user_must_own(page.book)
 		assert_last_command_up_to_date(request)
-		page.update(request.params)
-		new_last_id = ServerCommand.createReplacePageCmd(page, get_stream(request))
+		Page.transaction do
+  		page.update(request.params)
+  		new_last_id = ServerCommand.createReplacePageCmd(page, get_stream(request))
+		end
 		response.headers['X-Sveg-LastCommandId'] = String(new_last_id)
 		content_type "text/plain"
 		"Update successful"
@@ -702,7 +704,7 @@ class SvegApp < Sinatra::Base
 	end
 
 # setup & run
-  use SvegLogger
+  use SvegLogger if SvegSettings.environment == :development
 	use Rack::CommonLogger, Logger.new(File.join(SvegSettings.log_dir, "sveg.log"))
 	use SessionMiddleware
 	use Rack::Flash

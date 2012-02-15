@@ -16,25 +16,8 @@ class CreateSampleData < Test::Unit::TestCase
   end
   
   def test_create_books
-    user = create_user('atotic')
-    template = PB::BookTemplate.new("modern_lines")
-		book1 = template.create_book(user, {"title" => "Book1", "template"=>{"name"=>"modern_lines"}});
-    assert book1
-    book2 = template.create_book(user, {"title" => "Book2", "template"=>{"name"=>"modern_lines"}});
-    assert book2
-    Dir.glob(File.join(SvegSettings.root_dir, "test/public/*.jpg")).each do |filename|
-      photo = PB::Photo.first(:display_name => File.basename(filename))
-      unless photo
-        newName = "#{filename}.jpg"
-        `cp #{filename} #{newName}`
-        photo = PB::Photo.create( {:display_name => File.basename(filename), :user_id => user['id']} );
-				PB::PhotoStorage.storeFile(photo, newName )
-      end
-			book1.photos << photo
-			book2.photos << photo
-	  end
-	  book1.save
-	  book2.save
-	  assert "All done"
+    book1 = create_book( :title => "Book1", :img_cnt => 10)
+    assert book1, "Could not create book"
+    book2 = create_book( :title => "Book1", :img_cnt => 10)
   end
 end

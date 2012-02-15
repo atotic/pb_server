@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# starts pdf_saver_server
+# starts comet process
 
 require 'config/settings'
 require 'svegutils'
@@ -13,7 +13,7 @@ end
 usage unless ARGV.length >= 1 && ARGV[0].match(/start|stop|restart|debug/)
 
 cmd_line_args = "bin/thin"
-cmd_line_args += " --port 27000 --rackup pdf_saver_server.rb"
+cmd_line_args += " --port 28000 --rackup comet.rb"
 
 if (ARGV[0].eql? 'debug') then
    require 'ruby-debug'
@@ -23,9 +23,9 @@ if (ARGV[0].eql? 'debug') then
   Kernel.exec cmd_line_args
 end
 
-cmd_line_args += " --log #{File.join(SvegSettings.log_dir, 'pdf_saver_server.info')}"
-cmd_line_args += " --pid #{File.join(SvegSettings.tmp_dir, 'pdf_saver_server.pid')}"
-cmd_line_args += " --tag pdf_ss_#{SvegSettings.environment.to_s[0..1]}"
+cmd_line_args += " --log #{File.join(SvegSettings.log_dir, 'comet.info')}"
+cmd_line_args += " --pid #{File.join(SvegSettings.tmp_dir, 'comet.pid')}"
+cmd_line_args += " --tag comet_#{SvegSettings.environment.to_s[0..1]}"
 cmd_line_args += " --daemonize" 
 # need to force quit because constant polling keeps connection open forever
 cmd_line_args += " --force" if ARGV[0].eql?("stop") 
@@ -33,5 +33,5 @@ cmd_line_args += ARGV[1,100].join(" ") + " " + ARGV[0]
 puts cmd_line_args
 out = `#{cmd_line_args} 2>&1`
 puts out unless out.empty?
-puts "Error in pdf_saver_server" unless $?.success?
+puts "Error in comet" unless $?.success?
 

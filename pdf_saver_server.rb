@@ -1,4 +1,4 @@
-#! bin/thin start -C config/pdf_saver_server.yml
+#! bin/thin start --rackup pdf_saver_server.rb
 # bin/rake test:all TEST=test/pdf_saver_server_test.rb
 
 
@@ -9,11 +9,10 @@ require 'app/book2pdf_job'
 require 'rack'
 require 'config/delayed_job'
 
-DataMapper::Logger.set_log(StringIO.new, :fatal) # /dev/null logger, we access db continuously
+DataMapper.logger.set_log(StringIO.new, :fatal) # /dev/null logger, we access db continuously
 DataMapper.finalize
 
 # logging setup
-LOGGER = PB.get_logger("pdf_saver_server")
 if (SvegSettings.environment == :production) then
   stdoutFile = File.new(File.join(SvegSettings.log_dir, "pdf_saver_server.info"), "w")
   $stdout = stdoutFile
@@ -22,8 +21,8 @@ end
 
 $response = {
   :success => [  200, 
-      { 'Content-Type' => 'text/plain', 'Content-Length' => '7',},
-      ['success']],
+      { 'Content-Type' => 'text/plain', 'Content-Length' => '9',},
+      ['pdf_saver']],
   :no_work_available => [ 204, 
       { 'Content-Type' => 'text/plain', 'Content-Length' => '0'}, 
       [""]],
@@ -32,10 +31,11 @@ $response = {
   :bad_request_task_not_found => [404, {}, ["Task not found}"]]
 }
 
-class PdfSaver
+module PdfSaver
 
   @@last_poll = Time.now
   MAX_CONCURRENT_WORK = 2
+  LOGGER = PB.get_logger 'pdf_saver_server'
   
   def self.log(env, msg="")
   	LOGGER.info env["REQUEST_METHOD"] + " " + env["SCRIPT_NAME"] + " " + msg
@@ -43,6 +43,10 @@ class PdfSaver
 
   def self.last_poll 
     return @@last_poll
+  end
+  
+  def self.do_not_wake_up_chrome
+    @@last_poll = Time.now + 2 * 24 * 3600
   end
   
   def self.handle_test(env)
@@ -139,14 +143,14 @@ Thread.new {
   while true do
     Kernel.sleep(chromium_timer)
     if Time.now > (PdfSaver.last_poll + chromium_timer) then
-      LOGGER.error("Chromium did not GET /poll_pdf_work for more than #{chromium_timer} seconds. Restarting chromium")
+      PdfSaver::LOGGER.error("Chromium did not GET /poll_pdf_work for more than #{chromium_timer} seconds. Restarting chromium")
       orphans = PB::ChromePDFTask.all(:processing_stage => PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME)
       orphans.each do |t|
-        LOGGER.warn("Task #{t.id} was orphaned. Resetting.")
+        PdfSaver::LOGGER.warn("Task #{t.id} was orphaned. Resetting.")
         o.processing_stage = PB::ChromePDFTask::STAGE_WAITING;
         o.save
       end
-      LOGGER.info(`#{File.join(SvegSettings.root_dir, 'script/chrome')} restart`)
+      PdfSaver::LOGGER.info(`#{File.join(SvegSettings.root_dir, 'script/chrome')} restart`)
     end
   end
 }
@@ -167,7 +171,7 @@ Pdf_saver_server = Rack::Builder.new do
   end
 end.to_app
 
-LOGGER.info "started #{SvegSettings.environment.to_s} #{Time.now.to_s}"
-LOGGER.info "tasks available: #{PB::ChromePDFTask.count}"
+PdfSaver::LOGGER.info "started #{SvegSettings.environment.to_s} #{Time.now.to_s}"
+PdfSaver::LOGGER.info "tasks available: #{PB::ChromePDFTask.count}"
 
 $Pdf_saver_server = Pdf_saver_server

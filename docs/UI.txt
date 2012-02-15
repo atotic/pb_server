@@ -1,0 +1,6 @@
+We are using jquery + jquery ui.
+UI theme is smoothness with mods: 
+Font settings: font-family: Arial, Helvetica, sans-serif;font-size: 1em;
+Modal screen for overlays: overlay opacity: 70%
+Header/Toolbar:background color 0%
+Content: background color 0%

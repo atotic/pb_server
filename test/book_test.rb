@@ -5,16 +5,17 @@ require 'test/unit'
 require 'rack/test'
 require "test/helper"
 require 'config/settings'
+require 'config/db'
 require "app/book"
 require "app/book_template"
 
 # book model tests
-class BookModelTest < Test::Unit::TestCase
-	include Rack::Test::Methods
+class BookTest < Test::Unit::TestCase
 	include TestHelpers
 	
 	def setup
 	  ::DataMapper.auto_migrate!
+	  DataMapper.finalize
   end
   
 	def test_book_templates_dir
@@ -35,7 +36,6 @@ class BookModelTest < Test::Unit::TestCase
 		book.save
 		assert_not_nil book
 		assert_not_nil(PB::Book.first);
-		
 	end
 	
 	def test_book_properties
@@ -47,4 +47,5 @@ class BookModelTest < Test::Unit::TestCase
 		b = PB::Book.new(user, params)
 		b.save
 	end
+	
 end

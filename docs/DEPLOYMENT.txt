@@ -8,16 +8,16 @@ growl, growlnotify -- development only, growl errors in logs
 xvfd -- for running headless chrome
 
 SERVERS
-sveg -- main application server
+sveg -- main application server, 26000
 delayed_job -- pdf generation, image resizing, etc
 chromium -- custom chromium, converts html -> pdf
-pdf_saver_server -- interface to custom chromium
-comet -- broadcast protocol
+pdf_saver_server -- interface to custom chromium, 27000
+comet -- broadcast protocol, 28000
 nginx -- front end server
 database -- sqlite on development,mysql on production
 
 SERVER DETAILS
-	all servers start/stop with script/<server_name> start|stop
+	all servers have ./script/<server_name> with argument start/stop/debug/restart
 	pids are in data_dir/tmp
 
 chromium:
@@ -29,7 +29,10 @@ delayed_job:
 	logs to delayed_job.log (hardcoded in gem)
 	
 pdf_saver_server:
-	
+	ChromePDFTask server for chromium. Allocates ChromePDFTasks created by delayed_job, 
+	reports job results from Chromium. 
+	Monitors chromium, restarts it if hangup detected
+	Logs to pdf_saver_server.info.
 
 LOGGING
   Logs are in data_dir/log
@@ -41,7 +44,6 @@ LOGGING
 	
 	
 TODO
-delayed job logger, do the same as pdf_server_saver
 refactor streaming
 image resizing
 nginx

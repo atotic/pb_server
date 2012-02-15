@@ -6,7 +6,7 @@ require 'config/settings'
 require 'svegutils'
 
 def usage
-  $stdout.puts "usage: #{__FILE__} start|stop"; exit
+  $stdout.puts "usage: #{__FILE__} start|stop|restart"; exit
 end
 
 def start
@@ -23,10 +23,13 @@ end
 
 def stop
   pid  = PB::CommandLine.get_chromium_pid
-  (Process.kill("TERM", pid);puts "stopping chromium") if pid
+  if pid then
+    Process.kill("TERM", pid)
+    puts "stopping chromium"
+  end
 end
 
-usage unless ARGV.length == 1
+usage unless ARGV.length == 1 && ARGV[0].match(/start|stop|restart/)
 case 
   when ARGV[0].eql?("start") then start
   when ARGV[0].eql?("stop") then stop

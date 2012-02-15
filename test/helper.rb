@@ -1,49 +1,42 @@
-# http://glu.ttono.us/articles/2005/10/30/why-and-how-ruby-and-rails-unit-testing
-# http://en.wikibooks.org/wiki/Ruby_Programming/Unit_testing
+# bin/rake test:all TEST=test/helper.rb
 
-# rake test:all TEST=test/book_page_test.rb
-require 'sveg'
+require 'config/settings'
+require 'app/user'
+require 'app/book'
+require 'app/book_template'
 
 module TestHelpers
-
-	def app
-		@app = PB::SvegApp.new unless @app
-		return @app
-	end
 	
 	# logs in with given username. User created if does not exists
 	def create_user(username)
-		app
 		user = PB::User.first(:display_name => username)
 		user = PB::AuthLogin.create(username).user unless user
 		user
 	end
 
-	def old_crap
-		# users
-		PB::AuthLogin.create('atotic') if User.count < 1
-		user = User.first
-		# books
-		book = user.books.first
-		unless book
-			book = PB::Book.new(user, { :title => "Seed book 1"}, { :style=> "6x6"} )
-			book.init_from_template			
-		end
-		# photos
-		test_photo_dir = "./test/photo"
-		temp_name = "./test/tmp.jpg"
-		
-		Dir.foreach(test_photo_dir) do |filename|
-			next if PB::Photo.first(:display_name => filename)
-			next if File.extname(filename).empty?
-			puts filename
-			photo = PB::Photo.new({:display_name => filename} );
-			photo.user_id = user.id
-			FileUtils.copy_file( File.join(test_photo_dir, filename), temp_name)
-			PB::PhotoStorage.storeFile(photo, temp_name)
-			photo.save
-			book.photos << photo 
-			book.save
-		end
+  def create_book(options = {})
+    opts = options.merge({
+      :user => create_user("atotic"),
+      :template_name => "modern_lines",
+      :title => "Default book",
+      :img_cnt => 1
+    })
+    template = PB::BookTemplate.new(opts[:template_name])
+		book = template.create_book(opts[:user], {"title" => opts[:title], "template"=>{"name"=>opts[:template_name]}});
+    assert book, "Book could not be cretated"
+    Dir.glob(File.join(SvegSettings.root_dir, "test/public/*.jpg")).each do |filename|
+      photo = PB::Photo.first(:display_name => File.basename(filename))
+      next if opts[:img_cnt] <= 0
+      unless photo
+        newName = "#{filename}.jpg"
+        `cp #{filename} #{newName}`
+        photo = PB::Photo.create( {:display_name => File.basename(filename), :user_id => opts[:user]['id']} );
+				PB::PhotoStorage.storeFile(photo, newName )
+      end
+			book.photos << photo
+			opts[:img_cnt] -= 1
+	  end
+	  assert book.save, "Book could not be saved."
+	  book
 	end
 end

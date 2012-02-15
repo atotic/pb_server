@@ -1,11 +1,49 @@
 Building an editor for HTML-based photo books.
 Books are stored on server in SQL.
-We are using jquery + jquery ui.
-UI theme is smoothness with mods: 
-Font settings: font-family: Arial, Helvetica, sans-serif;font-size: 1em;
-Modal screen for overlays: overlay opacity: 70%
-Header/Toolbar:background color 0%
-Content: background color 0%
+
+PROBLEM: GROUP EDITING (DOCS, GOOGLE STYLE)
+  A server-based document editor has a problem of document state. The problem is consistency.
+  Once the document exists and is modified in more than one place, how do you reconcile the edit?
+  This problem happens when:
+  - single user edits a document on more than one client. This can easily happen between home
+    and work. 
+	- multiple users edit document at once
+	Although solution is complicated, it is a core to solving so many problems (multiple client sync,
+	offline, group editing, undo/redo). Retrofitting would be a rewrite. We are doing it now.
+	Some call this Operational Transformation
+
+SOLUTION
+  Change stream.
+  Theoretically, document is no longer represented as a static structure, but as
+  a change stream. Instead of a document being database record, we store a sequence
+  of operations that create that record.
+  Document mutates by appending to the change stream on the server.
+  A client cannot commit any operations to the server until all server operations have been applied
+  on the client. Client gets in sync with the server by applying all the change operations on the client.
+
+  In practice, recreating a document from change stream from scratch on the client
+  would take up too much time, bandwidth. Instead, we store the document + change stream
+  on the server. Client gets the document + change stream id. It represents document
+  as represented by all operations up to stream id.
+
+  Consequences of this architecture:
+  - Operations must be applied on both client and server. Every operation needs to be implemented
+    in javascript and ruby.
+  - Clients use comet to monitor server for document changes
+  - Offline is easy, just save the op stream, and stream it back to the server when coming online
+  - Should strive for fine granularity of operations. Smaller operations reduce potential for conflicts.
+  - Some data can be lost, if two operations with same footprint happen simultaneously.
+
+  See command_stream.rb, editor.streaming.js for implementation details.
+
+PROBLEM: OFFLINE IDS
+we need to create and use an object before we got an id from the server.
+we will get an id from server eventually.
+
+use cases: 
+  - images before fully uploaded.
+  - page (if created in browser)
+  - offline (page/image creation), book creation
 
 Books are complex data structures:
 	- they are a set of interacting simple structures: book, page, image
@@ -17,25 +55,11 @@ Each addressable object needs to get an element id assigned at birth.
 SQL based objects have to have their id's assigned at server. Server cannot be always
 contacted immediately, which causes the problem of "offline ids"
 
-TOPIC: APPLICATION CONFIGURATION
-
-TOPIC: LOGGING FRAMEWORK
-2 types of loggers: 
-	- url_loggers log server access
-	- print_logger log error/warn/info messages
-
-PROBLEM: OFFLINE IDS
-we need to create and use an object before we got an id from the server.
-we will get an id from server eventually.
-use cases: 
-  - images before fully uploaded.
-  - page (if created in browser)
-  - offline (page/image creation), book creation
 SOLUTION: OFFLINE IDS
-  - on browser, never store id pointers. Always store pointer to an object (or a proxy) itself. Obtain
-  id from object/proxy when converting object to json for saving.
-  - when generating json for saving, get id's from object/proxies
-  - corner case is http links to user photos. These are stored in page.html, and use an id.
+  - on browser, never use ids as pointers. Always store reference to an object (or a proxy) itself, not an id.
+ 		Convert references to ids when object is saved on server.
+  - when generating json for saving, get id's from object references
+  - corner case is http links to user photos. These are stored in page.html, and must use an id.
     before image is uploaded, we point it to local file url, that has to be fixed before page is saved
   - for this to work, objects have to be saved in order: 
     if book(with id), points to page, and page points to image, and they've all been modified
@@ -45,23 +69,12 @@ SOLUTION: OFFLINE IDS
     a book, then added 2 pages, we'd save book, page, page, book again.
 
 PROBLEM: PAGE THUMBNAILS
-	no way to convert page html to a png page thumbnail on the client
+	no way to convert page html to a png page thumbnail on the client, can't draw html on canvas
 SOLUTION:
-  each page template also has thumbnail template
+	thumbnails are snippets of html
+  each page template also has thumbnail template (handcrafted, or generated with rake book_template:fill )
   thumbnail template can reference elements of a real page through data-page attributes
 
-PROBLEM: SERVER STREAMING
-
-UNSOLVEABLE PROBLEMS:
-generation of page thumbnails
-	no way to convert html to bitmap on client
-	expensive to do on the server for every save
-	workaround: a) client: generate simple thumbnails on canvas (just images)
-	            b) generate real thumbnails with the pdf conversion on server
-
-FUTURE DIRECTIONS    
-- Sharing
-  multiple simulataneus editors?
 
 MODELS
 
@@ -83,4 +96,3 @@ Book:
 
 Page: 
   creation when book is created: on server
-  	TODO we do not assign id's to significant elements when page is created.
