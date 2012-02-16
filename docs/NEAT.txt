@@ -41,6 +41,8 @@ CSS Patterns, might use in book backgrounds: http://leaverou.me/css3patterns/#
 3D Photo rollover: http://thewebrocks.com/demos/3D-photo-rollover/
 CSS Fonts as icons: fun icon effects with fonts http://css-tricks.com/15099-using-fonts-for-icons/
 Use box sizing for width/padding: http://paulirish.com/2012/box-sizing-border-box-ftw/
+Simple CSS sizing framework: https://github.com/robertpiira/ingrid
+
 JS
 HTML5 flipping pages animation: http://studio.html5rocks.com/#Flip
 How to resume a file upload http://hacks.mozilla.org/2011/04/resumeupload/

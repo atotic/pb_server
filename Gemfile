@@ -18,7 +18,7 @@ gem 'daemons'
 group :development do
 	gem "ruby-debug"
 	gem 'sinatra-reloader'
-	gem "dm-sqlite-adapter"
+	gem "dm-mysql-adapter"
 	gem "wkpdf"
 	gem "growl"
 end

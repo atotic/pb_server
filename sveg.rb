@@ -646,7 +646,7 @@ class SvegApp < Sinatra::Base
 	
 	delete '/book_page/:id' do
 		user_must_be_logged_in
-		page = BookPage.get(params.delete("id"))
+		page = PB::BookPage.get(params.delete("id"))
 		halt [404, "Book page not found"] unless page
 		user_must_own(page.book)
 		assert_last_command_up_to_date(request)
@@ -660,15 +660,15 @@ class SvegApp < Sinatra::Base
 	
 	put '/book_page/:id' do
 		user_must_be_logged_in
-		page = BookPage.get(params['id'])
+		page = PB::BookPage.get(params['id'])
 		halt [404, "Book page not found"] unless page
 		user_must_own(page.book)
 		assert_last_command_up_to_date(request)
-		Page.transaction do
+		PB::BookPage.transaction do
   		page.update(request.params)
   		new_last_id = ServerCommand.createReplacePageCmd(page, get_stream(request))
+  		response.headers['X-Sveg-LastCommandId'] = String(new_last_id)
 		end
-		response.headers['X-Sveg-LastCommandId'] = String(new_last_id)
 		content_type "text/plain"
 		"Update successful"
 	end

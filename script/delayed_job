@@ -4,10 +4,29 @@ require 'dm-validations'
 require 'config/settings'
 require 'config/delayed_job'
 require 'app/book2pdf_job'
+
 require 'daemons'
 require 'delayed_job_data_mapper'
 require 'delayed/worker'
 require 'log4r'
+
+# Monkeypatch so logger can b
+module Delayed
+  class Worker
+    def say(text, level = Logger::INFO)
+#      text = "[Worker(#{name})] #{text}"
+ #     puts text unless @quiet
+      return unless logger
+      case
+      when level == Logger::INFO then logger.info text
+      when level == Logger::ERROR then logger.error text
+      when level == Logger::DEBUG then logger.debug text
+      when level == Logger::WARN then logger.warn text
+      else logger.info("Unknown level #{text}")
+      end
+    end
+  end
+end
 
 def usage
   puts "invalid option #{ARGV[0]}"

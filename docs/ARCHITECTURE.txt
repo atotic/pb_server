@@ -2,15 +2,20 @@ Building an editor for HTML-based photo books.
 Books are stored on server in SQL.
 
 PROBLEM: GROUP EDITING (DOCS, GOOGLE STYLE)
-  A server-based document editor has a problem of document state. The problem is consistency.
-  Once the document exists and is modified in more than one place, how do you reconcile the edit?
+  A server-based document editor has a consistency problem.
+  Once the document exists and is modified in more than one place, how do you reconcile
+  different, possibly conficting changes.
   This problem happens when:
   - single user edits a document on more than one client. This can easily happen between home
     and work. 
 	- multiple users edit document at once
-	Although solution is complicated, it is a core to solving so many problems (multiple client sync,
-	offline, group editing, undo/redo). Retrofitting would be a rewrite. We are doing it now.
-	Some call this Operational Transformation
+	Although solution is complicated, it solving it helps with many other problems:
+		- multiple client sync,
+		- offline 
+		- group editing, 
+		- undo/redo). 
+	Retrofitting would be a rewrite. We are doing it for the first release.
+	After implementing it, I've learned that some call it Operational Transformation
 
 SOLUTION
   Change stream.

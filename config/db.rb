@@ -14,7 +14,8 @@ DataMapper::Model.raise_on_save_failure = true
 #  	if ($0.match(/script\/(delayed_job)/)) then
   DataMapper::Logger.new(File.join(SvegSettings.log_dir, "datamapper.log"), :debug)
 #	  end
-database_url ="sqlite3://#{SvegSettings.data_dir}/#{SvegSettings.environment}.sqlite"
+#database_url ="sqlite3://localhost/#{SvegSettings.data_dir}#{SvegSettings.environment}.sqlite3"
+database_url ="mysql://sveg:svegsveg@localhost/sveg_#{SvegSettings.environment}"
 adapter = DataMapper.setup(:default, database_url)
 # i would love to set busy timeout, but it is impossible with DataMapper.
 # datamapper uses data_objects uses do_sqlite3, which is a binary extension that provides no facilities for busy_timeout

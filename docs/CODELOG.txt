@@ -42,7 +42,7 @@ Next:
 Switching page layouts
 Full book view for Book pane
 Image pane sorting, show only not placed, show comments as hidden text
-
+In
 
 Next:
 Image resize as delayed_job
@@ -55,6 +55,14 @@ Deployment:
 - put something up there first
 - logging in via Facebook/Twitter/Google
 - Chromium PDF conversion
+
+Feb 15
+Servers pass tests
+Implementing comet server
+Switch to mysql.
+mariadb: open source drop-in mysql replacement instead, mysql seemed rusty
+brew: another os x package manager
+uninstalled macports
 
 Feb 11
 PDF generation works.

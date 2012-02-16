@@ -1,3 +1,28 @@
+Switched to mariadb (mysql)
+
+mariadb on the Mac:
+brew install mariadb
+How do I create a database?
+# Stop the daemnon
+launchctl unload ~/Library/LaunchAgents/homebrew.mxcl.mariadb.plist 
+# blow away all the databases
+rm -rf /usr/local/var/mysql
+# Start daemon 
+launchctl load ~/Library/LaunchAgents/homebrew.mxcl.mariadb.plist
+#install  database
+mysql_install_db
+# secure the installation, run after starting daemon
+mysql_secure_installation
+
+Log in as root
+run config/setup.sql
+
+SUCCESS
+
+
+
+
+ 
 DataMapper sqlite3 dies often with Database busy error. Fix in
 
 dm-do-adapter/adapter.rb:193

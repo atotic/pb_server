@@ -32,8 +32,13 @@ class DelayedJobTest < Test::Unit::TestCase
     10.times { Delayed::Job.enqueue PB::TestJob.new("test_simple_job") }
     assert Delayed::Backend::DataMapper::Job.count == 10, "Need 10 jobs"
     `./script/delayed_job start`
-    Kernel.sleep(1)
-    assert Delayed::Backend::DataMapper::Job.count == 0, "Soft fail, generaly 0 but now #{Delayed::Backend::DataMapper::Job.count} jobs remaining"
+    begin
+      Timeout.timeout(10) do
+        Kernel.sleep(0.1) while Delayed::Backend::DataMapper::Job.count != 0
+      end
+    rescue Timeout::Error => e
+      assert Delayed::Backend::DataMapper::Job.count == 0, "Jobs not completed in 10 seconds, #{Delayed::Backend::DataMapper::Job.count} jobs remaining."
+    end
   end
   
 end
