@@ -14,8 +14,8 @@ class BookTest < Test::Unit::TestCase
 	include TestHelpers
 	
 	def setup
-	  ::DataMapper.auto_migrate!
 	  DataMapper.finalize
+	  PB::Book.all.destroy!
   end
   
 	def test_book_templates_dir

@@ -13,27 +13,11 @@ launchctl load ~/Library/LaunchAgents/homebrew.mxcl.mariadb.plist
 mysql_install_db
 # secure the installation, run after starting daemon
 mysql_secure_installation
+# create the databases
+mysql -u root -p < config/setup.sql
+# datamapper migrations
+rake db:migrate RACK_ENV=test
+rake db:migrate RACK_ENV=development
+rake db:migrate RACK_ENV=production
 
-Log in as root
-run config/setup.sql
-
-SUCCESS
-
-
-
-
- 
-DataMapper sqlite3 dies often with Database busy error. Fix in
-
-dm-do-adapter/adapter.rb:193
-
-      with_connection do |connection|
-        begin
-          connection.create_command(statement).execute_non_query(*bind_values)
-        rescue
-          Kernel.sleep(1)
-          DataMapper.logger.warn("atotic fix: retry after an error")
-          connection.create_command(statement).execute_non_query(*bind_values)
-        end
-      end.affected_rows
-    end
+mysql seems slower than sqlite

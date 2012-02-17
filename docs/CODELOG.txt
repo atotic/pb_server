@@ -1,3 +1,11 @@
+Feb 14th estimates:
+2 weeks: comet, image resizing delayed, nginx
+2 weeks: capistrano, unix deployment
+1 week: kill datamapper, use sequel
+2 weeks: log in to fb/browser_id
+1 week: security/sharing
+6 weeks: editor rewrite, touch style, drop images from anywhere
+2 weeks: own store
 
 PLAN:
 Goals:
@@ -8,24 +16,14 @@ Goals:
 - can create interesting books and templates
   interesting features: colored books, backgrounds, text, rotation
 
-July 15
-iPhoto style default images
-new cursors, and maybe consistent positioning of tools.
 image frame resize?
 image metadata: sort date/rating/as-if, default text
-split image upload into 2 parts to prevent saving of pages pointing to local images (create/upload) July 21
-multiple editors?/
-Deployment, multi-login, imports: august
-I wish I had a better Javascript test harness. Should I spend a few days developing one?
-Might be worth it, part of my book testbook? Once I have the themed javascript loading, I could
-create a test harness.
+split image upload into 2 parts to prevent saving of pages pointing to local images (create/upload)
 
 Next:
 Printing of text: hide default text
 Pages assets:
 pages:
-commands: add/delete
-default set of templates
 switching page/book layouts (template matching), use nokogiri for it
 page display: thumbnails, facing pages, etc.
 hash bangs for pages
@@ -47,14 +45,8 @@ In
 Next:
 Image resize as delayed_job
 have strategies for debugging:
-- view all logs at once
-- get notified of errors in delayed_jobs|comet
 Comet
 nginx on my Mac
-Deployment:
-- put something up there first
-- logging in via Facebook/Twitter/Google
-- Chromium PDF conversion
 
 Feb 15
 Servers pass tests

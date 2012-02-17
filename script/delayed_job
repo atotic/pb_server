@@ -44,7 +44,7 @@ def run_worker
   }
   Delayed::Worker.logger = PB.get_logger('delayed_job')
   worker = Delayed::Worker.new(worker_options)
-  worker.name_prefix = "WORKA WORKA";
+  worker.name_prefix = "DJ@";
   worker.start
 end
 

@@ -7,6 +7,7 @@ require 'config/settings'
 require 'config/db'
 require 'svegutils'
 require 'rack'
+require 'eventmachine'
 
 DataMapper.finalize
 
@@ -15,7 +16,7 @@ module Comet
 LOGGER = PB.get_logger("comet")
 
 class DeferrableBody
-  include EventMachine::Deferrable
+  include ::EventMachine::Deferrable
 
   def call(body)
     body.each { |chunk| @body_callback.call(chunk) }
@@ -103,7 +104,7 @@ private
 end
 
 
-class CometServer
+class Server
 
   RESPONSE = {
     :success => [  200, 
@@ -121,11 +122,11 @@ class CometServer
 
   def self.handle_test(env)
     log(env)
-    $response[:success]
+    RESPONSE[:success]
   end
 
-
-  def self.handle_subscribe(book_id, last_cmd_id)
+  # /subscribe/:book_id, 
+  def self.handle_subscribe(env)
     book_id = params[:book_id];
 		last_cmd_id = params['last_cmd_id']
 		body = DeferrableBody.new
@@ -142,21 +143,21 @@ class CometServer
 end
 end
 # rackup looks for app in variable named Pdf_saver_server
-Comet = Rack::Builder.new do
+CometApp = Rack::Builder.new do
   map "/test" do
-    run lambda { |env| CometServer.handle_test(env) }
+    run lambda { |env| Comet::Server.handle_test(env) }
   end
   map "/subscribe" do
-    run lambda { |env| CometServer.handle_subscribe(book_id, last_cmd_id)}
+    run lambda { |env| Comet::Server.handle_subscribe(env)}
   end
   map "/broadcast" do
-    run lambda { |env| CometServer.handle_broadcast(msg_id, book_id, exclude_id) }
+    run lambda { |env| Comet::Server.handle_broadcast(msg_id, book_id, exclude_id) }
   end
   map "/status" do
-    run lambda { |env| CometServer.handle_status}
+    run lambda { |env| Comet::Server.handle_status}
   end
 end.to_app
 
-LOGGER.info "Comet started #{SvegSettings.environment.to_s} #{Time.now.to_s}"
+Comet::LOGGER.info "Comet started #{SvegSettings.environment.to_s} #{Time.now.to_s}"
 
-$Comet = Comet
+$Comet = CometApp
