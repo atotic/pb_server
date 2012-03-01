@@ -1,52 +1,43 @@
 Feb 14th estimates:
 2 weeks: comet, image resizing delayed, nginx
+1 week: kill datamapper, use sequel http://rhnh.net/2011/11/29/datamapper-retrospective
 2 weeks: capistrano, unix deployment
-1 week: kill datamapper, use sequel
 2 weeks: log in to fb/browser_id
 1 week: security/sharing
 6 weeks: editor rewrite, touch style, drop images from anywhere
 2 weeks: own store
+1 week: dropbox integration?
 
-PLAN:
-Goals:
-- UI2: 
-    better book page icons
-    button templates & menus
-
-- can create interesting books and templates
-  interesting features: colored books, backgrounds, text, rotation
-
+Featuritis:
+cflr security protection
+DropBox image import/storage
 image frame resize?
-image metadata: sort date/rating/as-if, default text
-split image upload into 2 parts to prevent saving of pages pointing to local images (create/upload)
-
-Next:
-Printing of text: hide default text
-Pages assets:
-pages:
+printing text: hide default text
 switching page/book layouts (template matching), use nokogiri for it
-page display: thumbnails, facing pages, etc.
 hash bangs for pages
 - assets css/js that comes with the book
 - assets css/js that comes with the page
-samigrating albums: use nokogiri for html manipulation
+migrating albums: use nokogiri for html manipulation
 
 Add page|delete|change layout
 Book pane: scrolling, page padding
 
-Asset permission architecture
-
-Next:
-Switching page layouts
-Full book view for Book pane
-Image pane sorting, show only not placed, show comments as hidden text
-In
-
-Next:
+Scheduled:
+Reimplement sessions/flash, so they can be reused between servers
 Image resize as delayed_job
-have strategies for debugging:
-Comet
 nginx on my Mac
+Comet: use sessions, 
+Sequel: datamapper sucks
+
+
+Feb 29
+sessions/flash reimplementation done
+
+Feb 25
+parents here for a visit
+
+Feb 18
+Baby girl (vivian?) was born!, weeks off ahead
 
 Feb 15
 Servers pass tests

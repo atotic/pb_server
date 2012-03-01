@@ -1,3 +1,6 @@
+Switching to sequel from mysql
+http://cheat.errtheblog.com/s/sequel/
+
 Switched to mariadb (mysql)
 
 mariadb on the Mac:
@@ -20,4 +23,9 @@ rake db:migrate RACK_ENV=test
 rake db:migrate RACK_ENV=development
 rake db:migrate RACK_ENV=production
 
-mysql seems slower than sqlite
+mysql seems slower than sqlite, datamapper takes 5 seconds to start up. Enough of the datamapper, switching to sequel
+
+gem install sequel
+# installing the gem:
+sudo gem install --no-rdoc --no-ri mysql2 -- --with-mysql-dir=$(brew --prefix mariadb) --with-mysql-config=$(brew --prefix mariadb)/bin/mysql_config 
+

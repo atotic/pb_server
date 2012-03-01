@@ -39,19 +39,13 @@ end
 module PB
 
 
-LOGGER = Log4r::Logger.new 'svegapp'
-Log4r::Outputter.stdout.formatter= PB::SVEG_FORMATTER
-if (SvegSettings.environment == :development) then
-  LOGGER.add Log4r::Outputter.stdout
-  LOGGER.add Log4r::GrowlOutputter.new('growlout')
-end
-LOGGER.add Log4r::FileOutputter.new("sveg.info", :filename => File.join(SvegSettings.log_dir, 'sveg.info'))
+LOGGER = PB.get_logger('sveg')
 
 class SvegLogger
 	FORMAT = %{ %s"%s %s%s %s" %s %0.4f}
 	def initialize(app)
 		@app = app
-		@logger = Log4r::Logger['svegapp']
+		@logger = Log4r::Logger['sveg']
 	end
 
 	def call(env)
@@ -110,7 +104,7 @@ class Session
 					if (key.class == String)
 						@flash[key.intern] = @flash[key]
 						@flash.delete(key)
- 					end
+					end
 				end
 			rescue
 				LOGGER.error "Could not parse flash cookie #{flash_cookie}"
@@ -410,27 +404,27 @@ class SvegApp < Sinatra::Base
 			erb :"test/qunit/#{params[:id]}", {:layout => :'test/qunit/layout'}, {:locals => { :filename => params[:id] }}
 		end
 	
-	  get '/jobs' do
-	    jobs = Delayed::Backend::DataMapper::Job.all
-	    content_type "text/html"
-      body = "<html><head><title>jobs</title></head><body>"
+		get '/jobs' do
+			jobs = Delayed::Backend::DataMapper::Job.all
+			content_type "text/html"
+			body = "<html><head><title>jobs</title></head><body>"
 #	    body = "<html><head><title>jobs</title><meta http-equiv='Refresh' content='5' /></head><body>"
-	    body += "<p>Jobs table</p><table border='1'><thead><td>Id</td><td>Time</td><td>Handler</td><td>Failed</td><td>Error</td>"
-	    if jobs.nil?
-	      body += "<tr><td>No jobs</td></tr></table>"
-	    else
-  	    jobs.each do |job|
-  	      body += "<tr>"
-  	      body += "<td>" + job.id.to_s + "</td>"
-  	      body += "<td>" + job.run_at.to_s + "</td>"
-  	      body += "<td>" + job.handler.to_s + "</td>"
-  	      body += "<td>" + job.failed_at.to_s + "</td>"
-  	      body += "<td><pre>" + job.last_error.to_s + "</pre></td>"
-  	      body += "</tr>"
-        end
-      end
-      body
-    end
+			body += "<p>Jobs table</p><table border='1'><thead><td>Id</td><td>Time</td><td>Handler</td><td>Failed</td><td>Error</td>"
+			if jobs.nil?
+				body += "<tr><td>No jobs</td></tr></table>"
+			else
+				jobs.each do |job|
+					body += "<tr>"
+					body += "<td>" + job.id.to_s + "</td>"
+					body += "<td>" + job.run_at.to_s + "</td>"
+					body += "<td>" + job.handler.to_s + "</td>"
+					body += "<td>" + job.failed_at.to_s + "</td>"
+					body += "<td><pre>" + job.last_error.to_s + "</pre></td>"
+					body += "</tr>"
+				end
+			end
+			body
+		end
 	end	
 
 	get '/' do
@@ -665,9 +659,9 @@ class SvegApp < Sinatra::Base
 		user_must_own(page.book)
 		assert_last_command_up_to_date(request)
 		PB::BookPage.transaction do
-  		page.update(request.params)
-  		new_last_id = ServerCommand.createReplacePageCmd(page, get_stream(request))
-  		response.headers['X-Sveg-LastCommandId'] = String(new_last_id)
+			page.update(request.params)
+			new_last_id = ServerCommand.createReplacePageCmd(page, get_stream(request))
+			response.headers['X-Sveg-LastCommandId'] = String(new_last_id)
 		end
 		content_type "text/plain"
 		"Update successful"
@@ -704,7 +698,7 @@ class SvegApp < Sinatra::Base
 	end
 
 # setup & run
-  use SvegLogger if SvegSettings.environment == :development
+	use SvegLogger if SvegSettings.environment == :development
 	use Rack::CommonLogger, Logger.new(File.join(SvegSettings.log_dir, "sveg.log"))
 	use SessionMiddleware
 	use Rack::Flash

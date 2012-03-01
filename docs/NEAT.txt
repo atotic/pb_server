@@ -119,6 +119,10 @@ TOUCH INTERFACES
 Sweet & short take on ipad html development http://mir.aculo.us/2010/06/04/making-an-ipad-html5-app-making-it-really-fast/
 jQuery touch http://jqtouch.com/
 
+PRINTING
+Reviews http://insig.ht/2009/06/print-on-demand-review/
+Print resources for independent art publishers: http://print-resources.tumblr.com/
+
 BUSINESS
 Designer fund: funds for designers, maybe find me a co-founder here http://designerfund.com/
 Minted: they are designer focused, my solution would be a great fit

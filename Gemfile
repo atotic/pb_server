@@ -10,6 +10,7 @@ gem 'rack-flash'
 gem 'nokogiri' # html parsing
 gem 'css_parser'
 gem 'log4r'
+gem 'thin'
 # delayed job
 gem 'delayed_job'
 gem 'delayed_job_data_mapper', :git => "git://github.com/collectiveidea/delayed_job_data_mapper.git"

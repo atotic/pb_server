@@ -8,6 +8,7 @@ require 'config/settings'
 #require 'data_objects'
 
 require 'data_mapper'
+require "benchmark"
 
 DataMapper::Property::String.length(128) # must be declared before model definition
 DataMapper::Model.raise_on_save_failure = true
@@ -16,7 +17,8 @@ DataMapper::Model.raise_on_save_failure = true
 #	  end
 #database_url ="sqlite3://localhost/#{SvegSettings.data_dir}#{SvegSettings.environment}.sqlite3"
 database_url ="mysql://sveg:svegsveg@localhost/sveg_#{SvegSettings.environment}"
-adapter = DataMapper.setup(:default, database_url)
+puts Benchmark.measure { adapter = DataMapper.setup(:default, database_url) }
+puts "adapter done"
 # i would love to set busy timeout, but it is impossible with DataMapper.
 # datamapper uses data_objects uses do_sqlite3, which is a binary extension that provides no facilities for busy_timeout
 # sqlite3_busy_timeout( db, 100 );

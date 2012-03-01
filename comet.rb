@@ -1,5 +1,4 @@
-#! bin/thin start -C config/pdf_saver_server.yml
-# bin/rake test:all TEST=test/pdf_saver_server_test.rb
+# bin/rake test:server TEST=test/server/comet_test.rb
 
 # Comet is an http server handling command streaming
 # 
@@ -8,8 +7,11 @@ require 'config/db'
 require 'svegutils'
 require 'rack'
 require 'eventmachine'
+require 'thin'
+require 'app/command_stream'
 
 DataMapper.finalize
+Thin::Logging.silent = false;
 
 module Comet
 
@@ -27,6 +29,7 @@ class DeferrableBody
   end
 
   def <<(str)
+    puts "body << #{str}"
   	@body_callback.call(str)
   	self
   end
@@ -48,7 +51,7 @@ class CmdStreamBroadcaster
 		# send standard js streaming header
 		body << stream_id << ";" << " " * 1024 << ";" 
 		# send all the outstanding commands 
-		commands = ServerCommand.all(:id.gt => last_cmd_id, :book_id => book_id)
+		commands = ::PB::ServerCommand.all(:id.gt => last_cmd_id, :book_id => book_id)
 		commands.each { |cmd| body << self.encode_msg(cmd) }
 		# tell client they are up to date
 		self.send_stream_up_to_date(book_id, body);
@@ -110,53 +113,63 @@ class Server
     :success => [  200, 
         { 'Content-Type' => 'text/plain', 'Content-Length' => '6',},
         ['comet!']],
-    :bad_request_no_id => [400, {}, ["Bad request. Need id in query params"]],
-    :bad_request_task_stage => [405, {}, "Not allowed. Task not in STAGE_DISPATCHED_TO_CHROME" ],
-    :bad_request_task_not_found => [404, {}, ["Task not found}"]]
+    :need_async_server => [500, {}, ["Internal server error. Not running inside async server"]]
   }
 
-
-  def self.log(env, msg="")
+  def log(env, msg="")
   	LOGGER.info env["REQUEST_METHOD"] + " " + env["SCRIPT_NAME"] + " " + msg
   end
 
-  def self.handle_test(env)
+  def handle_test(env)
     log(env)
     RESPONSE[:success]
   end
 
   # /subscribe/:book_id, 
-  def self.handle_subscribe(env)
-    book_id = params[:book_id];
-		last_cmd_id = params['last_cmd_id']
-		body = DeferrableBody.new
-		# send out headers right away
-		EM.next_tick { env['async.callback'].call [200, {'Content-Type' => 'text/plain'}, body] }
-		# bind to command broadcaster
-		EM.next_tick { CmdStreamBroadcaster.bind(body, book_id, last_cmd_id) }
-		# unbind on close
-		env['async.close'].callback { CmdStreamBroadcaster.unbind(book_id, body) }
-		# returning AsyncResponse dies in sinatra/base.rb:874 (can't modify frozen array)
-		throw :async
+  def handle_subscribe(env, book_id)
+    # TODO AUTHENTICATE
+    return RESPONSE[:need_async_server] unless env['async.close']
+    query = Rack::Utils.parse_query(env['QUERY_STRING'])
+    last_cmd_id = (query.has_key? 'last_cmd_id') ? query['last_cmd_id'].to_i : 0    
+	body = DeferrableBody.new
+	EM.next_tick do
+  		# send out headers right away
+		env['async.callback'].call [200, {'Content-Type' => 'text/plain', 'Transfer-Encoding' => 'chunked'}, body]
+  		# bind to command broadcaster
+		CmdStreamBroadcaster.bind(body, book_id, last_cmd_id)
+	end
+	# unbind on close
+    env['async.close'].callback { CmdStreamBroadcaster.unbind(book_id, body) }
+	# returning AsyncResponse dies in sinatra/base.rb:874 (can't modify frozen array)
+	return Thin::Connection::AsyncResponse
+  end
+  
+  def handle_broadcast(env, msg_id)
+    query = Rack::Utils.parse_query(env['QUERY_STRING'])
+    msg = ::PB::ServerCommand.get(msg_id)
+    return  [500, {}, ["Message not found #{msg_id}"]] unless msg
+    query = Rack::Utils.parse_query(env['QUERY_STRING'])
+    exclude_id = (query.has_key? 'exclude') ? query['exclude'] : nil    
+    book_id = (query.has_key? 'book_id') ? query['book_id'] : mgs.book_id
+    CmdStreamBroadcaster.broadcast(msg, book_id, exclude_id)
+  end
+  
+  def call(env)
+    case
+    when env['PATH_INFO'] =~ /^\/subscribe\/book\/[\d+]$/ then handle_subscribe(env, $~[1].to_i)
+    when env['PATH_INFO'] =~ /^\/test/ then handle_test(env)
+    # /broadcast/:msg_id?[exclude=stream_id]
+    when env['PATH_INFO'] =~ /^\/broadcast\/[\d+]$/ then handle_broadcast(env, )
+    when env['PATH_INFO'] =~ /^\/status/ then handle_status(env)
+    else [ 400, {'Content-Type' => 'text/plain'}, ["No such path #{env['PATH_INFO']}" ]] 
+    end
   end
 
 end
-end
-# rackup looks for app in variable named Pdf_saver_server
-CometApp = Rack::Builder.new do
-  map "/test" do
-    run lambda { |env| Comet::Server.handle_test(env) }
-  end
-  map "/subscribe" do
-    run lambda { |env| Comet::Server.handle_subscribe(env)}
-  end
-  map "/broadcast" do
-    run lambda { |env| Comet::Server.handle_broadcast(msg_id, book_id, exclude_id) }
-  end
-  map "/status" do
-    run lambda { |env| Comet::Server.handle_status}
-  end
-end.to_app
+
+end # module
+
+CometApp = Comet::Server.new
 
 Comet::LOGGER.info "Comet started #{SvegSettings.environment.to_s} #{Time.now.to_s}"
 
