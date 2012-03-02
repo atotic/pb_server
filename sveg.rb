@@ -41,176 +41,6 @@ module PB
 
 LOGGER = PB.get_logger('sveg')
 
-class SvegLogger
-	FORMAT = %{ %s"%s %s%s %s" %s %0.4f}
-	def initialize(app)
-		@app = app
-		@logger = Log4r::Logger['sveg']
-	end
-
-	def call(env)
-		start_time = Time.now
-		status, header, body = @app.call(env)
-		log(env, status, Time.now - start_time)
-		[status, header, body]
-	end
-
-	def log(env, status, time_taken)
-		now = Time.now
-		return if env['sinatra.static_file']
-		return if /assets/ =~ env["PATH_INFO"] 
-		@logger.error "HTTP ERROR" if status >= 400
-		@logger.info FORMAT % [
-			env["REMOTE_USER"] || "-",
-			env["REQUEST_METHOD"],
-			env["PATH_INFO"],
-			env["QUERY_STRING"].empty? ? "" : "?"+env["QUERY_STRING"],
-			env["HTTP_VERSION"],
-			status.to_s[0..3],
-			time_taken ]
-	end
-end
-
-
-# Our sessions
-# Rolled my own to prevent cookie traffic on every response
-# SessionMiddleware saves/restores Session objects
-# Session object maintains 2 cookies:
-#  - flash cookie holds flash messages
-#  - user cookie holds user information
-
-class Session
-
-	attr_accessor :user_id
-	
-	def self.from_cookie(user_cookie, flash_cookie)
-		return self.new(user_cookie, flash_cookie)
-	end
-	
-	def initialize(user_cookie, flash_cookie)
-		clear_user
-		if user_cookie
-			begin 
-				hash = Marshal.load(Base64.decode64(user_cookie))
-				@user_id = hash[:id]
-			rescue
-				LOGGER.error("Error decoding cookie #{user_cookie}")
-			end
-		end
-		if flash_cookie
-			begin
-				@flash = JSON.parse flash_cookie
-				@flash.keys.each do |key|		# JSON encoded symbols as strings :(
-					if (key.class == String)
-						@flash[key.intern] = @flash[key]
-						@flash.delete(key)
-					end
-				end
-			rescue
-				LOGGER.error "Could not parse flash cookie #{flash_cookie}"
-				@flash = {}
-			end
-		else
-			@flash = {}
-		end
-	end
-
-	def clear_user
-		@save_on_server = false
-		@expires = Time.now + 60 * 60 * 24	# TODO fix login expiration
-		@user_id = nil			
-	end
-	
-	def save_on_server?
-		@save_on_server
-	end	
-	
-	def save_on_server!
-		@save_on_server = true
-	end
-	
-	def to_cookie_hash
-		{
-			:path => '/',
-			:httponly => true,
-			:expires => @expires,
-			:value => Base64.encode64(Marshal.dump(
-				{:id => @user_id}
-			))
-		}
-	end
-	# access
-	
-	def user
-		User.get(@user_id)
-	end
-	
-	def resource(*args)
-		
-	end
-
-	# flash methods
-	
-	def to_flash_hash
-		retVal = {
-			:path => '/',
-			:httponly => true,
-			:value => JSON.generate(@flash)
-		}
-		retVal[:expires] =  Time.now - 3600 if @flash.empty?	# delete cookie if empty
-		retVal
-	end
-	
-	def save_flash?
-		return !@flash.empty?
-	end
-
-	def [](prop)
-		raise "Unknown property #{prop}" unless prop == :__FLASH__
-		@flash
-	end
-	
-	def []=(prop, val)
-		raise "Unknown property #{prop}" unless prop == :__FLASH__
-		@flash = val
-	end
-end
-
-# Home grown session middleware
-# have 2 cookies, one for login, one for flash
-class SessionMiddleware
-	@@key = "sveg.session"
-	@@flash_key = "flash.session"
-	
-	def initialize(app, options={})
-		@app = app;
-	end
-
-	def call(env)
-		request = Rack::Request.new(env)
-		load_session(env, request)
-		status, headers, body = @app.call(env)
-		save_session(env, headers, request) if status != -1
-		[status, headers, body]
-	end
-	
-	def load_session(env, request)
-		env["rack.session"] = Session.from_cookie(
-			request.cookies[@@key],
-			request.cookies[@@flash_key])
-	end
-	
-	def save_session(env, headers, request)
-		if env["rack.session"].save_on_server?
-			Rack::Utils.set_cookie_header!(headers, @@key, env["rack.session"].to_cookie_hash) 
-		end
-		if env['rack.session'].save_flash? || request.cookies[@@flash_key]
-			Rack::Utils.set_cookie_header!(headers, @@flash_key, env['rack.session'].to_flash_hash)
-		end
-	end
-end
-
-
 #
 # Main application
 #
@@ -276,11 +106,11 @@ class SvegApp < Sinatra::Base
 		
 		# User access
 		def current_user
-			env['rack.session'].user
+			env['sveg.user']
 		end
 
 		def user_must_be_logged_in
-			return if env['rack.session'].user
+			return if env['sveg.user']
 			if (request.xhr?)
 				flash.now[:error] = "You must be logged in to access #{env['REQUEST_PATH']}."
 				halt 401
@@ -450,8 +280,7 @@ class SvegApp < Sinatra::Base
 	end
 	
 	get '/logout' do
-		env['rack.session'].clear_user
-		env['rack.session'].save_on_server!
+		PB::User.logout(env)
 		flash[:notice] = "You've logged out."
 		redirect to('/')
 	end
@@ -461,8 +290,7 @@ class SvegApp < Sinatra::Base
 	end
 	
 	post '/auth/login' do
-		env['rack.session'].clear_user
-		env['rack.session'].save_on_server!
+		PB::User.logout(env)
 
 		login_id = params[:login_id]
 		if !login_id || login_id.empty?
@@ -477,7 +305,7 @@ class SvegApp < Sinatra::Base
 				User.transaction do |t|
 					auth = AuthLogin.create(login_id)
 					user = auth.user
-					env['rack.session'].user_id = user.id
+					user.login(env)
 					flash[:notice]="Created a new account"
 				end
 				redirect to("/account")
@@ -490,7 +318,7 @@ class SvegApp < Sinatra::Base
 		# login exists, just log in
 			authlogin.last_login = Time.now
 			authlogin.save!
-			env['rack.session'].user_id = authlogin.user_id
+			User.get(authlogin.user_id).login(env)
 			flash[:notice]="Logged in successfully"
 			redirect to("/account")
 		end
@@ -698,10 +526,15 @@ class SvegApp < Sinatra::Base
 	end
 
 # setup & run
-	use SvegLogger if SvegSettings.environment == :development
-	use Rack::CommonLogger, Logger.new(File.join(SvegSettings.log_dir, "sveg.log"))
-	use SessionMiddleware
+	use Rack::Session::Cookie, {
+		:key => 'rack.session',
+		:coder => PB::SvegSessionCoder.new,
+		:sidbits => 32,
+		:skip => true,	# Rack > 1.4
+		:defer => true, # Rack < 1.4
+	}
 	use Rack::Flash
+	use SvegSession
 end
 
 end

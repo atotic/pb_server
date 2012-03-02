@@ -22,7 +22,7 @@ class TestServer
 				[200, {}, ['logged in']]
 			when env['PATH_INFO'] =~ /^\/logout/
 				if env['sveg.user']
-					env['sveg.user'].logout(env)
+					PB::User.logout(env)
 					[200, {}, ['logged out']]
 				else
 					[404, {}, ['no user to log out']]
