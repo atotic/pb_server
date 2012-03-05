@@ -39,16 +39,16 @@ end
 module PB
 
 
-LOGGER = PB.get_logger('sveg')
+LOGGER = PB.create_server_logger('sveg')
 
 #
 # Main application
 #
 class SvegApp < Sinatra::Base
 
-	set :root, File.dirname(__FILE__)
-	set :show_exceptions, true
-	
+	set :show_exceptions, true if SvegSettings.environment == :development
+	set :dump_errors, true if SvegSettings.environment == :development
+
 #	set :static_cache_control, "max-age=3600" # serve stuff from public with expiry date
 	def initialize(*args)
 		super(args)
@@ -110,7 +110,7 @@ class SvegApp < Sinatra::Base
 		end
 
 		def user_must_be_logged_in
-			return if env['sveg.user']
+			return if current_user
 			if (request.xhr?)
 				flash.now[:error] = "You must be logged in to access #{env['REQUEST_PATH']}."
 				halt 401
@@ -145,40 +145,12 @@ class SvegApp < Sinatra::Base
 				end
 			end
 		end
-
-		def get_stream(request)
-			stream_header = request.env['HTTP_X_SVEGSTREAM']
-			stream_id, book_id = stream_header.split(";") if stream_header
-			stream_id
-		end
-		
-		def get_last_command_info(request)
-			stream_id = book_id = last_command_id = nil
-			stream_header = request.env['HTTP_X_SVEGSTREAM']
-			last_command_id = request.env['HTTP_X_SVEG_LASTCOMMANDID']
-#			LOGGER.info("request " + request.env.object_id.to_s + " " + last_command_id.to_s)
-			debugger if (last_command_id.nil? || last_command_id == "undefined")
-			last_command_id = Integer(last_command_id) if last_command_id
-			if stream_header
-				stream_id, book_id = stream_header.split(";")
-				book_id = Integer(book_id) if book_id
-			end
-			[stream_id, book_id, last_command_id]
-		end
-		
+			
 		def assert_last_command_up_to_date(request)
-			stream_id, book_id, last_command_id = get_last_command_info(request)
-			halt 412, {'Content-Type' => 'text/plain'}, "You must supply last command" if last_command_id.nil?
-			halt 412, {'Content-Type' => 'text/plain'}, "Your last command is not up to date" if last_command_id != ServerCommand.last_command_id(book_id)
+			halt 412, {'Content-Type' => 'text/plain'}, "You must supply last command" if env['sveg.stream.last_command'].nil?
+			halt 412, {'Content-Type' => 'text/plain'}, "Your last command is not up to date" if env['sveg.stream.last_command'] != ServerCommand.last_command_id(env['sveg.stream.book'])
 		end
 	end # helpers
-
-	after do
-		if request.xhr? # ajax requests get flash headers
-			headers({"X-FlashError" => flash[:error]}) if flash[:error]
-			headers({"X-FlashNotice" => flash[:notice]}) if flash[:notice]
-		end
-	end
 
 	#
 	# CONTROLLER METHODS
@@ -433,7 +405,7 @@ class SvegApp < Sinatra::Base
 			destroy_me.destroy if destroy_me
 			
 			# broadcast cmd
-			new_last_id = ServerCommand.createAddPhotoCmd(book.id, photo, get_stream(request))
+			new_last_id = ServerCommand.createAddPhotoCmd(book.id, photo, env['sveg.stream.id'])
 			headers "X-Sveg-LastCommandId" => String(new_last_id)
 			# response
 			content_type :json
@@ -453,7 +425,7 @@ class SvegApp < Sinatra::Base
 				page_position = Integer(params.delete('page_position'))
 				page = PB::BookPage.new(params);
 				book.insertPage(page, page_position)
-				new_last_id = ServerCommand.createAddPageCmd(page, page_position, get_stream(request))
+				new_last_id = ServerCommand.createAddPageCmd(page, page_position, env['sveg.stream.id'])
 				response.headers['X-Sveg-LastCommandId'] = String(new_last_id)
 			end
 			content_type :json
@@ -473,7 +445,7 @@ class SvegApp < Sinatra::Base
 		user_must_own(page.book)
 		assert_last_command_up_to_date(request)
 		page.destroy
-		new_last_id = ServerCommand.createDeletePageCmd(page, get_stream(request))
+		new_last_id = ServerCommand.createDeletePageCmd(page, env['sveg.stream.id'])
 		response.headers['X-Sveg-LastCommandId'] = String(new_last_id)
 		page.destroy
 		content_type "text/plain"
@@ -488,7 +460,7 @@ class SvegApp < Sinatra::Base
 		assert_last_command_up_to_date(request)
 		PB::BookPage.transaction do
 			page.update(request.params)
-			new_last_id = ServerCommand.createReplacePageCmd(page, get_stream(request))
+			new_last_id = ServerCommand.createReplacePageCmd(page, env['sveg.stream.id'])
 			response.headers['X-Sveg-LastCommandId'] = String(new_last_id)
 		end
 		content_type "text/plain"
@@ -526,6 +498,7 @@ class SvegApp < Sinatra::Base
 	end
 
 # setup & run
+	use Rack::CommonLogger, File.join(SvegSettings.log_dir, "sveg.log" ) 
 	use Rack::Session::Cookie, {
 		:key => 'rack.session',
 		:coder => PB::SvegSessionCoder.new,

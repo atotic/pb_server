@@ -15,7 +15,7 @@ Thin::Logging.silent = false;
 
 module Comet
 
-LOGGER = PB.get_logger("comet")
+LOGGER = PB.create_server_logger("comet")
 
 class DeferrableBody
   include ::EventMachine::Deferrable
@@ -159,7 +159,7 @@ class Server
     when env['PATH_INFO'] =~ /^\/subscribe\/book\/[\d+]$/ then handle_subscribe(env, $~[1].to_i)
     when env['PATH_INFO'] =~ /^\/test/ then handle_test(env)
     # /broadcast/:msg_id?[exclude=stream_id]
-    when env['PATH_INFO'] =~ /^\/broadcast\/[\d+]$/ then handle_broadcast(env, )
+    when env['PATH_INFO'] =~ /^\/broadcast\/[\d+]$/ then handle_broadcast(env, $~[1] )
     when env['PATH_INFO'] =~ /^\/status/ then handle_status(env)
     else [ 400, {'Content-Type' => 'text/plain'}, ["No such path #{env['PATH_INFO']}" ]] 
     end

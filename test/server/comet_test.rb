@@ -55,7 +55,11 @@ class CometServerTest < Test::Unit::TestCase
   end
 
   def test_test
-    @session.get "/test" { |r| assert r.status == 200, "Server down?" }
+    mock_session = Rack::MockSession.new($Comet)
+    session = Rack::Test::Session.new(mock_session)
+    session.get "/test" do |r| 
+      assert r.status == 200, "Server down?" 
+    end
   end
   
   def test_AAA_subscribe
@@ -65,7 +69,7 @@ class CometServerTest < Test::Unit::TestCase
     mock_session1 = Rack::MockSession.new($Comet)
     session1 = Rack::Test::Session.new(mock_session1)
     async_get(session1, mock_session1, "/subscribe/book/#{book['id']}")
-    assert session1.last_request.status == 200, "subscribe should be legal"
+    assert session1.last_response.status == 200, "subscribe should be legal"
 
     mock_session2 = Rack::MockSession.new($Comet)
     session2 = Rack::Test::Session.new(mock_session2)

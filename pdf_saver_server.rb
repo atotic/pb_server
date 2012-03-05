@@ -35,7 +35,7 @@ module PdfSaver
 
   @@last_poll = Time.now
   MAX_CONCURRENT_WORK = 2
-  LOGGER = PB.get_logger 'pdf_saver_server'
+  LOGGER = PB.create_server_logger 'pdf_saver_server'
   
   def self.log(env, msg="")
   	LOGGER.info env["REQUEST_METHOD"] + " " + env["SCRIPT_NAME"] + " " + msg
