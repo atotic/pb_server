@@ -10,6 +10,7 @@ HOWTO for JS & SVG http://www.w3.org/Graphics/SVG/IG/resources/svgprimer.html
 Mediawiki wrestling with SVG -> PNG conversion http://www.mediawiki.org/wiki/Manual:$wgSVGConverters
 
 CSS
+Talks about bootstrap & color, CSS layout frameworks http://drawar.com/d/great-another-bootstrap-site/
 Pure CSS page turn: http://www.romancortes.com/ficheros/page-flip.html
 Pure CSS progress bars http://dipperstove.com/design/css3-progress-bars.html
 Get value of rotation from transform matrix: http://css-tricks.com/get-value-of-css-rotation-through-javascript/

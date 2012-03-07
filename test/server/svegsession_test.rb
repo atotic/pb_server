@@ -95,7 +95,7 @@ class SvegSessionTest < Test::Unit::TestCase
 		get "/null" # no setting a cookie again
 		assert last_response['Set-Cookie'].nil?
 		get "/show_flash" # shows text inline, sets cookie to clear flash
-		assert last_response.ok?
+		assert last_response.ok?, "/show_flash failed #{last_response.status} #{last_response.body}"
 		assert last_response['Set-Cookie']
 		get "/show_flash" # no more flash
 		assert last_response.client_error?

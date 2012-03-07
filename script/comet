@@ -5,9 +5,9 @@ require 'config/settings'
 require 'svegutils'
 
 def usage
-  puts "invalid option #{ARGV[0]}"
-  $stdout.puts "usage: #{__FILE__} start|stop|restart|debug [thin options]"
-  exit
+	puts "invalid option #{ARGV[0]}"
+	$stdout.puts "usage: #{__FILE__} start|stop|restart|debug [thin options]"
+	exit
 end
 
 usage unless ARGV.length >= 1 && ARGV[0].match(/start|stop|restart|debug/)
@@ -16,11 +16,11 @@ cmd_line_args = "bin/thin"
 cmd_line_args += " --port 28000 --rackup comet.rb"
 
 if (ARGV[0].eql? 'debug') then
-   require 'ruby-debug'
-  ARGV[0] = 'start'
-  cmd_line_args += " --debug"
-  cmd_line_args += ARGV[1,100].join(" ") + " " + ARGV[0]
-  Kernel.exec cmd_line_args
+	 require 'ruby-debug'
+	ARGV[0] = 'start'
+	cmd_line_args += " --debug"
+	cmd_line_args += ARGV[1,100].join(" ") + " " + ARGV[0]
+	Kernel.exec cmd_line_args
 end
 
 cmd_line_args += " --log #{File.join(SvegSettings.log_dir, 'comet.info')}"

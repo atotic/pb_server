@@ -6,33 +6,33 @@ require 'config/settings'
 require 'svegutils'
 
 def usage
-  $stdout.puts "usage: #{__FILE__} start|stop|restart"; exit
+	$stdout.puts "usage: #{__FILE__} start|stop|restart"; exit
 end
 
 def start
-  puts "starting chromium"
-  pid = Kernel.spawn(SvegSettings.chrome_binary,
-                     "--user-data-dir=#{SvegSettings.chrome_profile_dir}",
-                     "--no-sandbox",
-                     :chdir => SvegSettings.chrome_profile_dir,
-                     :out => File.join(SvegSettings.log_dir, "chromepdf.stdout"),
-                     :err => File.join(SvegSettings.log_dir, "chromepdf.stdout"))
-   Process.detach(pid)
-   pid
+	puts "starting chromium"
+	pid = Kernel.spawn(SvegSettings.chrome_binary,
+										 "--user-data-dir=#{SvegSettings.chrome_profile_dir}",
+										 "--no-sandbox",
+										 :chdir => SvegSettings.chrome_profile_dir,
+										 :out => File.join(SvegSettings.log_dir, "chromepdf.stdout"),
+										 :err => File.join(SvegSettings.log_dir, "chromepdf.stdout"))
+	 Process.detach(pid)
+	 pid
 end
 
 def stop
-  pid  = PB::CommandLine.get_chromium_pid
-  if pid then
-    Process.kill("TERM", pid)
-    puts "stopping chromium"
-  end
+	pid  = PB::CommandLine.get_chromium_pid
+	if pid then
+		Process.kill("TERM", pid)
+		puts "stopping chromium"
+	end
 end
 
 usage unless ARGV.length == 1 && ARGV[0].match(/start|stop|restart/)
 case 
-  when ARGV[0].eql?("start") then start
-  when ARGV[0].eql?("stop") then stop
-  when ARGV[0].eql?("restart") then stop;start
-  else usage
+	when ARGV[0].eql?("start") then start
+	when ARGV[0].eql?("stop") then stop
+	when ARGV[0].eql?("restart") then stop;start
+	else usage
 end

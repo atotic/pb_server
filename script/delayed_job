@@ -1,68 +1,72 @@
 #!/usr/bin/env ruby
 
-require 'config/settings'
-require 'config/delayed_job'
-require 'app/book2pdf_job'
 
+require 'config/delayed_job'
 require 'daemons'
 require 'delayed/worker'
 require 'log4r'
 
+require 'app/book2pdf_job'
+
+# require all models delayed_job will need
+
+
 # Monkeypatch so logger can b
 module Delayed
-  class Worker
-    def say(text, level = Logger::INFO)
+	class Worker
+		def say(text, level = Logger::INFO)
 #      text = "[Worker(#{name})] #{text}"
  #     puts text unless @quiet
-      return unless logger
-      case
-      when level == Logger::INFO then logger.info text
-      when level == Logger::ERROR then logger.error text
-      when level == Logger::DEBUG then logger.debug text
-      when level == Logger::WARN then logger.warn text
-      else logger.info("Unknown level #{text}")
-      end
-    end
-  end
+			return unless logger
+			case
+			when level == Logger::INFO then logger.info text
+			when level == Logger::ERROR then logger.error text
+			when level == Logger::DEBUG then logger.debug text
+			when level == Logger::WARN then logger.warn text
+			else logger.info("Unknown level #{text}")
+			end
+		end
+	end
 end
 
 def usage
-  puts "invalid option #{ARGV[0]}"
-  $stdout.puts "usage: #{__FILE__} start|stop|restart|debug [thin options]"
-  exit
+	puts "invalid option #{ARGV[0]}"
+	$stdout.puts "usage: #{__FILE__} start|stop|restart|debug [thin options]"
+	exit
 end
 
 def run_worker
-  require File.join(SvegSettings.root_dir,'config/db')
-  Delayed::Job.enqueue PB::TestJob.new("script/delayed_job")
-  worker_options = {
-    :quiet => false,
-    :sleep_delay => 5
-  }
-  Delayed::Worker.logger = PB.create_server_logger('delayed_job')
-  worker = Delayed::Worker.new(worker_options)
-  worker.name_prefix = "DJ@";
-  worker.start
+	Delayed::Job.enqueue PB::TestJob.new("script/delayed_job")
+	worker_options = {
+		:quiet => false,
+		:sleep_delay => 5
+	}
+	Delayed::Worker.logger = PB.create_server_logger('delayed_job')
+	worker = Delayed::Worker.new(worker_options)
+	worker.name_prefix = "DJ@";
+	worker.start
 end
 
 usage unless ARGV.length >= 1 && ARGV[0].match(/start|stop|restart|debug/)
 
 daemon_options = {
-  :ARGV => ARGV,
-  :dir_mode => :normal,
-  :dir => SvegSettings.tmp_dir,
-  :backtrace => true,
-  :monitor => true,
-  :log_dir => SvegSettings.log_dir,
-  :log_output => true
+	:ARGV => ARGV,
+	:dir_mode => :normal,
+	:dir => SvegSettings.tmp_dir,
+	:backtrace => true,
+	:monitor => true,
+	:log_dir => SvegSettings.log_dir,
+	:log_output => true
 }
 debug = ARGV.index("debug")
 if debug then
-  require 'ruby-debug'
-  ARGV[debug] = 'start'
-  run_worker
+	require 'ruby-debug'
+	ARGV[debug] = 'start'
+	run_worker
 else
-  Daemons.run_proc "delayed_job", daemon_options do
-    run_worker
-  end
+	Delayed::Worker.before_fork
+	Daemons.run_proc "delayed_job", daemon_options do
+		Delayed::Worker.after_fork
+		run_worker
+	end
 end

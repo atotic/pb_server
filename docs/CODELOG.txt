@@ -23,16 +23,20 @@ Add page|delete|change layout
 Book pane: scrolling, page padding
 
 Scheduled:
-Reimplement sessions/flash, so they can be reused between servers
+Comet: 
 Image resize as delayed_job
 nginx on my Mac
-Comet: use sessions, 
-Sequel: datamapper sucks
+
+Mar 7
+Sequel migration complete. All tests pass
+branched delayed_job_sequel on github, will try to merge
 
 Mar 6
 Sequel migration went a lot smoother than I thought. delayed_job server
 is the only thing not working.
 Sequel is a pleasure to work with.
+32 files changed, 621 insertions(+), 672 deletions(-)
+More code has been removed than added!
 
 Mar 5
 Sequel migration: I'll be happy to leave DataMapper. The 5 sec startup time
