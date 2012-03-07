@@ -12,7 +12,6 @@ class CreateSampleData < Test::Unit::TestCase
 	include TestHelpers
 	
 	def setup
-    DataMapper.finalize	  
   end
   
   def test_create_books

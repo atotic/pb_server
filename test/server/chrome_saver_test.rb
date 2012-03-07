@@ -8,9 +8,6 @@ require 'svegutils'
 require "log4r"
 require 'app/book2pdf_job'
 
-DataMapper.finalize
-
-
 # Exercises http API for pdf_saver_server.rb
 class ChromeSaverTest < Test::Unit::TestCase
   LOGGER = Log4r::Logger.new 'chrome_saver_test'
@@ -41,12 +38,13 @@ class ChromeSaverTest < Test::Unit::TestCase
     	:pdf_file => pdf_file,
     	:book_id => 1,
     	:html_file_url => "file://" + html_file,
-    	:pageWidth => 480,
-    	:pageHeight => 480
+    	:page_width => 480,
+    	:page_height => 480
     })
     # 72 page width points are 1in
     # 96 display points are 1in 
-    assert task.valid?, "Task validation failed, #{task.errors.collect{|x| x.to_s}.to_s}"
+    task.validate
+    assert task.errors.empty?, "Task validation failed, #{task.errors.full_messages().to_s}"
     task.save
     task
   end
@@ -66,10 +64,10 @@ class ChromeSaverTest < Test::Unit::TestCase
     timeout = 600
     begin
       Timeout.timeout(timeout) do
-        n = PB::ChromePDFTask.count(:processing_stage.not => PB::ChromePDFTask::STAGE_DONE ) 
+        n = PB::ChromePDFTask.exclude(:processing_stage => PB::ChromePDFTask::STAGE_DONE ).count 
         LOGGER.info "Waiting for #{n} tasks"
         while ((@task.processing_stage != PB::ChromePDFTask::STAGE_DONE) && (@task2.processing_stage != PB::ChromePDFTask::STAGE_DONE)) do
-          n = PB::ChromePDFTask.count(:processing_stage.not => PB::ChromePDFTask::STAGE_DONE ) 
+          n = PB::ChromePDFTask.exclude(:processing_stage => PB::ChromePDFTask::STAGE_DONE ).count 
           LOGGER.info "Waiting for #{n} tasks"
           # assert !PB::ChromePDFTask.all.empty?, "The task has disappeared" if PB::ChromePDFTask.all.empty?
           Kernel.sleep(1)

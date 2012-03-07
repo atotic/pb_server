@@ -1,12 +1,10 @@
 #!/usr/bin/env ruby
 
-require 'dm-validations'
 require 'config/settings'
 require 'config/delayed_job'
 require 'app/book2pdf_job'
 
 require 'daemons'
-require 'delayed_job_data_mapper'
 require 'delayed/worker'
 require 'log4r'
 
@@ -36,7 +34,6 @@ end
 
 def run_worker
   require File.join(SvegSettings.root_dir,'config/db')
-  DataMapper.finalize
   Delayed::Job.enqueue PB::TestJob.new("script/delayed_job")
   worker_options = {
     :quiet => false,

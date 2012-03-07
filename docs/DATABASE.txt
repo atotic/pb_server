@@ -1,4 +1,6 @@
-Switching to sequel from mysql
+Sequel model attributes are documented in migration files
+
+Switching to sequel from datamapper
 http://cheat.errtheblog.com/s/sequel/
 
 Switched to mariadb (mysql)

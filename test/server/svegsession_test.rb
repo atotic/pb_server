@@ -17,7 +17,7 @@ class TestServer
 			when env['PATH_INFO'] =~ /^\/null$/
 				[200, {}, ['ok']]
 			when env['PATH_INFO'] =~ /^\/login\/(\d+)/
-				u = PB::User.get($~[1].to_i)
+				u = PB::User[$~[1].to_i]
 				u.login(env)
 				[200, {}, ['logged in']]
 			when env['PATH_INFO'] =~ /^\/logout/
@@ -76,7 +76,7 @@ class SvegSessionTest < Test::Unit::TestCase
 
 	def test_user
 		u = create_user "atotic"
-		get "/login/#{u['id']}"
+		get "/login/#{u.pk}"
 		assert last_response.ok?, "/login"
 		assert last_response['Set-Cookie']
 		get "/assert_user"

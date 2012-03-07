@@ -3,7 +3,7 @@
 <form id="new_photo_book" method="post" data-remote="true" action="/books">
 	<%= show_error @book, :pages %>
 	<p><label for='title'>What is the name of your book?<label>
-		<input type="text" name="title" value="<%= @book.title || "Test" %>">
+		<input type="text" name="book[title]" value="<%= @book.title || "Test" %>">
 		<%= show_error @book, :title %>
 	</p>
 	<p>Size of your book?

@@ -34,8 +34,8 @@ class PDFSaverServerTest < Test::Unit::TestCase
     	:pdf_file => File.join(SvegSettings.data_dir,"pdf_saver_server_test.pdf"),
     	:book_id => 1,
     	:html_file_url => "file:///yo",
-    	:pageWidth => 600,
-    	:pageHeight => 600
+    	:page_width => 600,
+    	:page_height => 600
     })
     assert task.valid?, "Task validation failed, #{task.errors.collect{|x| x.to_s}.to_s}"
     task.save

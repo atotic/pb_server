@@ -20,8 +20,6 @@ require 'app/book_template'
 require 'app/command_stream'
 require 'app/book2pdf_job'
 
-DataMapper.finalize()
-
 # Quick and dirty shutdown
 # EventMachine takes about 10s to close my local streaming connection, too long for dev cycle
 module Sinatra
@@ -136,7 +134,7 @@ class SvegApp < Sinatra::Base
 					redirect_back
 				end
 			end
-			if !current_user || (current_user.id != resource.user_id && !current_user.is_administrator)
+			if !current_user || (current_user.pk != resource.user_id && !current_user.is_administrator)
 				flash[:error]="Access not allowed."
 				if request.xhr?
 					halt 401
@@ -237,7 +235,7 @@ class SvegApp < Sinatra::Base
 		user_must_be_logged_in
 		targetuser = current_user
 		if targetuser.is_administrator && params[:user_id]
-			targetuser = User.get(params[:user_id])
+			targetuser = PB::User[params[:user_id]]
 			if (targetuser == nil)
 				flash "No such user #{params[:user_id]}"
 				redirect to("/admin")
@@ -269,13 +267,13 @@ class SvegApp < Sinatra::Base
 			flash.now[:error]="User id cannot be blank"
 			return erb :login, :layout => :'layout/plain'
 		end
-		authlogin = AuthLogin.get(login_id)
+		authlogin = AuthLogin[login_id]
 		nextPage = :login
 		if !authlogin
 		# no login, create new user
 			begin
-				User.transaction do |t|
-					auth = AuthLogin.create(login_id)
+				DB.transaction do
+					auth = AuthLogin.create_with_user(login_id)
 					user = auth.user
 					user.login(env)
 					flash[:notice]="Created a new account"
@@ -283,14 +281,15 @@ class SvegApp < Sinatra::Base
 				redirect to("/account")
 			rescue => ex
 				LOGGER.error(ex.message)
+				ex.backtrace
 				flash[:error]="Unexpected error creating the user"
 				redirect to("/auth/login")
 			end
 		else
 		# login exists, just log in
 			authlogin.last_login = Time.now
-			authlogin.save!
-			User.get(authlogin.user_id).login(env)
+			authlogin.save
+			authlogin.user.login(env)
 			flash[:notice]="Logged in successfully"
 			redirect to("/account")
 		end
@@ -298,25 +297,24 @@ class SvegApp < Sinatra::Base
 			
 	get '/books/new' do
 		user_must_be_logged_in
-		@book = Book.new(current_user, {})
+		@book = Book.new({:user_id => current_user.pk})
 		erb :book_new, {:layout => :'layout/plain'}
 	end
 
 	delete '/books/:id' do
-		book = Book.get(params[:id])
+		book = PB::Book[params[:id]]
 		user_must_own book
-		book.destroy_dependents
 		success = book.destroy
 		flash[:notice] = success ? "Book " + book.title + " was deleted" : "Book could not be deleted."
 		content_type "text/plain"
 	end
 	
 	get '/books/:id' do
-		@book = Book.get(params[:id])
+		@book = PB::Book[params[:id]]
 		user_must_own @book
-		if (request.xhr?)
+		if request.xhr?
 			content_type :json
-			@book.to_json()
+			@book.to_json
 		else
 			erb :book_editor
 		end
@@ -325,9 +323,9 @@ class SvegApp < Sinatra::Base
 	post '/books' do
 		user_must_be_logged_in
 		begin
-			Book.transaction do |t|
+			DB.transaction do
 				template = BookTemplate.new(params["template"])
-				@book = template.create_book(current_user, params);
+				@book = template.create_book(current_user, params["book"]);
 				if request.xhr?
 					content_type :json
 					"{ \"id\" : #{@book.id} }"
@@ -339,19 +337,20 @@ class SvegApp < Sinatra::Base
 			LOGGER.error(ex.message)
 			LOGGER.error(ex.backtrace[0..5] )
 			flash.now[:error]= "Errors prevented the book from being created. Please fix them and try again."
+			@book = Book.new unless @book
 			erb :book_new, {:layout => :'layout/plain'}
 		end
 	end
 
 	get '/books/:id/pdf' do
 		user_must_be_logged_in
-		book = Book.get(params[:id])
+		book = Book[params[:id]]
 		user_must_own book
 		send_file book.pdf_path
 	end
 	
 	post '/books/:id/pdf' do
-		book = Book.get(params[:id])
+		book = Book[params[:id]]
 		user_must_own book
 		status = book.generate_pdf
 		if request.xhr?
@@ -364,7 +363,7 @@ class SvegApp < Sinatra::Base
 
 	get '/photo/:id' do
 		user_must_be_logged_in
-		photo = Photo.first(:user_id => current_user.id, :id => params[:id])
+		photo = Photo.filter(:user_id => current_user.pk).filter(:id => params[:id]).first
 		return [404, "Photo not found"] unless photo
 		send_file photo.file_path(params[:size])
 	end
@@ -375,7 +374,7 @@ class SvegApp < Sinatra::Base
 		user_must_be_logged_in
 		assert_last_command_up_to_date(request)
 		book_id = params.delete('book_id')	
-		book = Book.get(book_id)
+		book = Book[book_id]
 		user_must_own(book)		
 
 		begin
@@ -383,22 +382,22 @@ class SvegApp < Sinatra::Base
 			photo_file = params.delete('photo_file')
 			
 			photo = Photo.new(params);
-			photo.user_id = current_user.id
-			Photo.transaction do |t|
+			photo.user_id = current_user.pk
+			DB.transaction do 
 				# save photo_file
 				PhotoStorage.storeFile(photo, photo_file[:tempfile].path ) if photo_file
 				photo.save
 				# if there are duplicate photos, destroy this one, and use duplicate instead
-				dup = Photo.first(:user_id => photo.user_id, :md5 => photo.md5, :id.not => photo.id)
+				dup = Photo.filter(:user_id => photo.user_id).filter(:md5 => photo.md5).exclude(:id => photo.id).first
 				if dup
 					destroy_me = photo
 					photo = dup
 					LOGGER.warn("duplicate photo, using old one #{photo.display_name}")
 				end
 				# associate photo with a book
-				book = Book.get(book_id) if book_id
+				book = Book[book_id] if book_id
 				if book
-					book.photos << photo 
+					book.add_photo photo 
 					book.save
 				end
 			end # transaction
@@ -416,12 +415,12 @@ class SvegApp < Sinatra::Base
 	end
 
 	post '/book_page' do
-		book = Book.get(params.delete('book_id'))
+		book = Book[params.delete('book_id')]
 		user_must_own(book)
 		assert_last_command_up_to_date(request)
 		begin
 			page = nil
-			Book.transaction do |t|
+			DB.transaction do 
 				page_position = Integer(params.delete('page_position'))
 				page = PB::BookPage.new(params);
 				book.insertPage(page, page_position)
@@ -431,7 +430,6 @@ class SvegApp < Sinatra::Base
 			content_type :json
 			page.to_json
 		rescue => ex
-			LOGGER.error("Book validation failed " + book.errors) if ex.is_a? DataMapper::SaveFailureError
 			LOGGER.error(ex.message)
 			flash.now[:error]= "Errors prevented page from being saved. Contact the web site owner."
 			halt 500, "Unexpected server error"
@@ -440,11 +438,10 @@ class SvegApp < Sinatra::Base
 	
 	delete '/book_page/:id' do
 		user_must_be_logged_in
-		page = PB::BookPage.get(params.delete("id"))
+		page = PB::BookPage[params.delete("id")]
 		halt [404, "Book page not found"] unless page
 		user_must_own(page.book)
 		assert_last_command_up_to_date(request)
-		page.destroy
 		new_last_id = ServerCommand.createDeletePageCmd(page, env['sveg.stream.id'])
 		response.headers['X-Sveg-LastCommandId'] = String(new_last_id)
 		page.destroy
@@ -454,12 +451,12 @@ class SvegApp < Sinatra::Base
 	
 	put '/book_page/:id' do
 		user_must_be_logged_in
-		page = PB::BookPage.get(params['id'])
+		page = PB::BookPage[params['id']]
 		halt [404, "Book page not found"] unless page
 		user_must_own(page.book)
 		assert_last_command_up_to_date(request)
-		PB::BookPage.transaction do
-			page.update(request.params)
+		DB.transaction do
+			page.set_fields(request.params, [:html,	:width, :height, :icon,:position])
 			new_last_id = ServerCommand.createReplacePageCmd(page, env['sveg.stream.id'])
 			response.headers['X-Sveg-LastCommandId'] = String(new_last_id)
 		end

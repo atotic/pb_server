@@ -14,8 +14,7 @@ class BookTest < Test::Unit::TestCase
 	include TestHelpers
 	
 	def setup
-	  DataMapper.finalize
-	  PB::Book.all.destroy!
+	  PB::Book.destroy
   end
   
 	def test_book_templates_dir
@@ -30,9 +29,9 @@ class BookTest < Test::Unit::TestCase
 
 	def test_book_creation
 		user = create_user "book_owner"
-		params = { "title" => "test book", "template" => {"name" => "6x6" } }
-		template = PB::BookTemplate.get(params["template"]);
-		book = template.create_book(user, params);
+		book_params = { :title => "test book" }
+		template = PB::BookTemplate.get("6x6");
+		book = template.create_book(user, book_params);
 		book.save
 		assert_not_nil book
 		assert_not_nil(PB::Book.first);
@@ -40,11 +39,11 @@ class BookTest < Test::Unit::TestCase
 	
 	def test_book_properties
 		user = create_user "blah"
-		params = { "title" => "test book" }
-		b = PB::Book.new(user, params);
+		params = { :user_id => user.pk, :title => "test book" }
+		b = PB::Book.new(params);
 		b.save
 		params["template"] = { "a" => "b", "c" => "d"}
-		b = PB::Book.new(user, params)
+		b = PB::Book.new(params)
 		b.save
 	end
 	

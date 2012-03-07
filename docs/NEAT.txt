@@ -10,6 +10,7 @@ HOWTO for JS & SVG http://www.w3.org/Graphics/SVG/IG/resources/svgprimer.html
 Mediawiki wrestling with SVG -> PNG conversion http://www.mediawiki.org/wiki/Manual:$wgSVGConverters
 
 CSS
+Pure CSS page turn: http://www.romancortes.com/ficheros/page-flip.html
 Pure CSS progress bars http://dipperstove.com/design/css3-progress-bars.html
 Get value of rotation from transform matrix: http://css-tricks.com/get-value-of-css-rotation-through-javascript/
 Fun CSS generators: http://www.awcore.com/html/news/14/25-Time-saving-Generators_en
@@ -93,20 +94,16 @@ Viewport scoller https://github.com/zynga/scroller
 Developing a nice mobile site: http://davidbcalhoun.com/2011/mobile-performance-manifesto
 
 OTHER
+Free ssl cert https://www.startssl.com/?app=40
 PlentyOfFish website run by one guy, 10M page views a month. http://highscalability.com/blog/2011/12/27/plentyoffish-update-6-billion-pageviews-and-32-billion-image.html
 ssh tips, useful for Amazon: http://shebang.brandonmintern.com/tips-for-remote-unix-work-ssh-screen-and-vnc
-Look at duostack for deployment
-How to deploy custom binaries on Heroku: http://blog.mattgornick.com/using-pdfkit-on-heroku
 https://www.crowdspring.com/post-a-project/, UI design referred from Michael LaGuardia
 Survey of offline: http://www.html5rocks.com/tutorials/offline/whats-offline/#toc-compatibility
 Unicode geometric shapes: http://www.unicodemap.org/range/54/Geometric_Shapes/
-Firebug DOM member maps: http://www.google.com/codesearch/p?hl=en#BmTejM3fPxA/content/firebug/lib.js&q=viewbox%20lang:javascript&sa=N&cd=6&ct=rc&l=4314
 Branching strategy with git: http://betterexplained.com/articles/aha-moments-when-learning-git/
-Comet is a standard for long-lived HTTP
 Use bcrypt to store passwords http://codahale.com/how-to-safely-store-a-password/
 WebIntents: case study is image editor http://paul.kinlan.me/web-intents-a-fresh-look
 Simple, cheap scalable site: http://highscalability.com/blog/2011/8/1/peecho-architecture-scalability-on-a-shoestring.html
-Sinatra assets https://github.com/rstacruz/sinatra-assetpack
 SLIPSUM: http://slipsum.com/
 BrowserID authentication: https://github.com/mozilla/browserid/wiki/How-to-Use-BrowserID-on-Your-Site
 Stripe payments system: cheap way to accept credit cards

@@ -2,15 +2,14 @@
 
 # Comet is an http server handling command streaming
 # 
-require 'config/settings'
-require 'config/db'
-require 'svegutils'
 require 'rack'
 require 'eventmachine'
 require 'thin'
+require 'config/settings'
+require 'config/db'
+require 'svegutils'
 require 'app/command_stream'
 
-DataMapper.finalize
 Thin::Logging.silent = false;
 
 module Comet
@@ -51,7 +50,7 @@ class CmdStreamBroadcaster
 		# send standard js streaming header
 		body << stream_id << ";" << " " * 1024 << ";" 
 		# send all the outstanding commands 
-		commands = ::PB::ServerCommand.all(:id.gt => last_cmd_id, :book_id => book_id)
+		commands = ::PB::ServerCommand.filter('(id > ?) AND (book_id == ?)', last_cmd_id, book_id)
 		commands.each { |cmd| body << self.encode_msg(cmd) }
 		# tell client they are up to date
 		self.send_stream_up_to_date(book_id, body);
@@ -146,7 +145,7 @@ class Server
   
   def handle_broadcast(env, msg_id)
     query = Rack::Utils.parse_query(env['QUERY_STRING'])
-    msg = ::PB::ServerCommand.get(msg_id)
+    msg = ::PB::ServerCommand[msg_id]
     return  [500, {}, ["Message not found #{msg_id}"]] unless msg
     query = Rack::Utils.parse_query(env['QUERY_STRING'])
     exclude_id = (query.has_key? 'exclude') ? query['exclude'] : nil    

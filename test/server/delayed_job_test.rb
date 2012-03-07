@@ -9,8 +9,6 @@ require "log4r"
 require 'app/book2pdf_job'
 
 
-
-DataMapper.finalize
 # Exercises http API for pdf_saver_server.rb
 
 class DelayedJobTest < Test::Unit::TestCase
@@ -18,8 +16,9 @@ class DelayedJobTest < Test::Unit::TestCase
   LOGGER.add Log4r::Outputter.stdout
 
   def setup
-    Delayed::Backend::DataMapper::Job.destroy
-    assert SvegSettings.environment == :development, "Server tests must be run in development mode"
+    Delayed::Backend::Sequel::Job.delete
+    `./script/delayed_job start`
+   assert SvegSettings.environment == :development, "Server tests must be run in development mode"
   end
   
   def teardown
@@ -27,17 +26,16 @@ class DelayedJobTest < Test::Unit::TestCase
   end
 
   def test_simple_job
-    jobs = Delayed::Backend::DataMapper::Job.count
-    assert Delayed::Backend::DataMapper::Job.count == 0, "Have no jobs"
+    assert Delayed::Backend::Sequel::Job.count == 0, "Have no jobs"
     10.times { Delayed::Job.enqueue PB::TestJob.new("test_simple_job") }
-    assert Delayed::Backend::DataMapper::Job.count == 10, "Need 10 jobs"
+    assert Delayed::Backend::Sequel::Job.count == 10, "Need 10 jobs"
     `./script/delayed_job start`
     begin
       Timeout.timeout(10) do
-        Kernel.sleep(0.1) while Delayed::Backend::DataMapper::Job.count != 0
+        Kernel.sleep(0.1) while Delayed::Backend::Sequel::Job.count != 0
       end
     rescue Timeout::Error => e
-      assert Delayed::Backend::DataMapper::Job.count == 0, "Jobs not completed in 10 seconds, #{Delayed::Backend::DataMapper::Job.count} jobs remaining."
+      assert Delayed::Backend::Sequel::Job.count == 0, "Jobs not completed in 10 seconds, #{Delayed::Backend::Sequel::Job.count} jobs remaining."
     end
   end
   

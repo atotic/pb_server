@@ -1,6 +1,7 @@
 # bin/rake test:all TEST=test/helper.rb
 
 require 'config/settings'
+require 'config/db'
 require 'app/user'
 require 'app/book'
 require 'app/book_template'
@@ -9,8 +10,8 @@ module TestHelpers
 	
 	# logs in with given username. User created if does not exists
 	def create_user(username)
-		user = PB::User.first(:display_name => username)
-		user = PB::AuthLogin.create(username).user unless user
+		user = PB::User[:display_name => username]
+		user = PB::AuthLogin.create_with_user(username).user unless user
 		user
 	end
 
@@ -25,7 +26,7 @@ module TestHelpers
 		book = template.create_book(opts[:user], {"title" => opts[:title], "template"=>{"name"=>opts[:template_name]}});
     assert book, "Book could not be cretated"
     Dir.glob(File.join(SvegSettings.root_dir, "test/public/*.jpg")).each do |filename|
-      photo = PB::Photo.first(:display_name => File.basename(filename))
+      photo = PB::Photo.filter(:display_name => File.basename(filename)).first
       next if opts[:img_cnt] <= 0
       unless photo
         newName = "#{filename}.jpg"
@@ -33,7 +34,7 @@ module TestHelpers
         photo = PB::Photo.create( {:display_name => File.basename(filename), :user_id => opts[:user]['id']} );
 				PB::PhotoStorage.storeFile(photo, newName )
       end
-			book.photos << photo
+			book.add_photo << photo
 			opts[:img_cnt] -= 1
 	  end
 	  assert book.save, "Book could not be saved."

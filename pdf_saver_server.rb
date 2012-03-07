@@ -2,15 +2,13 @@
 # bin/rake test:all TEST=test/pdf_saver_server_test.rb
 
 
+require 'rack'
 require 'config/settings'
 require 'config/db'
-require 'svegutils'
-require 'app/book2pdf_job'
-require 'rack'
 require 'config/delayed_job'
 
-DataMapper.logger.set_log(StringIO.new, :fatal) # /dev/null logger, we access db continuously
-DataMapper.finalize
+require 'svegutils'
+require 'app/book2pdf_job'
 
 # logging setup
 if (SvegSettings.environment == :production) then
@@ -57,9 +55,9 @@ module PdfSaver
   def self.handle_poll_work(env)
     @@last_poll = Time.now
     # find a job, return 200 on success
-    task = PB::ChromePDFTask.first(:processing_stage => PB::ChromePDFTask::STAGE_WAITING)
+    task = PB::ChromePDFTask.filter(:processing_stage => PB::ChromePDFTask::STAGE_WAITING).first
     dispatched_count = 
-      PB::ChromePDFTask.count(:processing_stage => PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME)
+      PB::ChromePDFTask.filter(:processing_stage => PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME).count
     return $response[:no_work_available] unless task && dispatched_count < MAX_CONCURRENT_WORK
     self.log(env, "task " + task.id.to_s)
     task.processing_stage = PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME
@@ -67,22 +65,10 @@ module PdfSaver
     [200, {'Content-Type' => 'application/json'}, task.to_json]
   end
 
-  # If save fails, retry after a couple of seconds
-  def self.saveTask(task)
-    done = false
-    begin
-      task.save
-    rescue => ex
-      Kernel.sleep(2)
-      LOGGER.warn("Database busy, retrying to save task #{task[:id]}")
-      task.save
-    end
-  end
-
   def self.handle_pdf_done(env)
     query = Rack::Utils.parse_query(env['QUERY_STRING'])
     return $response[:bad_request_no_id] unless query['id']
-    task = PB::ChromePDFTask.get(query['id'])
+    task = PB::ChromePDFTask[query['id']]
     unless task
       LOGGER.error("handle_pdf_done failed to find task " + query['id'])
       return $response[:bad_request_task_not_found]
@@ -115,7 +101,7 @@ module PdfSaver
   def self.handle_pdf_fail(env)
     query = Rack::Utils.parse_query(env['QUERY_STRING'])
     return $response[:bad_request_no_id] unless query['id']
-    task = PB::ChromePDFTask.get(query['id'])
+    task = PB::ChromePDFTask[query['id']]
     unless task
       LOGGER.error("handle_pdf_fail failed to find task " + query['id'])
       return $response[:bad_request_task_stage]
@@ -144,7 +130,7 @@ Thread.new {
     Kernel.sleep(chromium_timer)
     if Time.now > (PdfSaver.last_poll + chromium_timer) then
       PdfSaver::LOGGER.error("Chromium did not GET /poll_pdf_work for more than #{chromium_timer} seconds. Restarting chromium")
-      orphans = PB::ChromePDFTask.all(:processing_stage => PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME)
+      orphans = PB::ChromePDFTask.filter(:processing_stage => PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME)
       orphans.each do |t|
         PdfSaver::LOGGER.warn("Task #{t.id} was orphaned. Resetting.")
         o.processing_stage = PB::ChromePDFTask::STAGE_WAITING;

@@ -29,6 +29,19 @@ nginx on my Mac
 Comet: use sessions, 
 Sequel: datamapper sucks
 
+Mar 6
+Sequel migration went a lot smoother than I thought. delayed_job server
+is the only thing not working.
+Sequel is a pleasure to work with.
+
+Mar 5
+Sequel migration: I'll be happy to leave DataMapper. The 5 sec startup time
+was killing me. Other reasons for leaving:
+- documentation is iffy (sequel not that great in this respect either)
+- migrations were getting tricky
+- in general, did not feel solid, when pushed, had to jump through a lot of hoops
+- hated many gem dependencies
+- felt far removed from SQL
 
 Feb 29
 sessions/flash reimplementation done
