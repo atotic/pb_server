@@ -27,6 +27,9 @@ Comet:
 Image resize as delayed_job
 nginx on my Mac
 
+Mar 8
+Book deletion deletes all dependents
+
 Mar 7
 Sequel migration complete. All tests pass
 branched delayed_job_sequel on github, will try to merge

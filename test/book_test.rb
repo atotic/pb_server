@@ -14,9 +14,9 @@ class BookTest < Test::Unit::TestCase
 	include TestHelpers
 	
 	def setup
-	  PB::Book.destroy
-  end
-  
+		PB::Book.destroy
+	end
+	
 	def test_book_templates_dir
 		Dir.foreach(SvegSettings.book_templates_dir) do |template_name|
 			next if template_name.start_with? "."

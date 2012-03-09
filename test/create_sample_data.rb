@@ -12,11 +12,11 @@ class CreateSampleData < Test::Unit::TestCase
 	include TestHelpers
 	
 	def setup
-  end
-  
-  def test_create_books
-    book1 = create_book( :title => "Book1", :img_cnt => 10)
-    assert book1, "Could not create book"
-    book2 = create_book( :title => "Book1", :img_cnt => 10)
-  end
+	end
+	
+	def test_create_books
+		book1 = create_book( :title => "Book1", :img_cnt => 10)
+		assert book1, "Could not create book"
+		book2 = create_book( :title => "Book1", :img_cnt => 10)
+	end
 end

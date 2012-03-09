@@ -95,6 +95,7 @@ Viewport scoller https://github.com/zynga/scroller
 Developing a nice mobile site: http://davidbcalhoun.com/2011/mobile-performance-manifesto
 
 OTHER
+Open source freelancers, where to register non-seizable domain: http://gun.io/
 Free ssl cert https://www.startssl.com/?app=40
 PlentyOfFish website run by one guy, 10M page views a month. http://highscalability.com/blog/2011/12/27/plentyoffish-update-6-billion-pageviews-and-32-billion-image.html
 ssh tips, useful for Amazon: http://shebang.brandonmintern.com/tips-for-remote-unix-work-ssh-screen-and-vnc

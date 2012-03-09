@@ -7,8 +7,8 @@ class HelperTest < Test::Unit::TestCase
 	include TestHelpers
 
 	def setup
-  end
-  
+	end
+
 	def test_create_user
 		create_user("atotic")
 		assert_not_nil PB::User[:display_name => "atotic"], "Could not log in"

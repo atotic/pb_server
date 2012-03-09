@@ -15,29 +15,29 @@ module TestHelpers
 		user
 	end
 
-  def create_book(options = {})
-    opts = options.merge({
-      :user => create_user("atotic"),
-      :template_name => "modern_lines",
-      :title => "Default book",
-      :img_cnt => 1
-    })
-    template = PB::BookTemplate.new(opts[:template_name])
+	def create_book(options = {})
+		opts = options.merge({
+			:user => create_user("atotic"),
+			:template_name => "modern_lines",
+			:title => "Default book",
+			:img_cnt => 1
+		})
+		template = PB::BookTemplate.new(opts[:template_name])
 		book = template.create_book(opts[:user], {"title" => opts[:title], "template"=>{"name"=>opts[:template_name]}});
-    assert book, "Book could not be cretated"
-    Dir.glob(File.join(SvegSettings.root_dir, "test/public/*.jpg")).each do |filename|
-      photo = PB::Photo.filter(:display_name => File.basename(filename)).first
-      next if opts[:img_cnt] <= 0
-      unless photo
-        newName = "#{filename}.jpg"
-        `cp #{filename} #{newName}`
-        photo = PB::Photo.create( {:display_name => File.basename(filename), :user_id => opts[:user]['id']} );
+		assert book, "Book could not be cretated"
+		Dir.glob(File.join(SvegSettings.root_dir, "test/public/*.jpg")).each do |filename|
+			photo = PB::Photo.filter(:display_name => File.basename(filename)).first
+			next if opts[:img_cnt] <= 0
+			unless photo
+				newName = "#{filename}.jpg"
+				`cp #{filename} #{newName}`
+				photo = PB::Photo.create( {:display_name => File.basename(filename), :user_id => opts[:user]['id']} );
 				PB::PhotoStorage.storeFile(photo, newName )
-      end
+			end
 			book.add_photo << photo
 			opts[:img_cnt] -= 1
-	  end
-	  assert book.save, "Book could not be saved."
-	  book
+		end
+		assert book.save, "Book could not be saved."
+		book
 	end
 end

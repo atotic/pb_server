@@ -22,7 +22,7 @@ Sequel.migration do
 		end
 		
 
-		create_table(:server_commands, :ignore_index_errors=>true) do
+		create_table(:browser_commands, :ignore_index_errors=>true) do
 			primary_key :id
 			DateTime :created_at
 			DateTime :updated_at

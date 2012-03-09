@@ -9,13 +9,13 @@ Sequel::Model.raise_on_save_failure = true
 options = {}
 options[:logger] = Logger.new(STDOUT) if SvegSettings.environment == :development
 db_config = {
-    :adapter => 'mysql2',        # NOT 'postgresql'
-    :default_schema  => 'public',  # NOT :schema_search_path
-    :user => 'sveg',         # NOT :username
-    :password => 'svegsveg',
-    :host => 'localhost',
-    :database => "sveg_#{SvegSettings.environment}",
-    :max_connections => 5          # NOT :pool'
+		:adapter => 'mysql2',
+		:default_schema => 'public',
+		:user => 'sveg',
+		:password => 'svegsveg',
+		:host => 'localhost',
+		:database => "sveg_#{SvegSettings.environment}",
+		:max_connections => 5
 }
 DB = Sequel.connect("mysql2://sveg:svegsveg@localhost/sveg_#{SvegSettings.environment}",
 	options)
