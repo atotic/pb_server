@@ -1,6 +1,6 @@
 # bin/rake test:server TEST=test/server/comet_test.rb
 
-# Comet is an http server handling command streaming
+# Comet is an http server handling browser streaming
 # 
 require 'rack'
 require 'eventmachine'
@@ -27,6 +27,7 @@ class DeferrableBody
 
 	def each(&blk)
 		@body_callback = blk
+		""
 	end
 
 	def <<(str)
@@ -165,16 +166,17 @@ class Server
 		query = Rack::Utils.parse_query(env['QUERY_STRING'])
 		exclude_id = (query.has_key? 'exclude') ? query['exclude'] : env['sveg.stream.id']
 		BrowserStreamBroadcaster.broadcast(msg, msg.book_id, exclude_id)
+		[200, {} ['ok']]
 	end
 	
 	def call(env)
 		case
-		when env['PATH_INFO'] =~ /^\/subscribe\/book\/[\d+]$/ then handle_subscribe(env, $~[1].to_i)
-		when env['PATH_INFO'] =~ /^\/test/ then handle_test(env)
+		when env['PATH_INFO'].match( /^\/subscribe\/book\/(\d+)$/) then handle_subscribe(env, $~[1].to_i)
+		when env['PATH_INFO'].match(/^\/test/) then handle_test(env)
 		# /broadcast/:msg_id?[exclude=stream_id], or pass exclude in usual X-SvegStream header
-		when env['PATH_INFO'] =~ /^\/broadcast\/[\d+]$/ then handle_broadcast(env, $~[1] )
-		when env['PATH_INFO'] =~ /^\/status/ then handle_status(env)
-		when env['PATH_INFO'] =~ /favicon.ico/ then [200, {}, []]
+		when env['PATH_INFO'].match(/^\/broadcast\/(\d+)$/) then handle_broadcast(env, $~[1] )
+		when env['PATH_INFO'].match(/^\/status/) then handle_status(env)
+		when env['PATH_INFO'].match(/favicon.ico/) then [200, {}, []]
 		else [ 400, {'Content-Type' => 'text/plain'}, ["No such path #{env['PATH_INFO']}" ]] 
 		end
 	end

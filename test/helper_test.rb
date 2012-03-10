@@ -13,5 +13,12 @@ class HelperTest < Test::Unit::TestCase
 		create_user("atotic")
 		assert_not_nil PB::User[:display_name => "atotic"], "Could not log in"
 	end
+
+	def test_login_user
+		u = create_user("atotic")
+		session = Rack::MockSession.new(nil)
+		login_user(u, session)
+		
+	end
 	
 end

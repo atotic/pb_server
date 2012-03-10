@@ -62,6 +62,7 @@ class SvegApp < Sinatra::Base
 		end
 		
 		def print_datetime(dt)
+			debugger if dt.nil?
 			dt.strftime "%b %d %I:%M%p"
 		end
 		
@@ -398,8 +399,7 @@ class SvegApp < Sinatra::Base
 			destroy_me.destroy if destroy_me
 			
 			# broadcast cmd
-			new_last_id = BrowserCommand.createAddPhotoCmd(book.id, photo, env['sveg.stream.id'])
-			headers "X-Sveg-LastCommandId" => String(new_last_id)
+			headers( BrowserCommand.createAddPhotoCmd(book.id, photo).broadcast(env))
 			# response
 			content_type :json
 			body photo.to_json
@@ -418,8 +418,7 @@ class SvegApp < Sinatra::Base
 				page_position = Integer(params.delete('page_position'))
 				page = PB::BookPage.new(params);
 				book.insertPage(page, page_position)
-				new_last_id = BrowserCommand.createAddPageCmd(page, page_position, env['sveg.stream.id'])
-				response.headers['X-Sveg-LastCommandId'] = String(new_last_id)
+				headers(BrowserCommand.createAddPageCmd(page, page_position).broadcast(env))
 			end
 			content_type :json
 			page.to_json
@@ -436,8 +435,7 @@ class SvegApp < Sinatra::Base
 		halt [404, "Book page not found"] unless page
 		user_must_own(page.book)
 		assert_last_command_up_to_date(request)
-		new_last_id = BrowserCommand.createDeletePageCmd(page, env['sveg.stream.id'])
-		response.headers['X-Sveg-LastCommandId'] = String(new_last_id)
+		headers(BrowserCommand.createDeletePageCmd(page).broadcast(env))
 		page.destroy
 		content_type "text/plain"
 		"Delete successful"
@@ -451,8 +449,7 @@ class SvegApp < Sinatra::Base
 		assert_last_command_up_to_date(request)
 		DB.transaction do
 			page.update_only(request.params, [:html,	:width, :height, :icon,:position])
-			new_last_id = BrowserCommand.createReplacePageCmd(page, env['sveg.stream.id'])
-			response.headers['X-Sveg-LastCommandId'] = String(new_last_id)
+			headers( BrowserCommand.createReplacePageCmd(page).broadcast(env))
 		end
 		content_type "text/plain"
 		"Update successful"
