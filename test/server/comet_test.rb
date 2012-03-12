@@ -13,6 +13,7 @@ module Rack
 	class MockSession
 		def complete_request(response)
 			status, headers, body = response
+			debugger if (body.nil? || headers.nil?)
 			@last_response = MockResponse.new(status, headers, body, @last_request.env["rack.errors"].flush)
 			return if status == -1
 			body.close if body.respond_to?(:close)
@@ -39,6 +40,7 @@ class CometServerTest < Test::Unit::TestCase
 	include TestHelpers
 
 	def setup
+		PB.logger.level = Log4r::FATAL
 		assert SvegSettings.environment == :development, "Server tests must be run in development mode"
 		@user = create_user("atotic")
 		@book = create_book({:user => @user, :title => "Subscribe test"})
@@ -62,7 +64,7 @@ class CometServerTest < Test::Unit::TestCase
 		session.last_response
 	end
 
-	def test_test
+	def test_atest
 		mock_session = Rack::MockSession.new(Comet)
 		session = Rack::Test::Session.new(mock_session)
 		session.get "/test" do |r| 
@@ -71,22 +73,27 @@ class CometServerTest < Test::Unit::TestCase
 		login_user(@user, mock_session)
 	end
 	
-	def test_subscribe_broadcast
-		mock_session1 = Rack::MockSession.new(Comet)
-		login_user(@user, mock_session1)
-		session1 = Rack::Test::Session.new(mock_session1)
-		async_get(session1, mock_session1, "/subscribe/book/#{@book.pk}")
-		assert session1.last_response.status == 200, "subscribe should be legal"
+	def create_async_subscribe_session(user, book)
+		mock_session = Rack::MockSession.new(Comet)
+		login_user(@user, mock_session)
+		session = Rack::Test::Session.new(mock_session)
+		async_get(session, mock_session, "/subscribe/book/#{book.pk}")
+		assert session.last_response.status == 200, "subscribe should be legal"
+		session
+	end
 
-		mock_session2 = Rack::MockSession.new(Comet)
-		# we could also transfer cookie jar from mock_session1
-		login_user(@user, mock_session2)
-		session2 = Rack::Test::Session.new(mock_session2)
-		async_get(session2, mock_session2, "/subscribe/book/#{@book.pk}")
+	def test_subscribe_broadcast
+		session1 = create_async_subscribe_session(@user, @book)
+		assert session1.last_response.status == 200, "subscribe should be legal"
+		session1_id = session1.last_response.body.match(/^([^\;]+)/)[1]
+
+		session2 = create_async_subscribe_session(@user, @book)
+		assert session2.last_response.status == 200, "subscribe should be legal"
+		session2_id = session2.last_response.body.match(/^([^\;]+)/)[1]
 
 		control_mock_session = Rack::MockSession.new(Comet)
-		# no login, broadcasting is not protected
 		control_session = Rack::Test::Session.new(control_mock_session)
+		# control_session does not need login, broadcasting is not protected
 
 	# simple broadcast is received by both sessions
 		@book.pages[0].update({:html => "COMMAND1"})
@@ -94,14 +101,42 @@ class CometServerTest < Test::Unit::TestCase
 		control_session.get("/broadcast/#{cmd.pk}")
 		assert session1.last_response.body.include? "COMMAND1"
 		assert session2.last_response.body.include? "COMMAND1"
+
 	# broadcast on session1 is received by session2, but not session1
+		@book.pages[0].update({:html => "COMMAND2"})
+		cmd = ::PB::BrowserCommand.createReplacePageCmd(@book.pages[0])
+		control_session.get("/broadcast/#{cmd.pk}?exclude=#{session1_id}")
+		assert !(session1.last_response.body.include? "COMMAND2")
+		assert session2.last_response.body.include? "COMMAND2"
+
 	# broadcast on session2 is received by session1, not session2
+		@book.pages[0].update({:html => "COMMAND3"})
+		cmd = ::PB::BrowserCommand.createReplacePageCmd(@book.pages[0])
+		control_session.get("/broadcast/#{cmd.pk}?exclude=#{session2_id}")
+		assert session1.last_response.body.include? "COMMAND3"
+		assert !(session2.last_response.body.include? "COMMAND3")
+
+	end
 
 	# try creating each different commands
+	def test_create_commands
+
 	end
 	
 	def test_errors
-		# broadcast on non-existent book
-		# broadcast non-existent message
+		mock_session = Rack::MockSession.new(Comet)		
+
+		session = Rack::Test::Session.new(mock_session)
+		async_get(session, mock_session, "/subscribe/book/#{@book.pk}")
+		assert session.last_response.status == 401, "Unauthorized access"
+
+		# non existent subscribe fail
+		login_user(@user, mock_session)
+		async_get(session, mock_session, "/subscribe/book/70000")
+		assert session.last_response.status == 404, "Book not found"
+
+		# non existent broadcast fail
+		session.get("/broadcast/50000")
+		assert session.last_response.status == 404, "No such command"
 	end
 end

@@ -43,6 +43,9 @@ end
 # based on https://github.com/rkh/presentations/blob/realtime-rack/example.rb
 # and http://code.google.com/p/jquery-stream/wiki/ServerSideProcessing
 class BrowserStreamBroadcaster
+
+	LOGGER = PB.create_class_logger(self)
+	
 	class StreamRecord
 		attr_reader :body, :stream_id
 		def initialize(body, stream_id)
@@ -144,8 +147,13 @@ class Server
 	# async response. Keeps connection open, and sends BrowserCommands 
 	def handle_subscribe(env, book_id)
 		return RESPONSE[:need_async_server] unless env['async.close']
-		PB::Security.user_must_own(env, PB::Book[book_id])
-
+		book = PB::Book[book_id]
+		return [404, {}, ['no such book']] unless book
+		begin
+			PB::Security.user_must_own(env, PB::Book[book_id])		
+		rescue
+			return [401, {}, ['unauthorized']]
+		end
 		query = Rack::Utils.parse_query(env['QUERY_STRING'])
 		last_cmd_id = (query.has_key? 'last_cmd_id') ? query['last_cmd_id'].to_i : 0
 		body = DeferrableBody.new
@@ -162,11 +170,11 @@ class Server
 	
 	def handle_broadcast(env, msg_id)
 		msg = ::PB::BrowserCommand[msg_id]
-		return [500, {}, ["Message not found #{msg_id}"]] unless msg
+		return [404, {}, ["Message not found #{msg_id}"]] unless msg
 		query = Rack::Utils.parse_query(env['QUERY_STRING'])
 		exclude_id = (query.has_key? 'exclude') ? query['exclude'] : env['sveg.stream.id']
 		BrowserStreamBroadcaster.broadcast(msg, msg.book_id, exclude_id)
-		[200, {} ['ok']]
+		[200, {}, ['ok']]
 	end
 	
 	def call(env)
