@@ -12,6 +12,7 @@ Debugger.settings[:autoeval] = true
 
 class SvegSettings
 	
+	# directories
 	@root_dir = File.dirname(File.dirname(File.expand_path(__FILE__))).freeze
 	@environment = ( ENV['RACK_ENV'] || :development ).to_sym # :production :development :test
 	@book_templates_dir = File.join(@root_dir, "book-templates").freeze
@@ -25,16 +26,22 @@ class SvegSettings
 	@photo_dir = File.join(@data_dir, "photo-storage").freeze # photo storage directory
 	@book2pdf_dir = File.join(@data_dir, "pdf-books").freeze # generated books
 	
+	# binaries
 	@chrome_binary = "/Users/atotic/chromium/src/out/Release/Chromium.app/Contents/MacOS/Chromium".freeze
 	@chrome_dir = "/Users/atotic/chromium/src/out/Release/Chromium.app".freeze
 	@chrome_profile_dir = File.join(@root_dir, "chromium_profile").freeze
 	@pdf_toolkit_binary = "/usr/local/bin/pdftk".freeze
 	
+	#
+	@comet_port = 28000
+	@comet_host = "localhost"
+
 	class << self
 		attr_accessor :root_dir,:data_dir, :tmp_dir, :log_dir, :test_dir
 		attr_accessor :environment
 		attr_accessor :book_templates_dir, :photo_dir, :book2pdf_dir
 		attr_accessor :chrome_binary, :chrome_dir, :chrome_profile_dir, :pdf_toolkit_binary
+		attr_accessor :comet_port, :comet_host
 	end
 	
 	def self.init()

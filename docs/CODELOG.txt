@@ -27,6 +27,12 @@ Comet:
 Image resize as delayed_job
 nginx on my Mac
 
+Mar 12
+Comet testing complete.
+My ajax calls are not sending the authentication cookie.
+Tracing cookie problems with:
+sudo tcpdump -s 0 -A -i lo0 'tcp port 28000 and (((ip[2:2] - ((ip[0]&0xf)<<2)) - ((tcp[12]&0xf0)>>2)) != 0)'
+
 Mar 8
 Book deletion deletes all dependents
 

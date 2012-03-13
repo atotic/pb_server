@@ -468,21 +468,10 @@ class SvegApp < Sinatra::Base
 		content_type (request.xhr? ? :json : "text/plain")
 		BookTemplate.get(params[:id]).to_json
 	end
-		
-	# AsyncResponse = [-1, {}, []].freeze
 	
-	get '/cmd/stream/:book_id' do # async
-		book_id = params[:book_id];
-		last_cmd_id = params['last_cmd_id']
-		body = DeferrableBody.new
-		# send out headers right away
-		EM.next_tick { env['async.callback'].call [200, {'Content-Type' => 'text/plain'}, body] }
-		# bind to command broadcaster
-		EM.next_tick { CmdStreamBroadcaster.bind(body, book_id, last_cmd_id) }
-		# unbind on close
-		env['async.close'].callback { CmdStreamBroadcaster.unbind(book_id, body) }
-		# returning AsyncResponse dies in sinatra/base.rb:874 (can't modify frozen array)
-		throw :async
+	get '/subscribe/book/:book_id' do # async
+		LOGGER.error "Subscriptions should be forwarded to comet"
+		redirect "http://#{SvegSettings.comet_host}:#{SvegSettings.comet_port}/subscribe/book/#{params[:book_id]}?#{env['QUERY_STRING']}"
 	end
 
 # setup & run

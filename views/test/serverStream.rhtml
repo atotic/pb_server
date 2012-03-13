@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Test: JQuery Dialog</title>
+	<title>Test: ServerStream</title>
 	<%= asset_link("jquery.js", "jquery-ui.js", "transform.js", "application.js") %>
 	<%= asset_link("editor-base") %>
 	<%= asset_link("jquery-ui.css", "application.css") %>
+
 </head>
 <body>
 <script type="text/javascript">
-	var book = new PB.Book(<%= PB::Book.get(26).to_json %>);
+	var book = new PB.Book(<%= PB::Book[1].to_json %>);
 	book.bind("serverStreamUpToDate", function() {
 		console.log("serverStreamUpToDate");
 	});
@@ -20,7 +21,24 @@
 	function disconnectFromServer() {
 		book.stream.close();
 	}
+	function testAjax() {
+		var request = new XMLHttpRequest();
+		request.open("GET", "http://localhost:28000/subscribe/book/" + book.id, true);
+		request.onreadystatechange = function (oEvent) {
+			console.log("Ready state is" + request.readyState);
+			if (request.readyState === 4) {  
+				if (request.status === 200) {  
+					console.log(request.responseText)  
+				} else {  
+					console.log("Error", request.statusText);  
+				}
+			}
+		} 
+		request.send();
+	//	$.ajax("/subscribe/book/" + book.id);
+	}
 </script>
 <h1>Server stream testing</h1>
+<button onclick="testAjax()">Test ajax</button>
 <button onclick="connectToServer()">Connect</button>
 <button onclick="disconnectFromServer()">Disconnect</button>

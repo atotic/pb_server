@@ -42,10 +42,10 @@ end
 # Broadcasts command to all open streams
 # based on https://github.com/rkh/presentations/blob/realtime-rack/example.rb
 # and http://code.google.com/p/jquery-stream/wiki/ServerSideProcessing
-class BrowserStreamBroadcaster
+class BrowserBroadcaster
 
-	LOGGER = PB.create_class_logger(self)
-	
+	LOGGER = PB.create_class_logger(self, {:level => Log4r::ALL})
+
 	class StreamRecord
 		attr_reader :body, :stream_id
 		def initialize(body, stream_id)
@@ -55,7 +55,7 @@ class BrowserStreamBroadcaster
 		end
 		def disconnected
 			time_connected = Time.now - @start_time
-			LOGGER.info("BrowserStream disconnected: " + item.stream_id + " #{time_connected.strftime('%s')}")
+			LOGGER.info("disconnected: " + @stream_id.to_s + " after " + ('%d.2' % time_connected) + "s")
 		end
 	end
 
@@ -67,7 +67,7 @@ class BrowserStreamBroadcaster
 		stream_id = rand(36**6).to_s(36).upcase
 		@@listeners[book_id] = [] unless @@listeners.has_key? book_id
 		@@listeners[book_id].push StreamRecord.new(body, stream_id)
-		LOGGER.info("BrowserStreamBroadcaster.bind " + stream_id)
+		LOGGER.info("bind " + stream_id)
 		
 		# send standard js streaming header
 		body << stream_id << ";" << " " * 1024 << ";" 
@@ -89,7 +89,7 @@ class BrowserStreamBroadcaster
 	# broadcast msg to (everyone except exclude_id) listening on book_id
 	# msg is String||BrowserCommand
 	def self.broadcast( msg, book_id, exclude_id )
-		LOGGER.info("BrowserStreamBroadcaster.send")
+		LOGGER.info("send")
 		book_id = Integer(book_id)
 		encoded_msg = self.encode_msg(msg)
 		streams = @@listeners[Integer(book_id)] || []
@@ -139,7 +139,6 @@ class Server
 	end
 
 	def handle_test(env)
-		log(env)
 		RESPONSE[:success]
 	end
 
@@ -161,10 +160,10 @@ class Server
 		# send out headers right away
 			env['async.callback'].call [200, {'Content-Type' => 'text/plain', 'Transfer-Encoding' => 'chunked'}, body]
 			# bind to command broadcaster
-			BrowserStreamBroadcaster.bind(body, book_id, last_cmd_id)
+			BrowserBroadcaster.bind(body, book_id, last_cmd_id)
 		end
 		# unbind on close
-		env['async.close'].callback { BrowserStreamBroadcaster.unbind(book_id, body) }
+		env['async.close'].callback { BrowserBroadcaster.unbind(book_id, body) }
 		return Thin::Connection::AsyncResponse # in sintara, this dies
 	end
 	
@@ -173,7 +172,7 @@ class Server
 		return [404, {}, ["Message not found #{msg_id}"]] unless msg
 		query = Rack::Utils.parse_query(env['QUERY_STRING'])
 		exclude_id = (query.has_key? 'exclude') ? query['exclude'] : env['sveg.stream.id']
-		BrowserStreamBroadcaster.broadcast(msg, msg.book_id, exclude_id)
+		BrowserBroadcaster.broadcast(msg, msg.book_id, exclude_id)
 		[200, {}, ['ok']]
 	end
 	
