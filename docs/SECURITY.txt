@@ -1,0 +1,8 @@
+SECURITY.txt
+
+Rack::Protection has been disabled in Sveg. It was causing errors in nginx deployment.
+
+Will need XSS security review once I do it.
+
+Make sure all our out-strings are escaped
+Check referer, nothing gets through without it

@@ -4,8 +4,8 @@ gem 'rake'
 
 gem "sinatra"
 gem "thin" # thin for async responses
-gem 'rack', "<1.4" # because of https://github.com/nakajima/rack-flash/issues/8
-gem 'rack-flash'
+gem 'rack' # because of https://github.com/nakajima/rack-flash/issues/8
+gem 'rack-flash', :git => "git://github.com/ChrisCauser/rack-flash.git"
 
 gem "sequel"
 gem "mysql2"
@@ -16,7 +16,7 @@ gem 'nokogiri' # html parsing
 gem 'css_parser'
 
 gem 'delayed_job', "~> 3.0"
-gem 'delayed_job_sequel', :path => "../delayed_job_sequel"
+gem 'delayed_job_sequel', :git => "git://github.com/atotic/delayed_job_sequel.git"
 gem 'daemons'
 
 group :development do

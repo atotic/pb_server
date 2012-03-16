@@ -1,5 +1,13 @@
-PATH
-  remote: ../delayed_job_sequel
+GIT
+  remote: git://github.com/ChrisCauser/rack-flash.git
+  revision: d8fd1d2c0b176d04bcb904a22cd84debe85f2061
+  specs:
+    rack-flash (0.1.2)
+      rack
+
+GIT
+  remote: git://github.com/atotic/delayed_job_sequel.git
+  revision: cf8865e9eaae69d1029c168e9ea71fa40a7e5f13
   specs:
     delayed_job_sequel (0.2.0)
       activesupport (>= 3.0.0)
@@ -28,12 +36,10 @@ GEM
     linecache (0.46)
       rbx-require-relative (> 0.0.4)
     log4r (1.1.10)
-    multi_json (1.0.4)
+    multi_json (1.1.0)
     mysql2 (0.3.11)
-    nokogiri (1.5.0)
-    rack (1.3.6)
-    rack-flash (0.1.2)
-      rack
+    nokogiri (1.5.2)
+    rack (1.4.1)
     rack-protection (1.2.0)
       rack
     rack-test (0.6.1)
@@ -59,7 +65,7 @@ GEM
       rack (>= 1.0.0)
     tilt (1.3.3)
     trollop (1.16.2)
-    wkpdf (0.6.1)
+    wkpdf (0.6.2)
       trollop (>= 1.16.2)
 
 PLATFORMS
@@ -75,8 +81,8 @@ DEPENDENCIES
   log4r
   mysql2
   nokogiri
-  rack (< 1.4)
-  rack-flash
+  rack
+  rack-flash!
   rack-test
   rake
   ruby-debug

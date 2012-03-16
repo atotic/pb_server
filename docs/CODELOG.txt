@@ -27,11 +27,19 @@ Comet:
 Image resize as delayed_job
 nginx on my Mac
 
+Mar 15
+Sveg was returning 403 responses to nginx.
+I did not detect this, because my logger was below Rack::Protection
+Need to learn about rack-protection, bunch of middleware
+
 Mar 12
+Ooops, tested syncing, not working between chrome and FF.
+
 Comet testing complete.
 My ajax calls are not sending the authentication cookie.
 Tracing cookie problems with:
 sudo tcpdump -s 0 -A -i lo0 'tcp port 28000 and (((ip[2:2] - ((ip[0]&0xf)<<2)) - ((tcp[12]&0xf0)>>2)) != 0)'
+Cookies cannot be forwarded to Comet server. To test, will need nginx
 
 Mar 8
 Book deletion deletes all dependents

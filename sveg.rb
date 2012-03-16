@@ -20,6 +20,8 @@ require 'app/photo'
 require 'app/book_template'
 require 'app/command_stream'
 
+Thin::SERVER = "Sveg".freeze
+
 # Quick and dirty shutdown
 # EventMachine takes about 10s to close my local streaming connection, too long for dev cycle
 module Sinatra
@@ -46,8 +48,8 @@ class SvegApp < Sinatra::Base
 
 	set :show_exceptions, true if SvegSettings.environment == :development
 	set :dump_errors, true if SvegSettings.environment == :development
+	set :protection, false
 
-#	set :static_cache_control, "max-age=3600" # serve stuff from public with expiry date
 	def initialize(*args)
 		super(args)
 	end
@@ -66,6 +68,14 @@ class SvegApp < Sinatra::Base
 			dt.strftime "%b %d %I:%M%p"
 		end
 		
+		def json_response(object)
+			[200, {'Content-Type' => Rack::Mime::MIME_TYPES['.json']}, [object.to_json]]
+		end
+
+		def plain_response(msg="")
+			[200, {'Content-Type' => Rack::Mime::MIME_TYPES['.txt']}, [msg]]
+		end
+
 		# TODO really redirect back, should use cookies?
 		def redirect_back
 			redirect "/"
@@ -82,10 +92,10 @@ class SvegApp < Sinatra::Base
 				if arg.end_with?("js")
 					arg = "jquery-1.7.js" if arg.eql? "jquery.js"
 					arg = "jquery-ui-1.8.16.custom.js" if arg.eql? "jquery-ui.js"
-					retVal += "<script src='/javascripts/#{arg}'></script>\n"				
+					retVal += "<script src='/js/#{arg}'></script>\n"				
 				elsif arg.end_with?("css")
 					arg = "smoothness/jquery-ui-1.8.16.custom.css" if arg.eql? "jquery-ui.css"
-					retVal += "<link href='/stylesheets/#{arg}' rel='stylesheet' type='text/css' />\n"
+					retVal += "<link href='/css/#{arg}' rel='stylesheet' type='text/css' />\n"
 				elsif arg.eql? "qunit"
 					retVal += "<script src='http://code.jquery.com/qunit/qunit-git.js'></script>\n"
 					retVal += "<link href='http://code.jquery.com/qunit/qunit-git.css' rel='stylesheet' type='text/css' />\n"
@@ -140,7 +150,9 @@ class SvegApp < Sinatra::Base
 		end
 			
 		def assert_last_command_up_to_date(request)
+			debugger if env['sveg.stream.last_command'].nil?
 			halt 412, {'Content-Type' => 'text/plain'}, "You must supply last command" if env['sveg.stream.last_command'].nil?
+			debugger if env['sveg.stream.last_command'] != BrowserCommand.last_command_id(env['sveg.stream.book'])
 			halt 412, {'Content-Type' => 'text/plain'}, "Your last command is not up to date" if env['sveg.stream.last_command'] != BrowserCommand.last_command_id(env['sveg.stream.book'])
 		end
 	end # helpers
@@ -301,15 +313,14 @@ class SvegApp < Sinatra::Base
 		user_must_own book
 		success = book.destroy
 		flash[:notice] = success ? "Book " + book.title + " was deleted" : "Book could not be deleted."
-		content_type "text/plain"
+		plain_response("")
 	end
 	
 	get '/books/:id' do
 		@book = PB::Book[params[:id]]
 		user_must_own @book
 		if request.xhr?
-			content_type :json
-			@book.to_json
+			json_response(@book)
 		else
 			erb :book_editor
 		end
@@ -323,7 +334,7 @@ class SvegApp < Sinatra::Base
 				@book = template.create_book(current_user, params["book"]);
 				if request.xhr?
 					content_type :json
-					"{ \"id\" : #{@book.id} }"
+					[200, {'Content-Type' => 'application/json'} ,["{ \"id\" : #{@book.id} }"]]
 				else
 					redirect to("/books/#{@book.id}")
 				end
@@ -350,9 +361,9 @@ class SvegApp < Sinatra::Base
 		status = book.generate_pdf
 		if request.xhr?
 			flash.now[:notice] = "<a href='/books/#{book.id}/pdf'>PDF</a> conversion in progress..."
-			200
+			plain_response("")
 		else
-			[200, "PDF generation in progress..."]
+			[200, {}, "PDF generation in progress..."]
 		end
 	end
 
@@ -370,8 +381,7 @@ class SvegApp < Sinatra::Base
 		assert_last_command_up_to_date(request)
 		book_id = params.delete('book_id')	
 		book = Book[book_id]
-		user_must_own(book)		
-
+		user_must_own(book)
 		begin
 			destroy_me = nil	# destroy must be outside the transaction
 			photo_file = params.delete('photo_file')
@@ -391,8 +401,8 @@ class SvegApp < Sinatra::Base
 				end
 				# associate photo with a book
 				book = Book[book_id] if book_id
-				if book
-					book.add_photo photo 
+				if book && book.photos.index(photo).nil?
+					book.add_photo photo
 					book.save
 				end
 			end # transaction
@@ -401,9 +411,9 @@ class SvegApp < Sinatra::Base
 			# broadcast cmd
 			headers( BrowserCommand.createAddPhotoCmd(book.id, photo).broadcast(env))
 			# response
-			content_type :json
-			body photo.to_json
+			json_response(photo)
 		rescue => ex
+			LOGGER.error "Unexpected server error" + ex.message
 			[500, "Unexpected server error" + ex.message]
 		end
 	end
@@ -420,8 +430,7 @@ class SvegApp < Sinatra::Base
 				book.insertPage(page, page_position)
 				headers(BrowserCommand.createAddPageCmd(page, page_position).broadcast(env))
 			end
-			content_type :json
-			page.to_json
+			json_response(page)
 		rescue => ex
 			LOGGER.error(ex.message)
 			flash.now[:error]= "Errors prevented page from being saved. Contact the web site owner."
@@ -437,8 +446,7 @@ class SvegApp < Sinatra::Base
 		assert_last_command_up_to_date(request)
 		headers(BrowserCommand.createDeletePageCmd(page).broadcast(env))
 		page.destroy
-		content_type "text/plain"
-		"Delete successful"
+		plain_response("Delete successful")
 	end
 	
 	put '/book_page/:id' do
@@ -451,8 +459,7 @@ class SvegApp < Sinatra::Base
 			page.update_only(request.params, [:html,	:width, :height, :icon,:position])
 			headers( BrowserCommand.createReplacePageCmd(page).broadcast(env))
 		end
-		content_type "text/plain"
-		"Update successful"
+		plain_response("Update successful")
 	end
 	
 	get '/assets/:template_name/:asset_file' do
@@ -465,8 +472,8 @@ class SvegApp < Sinatra::Base
 	end
 
 	get '/templates/:id' do
-		content_type (request.xhr? ? :json : "text/plain")
-		BookTemplate.get(params[:id]).to_json
+		template = BookTemplate.get(params[:id])
+		json_response(template)
 	end
 	
 	get '/subscribe/book/:book_id' do # async
@@ -475,7 +482,7 @@ class SvegApp < Sinatra::Base
 	end
 
 # setup & run
-	use Rack::CommonLogger, File.join(SvegSettings.log_dir, "sveg.log" ) 
+	use Rack::CommonLogger, File.join(SvegSettings.log_dir, "sveg.log" )
 	use Rack::Session::Cookie, PB::SvegSession::COOKIE_OPTIONS
 	use Rack::Flash
 	use PB::SvegSession

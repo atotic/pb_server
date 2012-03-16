@@ -202,14 +202,14 @@ a:visited {
 
 #progress_cancel {
 	display:inline-block;
-	background-image: url(/stylesheets/smoothness/images/ui-icons_454545_256x240.png);
+	background-image: url(/css/smoothness/images/ui-icons_454545_256x240.png);
 	margin-top: 0px;
 	background-position: -96px -125px;
 	height: 16px;
 	width:16px;
 }
 #progress_cancel:hover {
-	background-image: url(/stylesheets/smoothness/images/ui-icons_cd0a0a_256x240.png);
+	background-image: url(/css/smoothness/images/ui-icons_cd0a0a_256x240.png);
 	cursor: pointer;
 }
 .admin {

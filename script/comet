@@ -13,7 +13,7 @@ end
 usage unless ARGV.length >= 1 && ARGV[0].match(/start|stop|restart|debug/)
 
 cmd_line_args = "bin/thin"
-cmd_line_args += " --timeout 30" # hold onto connection for a couple of minutes maybe
+cmd_line_args += " --timeout 600" # hold onto connection for a couple of minutes maybe
 cmd_line_args += " --port #{SvegSettings.comet_port} --rackup comet.rb"
 
 if (ARGV[0].eql? 'debug') then

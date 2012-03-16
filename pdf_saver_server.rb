@@ -10,6 +10,8 @@ require 'config/delayed_job'
 require 'svegutils'
 require 'app/book2pdf_job'
 
+Thin::SERVER = "PDFSaver".freeze
+
 # logging setup
 if (SvegSettings.environment == :production) then
 	stdoutFile = File.new(File.join(SvegSettings.log_dir, "pdf_saver_server.info"), "w")

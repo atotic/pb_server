@@ -11,6 +11,7 @@ require 'svegutils'
 require 'app/command_stream'
 
 Thin::Logging.silent = false;
+Thin::SERVER = "Comet".freeze
 
 module Comets
 
@@ -108,9 +109,9 @@ private
 	def self.encode_command(cmd)
 		{
 			:id => cmd.pk,
-			:type => cmd['type'],
-			:book_id => cmd.book_id,
-			:payload => JSON.parse(cmd.payload)
+			:type => cmd[:type],
+			:book_id => cmd[:book_id],
+			:payload => JSON.parse(cmd[:payload])
 		}.to_json		
 	end
 	
@@ -149,7 +150,7 @@ class Server
 		book = PB::Book[book_id]
 		return [404, {}, ['no such book']] unless book
 		begin
-			PB::Security.user_must_own(env, PB::Book[book_id])		
+#			PB::Security.user_must_own(env, PB::Book[book_id])		
 		rescue
 			return [401, {}, ['unauthorized']]
 		end
@@ -158,7 +159,10 @@ class Server
 		body = DeferrableBody.new
 		EM.next_tick do
 		# send out headers right away
-			env['async.callback'].call [200, {'Content-Type' => 'text/plain', 'Transfer-Encoding' => 'chunked'}, body]
+			env['async.callback'].call [200, {
+				'Content-Type' => 'text/plain', 
+				'Transfer-Encoding' => 'chunked'
+				}, body]
 			# bind to command broadcaster
 			BrowserBroadcaster.bind(body, book_id, last_cmd_id)
 		end

@@ -377,7 +377,7 @@ PB.Manipulators.Text = {
 		button.bind(buttonEvents);				
 	},
 	createResizeButton: function(bookText) {
-		var html = "<img class='manipulator-button deleteme' src='/images/corner-icon.png'>";
+		var html = "<img class='manipulator-button deleteme' src='/img/corner-icon.png'>";
 		var button = $(html);
 		button.css({
 			position: "absolute",

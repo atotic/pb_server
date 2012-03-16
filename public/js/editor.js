@@ -350,6 +350,7 @@ PB.QueueFilter.NetworkErrorFilter = {
 				break;
 			default:
 				this.setNetworkError(jqXHR.status);
+				console.warn("unexpected xhr error:" + jqXHR.status + " " + jqXHR.responseText);
 				debugger;
 				break;
 		};
@@ -592,11 +593,12 @@ $.extend(PB.UploadQueue.prototype, {
 			// notify the network error
 			THIS._filters.forEach( function(filter) { if (filter.xhrFail) filter.xhrFail(jqXHR, status, ex) });
 			// put job back in front
+			console.warn("Job failed, retrying");
 			THIS._waitJobs.unshift(item);
 		});
 		job.done(function( data, textStatus, jqXHR) {
 			var cmd_id = jqXHR.getResponseHeader("X-Sveg-LastCommandId");
-			if (cmd_id)
+			if (cmd_id && PB.book)
 				PB.book().last_server_cmd_id = cmd_id;
 		});
 		// Notify filters when job completes

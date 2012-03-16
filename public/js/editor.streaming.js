@@ -20,7 +20,7 @@ PB.ServerStream = {
 	init: function () {
 		// send last command id with every ajax request
 		$('body').ajaxSend(function(event, jsXHR, ajaxOptions) {
-			var book = PB.book();
+			var book = 'book' in PB ? PB.book() : null;
 			if (book == null)
 				return;
 			ajaxOptions.headers = ajaxOptions.headers || {};
@@ -33,7 +33,7 @@ PB.ServerStream = {
 	},
 
 	url: function(book) {
-		return "/cmd/stream/" + book.id + "?last_cmd_id=" + (book ? book.last_server_cmd_id : 0);
+		return "/subscribe/book/" + book.id + "?last_cmd_id=" + (book ? book.last_server_cmd_id : 0);
 	},
 	
 	connect: function(book) {
@@ -47,15 +47,17 @@ PB.ServerStream = {
 			}, 
 			// Lifecycle callbacks
 			open: function(event, stream) {
+				console.log("ServerStream opened " + stream.id);
 			},
 			message: function(ev) {
+				console.log("Server stream message " + stream.id)
 				PB.ServerCmd.create(ev.data);
 			},
 			error: function(ev) {
-				console.log("ServerStream error , possible closure");
+				console.log("ServerStream error , possible closure " + stream.id);
 			},
 			close: function(ev) {
-				PB.warn("server connection closed");
+				console.warn("server connection closed");
 				book.stream = null;
 			}
 		});
