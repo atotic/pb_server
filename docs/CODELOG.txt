@@ -9,7 +9,6 @@ Feb 14th estimates:
 1 week: dropbox integration?
 
 Featuritis:
-cflr security protection
 DropBox image import/storage
 image frame resize?
 printing text: hide default text
@@ -23,9 +22,27 @@ Add page|delete|change layout
 Book pane: scrolling, page padding
 
 Scheduled:
-Comet: 
+
+Next:
 Image resize as delayed_job
-nginx on my Mac
+Better integration with nginx files: let nginx handle files(download, get just file name, img up server static)
+Error codes: we need error message management
+Image resize on etsy http://codeascraft.etsy.com/2010/07/09/batch-processing-millions-of-images/  
+Capistrano deployment, make it run on Ubuntu
+Ruby 1.9.3
+
+Mar 19
+Resizing & orientation
+Resizing takes ~0.5s
+Auto orientation takes 1.5s even if nothing is done
+
+Mar 16
+nginx works. Most of the problems were related to my servers. So many moving parts:
+Sinatra's protection was the trickiest, what threw me off was that I assumed
+my logger was telling the truth. Instead, Sinatra was changing server response
+under me without notification.
+Rest of the problems were minor, Sequel migration leftovers, and debugging artifacts.
+Firefox sneakily drops the XHR response if it detects cross-site scripting
 
 Mar 15
 Sveg was returning 403 responses to nginx.

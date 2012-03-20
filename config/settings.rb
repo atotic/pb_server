@@ -31,7 +31,8 @@ class SvegSettings
 	@chrome_dir = "/Users/atotic/chromium/src/out/Release/Chromium.app".freeze
 	@chrome_profile_dir = File.join(@root_dir, "chromium_profile").freeze
 	@pdf_toolkit_binary = "/usr/local/bin/pdftk".freeze
-	
+	@convert_binary = "/usr/local/bin/convert".freeze
+	@graphicsmagick_binary = "/usr/local/bin/gm".freeze
 	#
 	@comet_port = 28000
 	@comet_host = "localhost"
@@ -41,6 +42,7 @@ class SvegSettings
 		attr_accessor :environment
 		attr_accessor :book_templates_dir, :photo_dir, :book2pdf_dir
 		attr_accessor :chrome_binary, :chrome_dir, :chrome_profile_dir, :pdf_toolkit_binary
+		attr_accessor :convert_binary, :graphicsmagick_binary
 		attr_accessor :comet_port, :comet_host
 	end
 	

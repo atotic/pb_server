@@ -150,7 +150,7 @@ class Server
 		book = PB::Book[book_id]
 		return [404, {}, ['no such book']] unless book
 		begin
-#			PB::Security.user_must_own(env, PB::Book[book_id])		
+			PB::Security.user_must_own(env, PB::Book[book_id])		
 		rescue
 			return [401, {}, ['unauthorized']]
 		end

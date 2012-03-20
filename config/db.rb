@@ -7,7 +7,7 @@ require 'logger'
 
 Sequel::Model.raise_on_save_failure = true
 options = {}
-options[:logger] = Logger.new(STDOUT) if SvegSettings.environment == :development
+#options[:logger] = Logger.new(STDOUT) if SvegSettings.environment == :development
 db_config = {
 		:adapter => 'mysql2',
 		:default_schema => 'public',

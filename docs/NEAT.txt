@@ -76,6 +76,10 @@ Ruby toolbox: what gem should I use for.....  http://ruby-toolbox.com/
 MD5 digests in ruby http://www.siaris.net/index.cgi/Programming/LanguageBits/Ruby/MD5.rdoc
 Ruby command shell http://rdoc.info/github/banister/pry/master/file/README.markdown
 Manipulating HTML in Ruby: https://github.com/tenderlove/nokogiri
+Will I ever need a state machine https://github.com/pluginaweek/state_machine
+
+Security
+Use pbkdf2 for passwords https://github.com/emerose/pbkdf2-ruby
 
 S3
 Pure html ajax upload: http://zefer.posterous.com/pure-html-ajax-solutions-to-upload-files-to-s
@@ -113,6 +117,7 @@ Graphic designers: http://www.artisantalent.com/find-talent/print-talent/graphic
 OAuth2: http://googlecode.blogspot.com/2011/11/oauth-20-playground-open-to-developers.html
 Image resizing: GraphicsMagick
 Sending email: http://37signals.com/svn/posts/3096-behind-the-scenes-giving-away-the-secrets-of-email-delivery
+OS X shell tips http://hayne.net/MacDev/Notes/unixFAQ.html#shellStartup
 
 TOUCH INTERFACES
 Sweet & short take on ipad html development http://mir.aculo.us/2010/06/04/making-an-ipad-html5-app-making-it-really-fast/

@@ -1,12 +1,15 @@
+Hmmm: https://github.com/blog/470-deployment-script-spring-cleaning
 
 - Setup:
 bundle install --binstubs creates bundle binaries inside bin
 
 BINARIES
 chromium -- chromium built with pageCapture.saveAsPDF patch
-pdftk -- pdf toolkit, for converting to pdf
+pdftk -- pdf toolkit, for merging pdf pages
 growl, growlnotify -- development only, growl errors in logs
 xvfd -- for running headless chrome
+imagemagick - for auto-orient
+graphicsmagick - for image resizing
 
 SERVERS
 sveg -- main application server, 26000

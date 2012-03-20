@@ -9,5 +9,7 @@ class BinarySettingsTest < Test::Unit::TestCase
 		assert(File.exist?(SvegSettings.chrome_dir), "Chrome launch directory not found")
 		assert(File.exist?(SvegSettings.chrome_profile_dir), "Chrome profile directory not found")
 		assert(File.exist?(SvegSettings.pdf_toolkit_binary), "pdftk binary not found")
+		assert(File.exist?(SvegSettings.convert_binary), "convert binary not found")
+		assert(File.exist?(SvegSettings.graphicsmagick_binary), "graphicsmagick_binary not found")
 	end
 end
