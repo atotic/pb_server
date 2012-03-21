@@ -24,17 +24,31 @@ Book pane: scrolling, page padding
 Scheduled:
 
 Next:
-Image resize as delayed_job
 Better integration with nginx files: let nginx handle files(download, get just file name, img up server static)
 Error codes: we need error message management
-Image resize on etsy http://codeascraft.etsy.com/2010/07/09/batch-processing-millions-of-images/  
-Capistrano deployment, make it run on Ubuntu
 Ruby 1.9.3
+Automatically run tests
+
+Mar 21
+Ruby 1.9.3 compatibility tests:
+Lots of work, getting the debugger to work was the hardest, required manually installing some gems.
+See http://stackoverflow.com/questions/4062925/ruby-debug-install-error-failed-to-build-gem-native-extension
+
+Mar 20
+Met with Spence to get the goodies on deployment.
+Deployment with git is easy, just clone it. He looked at Capistrano, thought it was too complex
+Deploying secrets in production is an unsolved problem
+For servers, create special user and group, give them nothing
 
 Mar 19
-Resizing & orientation
-Resizing takes ~0.5s
-Auto orientation takes 1.5s even if nothing is done
+Resizing & orientation, done.
+Orientation takes 1.3s beause of slow imagemagick startup. Only done if needed
+Resize takes ~0.6s
+Installed Ruby 1.9.3 with rvm. Problems:
+ruby-debug has an issue, use 'debug' gem instead
+Need to figure out how to work the require paths
+rvm use 1.9.3
+rvm use system
 
 Mar 16
 nginx works. Most of the problems were related to my servers. So many moving parts:

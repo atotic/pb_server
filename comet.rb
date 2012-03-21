@@ -2,13 +2,15 @@
 
 # Comet is an http server handling browser streaming
 # 
+require 'backports'
 require 'rack'
 require 'eventmachine'
 require 'thin'
-require 'config/settings'
-require 'config/db'
-require 'svegutils'
-require 'app/command_stream'
+
+require_relative 'config/settings'
+require_relative 'config/db'
+require_relative 'lib/sveg_lib'
+
 
 Thin::Logging.silent = false;
 Thin::SERVER = "Comet".freeze

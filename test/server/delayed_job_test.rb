@@ -2,11 +2,14 @@
 
 require 'test/unit'
 require "rack/test"
-require 'config/settings'
-require 'config/db'
-require 'svegutils'
+
+require_relative '../helper'
+require_relative '../../config/settings'
+require_relative '../../config/db'
+require_relative '../../config/delayed_job'
+require_relative '../../lib/sveg_lib'
+
 require "log4r"
-require 'app/book2pdf_job'
 
 
 # Exercises http API for pdf_saver_server.rb

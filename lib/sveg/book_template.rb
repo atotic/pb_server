@@ -2,10 +2,6 @@ require 'json'
 require 'nokogiri'
 require 'css_parser'
 
-require 'app/user'
-require 'app/photo'
-require 'app/book'
-
 module PB
 # Holds information about a book template
 class BookTemplate
@@ -355,7 +351,7 @@ class PageTemplate
 				html << "width:#{t[:width]}%;height:#{t[:height]}px;"
 				html << "top:#{t[:top]}%;left:#{t[:left]}%;"
 				html << "\'>"
-				html << lipsum.choice
+				html << lipsum.sample
 				html << "</div>"
 			end
 			html << "\n</div>"

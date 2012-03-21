@@ -1,5 +1,5 @@
-require 'app/book'
 require 'sequel'
+require 'active_support'
 module PB
 	
 class User < Sequel::Model
@@ -10,7 +10,7 @@ class User < Sequel::Model
 	one_to_many :photos
 
 	def save_to_session(env, expire = nil)
-		expire ||= Time.now + 1.days.to_i
+		expire ||= Time.now + 1*24*3600	# one day
 		env['rack.session']['user_id'] = self.pk
 		env['rack.session']['user_id_expires'] = expire.to_i
 		env['sveg.user'] = self

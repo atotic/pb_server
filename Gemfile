@@ -15,12 +15,16 @@ gem 'log4r'
 gem 'nokogiri' # html parsing
 gem 'css_parser'
 
-gem 'delayed_job', "~> 3.0"
+gem 'delayed_job', "~> 3.0", :git => "git://github.com/atotic/delayed_job.git"
 gem 'delayed_job_sequel', :git => "git://github.com/atotic/delayed_job_sequel.git"
 gem 'daemons'
 
+gem 'backports'
+
 group :development do
-	gem "ruby-debug"
+	gem "ruby-debug", :platforms => :ruby_18
+	gem "ruby-debug-base19", "0.11.26", :platforms => :ruby_19
+	gem "ruby-debug19", "0.11.6", :require => 'ruby-debug', :platforms => :ruby_19
 	gem "wkpdf"
 	gem "growl"
 end

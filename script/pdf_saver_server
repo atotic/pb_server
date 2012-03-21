@@ -1,8 +1,10 @@
 #!/usr/bin/env ruby
 # starts pdf_saver_server
 
-require 'config/settings'
-require 'svegutils'
+require 'bundler/setup'
+require 'backports'
+
+require_relative '../config/settings'
 
 def usage
 	puts "invalid option #{ARGV[0]}"
@@ -16,7 +18,7 @@ cmd_line_args = "bin/thin"
 cmd_line_args += " --port 27000 --rackup pdf_saver_server.rb"
 
 if (ARGV[0].eql? 'debug') then
-	 require 'ruby-debug'
+	require_relative '../config/debug'
 	ARGV[0] = 'start'
 	cmd_line_args += " --debug"
 	cmd_line_args += ARGV[1,100].join(" ") + " " + ARGV[0]

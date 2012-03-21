@@ -1,7 +1,7 @@
-#! bin/rake test:all TEST=test/binaries_test.rb
-ENV['RACK_ENV'] = 'test'
-require 'config/settings'
+#! bin/rake test:functional TEST=test/binaries_test.rb
+
 require 'test/unit'
+require_relative '../config/settings'
 
 class BinarySettingsTest < Test::Unit::TestCase
 	def test_chrome_binary

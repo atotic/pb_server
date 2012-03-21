@@ -1,12 +1,6 @@
 require 'json'
 require 'sequel'
 
-require 'app/user'
-require 'app/photo'
-require 'app/book_template'
-require 'app/command_stream'
-require 'app/book2pdf_job'
-
 module PB
 	
 class Book < Sequel::Model(:books)

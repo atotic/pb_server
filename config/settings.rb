@@ -5,8 +5,6 @@ ENV['RAILS_ENV'] = ENV['RACK_ENV']
 
 # gem requires
 require 'bundler/setup'
-require 'ruby-debug'
-Debugger.settings[:autoeval] = true
 
 # server code
 
@@ -53,7 +51,19 @@ class SvegSettings
 		Dir.mkdir(@photo_dir) unless File.exists?(@photo_dir)
 		Dir.mkdir(@book2pdf_dir) unless File.exists?(@book2pdf_dir)
 	end
+
+	def self.development?
+		@environment == :development
+	end
+
+	def self.production?
+		@environment == :production
+	end
 end
 
 SvegSettings.init()
 
+if SvegSettings.development?
+	require 'backports'
+	require_relative 'debug'
+end

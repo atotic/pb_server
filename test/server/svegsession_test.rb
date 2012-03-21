@@ -1,15 +1,15 @@
 # bin/rake test:server TEST=test/server/svegsession_test.rb
 
 require 'test/unit'
-require "rack/test"
-require "test/helper"
+require 'rack/test'
 
-require 'config/settings'
-require 'config/db'
-require 'svegutils'
-require "log4r"
+require_relative '../helper'
+require_relative '../../config/settings'
+require_relative '../../config/db'
+require_relative '../../lib/sveg_lib'
+
+require 'log4r'
 require 'rack-flash'
-require 'app/user'
 
 class TestServer 
 	def call(env)
@@ -66,7 +66,7 @@ class SvegSessionTest < Test::Unit::TestCase
 						:skip => true,	# Rack > 1.4
 						:defer => true, # Rack < 1.4
 					}
-					use Rack::Flash
+					use Rack::Flash, :helper => nil
 					use PB::SvegSession
 					run TestServer.new
 				end

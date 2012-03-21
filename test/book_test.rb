@@ -1,13 +1,11 @@
-# bin/rake test:all TEST=test/book_test.rb
-ENV['RACK_ENV'] = 'test'
+# bin/rake test:functional TEST=test/book_test.rb
 
 require 'test/unit'
 require 'rack/test'
-require "test/helper"
-require 'config/settings'
-require 'config/db'
-require "app/book"
-require "app/book_template"
+require_relative "helper"
+require_relative '../config/settings'
+require_relative '../config/db'
+require_relative '../lib/sveg_lib'
 
 # book model tests
 class BookTest < Test::Unit::TestCase

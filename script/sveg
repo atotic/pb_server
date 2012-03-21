@@ -2,8 +2,8 @@
 # starts chrome process
 # TODO daemonize script/chrome with xvfd, taskless gem for Linux
 
-require 'config/settings'
-require 'svegutils'
+require 'bundler/setup'
+require 'backports'
 
 def usage
 	puts "invalid option #{ARGV[0]}"
@@ -15,13 +15,14 @@ usage unless ARGV.length >= 1 && ARGV[0].match(/start|stop|restart|debug/)
 cmd_line_args = "bin/thin --port 26000 --rackup sveg.rb "
 
 if (ARGV[0].eql? 'debug') then
-	require 'ruby-debug'
+	require_relative '../config/debug'
 	ARGV[0] = 'start'
 	cmd_line_args += " --debug"
 	cmd_line_args += ARGV[1,100].join(" ") + " " + ARGV[0]
 	Kernel.exec cmd_line_args
 end
 
+require_relative '../config/settings'
 cmd_line_args += "--log #{File.join(SvegSettings.log_dir, 'sveg.info')}"
 cmd_line_args += " --pid #{File.join(SvegSettings.tmp_dir, 'sveg.pid')} "
 cmd_line_args += " --tag sveg_#{SvegSettings.environment.to_s[0..1]}"
@@ -29,6 +30,7 @@ cmd_line_args += " --daemonize"
 cmd_line_args += ARGV[1,100].join(" ") + " " + ARGV[0]
 puts cmd_line_args
 Kernel.exec(cmd_line_args)
+
 #out = `#{cmd_line_args} 2>&1`
 #puts out unless out.empty?
 #puts "Error in sveg" unless $?.success?

@@ -1,8 +1,10 @@
 #!/usr/bin/env ruby
 # starts comet process
 
-require 'config/settings'
-require 'svegutils'
+require 'bundler/setup'
+require 'backports'
+
+require_relative '../config/settings'
 
 def usage
 	puts "invalid option #{ARGV[0]}"
@@ -17,7 +19,7 @@ cmd_line_args += " --timeout 600" # hold onto connection for a couple of minutes
 cmd_line_args += " --port #{SvegSettings.comet_port} --rackup comet.rb"
 
 if (ARGV[0].eql? 'debug') then
-	 require 'ruby-debug'
+	require_relative '../config/debug'
 	ARGV[0] = 'start'
 	cmd_line_args += " --debug"
 	cmd_line_args += ARGV[1,100].join(" ") + " " + ARGV[0]

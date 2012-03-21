@@ -99,6 +99,7 @@ Viewport scoller https://github.com/zynga/scroller
 Developing a nice mobile site: http://davidbcalhoun.com/2011/mobile-performance-manifesto
 
 OTHER
+Google Cloud Storage looks great. Looks like I could run the entire site for less than $10K a month.
 Open source freelancers, where to register non-seizable domain: http://gun.io/
 Free ssl cert https://www.startssl.com/?app=40
 PlentyOfFish website run by one guy, 10M page views a month. http://highscalability.com/blog/2011/12/27/plentyoffish-update-6-billion-pageviews-and-32-billion-image.html
@@ -145,6 +146,7 @@ picplum: mail best photos, http://paulstamatiou.com/picplum-automatic-photo-prin
 nation's photo lab
 Menlo Park photo book focussed place: http://www.keepsy.com/main/about_us
 walmart & walgreens both use snapfish photo book creation software.
+Jeff McMahon, Netscape guy CEO of Digilife http://www.linkedin.com/profile/connections?id=464352
 
 What I'd like:
 the image workflow is a mess for an average guy

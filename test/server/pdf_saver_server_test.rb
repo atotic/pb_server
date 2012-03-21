@@ -1,21 +1,24 @@
 # bin/rake test:server TEST=test/server/pdf_saver_server_test.rb
 
-require 'config/settings'
-require 'config/db'
 require 'test/unit'
+require 'rack/test'
 
-require "rack/test"
-require "pdf_saver_server"
+require_relative '../helper'
+require_relative '../../config/settings'
+require_relative '../../config/db'
+require_relative '../../lib/sveg_lib'
+require_relative '../../pdf_saver_server'
+
 require 'json'
 
-PdfSaver.do_not_wake_up_chrome
+PdfSaver::Server.do_not_wake_up_chrome
 
 # Exercises http API for pdf_saver_server.rb
 class PDFSaverServerTest < Test::Unit::TestCase
 	include Rack::Test::Methods
 
 	def app
-		return $Pdf_saver_server
+		return Pdf_saver_server
 	end
 	
 	def setup

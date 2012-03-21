@@ -1,7 +1,5 @@
 # gem requires
-require 'config/settings'
 require 'active_support/inflector' # see https://code.google.com/p/ruby-sequel/issues/detail?id=329
-require "benchmark"
 require 'sequel'
 require 'logger'
 

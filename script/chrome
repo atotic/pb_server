@@ -2,8 +2,11 @@
 # starts chrome process
 # TODO daemonize script/chrome with xvfd, taskless gem for Linux
 
-require 'config/settings'
-require 'svegutils'
+require 'bundler/setup'
+require 'backports'
+
+require_relative '../config/settings'
+require_relative '../lib/sveg/svegutils'
 
 def usage
 	$stdout.puts "usage: #{__FILE__} start|stop|restart"; exit

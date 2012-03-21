@@ -1,12 +1,14 @@
 # bin/rake test:server TEST=test/server/comet_test.rb
-require 'config/settings'
-require 'config/db'
+
+
 require 'test/unit'
 require "rack/test"
-require 'test/helper'
 
-require "comet"
-require "app/command_stream"
+require_relative '../helper'
+require_relative '../../config/settings'
+require_relative '../../config/db'
+require_relative '../../lib/sveg_lib'
+require_relative '../../comet'
 
 # monkeypatch for async responses
 module Rack

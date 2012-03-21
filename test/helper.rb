@@ -1,11 +1,9 @@
 # bin/rake test:all TEST=test/helper.rb
 
-require 'config/settings'
-require 'config/db'
-require 'app/user'
-require 'app/book'
-require 'app/book_template'
 require 'rack'
+require_relative '../config/settings'
+require_relative '../config/db'
+require_relative '../lib/sveg_lib'
 
 module TestHelpers
 	

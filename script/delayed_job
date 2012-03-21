@@ -1,17 +1,19 @@
 #!/usr/bin/env ruby
 
-
-require 'config/delayed_job'
+require 'bundler/setup'
+require 'backports'
 require 'daemons'
+require_relative '../config/delayed_job'
 require 'delayed/worker'
 require 'log4r'
 
-require 'app/book2pdf_job'
+require_relative '../config/settings'
+require_relative '../lib/sveg/book2pdf_job'
 
 # require all models delayed_job will need
 
 
-# Monkeypatch so logger can b
+# Monkeypatch so we can use log4r
 module Delayed
 	class Worker
 		def say(text, level = Logger::INFO)
@@ -31,7 +33,7 @@ end
 
 def usage
 	puts "invalid option #{ARGV[0]}"
-	$stdout.puts "usage: #{__FILE__} start|stop|restart|debug [thin options]"
+	$stdout.puts "usage: #{__FILE__} start|stop|restart|debug "
 	exit
 end
 
@@ -60,7 +62,7 @@ daemon_options = {
 }
 debug = ARGV.index("debug")
 if debug then
-	require 'ruby-debug'
+	require_relative '../config/debug'
 	ARGV[debug] = 'start'
 	run_worker
 else

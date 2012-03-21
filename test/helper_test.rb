@@ -1,7 +1,7 @@
-# bin/rake test:all TEST=test/helper_test.rb
+# bin/rake test:functional TEST=test/helper_test.rb
 require 'test/unit'
 require 'rack/test'
-require "test/helper"
+require_relative "helper"
 
 class HelperTest < Test::Unit::TestCase
 	include TestHelpers

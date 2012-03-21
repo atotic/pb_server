@@ -1,8 +1,10 @@
 #!/usr/bin/env ruby
 
-require 'config/settings'
-require 'svegutils'
-require 'ruby-debug'
+require 'bundler/setup'
+require 'backports'
+
+require_relative '../config/settings'
+require_relative '../lib/sveg/svegutils'
 
 def usage
 	puts "invalid option #{ARGV[0]}"

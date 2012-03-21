@@ -6,6 +6,13 @@ GIT
       rack
 
 GIT
+  remote: git://github.com/atotic/delayed_job.git
+  revision: 9ca7de9a4b55697ded638738d54630807c69c6a8
+  specs:
+    delayed_job (3.0.1)
+      activesupport (~> 3.0)
+
+GIT
   remote: git://github.com/atotic/delayed_job_sequel.git
   revision: cf8865e9eaae69d1029c168e9ea71fa40a7e5f13
   specs:
@@ -22,19 +29,21 @@ GEM
       i18n (~> 0.6)
       multi_json (~> 1.0)
     addressable (2.2.7)
+    archive-tar-minitar (0.5.2)
+    backports (2.3.0)
     columnize (0.3.6)
     css_parser (1.2.6)
       addressable
       rdoc
     daemons (1.1.8)
-    delayed_job (3.0.1)
-      activesupport (~> 3.0)
     eventmachine (0.12.10)
     growl (1.0.3)
     i18n (0.6.0)
     json (1.6.5)
     linecache (0.46)
       rbx-require-relative (> 0.0.4)
+    linecache19 (0.5.13)
+      ruby_core_source (>= 0.1.4)
     log4r (1.1.10)
     multi_json (1.1.0)
     mysql2 (0.3.11)
@@ -53,6 +62,16 @@ GEM
       ruby-debug-base (~> 0.10.4.0)
     ruby-debug-base (0.10.4)
       linecache (>= 0.3)
+    ruby-debug-base19 (0.11.26)
+      columnize (>= 0.3.1)
+      linecache19 (>= 0.5.11)
+      ruby_core_source (>= 0.1.4)
+    ruby-debug19 (0.11.6)
+      columnize (>= 0.3.1)
+      linecache19 (>= 0.5.11)
+      ruby-debug-base19 (>= 0.11.19)
+    ruby_core_source (0.1.5)
+      archive-tar-minitar (>= 0.5.2)
     sequel (3.33.0)
     sfl (2.1)
     sinatra (1.3.2)
@@ -72,9 +91,10 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  backports
   css_parser
   daemons
-  delayed_job (~> 3.0)
+  delayed_job (~> 3.0)!
   delayed_job_sequel!
   growl
   json
@@ -86,6 +106,8 @@ DEPENDENCIES
   rack-test
   rake
   ruby-debug
+  ruby-debug-base19 (= 0.11.26)
+  ruby-debug19 (= 0.11.6)
   sequel
   sfl
   sinatra

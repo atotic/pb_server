@@ -1,4 +1,3 @@
-require 'app/book'
 require 'eventmachine'
 require 'json'
 

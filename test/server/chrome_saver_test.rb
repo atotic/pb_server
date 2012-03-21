@@ -2,11 +2,14 @@
 require 'test/unit'
 require "rack/test"
 
-require 'config/settings'
-require 'config/db'
-require 'svegutils'
+require_relative '../helper'
+require_relative '../../config/settings'
+require_relative '../../config/db'
+require_relative '../../lib/sveg_lib'
+require_relative '../../comet'
+
 require "log4r"
-require 'app/book2pdf_job'
+
 
 # Exercises http API for pdf_saver_server.rb
 class ChromeSaverTest < Test::Unit::TestCase
@@ -26,6 +29,7 @@ class ChromeSaverTest < Test::Unit::TestCase
 		LOGGER.info('teardown')
 		`./script/chrome stop`
 		`./script/pdf_saver_server stop`
+		LOGGER.info('teardown complete')
 		@task.destroy if @task
 		@task2.destroy if @task2
 	end

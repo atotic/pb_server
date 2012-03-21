@@ -1,7 +1,7 @@
-require "fileutils"
-require "svegutils"
-require 'config/delayed_job'
-require "app/book"
+require 'fileutils'
+
+require_relative 'svegutils'
+require_relative 'book'
 
 # PDF Generation is fully documented here, and implemented in many pieces
 #

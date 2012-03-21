@@ -1,5 +1,4 @@
 require 'sequel'
-require 'app/book'
 require 'fileutils'
 require 'digest/md5'
 
@@ -68,6 +67,19 @@ class PhotoStorage
 		raise ("Could not query orientation " + $?.to_s) unless $? == 0
 		return if (result.eql?("unknown") || result.eql?("1")) # photo property oriented
 		LOGGER.info("auto-orienting image")
+# would like to use GraphicsMagick after all, see http://stackoverflow.com/questions/4263758/does-graphicsmagick-have-an-equivalent-to-imagemagick-convert-auto-orient-opt
+#		transformation = case 
+#			when result.eql?("2") then "-flip horizontal"
+#			when result.eql?("3") then "-rotate 180"
+#			when result.eql?("4") then "-flip vertical"
+#			when result.eql?("5") then "-transpose"
+#			when result.eql?("6") then "-rotate 90"
+#			when result.eql?("7") then "-transverse"
+#			when result.eql?("8") then "-rotate 270"
+#			else ""
+#		end
+#		cmd_line = "#{SvegSettings.graphicsmagick_binary} convert \"#{path}\""
+# would need tool like exiv2 to set exif data, it'll probably shave off a second, and remove imagemagick dependency
 		cmd_line = "#{SvegSettings.convert_binary} \"#{path}\"  \"#{path}\""
 		success = Kernel.system cmd_line
 		raise("Photo orient failed" + $?.to_s) unless success
@@ -81,6 +93,7 @@ class PhotoStorage
 	end
 
 	def self.resize(photo)
+		# try thumbnail option too
 		src = File.expand_path(photo.file_path)
 		dest_icon = File.expand_path(photo.file_path('icon'))
 		dest_display = File.expand_path(photo.file_path('display'))

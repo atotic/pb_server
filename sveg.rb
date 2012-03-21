@@ -1,5 +1,4 @@
-#! bin/thin -C config/sveg.yml start
-require 'config/settings'
+#! bin/thin -C config/sveg.rb start
 
 #Debugger.settings[:autoeval] = true
 #Debugger.settings[:autolist] = true
@@ -9,16 +8,13 @@ require 'rack-flash'
 require 'erb'
 require 'json'
 require 'base64'
+require 'thin'
 
-require 'config/settings'
-require 'config/db'
-require 'svegutils'
-
-require 'app/book'
-require 'app/user'
-require 'app/photo'
-require 'app/book_template'
-require 'app/command_stream'
+require 'backports'
+require_relative 'config/settings'
+require_relative 'config/db'
+require_relative 'config/delayed_job'
+require_relative 'lib/sveg_lib'
 
 Thin::SERVER = "Sveg".freeze
 
@@ -38,7 +34,6 @@ end
 
 module PB
 
-
 LOGGER = PB.create_server_logger('sveg')
 
 #
@@ -46,12 +41,17 @@ LOGGER = PB.create_server_logger('sveg')
 #
 class SvegApp < Sinatra::Base
 
-	set :show_exceptions, true if SvegSettings.environment == :development
-	set :dump_errors, true if SvegSettings.environment == :development
-	set :protection, false
+	configure :development do
+		set :show_exceptions, true
+		set :dump_errors, true
+	end
 
-	def initialize(*args)
-		super(args)
+	configure :production do
+		set :clean_trace, true
+	end
+
+	configure do
+		set :protection, false
 	end
 		
 	helpers do
@@ -212,7 +212,7 @@ class SvegApp < Sinatra::Base
 		end
 	
 		get '/jobs' do
-			jobs = Delayed::Backend::DataMapper::Job.all
+			jobs = Delayed::Backend::Sequel::Job.all
 			content_type "text/html"
 			body = "<html><head><title>jobs</title></head><body>"
 #	    body = "<html><head><title>jobs</title><meta http-equiv='Refresh' content='5' /></head><body>"
