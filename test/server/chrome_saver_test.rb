@@ -28,7 +28,7 @@ class ChromeSaverTest < Test::Unit::TestCase
 	def teardown
 		LOGGER.info('teardown')
 		`./script/chrome stop`
-		`./script/pdf_saver_server stop`
+		# this hangs for some reason: `./script/pdf_saver_server stop`
 		LOGGER.info('teardown complete')
 		@task.destroy if @task
 		@task2.destroy if @task2
