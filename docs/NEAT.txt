@@ -80,6 +80,7 @@ Will I ever need a state machine https://github.com/pluginaweek/state_machine
 
 Security
 Use pbkdf2 for passwords https://github.com/emerose/pbkdf2-ruby
+OAuth2 playground: https://code.google.com/oauthplayground/
 
 S3
 Pure html ajax upload: http://zefer.posterous.com/pure-html-ajax-solutions-to-upload-files-to-s

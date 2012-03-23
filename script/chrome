@@ -6,7 +6,7 @@ require 'bundler/setup'
 require 'backports'
 
 require_relative '../config/settings'
-require_relative '../lib/sveg/svegutils'
+require_relative '../lib/sveg/utils'
 
 def usage
 	$stdout.puts "usage: #{__FILE__} start|stop|restart"; exit
