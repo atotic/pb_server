@@ -9,7 +9,7 @@ require 'json'
 require_relative 'config/settings'
 require_relative 'config/db'
 require_relative 'config/delayed_job'
-require_relative 'lib/sveg/svegutils'
+require_relative 'lib/sveg/utils'
 require_relative 'lib/sveg/book2pdf_job'
 
 Thin::SERVER = "PDFSaver".freeze

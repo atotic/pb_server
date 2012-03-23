@@ -36,6 +36,80 @@ module PB
 
 LOGGER = PB.create_server_logger('sveg')
 
+class SvegApp < Sinatra::Base
+	if SvegSettings.development?
+
+		get '/debugger' do
+			debugger
+		end
+		
+		get '/routes' do
+			r = []
+			settings.routes.keys.each do |key|
+				next if key.eql? "HEAD"
+				settings.routes[key].each do |route|
+					path, vars = route
+					path = path.to_s.sub("(?-mix:^\\", "").sub("$)", "").sub("\\", "")
+					vars.each { |var| path = path.sub("([^\\/?#]+)", ":" + var) }
+					path = path.gsub("\\", "")
+					x = { :path => path, 
+						:key => key,
+						:vars => vars}
+					r.push x
+				end
+			end
+			r.sort! { |x, y| 
+				x[:path] == y[:path] ? x[:key] <=> y[:key] : x[:path] <=> y[:path]
+			}
+			content_type "text/plain"
+			response['Content-Disposition'] = "inline; filename=ROUTES.txt"
+			body = ""
+			r.each { |x| body += x[:key] + " " + x[:path] + " " + "\n"}
+	#			r.each { |x| body += x[:key] + " " + x[:path] + " " + x[:vars].join(" ") + "\n"}
+			body
+		end
+		
+		get '/test/:id' do
+			erb :"test/#{params[:id]}"	
+		end
+		
+	#		get 'test/qunit' do
+	#			Dir[glob].sort.each do |node|
+	#        stat = stat(node)
+	#        next unless stat
+	#			end
+	#			run Rack::Directory.new("#{Dir.pwd}/views/test/qunit");
+	#		end
+		
+		get '/test/qunit/:id' do
+			@filename = params[:id]
+			erb :"test/qunit/#{params[:id]}", {:layout => :'test/qunit/layout'}, {:locals => { :filename => params[:id] }}
+		end
+
+		get '/jobs' do
+			jobs = Delayed::Backend::Sequel::Job.all
+			content_type "text/html"
+			body = "<html><head><title>jobs</title></head><body>"
+	#	    body = "<html><head><title>jobs</title><meta http-equiv='Refresh' content='5' /></head><body>"
+			body += "<p>Jobs table</p><table border='1'><thead><td>Id</td><td>Time</td><td>Handler</td><td>Failed</td><td>Error</td>"
+			if jobs.nil?
+				body += "<tr><td>No jobs</td></tr></table>"
+			else
+				jobs.each do |job|
+					body += "<tr>"
+					body += "<td>" + job.id.to_s + "</td>"
+					body += "<td>" + job.run_at.to_s + "</td>"
+					body += "<td>" + job.handler.to_s + "</td>"
+					body += "<td>" + job.failed_at.to_s + "</td>"
+					body += "<td><pre>" + job.last_error.to_s + "</pre></td>"
+					body += "</tr>"
+				end
+			end
+			body
+		end
+	end
+end
+
 #
 # Main application
 #
@@ -60,7 +134,7 @@ class SvegApp < Sinatra::Base
 		alias_method :h, :escape_html
 		
 		def show_error(object, prop)
-			"<span class=\"error_message\">#{object.errors[prop]}</span>" if (object && object.errors[prop])
+			"<span class=\"error_message\">#{object.errors[prop].join(" ")}</span>" if (object && !object.errors[prop].empty?)
 		end
 		
 		def print_datetime(dt)
@@ -160,80 +234,6 @@ class SvegApp < Sinatra::Base
 	#
 	# CONTROLLER METHODS
 	#
-
-
-	# development-only methods	
-	if settings.environment == :development
-		get '/debugger' do
-			debugger
-		end
-		
-		get '/routes' do
-			r = []
-			settings.routes.keys.each do |key|
-				next if key.eql? "HEAD"
-				settings.routes[key].each do |route|
-					path, vars = route
-					path = path.to_s.sub("(?-mix:^\\", "").sub("$)", "").sub("\\", "")
-					vars.each { |var| path = path.sub("([^\\/?#]+)", ":" + var) }
-					path = path.gsub("\\", "")
-					x = { :path => path, 
-						:key => key,
-						:vars => vars}
-					r.push x
-				end
-			end
-			r.sort! { |x, y| 
-				x[:path] == y[:path] ? x[:key] <=> y[:key] : x[:path] <=> y[:path]
-			}
-			content_type "text/plain"
-			response['Content-Disposition'] = "inline; filename=ROUTES.txt"
-			body = ""
-			r.each { |x| body += x[:key] + " " + x[:path] + " " + "\n"}
-#			r.each { |x| body += x[:key] + " " + x[:path] + " " + x[:vars].join(" ") + "\n"}
-			body
-		end
-		
-		get '/test/:id' do
-			erb :"test/#{params[:id]}"	
-		end
-		
-#		get 'test/qunit' do
-#			Dir[glob].sort.each do |node|
-#        stat = stat(node)
-#        next unless stat
-#			end
-#			run Rack::Directory.new("#{Dir.pwd}/views/test/qunit");
-#		end
-		
-		get '/test/qunit/:id' do
-			@filename = params[:id]
-			erb :"test/qunit/#{params[:id]}", {:layout => :'test/qunit/layout'}, {:locals => { :filename => params[:id] }}
-		end
-	
-		get '/jobs' do
-			jobs = Delayed::Backend::Sequel::Job.all
-			content_type "text/html"
-			body = "<html><head><title>jobs</title></head><body>"
-#	    body = "<html><head><title>jobs</title><meta http-equiv='Refresh' content='5' /></head><body>"
-			body += "<p>Jobs table</p><table border='1'><thead><td>Id</td><td>Time</td><td>Handler</td><td>Failed</td><td>Error</td>"
-			if jobs.nil?
-				body += "<tr><td>No jobs</td></tr></table>"
-			else
-				jobs.each do |job|
-					body += "<tr>"
-					body += "<td>" + job.id.to_s + "</td>"
-					body += "<td>" + job.run_at.to_s + "</td>"
-					body += "<td>" + job.handler.to_s + "</td>"
-					body += "<td>" + job.failed_at.to_s + "</td>"
-					body += "<td><pre>" + job.last_error.to_s + "</pre></td>"
-					body += "</tr>"
-				end
-			end
-			body
-		end
-	end	
-
 	get '/' do
 		redirect "/auth/login"
 	end

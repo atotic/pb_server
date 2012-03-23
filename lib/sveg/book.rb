@@ -33,6 +33,10 @@ class Book < Sequel::Model(:books)
 		end
 	end
 	
+	def sorted_pages
+		self.page_order.split(",").collect { |i| PB::BookPage[i]}
+	end
+
 	def validate
 		page_errors = []
 		pages.each do |p|

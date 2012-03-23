@@ -20,14 +20,33 @@ migrating albums: use nokogiri for html manipulation
 
 Add page|delete|change layout
 Book pane: scrolling, page padding
+Faster upload with nginx: use the upload module
 
 Scheduled:
 
 Next:
-Better integration with nginx files: let nginx handle files(download, get just file name, img up server static)
-Error codes: we need error message management
-Ruby 1.9.3
-Automatically run tests
+Faster download for nginx, use X-Accel to serve out of data directory (nginx will need to get access to data directory, not configured)
+Split git into templates, chrome patch
+	Compile chrome on Ubuntu
+Logs: rotation, cleanup. Errors should be clearly marked
+Error pages: development vs production
+Register domain
+Nginx: localhost vs domain
+Keeping servers up: restart in download mode
+Email: email via Google Apps
+Login via FB, username/pw
+Comprehensive test (create user, books, pdf)
+Use max-age in our cache?
+Install on Ubuntu
+	Deployment scripts
+		install binaries, check out from git, ssh, rollback
+  Chrome inside xvft
+Capacity testing: how many simultaneous broadcast clients
+
+
+Mar 23
+Fought with thin HUP interrupt again. Made a patch on github
+Sequel cleanup, minor fixes for book generation
 
 Mar 21
 Ruby 1.9.3 compatibility tests:

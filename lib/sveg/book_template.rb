@@ -17,7 +17,7 @@ class BookTemplate
 	
 	def self.all()
 		Dir.entries(SvegSettings.book_templates_dir)\
-			.select { |x| !x.start_with?(".") && File.directory?(File.join(SvegSettings.book_templates_dir, x)) }\
+			.select { |x| (x =~ /\.|common/).nil? && File.directory?(File.join(SvegSettings.book_templates_dir, x)) }\
 			.map { |x| BookTemplate.get(x) }
 	end
 	
@@ -64,6 +64,7 @@ class BookTemplate
 	end
 
 	def get_all_pages
+		return [] unless File.exist? self.pages_folder_name
 		Dir.entries(self.pages_folder_name)\
 			.select { |x| x.end_with?(".html") && !x.end_with?("_icon.html") }\
 			.map { |x| PageTemplate.get(self, x.gsub(/\.html$/, "")) }
@@ -85,6 +86,7 @@ class BookTemplate
 	
 	# array of asset file names
 	def get_image_assets
+		return [] unless File.exists? self.assets_folder_name
 		images = Dir.entries( self.assets_folder_name )\
 			.select { |x| ( x =~ @@IMAGE_MATCH) != nil }\
 			.select { |x| ( x =~ @@DISPLAY_ICON_IMAGE_MATCH ) == nil }

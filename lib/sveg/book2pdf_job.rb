@@ -1,8 +1,8 @@
 require 'fileutils'
 
-require_relative 'svegutils'
+require_relative 'utils'
 require_relative 'book'
-
+require_relative 'photo'
 # PDF Generation is fully documented here, and implemented in many pieces
 #
 # Architecture discussion:
@@ -75,15 +75,15 @@ class BookToPdfCompleteJob
 	
 	def book_gone_fail
 		@logger.info("Book PDF conversion aborted, book is gone #{@book_id}")
-		tasks = PB::ChromePDFTask.filter(:book_id => @book_id)
+		tasks = PB::ChromePDFTask.filter(:book_id => @book_id).all
 		return unless tasks.length > 0
 		`rm -rf #{tasks[0].book_dir}` if tasks[0].book_dir
-		tasks.destroy
+		tasks.each { |t| t.destroy }
 	end
 
 	def pages_fail(book, failed_tasks)
-		@logger.error "Book conversion failed because pages had errors #{@book_id}" if failed.length > 0
-		failed.each do |t| 
+		@logger.error "Book conversion failed because pages had errors #{@book_id}" if failed_tasks.length > 0
+		failed_tasks.each do |t| 
 			@logger.error "Book #{book.id} page #{t.html_file_url} err: #{t.error_message}"
 		end
 		PB::ChromePDFTask.filter(:book_id => @book_id).destroy
@@ -108,18 +108,15 @@ class BookToPdfCompleteJob
 		return unless book
 	
 		# no conversion unless all pages have been processed
-		converted = PB::ChromePDFTask.filter(:book_id => book.id, 
-			:processing_stage => PB::ChromePDFTask::STAGE_DONE)
-		waiting = PB::ChromePDFTask.filter(:book_id => book.id, 
-			:processing_stage.not => PB::ChromePDFTask::STAGE_DONE)
-		return if waiting.length > 0
+		waiting = PB::ChromePDFTask.filter(:book_id => book.id).exclude(:processing_stage => PB::ChromePDFTask::STAGE_DONE).count
+		return if waiting > 0
 	
 		# conversion failed if pages failed
-		failed = PB::ChromePDFTask.filter(:book_id => book.id, :has_error => true)
-		return pages_fail(book, failed_tasks) if failed.length > 0
+		failed_tasks = PB::ChromePDFTask.filter(:book_id => book.id, :has_error => true).all
+		return pages_fail(book, failed_tasks) if failed_tasks.length > 0
 	
 		# success, merge pdfs
-		tasks = PB::ChromePDFTask.filter(:book_id => book.id).order(:id)
+		tasks = PB::ChromePDFTask.filter(:book_id => book.id).order(:id).all
 		return if tasks.empty? # book was already generated
 
 		pdf_files = tasks.map { |t| t.pdf_file }
@@ -230,7 +227,7 @@ class BookToPdfPrepJob
 </head>
 <body>
 eos
-		@book.pages.each do |page|
+		@book.sorted_pages.each do |page|
 			i += 1
 			name = "page" + i.to_s + ".html"
 			html = page.html

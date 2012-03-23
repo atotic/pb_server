@@ -13,7 +13,7 @@ class SvegSettings
 	# directories
 	@root_dir = File.dirname(File.dirname(File.expand_path(__FILE__))).freeze
 	@environment = ( ENV['RACK_ENV'] || :development ).to_sym # :production :development :test
-	@book_templates_dir = File.join(@root_dir, "book-templates").freeze
+	@book_templates_dir = File.expand_path(File.join(@root_dir, "../pb_templates/templates")).freeze
 	@test_dir = File.join(@root_dir, "test").freeze
 	
 	@data_dir = @environment == :test ? File.join(@root_dir, "test", "data") : File.join(@root_dir, "data")

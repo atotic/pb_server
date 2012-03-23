@@ -3,7 +3,7 @@ source :rubygems
 gem 'rake'
 
 gem "sinatra"
-gem "thin" # thin for async responses
+gem "thin"
 gem 'rack' # because of https://github.com/nakajima/rack-flash/issues/8
 gem 'rack-flash', :git => "git://github.com/ChrisCauser/rack-flash.git"
 
