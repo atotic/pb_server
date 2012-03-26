@@ -12,8 +12,11 @@ class SvegSettings
 	
 	# directories
 	@root_dir = File.dirname(File.dirname(File.expand_path(__FILE__))).freeze
+	@pb_chrome_dir = File.expand_path('../pb_chrome', @root_dir)
+	@pb_templates_dir = File.expand_path('../pb_templates', @root_dir)
+
 	@environment = ( ENV['RACK_ENV'] || :development ).to_sym # :production :development :test
-	@book_templates_dir = File.expand_path(File.join(@root_dir, "../pb_templates/templates")).freeze
+	@book_templates_dir = File.expand_path("./templates", @pb_templates_dir).freeze
 	@test_dir = File.join(@root_dir, "test").freeze
 	
 	@data_dir = @environment == :test ? File.join(@root_dir, "test", "data") : File.join(@root_dir, "data")
@@ -25,9 +28,11 @@ class SvegSettings
 	@book2pdf_dir = File.join(@data_dir, "pdf-books").freeze # generated books
 	
 	# binaries
-	@chrome_binary = "/Users/atotic/chromium/src/out/Release/Chromium.app/Contents/MacOS/Chromium".freeze
-	@chrome_dir = "/Users/atotic/chromium/src/out/Release/Chromium.app".freeze
-	@chrome_profile_dir = File.join(@root_dir, "chromium_profile").freeze
+#	@chrome_binary = "/Users/atotic/chromium/src/out/Release/Chromium.app/Contents/MacOS/Chromium".freeze
+#	@chrome_dir = "/Users/atotic/chromium/src/out/Release/Chromium.app".freeze
+	@chrome_binary = File.join(@pb_chrome_dir, "bin/mac/Chromium.app/Contents/MacOS/Chromium").freeze
+	@chrome_dir = File.join(@pb_chrome_dir, "bin/mac//Chromium.app").freeze
+	@chrome_profile_dir = File.join(@pb_chrome_dir, 'chromium_profile')
 	@pdf_toolkit_binary = "/usr/local/bin/pdftk".freeze
 	@convert_binary = "/usr/local/bin/convert".freeze
 	@graphicsmagick_binary = "/usr/local/bin/gm".freeze

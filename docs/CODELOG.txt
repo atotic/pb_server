@@ -17,20 +17,16 @@ hash bangs for pages
 - assets css/js that comes with the book
 - assets css/js that comes with the page
 migrating albums: use nokogiri for html manipulation
-
 Add page|delete|change layout
 Book pane: scrolling, page padding
 Faster upload with nginx: use the upload module
 
-Scheduled:
-
-Next:
-Faster download for nginx, use X-Accel to serve out of data directory (nginx will need to get access to data directory, not configured)
+Deployment milestone:
 Split git into templates, chrome patch
 	Compile chrome on Ubuntu
 Logs: rotation, cleanup. Errors should be clearly marked
 Error pages: development vs production
-Register domain
+- Register domain
 Nginx: localhost vs domain
 Keeping servers up: restart in download mode
 Email: email via Google Apps
@@ -43,6 +39,27 @@ Install on Ubuntu
   Chrome inside xvft
 Capacity testing: how many simultaneous broadcast clients
 
+Next
+Move chrome into git template: patch the config
+Create master git template
+Compile chrome on ubuntu
+
+Mar 23
+Faster download for nginx, use X-Accel to serve out of data directory (nginx will need to get access to data directory, not configured)
+Named the site: pb4us
+Moved templates out to pb_templates
+Moved chrome_profile and pdf_saver_extension to chrome
+Built Ubuntu 11:10 virgin VM
+
+git magic that pruned my tree:
+git clone sinbook pb_templates
+cd pb_templates
+git remote rm origin
+git filter-branch --index-filter "git rm -rf --cached --ignore-unmatch public script test views lib docs db config"
+rm -rf .git/refs/original
+git reflog expire --all
+git gc --aggressive --prune
+git filter-branch --index-filter "git rm -rf --cached --ignore-unmatch Gemfile Gemfile.lock Rakefile comet.rb pdf_saver_server.rb sveg.rb comet.rb"
 
 Mar 23
 Fought with thin HUP interrupt again. Made a patch on github

@@ -10,6 +10,7 @@ HOWTO for JS & SVG http://www.w3.org/Graphics/SVG/IG/resources/svgprimer.html
 Mediawiki wrestling with SVG -> PNG conversion http://www.mediawiki.org/wiki/Manual:$wgSVGConverters
 
 CSS
+Mutli-device layout patterns http://jasonweaver.name/lab/offcanvas/technical/
 Talks about bootstrap & color, CSS layout frameworks http://drawar.com/d/great-another-bootstrap-site/
 Pure CSS page turn: http://www.romancortes.com/ficheros/page-flip.html
 Pure CSS progress bars http://dipperstove.com/design/css3-progress-bars.html
@@ -23,10 +24,8 @@ Best border image overview: http://css-tricks.com/understanding-border-image/
 Nice way to do captions, HTML5 style http://css-tricks.com/slide-in-image-captions/
 http://www.trymyui.com/ great UI testing place
 Very neat background patterns: http://leaverou.me/css3patterns/#
-39 box shadows, how do they do it: http://www.viget.com/inspire/39-ridiculous-things-to-do-with-css3-box-shadows/
 Gradient editor: http://www.colorzilla.com/gradient-editor/
 CSS easing is cool: http://matthewlein.com/ceaser/
-3D CSS: http://www.webkit.org/blog/386/3d-transforms/
 Buttons can be made unselectable with : -webkit-user-select: none; (CSS3 property 
 Buttons http://webdesignledger.com/tutorials/12-excellent-css3-button-and-menu-techniques
 CSS Fonts: http://www.w3.org/Style/Examples/007/fonts.en.html
@@ -37,13 +36,12 @@ Icon resource: http://www.iconseeker.com/
 Patterns resource: http://subtlepatterns.com/
 Pure CSS drawing library: https://github.com/dnewcome/Donatello
 Excellent CSS effects: bounce, rotate, etc. If I ever need visual candy http://blackberry.github.com/Alice/demos.html
-LoremPixel: placeholder images: http://lorempixel.com/
-3D CSS transforms http://www.webkit.org/blog-files/3d-transforms/poster-circle.html
 CSS Patterns, might use in book backgrounds: http://leaverou.me/css3patterns/#
 3D Photo rollover: http://thewebrocks.com/demos/3D-photo-rollover/
 CSS Fonts as icons: fun icon effects with fonts http://css-tricks.com/15099-using-fonts-for-icons/
 Use box sizing for width/padding: http://paulirish.com/2012/box-sizing-border-box-ftw/
 Simple CSS sizing framework: https://github.com/robertpiira/ingrid
+LoremPixel: placeholder images: http://lorempixel.com/
 
 JS
 HTML5 flipping pages animation: http://studio.html5rocks.com/#Flip
