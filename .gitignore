@@ -1,11 +1,3 @@
-.loadpath
-.project
 .bundle
-data
 docs/*.tiff
 docs/iPhoto templates
-test/photo-storage
-test/test.sqlite
-public/img/border*.png
-chromium_profile/Default/Cache/f*
-chromium_profile/Default/*
