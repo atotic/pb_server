@@ -5,7 +5,7 @@ gem 'rake'
 gem "sinatra"
 gem "thin"
 gem 'rack' # because of https://github.com/nakajima/rack-flash/issues/8
-gem 'rack-flash', :git => "git://github.com/ChrisCauser/rack-flash.git"
+gem 'rack-flash3'
 
 gem "sequel"
 gem "mysql2"
