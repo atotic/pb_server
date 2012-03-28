@@ -25,11 +25,10 @@ group :development do
 	gem "ruby-debug", :platforms => :ruby_18
 	gem "ruby-debug-base19", "0.11.26", :platforms => :ruby_19
 	gem "ruby-debug19", "0.11.6", :require => 'ruby-debug', :platforms => :ruby_19
-	gem "wkpdf"
+	gem "linecache19", "0.5.13"
 	gem "growl"
 end
 
 group :test do
-  gem "sfl" # spawn on ruby 1.8.7
   gem "rack-test"
 end

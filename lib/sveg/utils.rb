@@ -1,7 +1,6 @@
 # Utility classes. Self-contained, can  be used by any server
 
 require 'log4r'
-require "sfl"
 
 class Log4r::GrowlOutputter < Log4r::Outputter
 	require 'growl'

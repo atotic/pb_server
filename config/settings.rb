@@ -9,7 +9,12 @@ require 'bundler/setup'
 # server code
 
 class SvegSettings
-	
+	# platform
+	@platform = case 
+		when RUBY_PLATFORM.include?('darwin') then :mac
+		when RUBY_PLATFORM.include?('linux') then :linux
+		else "Unknown platform"
+	end
 	# directories
 	@root_dir = File.dirname(File.dirname(File.expand_path(__FILE__))).freeze
 	@pb_chrome_dir = File.expand_path('../pb_chrome', @root_dir)
@@ -27,14 +32,21 @@ class SvegSettings
 	@book2pdf_dir = File.join(@data_dir, "pdf-books").freeze # generated books
 	
 	# binaries
-#	@chrome_binary = "/Users/atotic/chromium/src/out/Release/Chromium.app/Contents/MacOS/Chromium".freeze
-#	@chrome_dir = "/Users/atotic/chromium/src/out/Release/Chromium.app".freeze
-	@chrome_binary = File.join(@pb_chrome_dir, "bin/mac/Chromium.app/Contents/MacOS/Chromium").freeze
-	@chrome_dir = File.join(@pb_chrome_dir, "bin/mac//Chromium.app").freeze
-	@chrome_profile_dir = File.join(@pb_chrome_dir, 'chromium_profile')
-	@pdf_toolkit_binary = "/usr/local/bin/pdftk".freeze
-	@convert_binary = "/usr/local/bin/convert".freeze
-	@graphicsmagick_binary = "/usr/local/bin/gm".freeze
+	if @platform == :mac
+		@chrome_binary = File.join(@pb_chrome_dir, "bin/mac/Chromium.app/Contents/MacOS/Chromium").freeze
+		@chrome_dir = File.join(@pb_chrome_dir, "bin/mac//Chromium.app").freeze
+		@chrome_profile_dir = File.join(@pb_chrome_dir, 'chromium_profile')
+		@pdf_toolkit_binary = "/usr/local/bin/pdftk".freeze
+		@convert_binary = "/usr/local/bin/convert".freeze
+		@graphicsmagick_binary = "/usr/local/bin/gm".freeze
+	elsif @platform == :linux
+		@chrome_binary = File.join(@pb_chrome_dir, "bin/linux_64/chrome").freeze
+		@chrome_dir = File.join(@pb_chrome_dir, "bin/linux_64").freeze
+		@chrome_profile_dir = File.join(@pb_chrome_dir, 'chromium_profile')		
+		@pdf_toolkit_binary = "/usr/bin/pdftk".freeze
+		@convert_binary = "/usr/bin/convert".freeze
+		@graphicsmagick_binary = "/usr/bin/gm".freeze
+	end
 	#
 	@comet_port = 28000
 	@comet_host = "localhost"
