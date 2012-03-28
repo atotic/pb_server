@@ -114,6 +114,7 @@ class BookTemplate
 	end
 	
 	def clean_image_assets
+		return unless File.exists? self.assets_folder_name
 		images = Dir.entries( self.assets_folder_name )\
 			.select { |x| ( x =~ @@IMAGE_MATCH ) != nil }\
 			.select { |x| ( x =~ @@DISPLAY_ICON_IMAGE_MATCH ) != nil }

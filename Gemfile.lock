@@ -1,11 +1,4 @@
 GIT
-  remote: git://github.com/ChrisCauser/rack-flash.git
-  revision: d8fd1d2c0b176d04bcb904a22cd84debe85f2061
-  specs:
-    rack-flash (0.1.2)
-      rack
-
-GIT
   remote: git://github.com/atotic/delayed_job.git
   revision: 9ca7de9a4b55697ded638738d54630807c69c6a8
   specs:
@@ -49,6 +42,9 @@ GEM
     mysql2 (0.3.11)
     nokogiri (1.5.2)
     rack (1.4.1)
+    rack-flash3 (1.0.1)
+      rack
+      rack
     rack-protection (1.2.0)
       rack
     rack-test (0.6.1)
@@ -102,7 +98,7 @@ DEPENDENCIES
   mysql2
   nokogiri
   rack
-  rack-flash!
+  rack-flash3
   rack-test
   rake
   ruby-debug
