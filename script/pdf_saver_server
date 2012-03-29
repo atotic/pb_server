@@ -3,37 +3,16 @@
 
 require 'bundler/setup'
 require 'backports'
-
 require_relative '../config/settings'
 
-def usage
-	puts "invalid option #{ARGV[0]}"
-	$stdout.puts "usage: #{__FILE__} start|stop|restart|debug [thin options]"
-	exit
-end
+options = {
+	:port => 27000,
+	:rackup => File.expand_path(File.join(File.dirname(__FILE__), "../pdf_saver_server.rb")),
+	:log => File.join(SvegSettings.log_dir, 'pdf_saver_server.info'),
+	:pid => File.join(SvegSettings.tmp_dir, 'pdf_saver_server.pid'),
+	:tag => "pdf_ss_#{SvegSettings.environment.to_s[0..3]}",
+}
 
-usage unless ARGV.length >= 1 && ARGV[0].match(/start|stop|restart|debug/)
+require_relative './common'
 
-cmd_line_args = "bin/thin"
-cmd_line_args += " --port 27000 --rackup pdf_saver_server.rb"
-
-if (ARGV[0].eql? 'debug') then
-	require_relative '../config/debug'
-	ARGV[0] = 'start'
-	cmd_line_args += " --debug"
-	cmd_line_args += ARGV[1,100].join(" ") + " " + ARGV[0]
-	Kernel.exec cmd_line_args
-end
-
-cmd_line_args += " --log #{File.join(SvegSettings.log_dir, 'pdf_saver_server.info')}"
-cmd_line_args += " --pid #{File.join(SvegSettings.tmp_dir, 'pdf_saver_server.pid')}"
-cmd_line_args += " --tag pdf_ss_#{SvegSettings.environment.to_s[0..1]}"
-cmd_line_args += " --daemonize" 
-# need to force quit because constant polling keeps connection open forever
-cmd_line_args += " --force" if ARGV[0].eql?("stop") 
-cmd_line_args += ARGV[1,100].join(" ") + " " + ARGV[0]
-puts cmd_line_args
-out = `#{cmd_line_args} 2>&1`
-puts out unless out.empty?
-puts "Error in pdf_saver_server" unless $?.success?
-
+process(options)

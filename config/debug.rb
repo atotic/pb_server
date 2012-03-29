@@ -6,5 +6,4 @@ if RUBY_VERSION.to_f < 1.9
 else
 	require 'ruby-debug'
 end
-puts "debugger on"
-
+#puts "debugger on"

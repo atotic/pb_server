@@ -1,35 +1,21 @@
 #!/usr/bin/env ruby
-# starts chrome process
-# TODO daemonize script/chrome with xvfd, taskless gem for Linux
+# starts main sveg server
 
 require 'bundler/setup'
 require 'backports'
-
-def usage
-	puts "invalid option #{ARGV[0]}"
-	$stdout.puts "usage: #{__FILE__} start|stop|restart|debug [thin options]"
-	exit
-end
-
-usage unless ARGV.length >= 1 && ARGV[0].match(/start|stop|restart|debug/)
-cmd_line_args = "bin/thin --port 26000 --rackup sveg.rb "
-
-if (ARGV[0].eql? 'debug') then
-	require_relative '../config/debug'
-	ARGV[0] = 'start'
-	cmd_line_args += " --debug"
-	cmd_line_args += ARGV[1,100].join(" ") + " " + ARGV[0]
-	Kernel.exec cmd_line_args
-end
-
 require_relative '../config/settings'
-cmd_line_args += "--log #{File.join(SvegSettings.log_dir, 'sveg.info')}"
-cmd_line_args += " --pid #{File.join(SvegSettings.tmp_dir, 'sveg.pid')} "
-cmd_line_args += " --tag sveg_#{SvegSettings.environment.to_s[0..1]}"
-cmd_line_args += " --daemonize"
-cmd_line_args += ARGV[1,100].join(" ") + " " + ARGV[0]
-puts cmd_line_args
-Kernel.exec(cmd_line_args)
+
+options = {
+	:port => 26000,
+	:rackup => File.expand_path(File.join(File.dirname(__FILE__), "../sveg.rb")),
+	:log => File.join(SvegSettings.log_dir, 'sveg.info'),
+	:pid => File.join(SvegSettings.tmp_dir, 'sveg.pid'),
+	:tag => "sveg_#{SvegSettings.environment.to_s[0..3]}",
+}
+
+require_relative './common'
+
+process(options)
 
 #out = `#{cmd_line_args} 2>&1`
 #puts out unless out.empty?

@@ -1,7 +1,5 @@
 #! bin/thin -C config/sveg.rb start
 
-#Debugger.settings[:autoeval] = true
-#Debugger.settings[:autolist] = true
 
 require 'sinatra/base'
 require 'rack-flash'
