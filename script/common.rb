@@ -13,7 +13,7 @@ def get_cmd_line(options)
 		"thin",
 		ARGV[0]
 	]
-	[:port, :rackup, :pid,:log,:tag, :timeout, :environment].each do |o|
+	[:port, :rackup, :pid,:log,:tag, :timeout, :environment, :user, :group].each do |o|
 		cmd_line.push("--#{o.to_s} #{options[o]}") if options.has_key? o
 	end
 	[:daemonize, :debug, :force].each do |o|
@@ -24,6 +24,8 @@ def get_cmd_line(options)
 end
 
 def process(options)
+
+	# optional debug setup
 	if (ARGV[0].eql? 'debug') then
 		require_relative '../config/debug'
 		ARGV[0] = 'start'
@@ -32,7 +34,9 @@ def process(options)
 		options[:daemonize] = true
 	end
 
+	# set up common options
 	options = options.merge({ :environment => SvegSettings.environment.to_s})
+	options = options.merge({ :user => 'deploy', :group => 'deploy'}) if options[:environment].eql?('production')
 
 	usage
 
