@@ -10,6 +10,7 @@ HOWTO for JS & SVG http://www.w3.org/Graphics/SVG/IG/resources/svgprimer.html
 Mediawiki wrestling with SVG -> PNG conversion http://www.mediawiki.org/wiki/Manual:$wgSVGConverters
 
 CSS
+WebGL clouds, our something went wrong page: http://www.clicktorelease.com/code/css3dclouds/#?utm_source=html5weekly&utm_medium=email
 Mutli-device layout patterns http://jasonweaver.name/lab/offcanvas/technical/
 Talks about bootstrap & color, CSS layout frameworks http://drawar.com/d/great-another-bootstrap-site/
 Pure CSS page turn: http://www.romancortes.com/ficheros/page-flip.html
@@ -44,6 +45,7 @@ Simple CSS sizing framework: https://github.com/robertpiira/ingrid
 LoremPixel: placeholder images: http://lorempixel.com/
 
 JS
+Touch gestures: https://github.com/eightmedia/hammer.js#readme
 HTML5 flipping pages animation: http://studio.html5rocks.com/#Flip
 How to resume a file upload http://hacks.mozilla.org/2011/04/resumeupload/
 Javascript crypto: http://code.google.com/p/crypto-js/
@@ -128,6 +130,7 @@ Reviews http://insig.ht/2009/06/print-on-demand-review/
 Print resources for independent art publishers: http://print-resources.tumblr.com/
 
 BUSINESS
+Apago: looks like the place to get PDF optimization done http://www.apagoinc.com/prod_home.php?prod_id=37
 Designer fund: funds for designers, maybe find me a co-founder here http://designerfund.com/
 Minted: they are designer focused, my solution would be a great fit
 Adorama: seems to have their own book solution based upon flash 
@@ -163,3 +166,7 @@ However, I encountered some glitches with Blurb's Bookify.
 The other options don't seem to be ONLINE.
 In other words, the book would be saved to someone's personal computer - which would make it hard for everyone to do their own page.
 "
+
+UBUNTU
+apt-file list package_name # lists file in a package
+dpkg --get-selectionslis

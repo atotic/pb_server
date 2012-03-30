@@ -1,15 +1,26 @@
-Hmmm: https://github.com/blog/470-deployment-script-spring-cleaning
+See pb_chrome/docs/linux_install for cold deployment script
+Keeping servers up:
+check out http://michaelvanrooijen.com/articles/2011/06/08-managing-and-monitoring-your-ruby-application-with-foreman-and-upstart/
+10 mil hits a day on the cheap http://www.ewanleith.com/blog/900/10-million-hits-a-day-with-wordpress-using-a-15-server, also firewall config
+Eventualy, move all server start/stop stuff to upstart
 
-- Setup:
-bundle install --binstubs creates bundle binaries inside bin
+PRODUCTION setup
+nginx server: 
+	installed in /opt/nginx
+	configured via /opt/nginx/conf/nginx.conf
+	runs as nginx/nginx
+	/etc/init.d/nginx start/stop/restart
+comet, pdf_saver_server, delayed_job
+	git installed in /home/deploy/pb/pb_server
+	conf files in /home/deploy/pb/pb_server/config
 
 BINARIES
-chromium -- chromium built with pageCapture.saveAsPDF patch
+chrome custom build, checked into pb_chrome/bin -- chromium built with pageCapture.saveAsPDF patch
 pdftk -- pdf toolkit, for merging pdf pages
-growl, growlnotify -- development only, growl errors in logs
 xvfd -- for running headless chrome
 imagemagick - for auto-orient
 graphicsmagick - for image resizing
+growl, growlnotify -- development only, growl errors in logs
 
 SERVERS
 sveg -- main application server, 26000
@@ -18,7 +29,7 @@ chromium -- custom chromium, converts html -> pdf
 pdf_saver_server -- interface to custom chromium, 27000
 comet -- broadcast protocol, 28000
 nginx -- front end server
-database -- sqlite on development,mysql on production
+database -- mysql on production
 
 SERVER DETAILS
 	all servers have ./script/<server_name> with argument start/stop/debug/restart
@@ -46,50 +57,16 @@ LOGGING
 		<server_name>.stdout: stdout|stderr redirects
 	
 NGINX
-nginx -c /Users/atotic/code/sinbook/config/nginx.conf -s reload	
-	
-TODO
-image resizing
-chromium:
-	restart when crashes
-	run in xvdf on production
-	redirect stdout 
+nginx -c /Users/atotic/code/pb/pb_server/config/nginx.conf -s start	
+# reloads the conf file
+nginx -c /Users/atotic/code/pb/pb_server/config/nginx.conf -s reload
 
-NEAT:
-http://mediumexposure.com/how-i-setup-sinatra-rake-thin-server-and-deployed-it-capistrano-github/
-My recipe for Sinatra/Thin/Rack .... http://www.isnorcreative.com/blogs/29
+
 
 CHROME deployment:
 
-Need strategy how things work on my Mac, vs how they work on Linux
-Q: How do I start my server on different ports?
-A: Command line for thin http://stackoverflow.com/questions/4389181/passing-options-to-rackup-via-a-sinatra-application
-
-run nginx as a load balancer, have only 1 app server in the back
-http://markmaunder.com/2009/12/01/how-to-handle-1000s-of-concurrent-users-on-a-360mb-vps/
-
-http://library.linode.com/web-servers/nginx/configuration/front-end-proxy-and-software-load-balancing
-
 http://www.kalzumeus.com/2010/01/15/deploying-sinatra-on-ubuntu-in-which-i-employ-a-secretary/
-
 http://pemberthy.blogspot.com/2009/02/deploying-sinatra-applications-with.html
 http://blog.sosedoff.com/2009/07/04/how-to-deploy-sinatra-merb-applications-with-nginx/
 
-http://library.linode.com/web-servers/nginx/configuration/basic
 
-Code:
-
-thin - delayed_job server:
-	- resizing images
-	- generating pdfs
-thin - sveg app server
-thin - comet server
-thin - upload server?
-database running somewhere...
-
-
-my setup:
-sveg app server
-comet: comet server?
-delayed_job server. Resizing of images, generating pdfs.
-should comet server be another delayed_job server?

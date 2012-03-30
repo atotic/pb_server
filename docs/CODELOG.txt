@@ -1,7 +1,7 @@
 Feb 14th estimates:
 2 weeks: comet, image resizing delayed, nginx
 1 week: kill datamapper, use sequel http://rhnh.net/2011/11/29/datamapper-retrospective
-2 weeks: capistrano, unix deployment
+2 weeks: unix deployment
 2 weeks: log in to fb/browser_id
 1 week: security/sharing
 6 weeks: editor rewrite, touch style, drop images from anywhere
@@ -40,8 +40,47 @@ Install on Ubuntu
 Capacity testing: how many simultaneous broadcast clients
 
 Next
+A) Prerequisites
+Build 64bit chrome on ubuntu
+Install ruby 1.9.3 using rvm
+Install mariadb, pdftk, xvfd, imagemagick, graphicsmagick
+Install nginx. Make nginx work on development/production mac/linux, point to different dirs
+
+B) Booting the system
+Create databases
+
+C) Later
+Create master git template when I understand how to do it
+Install ubuntu server, and run everything on it
+
+Mar 30
+install nginx
+configure nginx
+Run chrome as xvfd, then initd
+Master git template?
+done:
+Firewall
+Run delayed_job as initd
+
+Mar 29
+Starting thin server menagerie on linux. Ended up with a simple solution
+using rubygems-bundler gem
+Reworked start/stop scripts to spit out conf files
+Created deploy:initd rake task to put these in /etc/thin
+rvmsudo does sudo for rvm
+
+Mar 27
+Installing SublimeText was sublime
+Linux install continuing. Major pain points:
+mariadb: installing 5.5 caused mysql2 gem to fail, reverting to 5.3 took work
+ruby-debug: why do they do this to me, hand-rolled install from a gist
+nginx is the only one left
+
+Mar 26
 Move chrome into git template: patch the config
-Create master git template
+Created github projects. Created new ssh key for private repo deployment on servers
+My git-fu is weak
+Moved data directories to pb_data
 Compile chrome on ubuntu
 
 Mar 23

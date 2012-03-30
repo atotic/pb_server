@@ -53,7 +53,7 @@ class SvegSettings
 
 	class << self
 		attr_accessor :root_dir,:data_dir, :tmp_dir, :log_dir, :test_dir
-		attr_accessor :environment
+		attr_accessor :environment, :platform
 		attr_accessor :book_templates_dir, :photo_dir, :book2pdf_dir
 		attr_accessor :chrome_binary, :chrome_dir, :chrome_profile_dir, :pdf_toolkit_binary
 		attr_accessor :convert_binary, :graphicsmagick_binary
@@ -78,6 +78,14 @@ class SvegSettings
 
 	def self.test?
 		@environment == :test
+	end
+
+	def self.mac?
+		@platform == :mac
+	end
+
+	def self.linux?
+		@platform == :linux
 	end
 end
 
