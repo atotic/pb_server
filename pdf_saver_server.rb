@@ -146,6 +146,7 @@ end
 # Restart if it has not contacted us in a while
 Thread.new {
 	chromium_timer = 5
+	return
 	while true do
 		Kernel.sleep(chromium_timer)
 		if Time.now > (PdfSaver.last_poll + chromium_timer) then
