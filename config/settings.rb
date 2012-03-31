@@ -1,7 +1,7 @@
 # Common settings, used by all sveg servers and scripts
+raise "RACK_ENV must be set (user:#{ENV['USER']})") unless ENV.has_key? 'RACK_ENV' 
 
-ENV['RACK_ENV'] = 'development' unless ENV.has_key? 'RACK_ENV'
-ENV['RAILS_ENV'] = ENV['RACK_ENV']
+ENV['RAILS_ENV'] = ENV['RACK_ENV'] # some gems (delayed_job) need this
 
 # gem requires
 require 'bundler/setup'

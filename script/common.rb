@@ -42,6 +42,7 @@ def process(options)
 	usage
 
 	if (ARGV[0].eql? 'dump_conf')
+		raise "Init scripts must run in production environment #{ENV['USER']}" unless SvegSettings.production?
 		utf_options = {}	# convert to utf8 for clean utf8 encoding
 		options.each_pair { |k,v| utf_options[k] = ((v.is_a? String) ? v.force_encoding("UTF-8") : v)}
 		puts utf_options.to_yaml
