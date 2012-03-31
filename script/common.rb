@@ -2,8 +2,9 @@
 
 def usage
 	unless ARGV.length >= 1 && ARGV[0].match(/start|stop|restart|debug|dump_conf/)
+		script_name = Kernel.caller[1].scan(/[^:]*/)[0]
 		puts "invalid option #{ARGV[0]}"
-		$stdout.puts "usage: #{__FILE__} start|stop|restart|debug|dump_conf [thin options]"
+		$stdout.puts "usage: #{script_name} start|stop|restart|debug|dump_conf [thin options]"
 		exit
 	end
 end
@@ -49,9 +50,8 @@ def process(options)
 		if options[:debug]
 			Kernel.exec get_cmd_line(options)
 		else
-			out = `#{cmd_line} 2>&1`
-			puts out unless out.empty?
-			puts "Error " unless $?.success?
+			out = `#{cmd_line} 2>&1`.chomp
+			puts "Error #{out}" unless $?.success?
 		end
 	end
 end
