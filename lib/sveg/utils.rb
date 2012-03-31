@@ -33,7 +33,7 @@ module PB
 		return @@logger if @@logger
 		@@logger = Log4r::Logger.new(name)
 		file_out = Log4r::FileOutputter.new("#{name}.info", { 
-			:filename => File.join(SvegSettings.log_dir, "#{name}.info" ), 
+			:filename => File.join(SvegSettings.log_dir, "#{name}.junk" ), 
 			:formatter => PB::SVEG_FORMATTER })
 		# root outputs everything, so we can use it in libraries
 		@@logger.add file_out
@@ -57,7 +57,7 @@ module PB
 	class CommandLine
 		
 		def self.get_chromium_pid
-			ps = `ps -A -o pid,comm`.split("\n")
+			ps = `ps -A -o pid,args`.split("\n")
 			ids = ps.collect do |i| 
 				if i.include? SvegSettings.chrome_binary then
 					m = i.match(/(\d+)/)

@@ -16,7 +16,7 @@ Thin::SERVER = "PDFSaver".freeze
 
 # logging setup
 if (SvegSettings.environment == :production) then
-	stdoutFile = File.new(File.join(SvegSettings.log_dir, "pdf_saver_server.info"), "w")
+	stdoutFile = File.new(File.join(SvegSettings.log_dir, "pdf_saver_server.junk"), "w")
 	$stdout = stdoutFile
 	$stderr = stdoutFile
 end
