@@ -9,7 +9,7 @@ require_relative '../config/settings'
 require_relative '../lib/sveg/utils'
 
 def usage
-	$stdout.puts "usage: #{__FILE__} start|stop|restart"; exit
+	$stdout.puts "usage: #{__FILE__} start|stop|restart|cmd_line"; exit
 end
 
 def start
@@ -18,8 +18,8 @@ def start
 										 "--user-data-dir=#{SvegSettings.chrome_profile_dir}",
 										 "--no-sandbox",
 										 :chdir => SvegSettings.chrome_profile_dir,
-										 :out => File.join(SvegSettings.log_dir, "chromepdf.stdout"),
-										 :err => File.join(SvegSettings.log_dir, "chromepdf.stdout"))
+										 :out => File.join(SvegSettings.log_dir, "chromepdf_error.log"),
+										 :err => File.join(SvegSettings.log_dir, "chromepdf_error.log"))
 	 Process.detach(pid)
 	 pid
 end
@@ -32,10 +32,15 @@ def stop
 	end
 end
 
-usage unless ARGV.length == 1 && ARGV[0].match(/start|stop|restart/)
+usage unless ARGV.length == 1 && ARGV[0].match(/start|stop|restart|cmd_line/)
 case 
 	when ARGV[0].eql?("start") then start
 	when ARGV[0].eql?("stop") then stop
 	when ARGV[0].eql?("restart") then stop;start
+	when ARGV[0].eql?('cmd_line') then
+		line =  "#{SvegSettings.chrome_binary} --user-data-dir=#{SvegSettings.chrome_profile_dir}"
+		line += " --no-sandbox "
+		puts line
+		STDERR.write "remember to redirect output to 2> #{File.join(SvegSettings.log_dir, "chromepdf_error.log")}"
 	else usage
 end
