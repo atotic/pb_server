@@ -58,16 +58,6 @@ class ChromePDFTask < Sequel::Model(:chrome_pdf_tasks)
 	end
 end
 
-class TestJob
-	def initialize(name)
-		@name = name
-	end
-	def perform
-		
-		::Delayed::Worker.logger.info("TestJob running with #{@name}");
-	end
-end
-
 class BookToPdfCompleteJob
 	def initialize(book_id)
 		@book_id = book_id

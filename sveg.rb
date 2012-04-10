@@ -14,7 +14,7 @@ require_relative 'config/db'
 require_relative 'config/delayed_job'
 require_relative 'lib/sveg_lib'
 
-Thin::SERVER = "Sveg".freeze
+PB.no_warnings { Thin::SERVER = "Sveg".freeze }
 
 # Quick and dirty shutdown
 # EventMachine takes about 10s to close my local streaming connection, too long for dev cycle
@@ -114,11 +114,15 @@ end
 class SvegApp < Sinatra::Base
 
 	configure :development do
-		set :show_exceptions, true
-		set :dump_errors, true
+		set :show_exceptions, :false
+		set :dump_errors, false
+		set :raise_errors, true
 	end
 
 	configure :production do
+		set :show_exceptions, false
+		set :dump_errors, false
+		set :raise_errors, true
 		set :clean_trace, true
 	end
 
@@ -235,7 +239,11 @@ class SvegApp < Sinatra::Base
 	get '/' do
 		redirect "/auth/login"
 	end
-	
+
+	get '/die' do 
+		raise "Died right here!"
+	end
+
 	get '/account' do
 		user_must_be_logged_in
 		targetuser = current_user
@@ -480,7 +488,10 @@ class SvegApp < Sinatra::Base
 	end
 
 # setup & run
-	use Rack::CommonLogger, File.join(SvegSettings.log_dir, "sveg.log" )
+	access_log_file = ::File.new(File.join(SvegSettings.log_dir, "sveg_access.#{PB.get_thin_server_port}.log" ), 'a')
+	access_log_file.sync= true
+	use Rack::CommonLogger, access_log_file
+	use Rack::ShowExceptions if SvegSettings.development?
 	use Rack::Session::Cookie, PB::SvegSession::COOKIE_OPTIONS
 	use Rack::Flash
 	use PB::SvegSession

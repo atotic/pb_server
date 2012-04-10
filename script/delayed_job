@@ -31,14 +31,31 @@ module Delayed
 	end
 end
 
+module PB
+	class TestJob
+		def initialize(name)
+			@name = name
+		end
+		def perform
+			
+			::Delayed::Worker.logger.info("TestJob running with #{@name}");
+		end
+	end
+
+	class DeathJob
+		def perform
+			raise "I'm dyin"
+		end
+	end
+end
+
 def usage
 	puts "invalid option #{ARGV[0]}"
-	$stdout.puts "usage: #{__FILE__} start|stop|restart|debug "
+	$stdout.puts "usage: #{__FILE__} start|stop|restart|debug|test_die|test_simple "
 	exit
 end
 
 def run_worker
-	Delayed::Job.enqueue PB::TestJob.new("script/delayed_job")
 	worker_options = {
 		:quiet => false,
 		:sleep_delay => 5
@@ -49,7 +66,7 @@ def run_worker
 	worker.start
 end
 
-usage unless ARGV.length >= 1 && ARGV[0].match(/start|stop|restart|debug/)
+usage unless ARGV.length >= 1 && ARGV[0].match(/start|stop|restart|debug|test_die|test_simple/)
 
 daemon_options = {
 	:ARGV => ARGV,
@@ -60,10 +77,15 @@ daemon_options = {
 	:log_dir => SvegSettings.log_dir,
 	:log_output => true
 }
-debug = ARGV.index("debug")
-if debug then
+if ARGV.index('test_die') then
+	Delayed::Job.enqueue PB::DeathJob.new
+	puts "Queued up DeathJob"
+elsif ARGV.index('test_simple') then
+	Delayed::Job.enqueue PB::TestJob.new("script/delayed_job")
+	puts "Queued up TestJob"	
+elsif ARGV.index('debug') then
 	require_relative '../config/debug'
-	ARGV[debug] = 'start'
+	ARGV[ARGV.index('debug')] = 'start'
 	run_worker
 else
 	Delayed::Worker.before_fork

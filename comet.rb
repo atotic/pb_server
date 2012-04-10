@@ -13,7 +13,7 @@ require_relative 'lib/sveg_lib'
 
 
 Thin::Logging.silent = false;
-Thin::SERVER = "Comet".freeze
+PB.no_warnings { Thin::SERVER = "Comet".freeze }
 
 module Comets
 
@@ -190,6 +190,7 @@ class Server
 		when env['PATH_INFO'].match(/^\/broadcast\/(\d+)$/) then handle_broadcast(env, $~[1] )
 		when env['PATH_INFO'].match(/^\/status/) then handle_status(env)
 		when env['PATH_INFO'].match(/favicon.ico/) then [200, {}, []]
+		when env['PATH_INFO'].eql?('/die') then raise "Die!"
 		else [ 400, {'Content-Type' => 'text/plain'}, ["No such path #{env['PATH_INFO']}" ]] 
 		end
 	end
@@ -199,6 +200,9 @@ end
 end # module
 
 comet_builder = Rack::Builder.new do 
+	access_log_file = ::File.new(File.join(SvegSettings.log_dir, "comet_access.#{PB.get_thin_server_port}.log" ), 'a')
+	access_log_file.sync= true
+	use Rack::CommonLogger, access_log_file
 	use Rack::Session::Cookie, PB::SvegSession::COOKIE_OPTIONS
 	use PB::SvegSession
 	run Comets::Server.new

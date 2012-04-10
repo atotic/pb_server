@@ -45,6 +45,7 @@ Simple CSS sizing framework: https://github.com/robertpiira/ingrid
 LoremPixel: placeholder images: http://lorempixel.com/
 
 JS
+Stop paying jquery tax, loading jquery at the bottom: http://samsaffron.com/archive/2012/02/17/stop-paying-your-jquery-tax
 Touch gestures: https://github.com/eightmedia/hammer.js#readme
 HTML5 flipping pages animation: http://studio.html5rocks.com/#Flip
 How to resume a file upload http://hacks.mozilla.org/2011/04/resumeupload/

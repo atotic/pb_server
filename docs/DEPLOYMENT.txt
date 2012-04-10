@@ -51,11 +51,16 @@ pdf_saver_server:
 
 LOGGING
   Logs are in data_dir/log
-	Each server has up to three logs:
-		<server_name>.log: http access log
-		<server_name>.info: LOGGER.info|error|warn output
-		<server_name>.stdout: stdout|stderr redirects
-	
+	Server logs are:
+	<server_name>_access.log : http log
+	<server_name>_error.log : stderr log
+
+	thin servers run in debug mode redirect stderr to stdout. error.log is empty
+	sveg: log names have port name
+	comet: log names have port name
+	pdf_saver_server: no _access.log. Every poll_pdf_work traces with a single dot. error log is access log
+	delayed_job: log file is delayed_job.output. Progress is stored there, dying tasks store their stack trace in database
+
 NGINX
 nginx -c /Users/atotic/code/pb/pb_server/config/nginx.conf -s start	
 # reloads the conf file

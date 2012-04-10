@@ -12,14 +12,7 @@ require_relative 'config/delayed_job'
 require_relative 'lib/sveg/utils'
 require_relative 'lib/sveg/book2pdf_job'
 
-Thin::SERVER = "PDFSaver".freeze
-
-# logging setup
-if (SvegSettings.environment == :production) then
-	stdoutFile = File.new(File.join(SvegSettings.log_dir, "pdf_saver_server.junk"), "w")
-	$stdout = stdoutFile
-	$stderr = stdoutFile
-end
+PB.no_warnings { Thin::SERVER = "PDFSaver".freeze }
 
 module PdfSaver
 
@@ -44,8 +37,12 @@ module PdfSaver
 			@@last_poll = Time.now + 2 * 24 * 3600
 		end
 
+		def initialize
+			@poll_work_count = 0
+		end
+
 		def log(env, msg="")
-			LOGGER.info env["REQUEST_METHOD"] + " " + env["SCRIPT_NAME"] + " " + msg
+			LOGGER.info env['REQUEST_METHOD'] + " " + env['PATH_INFO'] + " " + msg
 		end
 
 		def last_poll 
@@ -63,6 +60,11 @@ module PdfSaver
 			task = PB::ChromePDFTask.filter(:processing_stage => PB::ChromePDFTask::STAGE_WAITING).first
 			dispatched_count = 
 				PB::ChromePDFTask.filter(:processing_stage => PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME).count
+			STDERR.write '.'	# short logging, since this happens every second and is usually meaningless
+			if (@poll_work_count+=1) == 80
+				STDERR.write "\n"
+				@poll_work_count = 0
+			end 
 			return RESPONSE[:no_work_available] unless task && dispatched_count < MAX_CONCURRENT_WORK
 			log(env, "task " + task.id.to_s)
 			task.processing_stage = PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME
@@ -127,15 +129,15 @@ module PdfSaver
 		end
 
 		def call(env)
-			log env
 			response = case
 				when env['PATH_INFO'].eql?("/poll_pdf_work") then handle_poll_work(env)
 				when env['PATH_INFO'].eql?("/pdf_done") then handle_pdf_done(env)
 				when env['PATH_INFO'].eql?("/pdf_fail") then handle_pdf_fail(env)
 				when env['PATH_INFO'].eql?("/test") then handle_test(env)
+				when env['PATH_INFO'].eql?('/die') then raise "die die"
+				when env['PATH_INFO'].match(/favicon.ico/) then [200, {}, []]
 				else [ 400, {'Content-Type' => 'text/plain'}, ["No such path #{env['PATH_INFO']}" ]] 
 			end
-			LOGGER.info("Reply #{response[0]}")
 			response
 		end
 
@@ -163,6 +165,16 @@ Thread.new {
 }
 
 PdfSaver::LOGGER.info "started #{SvegSettings.environment.to_s} #{Time.now.to_s}"
-PdfSaver::LOGGER.info "tasks available: #{PB::ChromePDFTask.count}"
+#PdfSaver::LOGGER.info "tasks available: #{PB::ChromePDFTask.count}"
 
-Pdf_saver_server = PdfSaver::Server.new
+server_builder = Rack::Builder.new do 
+# not logging access, being polled by Chrome every second, continuosly
+#	access_log_file = ::File.new(File.join(SvegSettings.log_dir, "pdf_saver_access.#{PB.get_thin_server_port}.log" ), 'a')
+#	access_log_file.sync= true
+#	use Rack::CommonLogger, access_log_file
+	use Rack::Session::Cookie, PB::SvegSession::COOKIE_OPTIONS
+	use PB::SvegSession, { :ignore_sveg_http_headers => true}
+	run PdfSaver::Server.new
+end
+Pdf_saver_server = server_builder.to_app
+

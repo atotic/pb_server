@@ -2,12 +2,12 @@ Building an editor for HTML-based photo books.
 Books are stored on server in SQL.
 
 PROBLEM: GROUP EDITING (DOCS, GOOGLE STYLE)
-  A server-based document editor has a consistency problem.
-  Once the document exists and is modified in more than one place, how do you reconcile
-  different, possibly conficting changes.
-  This problem happens when:
-  - single user edits a document on more than one client. This can easily happen between home
-    and work. 
+	A server-based document editor has a consistency problem.
+	Once the document exists and is modified in more than one place, how do you reconcile
+	different, possibly conficting changes.
+	This problem happens when:
+	- single user edits a document on more than one client. This can easily happen between home
+		and work. 
 	- multiple users edit document at once
 	Although solution is complicated, it solving it helps with many other problems:
 		- multiple client sync,
@@ -18,37 +18,37 @@ PROBLEM: GROUP EDITING (DOCS, GOOGLE STYLE)
 	After implementing it, I've learned that some call it Operational Transformation
 
 SOLUTION
-  Change stream.
-  Theoretically, document is no longer represented as a static structure, but as
-  a change stream. Instead of a document being database record, we store a sequence
-  of operations that create that record.
-  Document mutates by appending to the change stream on the server.
-  A client cannot commit any operations to the server until all server operations have been applied
-  on the client. Client gets in sync with the server by applying all the change operations on the client.
+	Change stream.
+	Theoretically, document is no longer represented as a static structure, but as
+	a change stream. Instead of a document being database record, we store a sequence
+	of operations that create that record.
+	Document mutates by appending to the change stream on the server.
+	A client cannot commit any operations to the server until all server operations have been applied
+	on the client. Client gets in sync with the server by applying all the change operations on the client.
 
-  In practice, recreating a document from change stream from scratch on the client
-  would take up too much time, bandwidth. Instead, we store the document + change stream
-  on the server. Client gets the document + change stream id. It represents document
-  as represented by all operations up to stream id.
+	In practice, recreating a document from change stream from scratch on the client
+	would take up too much time, bandwidth. Instead, we store the document + change stream
+	on the server. Client gets the document + change stream id. It represents document
+	as represented by all operations up to stream id.
 
-  Consequences of this architecture:
-  - Operations must be applied on both client and server. Every operation needs to be implemented
-    in javascript and ruby.
-  - Clients use comet to monitor server for document changes
-  - Offline is easy, just save the op stream, and stream it back to the server when coming online
-  - Should strive for fine granularity of operations. Smaller operations reduce potential for conflicts.
-  - Some data can be lost, if two operations with same footprint happen simultaneously.
+	Consequences of this architecture:
+	- Operations must be applied on both client and server. Every operation needs to be implemented
+		in javascript and ruby.
+	- Clients use comet to monitor server for document changes
+	- Offline is easy, just save the op stream, and stream it back to the server when coming online
+	- Should strive for fine granularity of operations. Smaller operations reduce potential for conflicts.
+	- Some data can be lost, if two operations with same footprint happen simultaneously.
 
-  See command_stream.rb, editor.streaming.js for implementation details.
+	See command_stream.rb, editor.streaming.js for implementation details.
 
 PROBLEM: OFFLINE IDS
 we need to create and use an object before we got an id from the server.
 we will get an id from server eventually.
 
 use cases: 
-  - images before fully uploaded.
-  - page (if created in browser)
-  - offline (page/image creation), book creation
+	- images before fully uploaded.
+	- page (if created in browser)
+	- offline (page/image creation), book creation
 
 Books are complex data structures:
 	- they are a set of interacting simple structures: book, page, image
@@ -61,24 +61,36 @@ SQL based objects have to have their id's assigned at server. Server cannot be a
 contacted immediately, which causes the problem of "offline ids"
 
 SOLUTION: OFFLINE IDS
-  - on browser, never use ids as pointers. Always store reference to an object (or a proxy) itself, not an id.
- 		Convert references to ids when object is saved on server.
-  - when generating json for saving, get id's from object references
-  - corner case is http links to user photos. These are stored in page.html, and must use an id.
-    before image is uploaded, we point it to local file url, that has to be fixed before page is saved
-  - for this to work, objects have to be saved in order: 
-    if book(with id), points to page, and page points to image, and they've all been modified
-    we have to save image first, then page, then book
-    If id dependency is circular, some object will have to be saved multiple times until
-    no objects remain with multiple ids. (ex if we created
-    a book, then added 2 pages, we'd save book, page, page, book again.
+	- on browser, never use ids as pointers. Always store reference to an object (or a proxy) itself, not an id.
+		Convert references to ids when object is saved on server.
+	- when generating json for saving, get id's from object references
+	- corner case is http links to user photos. These are stored in page.html, and must use an id.
+		before image is uploaded, we point it to local file url, that has to be fixed before page is saved
+	- for this to work, objects have to be saved in order: 
+		if book(with id), points to page, and page points to image, and they've all been modified
+		we have to save image first, then page, then book
+		If id dependency is circular, some object will have to be saved multiple times until
+		no objects remain with multiple ids. (ex if we created
+		a book, then added 2 pages, we'd save book, page, page, book again.
 
 PROBLEM: PAGE THUMBNAILS
 	no way to convert page html to a png page thumbnail on the client, can't draw html on canvas
 SOLUTION:
 	thumbnails are snippets of html
-  each page template also has thumbnail template (handcrafted, or generated with rake book_template:fill )
-  thumbnail template can reference elements of a real page through data-page attributes
+	each page template also has thumbnail template (handcrafted, or generated with rake book_template:fill )
+	thumbnail template can reference elements of a real page through data-page attributes
+
+PROBLEM: LOGGING
+	the old "watch the logfile" method does not work once you have a stable of servers. In production, we only 
+	need access logs, and error events.
+	Logs should be rotated via logrotate cron job
+	Our logging strategy is:
+	- All logging files are in SvegSettings.log_dir
+	- All servers have two logs:
+		<servername>_access.log : standard http access log
+		<servername>_error.log : stderr. 
+	SvegSession middleware runs on all http servers
+	SvegSession middleware catches unexpected exceptions, and dumps them to stderr
 
 
 MODELS
@@ -87,17 +99,9 @@ Book:
 - book belongs_to user. If sharing, we'll need another layer of indirection
 	create menu: GET /books/new
 	creation: on a server POST /books
-  get: GET /books/:id, retrieves all the pages.
+	get: GET /books/:id, retrieves all the pages.
 	deletion: on a server DELETE /books/:id
  
- 	pdf generation: POST /books/:id/pdf
- 	pdf retrieval:  GET /books/:id/pdf
+	pdf generation: POST /books/:id/pdf
+	pdf retrieval:  GET /books/:id/pdf
 
-- TODO
-  update: 
-  	page_order: simple
-	pdfs do not expire when books is updated
-  change book's style
-
-Page: 
-  creation when book is created: on server

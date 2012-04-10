@@ -1,4 +1,4 @@
-Feb 14th estimates:
+ Feb 14th estimates:
 2 weeks: comet, image resizing delayed, nginx
 1 week: kill datamapper, use sequel http://rhnh.net/2011/11/29/datamapper-retrospective
 2 weeks: unix deployment
@@ -52,15 +52,30 @@ Create databases
 C) Later
 Create master git template when I understand how to do it
 Install ubuntu server, and run everything on it
+Email
+Authentication
 
-Mar 30
-install nginx
-configure nginx
+Next
+logrotate for deployment
 Run chrome as xvfd, then initd
 Master git template?
-done:
+
+Apr 9
+Logging tests finished. It is a large test suite, each server
+has to be tested for access/error in debug and daemon configuration.
+
+Apr 8
+lost week, Oliver's vacation. Implemented MiniProfiler middleware
+
+Mar 30
+all servers running on linux, as deploy
+install nginx
+configure nginx
+using vanilla nginx install
+rake deploy:initd creates all the files in initd
 Firewall
 Run delayed_job as initd
+
 
 Mar 29
 Starting thin server menagerie on linux. Ended up with a simple solution

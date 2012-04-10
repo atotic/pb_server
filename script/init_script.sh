@@ -1,4 +1,5 @@
 #!/bin/sh
+# Initialize script for thin daemons
 ### BEGIN INIT INFO
 # Provides:          $job_name
 # Required-Start:    $local_fs $remote_fs $network

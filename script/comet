@@ -8,7 +8,7 @@ require_relative '../config/settings'
 options = {
 	:port => SvegSettings.comet_port,
 	:rackup => File.expand_path(File.join(File.dirname(__FILE__), "../comet.rb")),
-	:log => File.join(SvegSettings.log_dir, 'comet.info'),
+	:log => File.join(SvegSettings.log_dir, 'comet_error.log'),
 	:pid => File.join(SvegSettings.tmp_dir, 'comet.pid'),
 	:tag => "comet_#{SvegSettings.environment.to_s[0..3]}",
 	:timeout => 600,

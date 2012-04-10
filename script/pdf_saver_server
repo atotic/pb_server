@@ -8,7 +8,7 @@ require_relative '../config/settings'
 options = {
 	:port => 27000,
 	:rackup => File.expand_path(File.join(File.dirname(__FILE__), "../pdf_saver_server.rb")),
-	:log => File.join(SvegSettings.log_dir, 'pdf_saver_server.info'),
+	:log => File.join(SvegSettings.log_dir, 'pdf_saver_server_error.log'),
 	:pid => File.join(SvegSettings.tmp_dir, 'pdf_saver_server.pid'),
 	:tag => "pdf_ss_#{SvegSettings.environment.to_s[0..3]}",
 }

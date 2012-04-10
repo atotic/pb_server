@@ -32,12 +32,12 @@ module PB
 	def self.create_server_logger(name) 
 		return @@logger if @@logger
 		@@logger = Log4r::Logger.new(name)
-		file_out = Log4r::FileOutputter.new("#{name}.info", { 
-			:filename => File.join(SvegSettings.log_dir, "#{name}.junk" ), 
-			:formatter => PB::SVEG_FORMATTER })
+#		file_out = Log4r::FileOutputter.new("#{name}.info", { 
+#			:filename => File.join(SvegSettings.log_dir, "#{name}.junk" ), 
+#			:formatter => PB::SVEG_FORMATTER })
 		# root outputs everything, so we can use it in libraries
-		@@logger.add file_out
-		@@logger.add Log4r::Outputter.stdout if SvegSettings.environment == :development
+#		@@logger.add file_out
+		@@logger.add Log4r::Outputter.stderr
 		@@logger.add Log4r::GrowlOutputter.new('growlout') if SvegSettings.environment == :development
 		@@logger
 	end
@@ -51,6 +51,20 @@ module PB
 		logger.level = options[:level]
 		logger.add Log4r::Outputter.stdout
 		logger
+	end
+
+	def self.get_thin_server_port
+		port = 0
+		ObjectSpace.each_object(Thin::Server) { |s| port = s.port }
+		raise "Could not find port" if port == 0
+		port
+	end
+
+	def self.no_warnings
+	  old_verbose, $VERBOSE = $VERBOSE, nil
+  	yield
+	ensure
+  	$VERBOSE = old_verbose
 	end
 
 	# command line utilities
@@ -127,9 +141,11 @@ module PB
 		}
 		def initialize(app, options = {})
 			options = {
-				:logging => SvegSettings.environment == :development
+				:logging => ::Thin::Logging.debug?,
+				:ignore_sveg_http_headers => false
 			}.merge(options)
 			@do_log = options[:logging]
+			@ignore_sveg_headers = options[:ignore_sveg_http_headers]
 			@app = app
 		end
 
@@ -163,14 +179,20 @@ module PB
 			before(env, request)
 			status, headers, body = @app.call(env)
 			after(env, request, status, headers, body)
-			log(env, status, Time.now - start_time, headers) if @do_log
+			log(env, status, Time.now - start_time, headers) if @do_log || (status && status > 399)
 			[status, headers, body]
+		rescue => ex
+			print_exception(env, ex)
+			raise ex if SvegSettings.development?
+			[500, {'Content-Type' => 'text/plain'}, ['Unexpected internal server error']]
 		end
 
 		def before(env, request)
 			# load user to sveg.user
-			PB::User.restore_from_session(env)
-			PB::BrowserCommand.restore_from_headers(env)
+			unless @ignore_sveg_headers
+				PB::User.restore_from_session(env)
+				PB::BrowserCommand.restore_from_headers(env)
+			end
 		end
 
 		def after(env, request, status, headers, body)
@@ -188,8 +210,22 @@ module PB
 			env['rack.session.options'][:defer] = false if changed
 #			PB.logger.info "Setting cookie" if changed
 		end
+
+		def print_exception(env, ex)
+			req = Rack::Request.new(env)
+			PB.logger.error "UNCAUGHT EXCEPTION: #{env['REQUEST_METHOD']} #{env['REQUEST_PATH']}"
+#			env['rack.errors'] << "UNCAUGHT EXCEPTION: #{req.script_name + req.path_info} #{Time.now.to_s}\n"
+			env['rack.errors'] << ex.inspect << "\n"
+			env['rack.errors'] << ex.backtrace[0..10].join("\n")
+			env['rack.errors'] << 'env:'
+			env.keys.sort.each do |k|
+				env['rack.errors'] << k << ' : ' << env[k].to_s << "\n"
+			end
+		end
+
 	end
 
+	# Security utility routines
 	class Security
 		def self.xhr?(env)
 			env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest"
@@ -212,7 +248,7 @@ module PB
 			return if (env['sveg.user'].pk == resource[:user_id]) || (env['sveg.user'].is_administrator)
 			raise "You are not allowed access to this resource"
 		end
-			
 
 	end
+
 end

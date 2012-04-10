@@ -8,7 +8,7 @@ require_relative '../config/settings'
 options = {
 	:port => 26000,
 	:rackup => File.expand_path(File.join(File.dirname(__FILE__), "../sveg.rb")),
-	:log => File.join(SvegSettings.log_dir, 'sveg.info'),
+	:log => File.join(SvegSettings.log_dir, 'sveg_error.log'),
 	:pid => File.join(SvegSettings.tmp_dir, 'sveg.pid'),
 	:tag => "sveg_#{SvegSettings.environment.to_s[0..3]}",
 }
