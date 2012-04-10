@@ -18,8 +18,8 @@ module TestHelpers
 	# session is Rack::MockSession
 	def login_user(user, session)
 		builder = Rack::Builder.new do
-			use Rack::Session::Cookie, PB::SvegSession::COOKIE_OPTIONS
-			use PB::SvegSession
+			use Rack::Session::Cookie, PB::SvegMiddleware::COOKIE_OPTIONS
+			use PB::SvegMiddleware
 			run lambda {|env| user.login(env); [200, {}, ['logged in']]}
 		end
 		env = {}

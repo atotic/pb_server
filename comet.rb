@@ -203,8 +203,8 @@ comet_builder = Rack::Builder.new do
 	access_log_file = ::File.new(File.join(SvegSettings.log_dir, "comet_access.#{PB.get_thin_server_port}.log" ), 'a')
 	access_log_file.sync= true
 	use Rack::CommonLogger, access_log_file
-	use Rack::Session::Cookie, PB::SvegSession::COOKIE_OPTIONS
-	use PB::SvegSession
+	use Rack::Session::Cookie, PB::SvegMiddleware::COOKIE_OPTIONS
+	use PB::SvegMiddleware
 	run Comets::Server.new
 end
 Comet = comet_builder.to_app

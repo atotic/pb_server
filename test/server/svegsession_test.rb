@@ -13,7 +13,7 @@ require 'rack-flash'
 
 class TestServer 
 	def call(env)
-		case 
+		case
 			when env['PATH_INFO'] =~ /^\/null$/
 				[200, {}, ['ok']]
 			when env['PATH_INFO'] =~ /^\/login\/(\d+)/
@@ -52,7 +52,7 @@ class TestServer
 	end
 end
 
-class SvegSessionTest < Test::Unit::TestCase
+class SvegMiddlewareTest < Test::Unit::TestCase
 	include Rack::Test::Methods
 	include TestHelpers
 
@@ -67,7 +67,7 @@ class SvegSessionTest < Test::Unit::TestCase
 						:defer => true, # Rack < 1.4
 					}
 					use Rack::Flash, :helper => nil
-					use PB::SvegSession
+					use PB::SvegMiddleware
 					run TestServer.new
 				end
 		end

@@ -126,10 +126,10 @@ module PB
 	#		:defer => true, # Rack < 1.4
 	#	}
 	#	use Rack::Flash
-	#	use SvegSession
+	#	use SvegMiddleware
 	# 
 	# api test in svegsession_test.rb
-	class SvegSession
+	class SvegMiddleware
 
 		COOKIE_OPTIONS = {
 			:key => 'rack.session',

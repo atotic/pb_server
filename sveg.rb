@@ -492,9 +492,9 @@ class SvegApp < Sinatra::Base
 	access_log_file.sync= true
 	use Rack::CommonLogger, access_log_file
 	use Rack::ShowExceptions if SvegSettings.development?
-	use Rack::Session::Cookie, PB::SvegSession::COOKIE_OPTIONS
+	use Rack::Session::Cookie, PB::SvegMiddleware::COOKIE_OPTIONS
 	use Rack::Flash
-	use PB::SvegSession
+	use PB::SvegMiddleware
 end
 
 end

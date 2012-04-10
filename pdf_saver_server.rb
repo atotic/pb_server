@@ -172,8 +172,8 @@ server_builder = Rack::Builder.new do
 #	access_log_file = ::File.new(File.join(SvegSettings.log_dir, "pdf_saver_access.#{PB.get_thin_server_port}.log" ), 'a')
 #	access_log_file.sync= true
 #	use Rack::CommonLogger, access_log_file
-	use Rack::Session::Cookie, PB::SvegSession::COOKIE_OPTIONS
-	use PB::SvegSession, { :ignore_sveg_http_headers => true}
+	use Rack::Session::Cookie, PB::SvegMiddleware::COOKIE_OPTIONS
+	use PB::SvegMiddleware, { :ignore_sveg_http_headers => true}
 	run PdfSaver::Server.new
 end
 Pdf_saver_server = server_builder.to_app
