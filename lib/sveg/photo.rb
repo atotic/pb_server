@@ -126,9 +126,9 @@ class PhotoStorage
 	
 	def self.destroyFile(photo)
 		begin
-			File.delete(photo.file_path())
+			File.delete(photo.file_path)
 		rescue => ex
-			PB.logger.error "Could not destroy file #{fileName} " + ex.message
+			PB.logger.error "Could not destroy file #{photo.file_path} " + ex.message
 		end
 		begin 
 			File.delete(photo.file_path(:icon)) 
