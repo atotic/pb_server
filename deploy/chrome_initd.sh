@@ -16,7 +16,7 @@ NAME=chrome_xvfb
 PIDFILE=/var/run/$NAME.pid
 #This is the command to be run, give the full pathname
 DAEMON=$chrome_binary
-DAEMON_OPTS=$chrome_options
+DAEMON_OPTS="$chrome_options"
 USER=deploy
 
 export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
