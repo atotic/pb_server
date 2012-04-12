@@ -1,16 +1,15 @@
 #! /bin/sh
-# lifted from http://serverfault.com/questions/251961/getting-xvfb-to-start-upon-booting-system-in-ubuntu-maverick
 ### BEGIN INIT INFO
-# Provides:          xvfb_chrome
+# Provides:          xvfb
 # Required-Start:    $remote_fs $syslog
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Start Xvfb with chrome
-# Description:       Start Xvfb with chrome
+# Short-Description: Start Xvfb.
+# Description:       Start the X virtual framebuffer.
 ### END INIT INFO
 
-# Author: a@totic.org
+# Author: Hannes Brandstaetter-Mueller <hannes.brandstaetter@fh-hagenberg.at>
 #
 # Please remove the "Author" lines above and replace them
 # with your own name if you copy and modify this script.
@@ -18,23 +17,21 @@
 # Do NOT "set -e" 
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
-DESC="xvfb chrome" 
-NAME="xvfb-run-chrome" 
-DAEMON=/usr/bin/xvfb-run
-DAEMON_ARGS="-screen 0 1024x768x24"
-CHROME_ARGS="$chrome_cmd_line"
-
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="X virtual framebuffer" 
+NAME="Xvfb" 
+DAEMON=/usr/bin/$NAME
+DAEMON_ARGS=":1 -screen 0 1024x768x24 -fbdir /tmp" 
 PIDFILE=/var/run/$NAME.pid
-SCRIPTNAME=/etc/init.d/xvfb_chrome
+SCRIPTNAME=/etc/init.d/$NAME
 
 # Read configuration variable file if it is present
-#[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh
 
 # Define LSB log_* functions.
-# Depend on lsb-base (>= 3.0-6) to ensure that this file is present.
 . /lib/lsb/init-functions
 
 #
@@ -49,7 +46,7 @@ do_start()
         start-stop-daemon --start --background --quiet --pidfile $PIDFILE --exec $DAEMON --test > /dev/null \
                 || return 1
         start-stop-daemon --start --background --quiet --pidfile $PIDFILE --exec $DAEMON -- \
-                $DAEMON_ARGS $CHROME_ARGS \
+                $DAEMON_ARGS \
                 || return 2
         # Add code here, if necessary, that waits for the process to be ready
         # to handle requests from services started subsequently which depend

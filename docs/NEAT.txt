@@ -1,15 +1,7 @@
 http://caniuse.com/
 
-SVG - image/svg+xml
-Mozilla SVG tutorial https://developer.mozilla.org/en/SVG/Tutorial/
-D3 is amazingly beautiful, Mike Bostock is super smart. Must play with it some more.
-Interesting SVG vector graphics library: http://raphaeljs.com/
-Going through this is better than reading a book: http://srufaculty.sru.edu/david.dailey/svg/SVGAnimations.htm
-SVG to canvas: http://www.svgopen.org/2010/papers/62-From_SVG_to_Canvas_and_Back/index.html
-HOWTO for JS & SVG http://www.w3.org/Graphics/SVG/IG/resources/svgprimer.html
-Mediawiki wrestling with SVG -> PNG conversion http://www.mediawiki.org/wiki/Manual:$wgSVGConverters
-
 CSS
+:target pseudo class might be useful http://css-tricks.com/on-target/
 WebGL clouds, our something went wrong page: http://www.clicktorelease.com/code/css3dclouds/#?utm_source=html5weekly&utm_medium=email
 Mutli-device layout patterns http://jasonweaver.name/lab/offcanvas/technical/
 Talks about bootstrap & color, CSS layout frameworks http://drawar.com/d/great-another-bootstrap-site/
@@ -43,6 +35,7 @@ CSS Fonts as icons: fun icon effects with fonts http://css-tricks.com/15099-usin
 Use box sizing for width/padding: http://paulirish.com/2012/box-sizing-border-box-ftw/
 Simple CSS sizing framework: https://github.com/robertpiira/ingrid
 LoremPixel: placeholder images: http://lorempixel.com/
+1366 x 768 most popular screen size http://gs.statcounter.com/press/screen-resolution-alert-for-web-developers
 
 JS
 Stop paying jquery tax, loading jquery at the bottom: http://samsaffron.com/archive/2012/02/17/stop-paying-your-jquery-tax
@@ -76,12 +69,14 @@ RUBY
 Ruby toolbox: what gem should I use for.....  http://ruby-toolbox.com/
 MD5 digests in ruby http://www.siaris.net/index.cgi/Programming/LanguageBits/Ruby/MD5.rdoc
 Ruby command shell http://rdoc.info/github/banister/pry/master/file/README.markdown
-Manipulating HTML in Ruby: https://github.com/tenderlove/nokogiri
 Will I ever need a state machine https://github.com/pluginaweek/state_machine
 
 Security
 Use pbkdf2 for passwords https://github.com/emerose/pbkdf2-ruby
 OAuth2 playground: https://code.google.com/oauthplayground/
+OAuth2: http://googlecode.blogspot.com/2011/11/oauth-20-playground-open-to-developers.html
+Free ssl cert https://www.startssl.com/?app=40
+Use bcrypt to store passwords http://codahale.com/how-to-safely-store-a-password/
 
 S3
 Pure html ajax upload: http://zefer.posterous.com/pure-html-ajax-solutions-to-upload-files-to-s
@@ -99,26 +94,22 @@ http://www.exiv2.org/?utm_source=dlvr.it&utm_medium=twitter
 MOBILE
 Viewport scoller https://github.com/zynga/scroller
 Developing a nice mobile site: http://davidbcalhoun.com/2011/mobile-performance-manifesto
+Touch event history and future: http://blog.jquery.com/2012/04/10/getting-touchy-about-patents/
 
 OTHER
 Google Cloud Storage looks great. Looks like I could run the entire site for less than $10K a month.
 Open source freelancers, where to register non-seizable domain: http://gun.io/
-Free ssl cert https://www.startssl.com/?app=40
 PlentyOfFish website run by one guy, 10M page views a month. http://highscalability.com/blog/2011/12/27/plentyoffish-update-6-billion-pageviews-and-32-billion-image.html
 ssh tips, useful for Amazon: http://shebang.brandonmintern.com/tips-for-remote-unix-work-ssh-screen-and-vnc
 https://www.crowdspring.com/post-a-project/, UI design referred from Michael LaGuardia
 Survey of offline: http://www.html5rocks.com/tutorials/offline/whats-offline/#toc-compatibility
 Unicode geometric shapes: http://www.unicodemap.org/range/54/Geometric_Shapes/
 Branching strategy with git: http://betterexplained.com/articles/aha-moments-when-learning-git/
-Use bcrypt to store passwords http://codahale.com/how-to-safely-store-a-password/
 WebIntents: case study is image editor http://paul.kinlan.me/web-intents-a-fresh-look
 Simple, cheap scalable site: http://highscalability.com/blog/2011/8/1/peecho-architecture-scalability-on-a-shoestring.html
-SLIPSUM: http://slipsum.com/
-BrowserID authentication: https://github.com/mozilla/browserid/wiki/How-to-Use-BrowserID-on-Your-Site
+]BrowserID authentication: https://github.com/mozilla/browserid/wiki/How-to-Use-BrowserID-on-Your-Site
 Stripe payments system: cheap way to accept credit cards
 Graphic designers: http://www.artisantalent.com/find-talent/print-talent/graphic-designers/
-OAuth2: http://googlecode.blogspot.com/2011/11/oauth-20-playground-open-to-developers.html
-Image resizing: GraphicsMagick
 Sending email: http://37signals.com/svn/posts/3096-behind-the-scenes-giving-away-the-secrets-of-email-delivery
 OS X shell tips http://hayne.net/MacDev/Notes/unixFAQ.html#shellStartup
 
@@ -129,6 +120,16 @@ jQuery touch http://jqtouch.com/
 PRINTING
 Reviews http://insig.ht/2009/06/print-on-demand-review/
 Print resources for independent art publishers: http://print-resources.tumblr.com/
+
+SVG - image/svg+xml
+Mozilla SVG tutorial https://developer.mozilla.org/en/SVG/Tutorial/
+D3 is amazingly beautiful, Mike Bostock is super smart. Must play with it some more.
+Interesting SVG vector graphics library: http://raphaeljs.com/
+Going through this is better than reading a book: http://srufaculty.sru.edu/david.dailey/svg/SVGAnimations.htm
+SVG to canvas: http://www.svgopen.org/2010/papers/62-From_SVG_to_Canvas_and_Back/index.html
+HOWTO for JS & SVG http://www.w3.org/Graphics/SVG/IG/resources/svgprimer.html
+Mediawiki wrestling with SVG -> PNG conversion http://www.mediawiki.org/wiki/Manual:$wgSVGConverters
+
 
 BUSINESS
 Apago: looks like the place to get PDF optimization done http://www.apagoinc.com/prod_home.php?prod_id=37

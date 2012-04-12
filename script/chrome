@@ -1,7 +1,12 @@
 #!/usr/bin/env ruby
 # starts chrome process
-# TODO daemonize script/chrome with xvfd, taskless gem for Linux
 
+# xvfd command line guide
+# start xvfd with screen backed by a file
+# Xvfd :1 -screen 0 1280x1024x24 -fbdir /tmp
+# take a peek at the screen:
+
+# xwud -in /tmp/Xvfb_screen0 
 require 'bundler/setup'
 require 'backports'
 

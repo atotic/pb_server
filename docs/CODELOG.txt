@@ -9,7 +9,6 @@
 1 week: dropbox integration?
 
 Featuritis:
-DropBox image import/storage
 image frame resize?
 printing text: hide default text
 switching page/book layouts (template matching), use nokogiri for it
@@ -19,7 +18,6 @@ hash bangs for pages
 migrating albums: use nokogiri for html manipulation
 Add page|delete|change layout
 Book pane: scrolling, page padding
-Faster upload with nginx: use the upload module
 
 Deployment milestone:
 Split git into templates, chrome patch
@@ -56,10 +54,12 @@ Email
 Authentication
 
 Next
-logrotate for deployment
 Run chrome as xvfd, then initd
 Master git template?
+Setting up chromium extension as rake task
 
+Apr 10
+everything works on ubuntu
 Apr 9
 Logging tests finished. It is a large test suite, each server
 has to be tested for access/error in debug and daemon configuration.

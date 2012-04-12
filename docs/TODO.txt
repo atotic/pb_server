@@ -1,0 +1,6 @@
+DEPLOYMENT
+logrotate for logrotation
+monit server monitor
+
+FEATURES
+DropBox image import/storage
