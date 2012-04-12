@@ -46,6 +46,6 @@ case
 		line =  "#{SvegSettings.chrome_binary} --user-data-dir=#{SvegSettings.chrome_profile_dir}"
 		line += " --no-sandbox "
 		puts line
-		STDERR.write "remember to redirect output to 2> #{File.join(SvegSettings.log_dir, "chromepdf_error.log")}"
+#		STDERR.write "remember to redirect output to 2> #{File.join(SvegSettings.log_dir, "chromepdf_error.log")}"
 	else usage
 end
