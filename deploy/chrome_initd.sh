@@ -1,12 +1,12 @@
 #!/bin/sh
 ### BEGIN INIT INFO
-# Provides:          chrome_xvfb
+# Provides:          chrome_daemon
 # Required-Start:    $local_fs $remote_fs $network $xvfb
 # Required-Stop:     $local_fs $remote_fs
 # Default-Start:     2 3 4 5
-# Default-Stop:      S 0 1 6
+# Default-Stop:      0 1 6
 # Short-Description: chrome runs inside xvfb
-# Description:       chromium_xvfb part of the pb4us server family
+# Description:       chrome_daemon part of the pb4us server family
 ### END INIT INFO
 DAEMON=$chrome_daemon_bin
 
