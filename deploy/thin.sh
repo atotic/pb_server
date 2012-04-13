@@ -16,7 +16,8 @@
 DAEMON=/usr/local/rvm/bin/bootup_thin
 SCRIPT_NAME=/etc/init.d/thin
 CONFIG_PATH=/etc/thin
-
+#export USE_BUNDLER=force did not allow me to include delayed_job_sequel
+ 
 case "$1" in
   start)
 	$DAEMON start --all $CONFIG_PATH
