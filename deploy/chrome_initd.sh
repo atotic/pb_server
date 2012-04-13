@@ -8,40 +8,20 @@
 # Short-Description: chrome runs inside xvfb
 # Description:       chromium_xvfb part of the pb4us server family
 ### END INIT INFO
-
-set -e
-
-# Must be a valid filename
-NAME=chrome_xvfb
-PIDFILE=/var/run/$NAME.pid
-#This is the command to be run, give the full pathname
-DAEMON=$chrome_binary
-DAEMON_OPTS="$chrome_options"
-USER=deploy
-
-export PATH="${PATH:+$PATH:}/usr/sbin:/sbin"
+DAEMON=$chrome_daemon_bin
 
 case "$1" in
   start)
-        echo -n "Starting daemon: "$NAME
-	start-stop-daemon --start --quiet --pidfile $PIDFILE --chuid $USER --exec $DAEMON -- $DAEMON_OPTS
-        echo "."
+	$DAEMON
 	;;
   stop)
-        echo -n "Stopping daemon: "$NAME
-	start-stop-daemon --stop --quiet --oknodo --pidfile $PIDFILE
-        echo "."
+	$DAEMON --stop
 	;;
   restart)
-        echo -n "Restarting daemon: "$NAME
-	start-stop-daemon --stop --quiet --oknodo --retry 30 --pidfile $PIDFILE
-	start-stop-daemon --start --quiet --pidfile $PIDFILE --chuid $USER --exec $DAEMON -- $DAEMON_OPTS
-	echo "."
+	$DAEMON --restart
 	;;
-
   *)
-	echo "Usage: "$1" {start|stop|restart}"
-	exit 1
+	echo "Usage: $0 {start|stop|restart}" >&2
+	exit 3
+	;;
 esac
-
-exit 0

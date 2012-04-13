@@ -14,9 +14,6 @@
 
 DAEMON=$job_bin
 
-# Exit if the package is not installed
-[ -x "$DAEMON" ] || exit 0
-
 case "$1" in
   start)
 	$DAEMON start
