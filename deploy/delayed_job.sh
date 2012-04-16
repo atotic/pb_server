@@ -12,6 +12,7 @@
 # prototypical init script
 # Do NOT "set -e"
 
+export RACK_ENV=production
 DAEMON=$job_bin
 
 case "$1" in

@@ -6,6 +6,7 @@ require 'daemons'
 require_relative '../config/delayed_job'
 require 'delayed/worker'
 require 'log4r'
+require 'socket'
 
 require_relative '../config/settings'
 require_relative '../lib/sveg/book2pdf_job'
@@ -73,7 +74,7 @@ daemon_options = {
 	:ARGV => ARGV,
 	:dir_mode => :normal,
 	:dir => SvegSettings.tmp_dir,
-	:backtrace => true,
+	:backtrace => false,
 	:monitor => true,
 	:log_dir => SvegSettings.log_dir,
 	:log_output => true
