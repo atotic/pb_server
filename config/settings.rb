@@ -67,7 +67,7 @@ class SvegSettings
 		Dir.mkdir(@photo_dir) unless File.exists?(@photo_dir)
 		Dir.mkdir(@book2pdf_dir) unless File.exists?(@book2pdf_dir)
 		chrome_log_dir = File.join(@log_dir, "chrome")
-		Dir.mkdir(chrome_log_dir) unless File.exists?(chrome_log_dir)
+		Dir.mkdir(chrome_log_dir, 0777) unless File.exists?(chrome_log_dir)
 	end
 
 	def self.development?

@@ -61,10 +61,27 @@ module PB
 	end
 
 	def self.no_warnings
-	  old_verbose, $VERBOSE = $VERBOSE, nil
-  	yield
+		old_verbose, $VERBOSE = $VERBOSE, nil
+		yield
 	ensure
-  	$VERBOSE = old_verbose
+		$VERBOSE = old_verbose
+	end
+
+	require 'etc'
+	def self.change_privilege(user, group=user)
+		puts "Changing process privilege to #{user}:#{group}"
+	
+		current_uid, current_gid = Process.euid, Process.egid
+		target_uid = Etc.getpwnam(user).uid
+		target_gid = Etc.getgrnam(group).gid
+
+		if current_uid != target_uid || current_gid != target_gid
+			Process.initgroups(user, target_gid)
+			Process::GID.change_privilege(target_gid)
+			Process::UID.change_privilege(target_uid)
+		end
+	rescue Errno::EPERM => e
+		raise "Couldn't change user and group to #{user}:#{group}: #{e}"
 	end
 
 	# command line utilities
