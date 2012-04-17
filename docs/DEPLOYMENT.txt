@@ -67,9 +67,10 @@ nginx -c /Users/atotic/code/pb/pb_server/config/nginx.conf -s start
 # reloads the conf file
 nginx -c /Users/atotic/code/pb/pb_server/config/nginx.conf -s reload
 
-
-
 CHROME deployment:
+Tricky:
+run xvfb as a daemon on screen 1
+create chrome_daemon.sh that uses daemon executable
 
 http://www.kalzumeus.com/2010/01/15/deploying-sinatra-on-ubuntu-in-which-i-employ-a-secretary/
 http://pemberthy.blogspot.com/2009/02/deploying-sinatra-applications-with.html
