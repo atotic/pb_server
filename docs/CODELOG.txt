@@ -49,13 +49,27 @@ Create databases
 
 C) Later
 Create master git template when I understand how to do it
-Install ubuntu server, and run everything on it
+Install ubuntu server, and run everything on it. Just use Linode
 Email
-Authentication
+Authentication/SSL
 
 Next
-Run chrome as xvfd, then initd
-Master git template?
+Email: create pb4us domain on google apps. Use it to send mail
+
+Apr 16
+delayed_job should run as deploy user use change_privilege
+1st successful total run on Ubuntu
+pb4us project as master git template. Did not use git built-in 
+submodule management, because submodules do not allow editing of subprojects.
+
+Apr 13
+servers run on startup.
+the trick was to wrap binaries with rvm wrapper command
+the thin servers could not find delayed_job_sequel gem, have to install manually
+delayed_job still running as root
+
+Apr 12
+chrome now runs inside xvfb. The whole server has been daemonized
 Setting up chromium extension as rake task
 
 Apr 10

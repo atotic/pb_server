@@ -1,6 +1,5 @@
 #! bin/thin -C config/sveg.rb start
 
-
 require 'sinatra/base'
 require 'rack-flash'
 require 'erb'
