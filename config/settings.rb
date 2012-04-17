@@ -25,16 +25,17 @@ class SvegSettings
 	@test_dir = File.join(@root_dir, "test").freeze
 	
 	@data_dir = File.join(File.expand_path('../pb_data', @root_dir), @environment.to_s).freeze
-	@tmp_dir = File.join(@data_dir, "tmp").freeze
-	@log_dir = File.join(@data_dir, "log").freeze
+	@tmp_dir = File.join(@data_dir, 'tmp').freeze
+	@log_dir = File.join(@data_dir, 'log').freeze
+	@chrome_log_dir = File.join(@log_dir, 'chrome').freeze
 
-	@photo_dir = File.join(@data_dir, "photo-storage").freeze # photo storage directory
-	@book2pdf_dir = File.join(@data_dir, "pdf-books").freeze # generated books
+	@photo_dir = File.join(@data_dir, 'photo-storage').freeze # photo storage directory
+	@book2pdf_dir = File.join(@data_dir, 'pdf-books').freeze # generated books
 	
 	# binaries
 	if @platform == :mac
-		@chrome_binary = File.join(@pb_chrome_dir, "bin/mac/Chromium.app/Contents/MacOS/Chromium").freeze
-		@chrome_dir = File.join(@pb_chrome_dir, "bin/mac//Chromium.app").freeze
+		@chrome_binary = File.join(@pb_chrome_dir, 'bin/mac/Chromium.app/Contents/MacOS/Chromium').freeze
+		@chrome_dir = File.join(@pb_chrome_dir, 'bin/mac//Chromium.app').freeze
 		@chrome_profile_dir = File.join(@pb_chrome_dir, 'chromium_profile')
 		@pdf_toolkit_binary = "/usr/local/bin/pdftk".freeze
 		@convert_binary = "/usr/local/bin/convert".freeze
@@ -55,7 +56,7 @@ class SvegSettings
 		attr_accessor :root_dir,:data_dir, :tmp_dir, :log_dir, :test_dir
 		attr_accessor :environment, :platform
 		attr_accessor :book_templates_dir, :photo_dir, :book2pdf_dir
-		attr_accessor :chrome_binary, :chrome_dir, :chrome_profile_dir, :pdf_toolkit_binary
+		attr_accessor :chrome_binary, :chrome_dir, :chrome_log_dir, :chrome_profile_dir, :pdf_toolkit_binary
 		attr_accessor :convert_binary, :graphicsmagick_binary
 		attr_accessor :comet_port, :comet_host
 	end
@@ -66,8 +67,7 @@ class SvegSettings
 		Dir.mkdir(@log_dir) unless File.exists?(@log_dir)
 		Dir.mkdir(@photo_dir) unless File.exists?(@photo_dir)
 		Dir.mkdir(@book2pdf_dir) unless File.exists?(@book2pdf_dir)
-		chrome_log_dir = File.join(@log_dir, "chrome")
-		Dir.mkdir(chrome_log_dir, 0777) unless File.exists?(chrome_log_dir)
+		Dir.mkdir(@chrome_log_dir, 0777) unless File.exists?(@chrome_log_dir)
 	end
 
 	def self.development?
