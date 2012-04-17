@@ -17,7 +17,7 @@ def status_one(process_name)
 	pid_file = File.join(SvegSettings.tmp_dir, process_name + ".pid")
 	if File.exists?(pid_file) then
 		pid = File.read(pid_file).to_s.chomp
-		status = `ps -A --format "pid,comm,time,user" | grep '^ *#{pid}'`[0..60]
+		status = `ps -A -o "pid,comm,time,user" | grep '^ *#{pid}'`[0..60]
 		if (status.empty?) then
 			`rm #{pid_file}`
 			status = "process not found. pid file removed"
