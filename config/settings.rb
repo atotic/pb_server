@@ -21,6 +21,7 @@ class SvegSettings
 	@pb_templates_dir = File.expand_path('../pb_templates', @root_dir)
 
 	@environment = ( ENV['RACK_ENV'] || :development ).to_sym # :production :development :test
+	raise "RACK_ENV must be production|development|test" unless @environment == :development || @environment == :production || @environment == :test
 	@book_templates_dir = File.expand_path("./templates", @pb_templates_dir).freeze
 	@test_dir = File.join(@root_dir, "test").freeze
 	
