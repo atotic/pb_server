@@ -2,7 +2,6 @@
 
 # Comet is an http server handling browser streaming
 # 
-require 'backports'
 require 'rack'
 require 'eventmachine'
 require 'thin'

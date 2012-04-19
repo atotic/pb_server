@@ -6,6 +6,7 @@ Sequel.migration do
 			DateTime :created_at
 			DateTime :updated_at
 			String :display_name, :size=>128, :null=>false
+			String :email, :size=>128
 			TrueClass :is_administrator, :default=>false
 		end
 

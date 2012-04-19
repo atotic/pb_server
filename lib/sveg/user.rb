@@ -9,6 +9,11 @@ class User < Sequel::Model
 	one_to_many :books
 	one_to_many :photos
 
+	def after_create
+		super
+		email = "a@totic.org" # TODO delete me
+	end
+
 	def save_to_session(env, expire = nil)
 		expire ||= Time.now + 1*24*3600	# one day
 		env['rack.session']['user_id'] = self.pk

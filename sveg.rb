@@ -7,7 +7,6 @@ require 'json'
 require 'base64'
 require 'thin'
 
-require 'backports'
 require_relative 'config/settings'
 require_relative 'config/db'
 require_relative 'config/delayed_job'

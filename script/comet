@@ -2,7 +2,6 @@
 # starts comet process
 
 require 'bundler/setup'
-require 'backports'
 require_relative '../config/settings'
 
 options = {

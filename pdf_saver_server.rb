@@ -1,7 +1,6 @@
 #! bin/thin start --rackup pdf_saver_server.rb
 # bin/rake test:server TEST=test/server/pdf_saver_server_test.rb
 
-require 'backports'
 require 'rack'
 require 'thin'
 require 'json'

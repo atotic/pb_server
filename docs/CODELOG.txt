@@ -56,6 +56,21 @@ Authentication/SSL
 Next
 Email: create pb4us domain on google apps. Use it to send mail
 
+Apr 19
+removed 1.8 compatibility
+added email field to user
+Mail sending works.
+servers@pb4us.com
+
+Apr 18
+update db to contain email
+send mail using a@totic.org
+create pb4us domain
+
+Apr 17
+cleaning up move to pb4us master project
+starting on email
+
 Apr 16
 delayed_job should run as deploy user use change_privilege
 1st successful total run on Ubuntu
