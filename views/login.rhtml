@@ -2,16 +2,21 @@
 <hr>
 <p>Do you already have an account on one of these sites? Click the logo to <b>log in</b> with it here:</p>
 <div id="openid_btns">
-	<a title="log in with google" href="/auth/google" style="background-image: url(/img/auth/google_64.png)">log in with google</a>
-	<a title="log in with facebook" href="/auth/facebook" style="background-image: url(/img/auth/facebook_64.png)">log in with facebook</a>
+	<a title="log in with facebook" href="/auth/facebook?origin=/login" style="background-image: url(/img/auth/facebook_64.png)">log in with facebook</a>
+	<a title="log in with google" href="/auth/google?origin=/login" style="background-image: url(/img/auth/google_64.png)">log in with google</a>
+	<% if SvegSettings.development? %>
+	<a title="log in with pb4us" href="/auth/developer?origin=/login" style="background-image: url(/img/auth/openid_64.png)">log in as developer</a>
+	<% end %>
 </div>
-<p>Or you can manually enter your user id:</p>
-<form id="openid_form" action="/auth/login" method="post">
-<p><input type="text" name="login_id">
-	<input type="submit" value="OpenId &rarr;">
-</form>
-	
-
+	<input type='checkbox' id='duration'> <label for='duration'>keep me logged in</input>
+<script>
+	$('#keep').change( function(x,y) {
+		var state = $('#duration')[0].checked ? 'long' : 'session'
+		$("#openid_btns a").each(function(index, el) {
+			el.href = el.href.replace(/\/login.*$/, '/login/' + state);
+		});
+	});
+</script>
 <style type="text/css" contenteditable style="display:none;white-space:pre; font-size: 13px; font-family:Monaco, Mono-Space;border-top: 5px solid gray">
 	#openid_btns a {
 		display:inline-block;

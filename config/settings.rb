@@ -5,6 +5,7 @@ ENV['RAILS_ENV'] = ENV['RACK_ENV'] # some gems (delayed_job) need this
 
 # gem requires
 require 'bundler/setup'
+require_relative './secrets'
 
 # server code
 
@@ -95,6 +96,5 @@ end
 SvegSettings.init()
 
 if SvegSettings.development?
-	require 'backports'
 	require_relative 'debug'
 end

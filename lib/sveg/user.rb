@@ -11,13 +11,15 @@ class User < Sequel::Model
 
 	def after_create
 		super
-		email = "a@totic.org" # TODO delete me
 	end
 
-	def save_to_session(env, expire = nil)
-		expire ||= Time.now + 1*24*3600	# one day
+	def save_to_session(env, expire = :session)
+		expire_in = 1*24*3600	# one day
 		env['rack.session']['user_id'] = self.pk
-		env['rack.session']['user_id_expires'] = expire.to_i
+		# our session has expiration baked in
+		env['rack.session']['user_id_expires'] = ( Time.now + expire_in).to_i
+		# cookie expires after browser session, or 'expire_in' time
+		env['rack.session.options'][:expire_after] = expire == :session ? nil : expire_in;
 		env['sveg.user'] = self
 	end
 
@@ -44,46 +46,55 @@ class User < Sequel::Model
 
 end
 
-
-#
-# Auth classes
-# each auth instance represents a login via corresponding service
-# 
-
-# AuthLogin is a simple username/pw login in theory
+# Each Omniauth login generates a token
+# OmniauthToken is a simple username/pw login in theory
 # For now, it is just username.
-class AuthLogin < Sequel::Model(:auth_logins)
+class OmniauthToken < Sequel::Model(:omniauth_tokens)
 	
-	plugin :timestamps
+	def self.get_strategy_id(strategy)
+		strategy = strategy.to_sym
+		case
+			when strategy == :developer then 0
+			when strategy == :facebook then 1
+			when strategy == :'google-oauth2' then 2
+			else raise "unknown strategy"
+		end
+	end
+	# returns [user, is_new?]
+	# throws string exceptions 
+	def self.login_with_omniauth(omniauth)
+		strategy_id = get_strategy_id(omniauth['provider'])
+		auth = self.filter(:strategy => strategy_id, :strategy_uid => omniauth['uid']).first
 
-#	property :login_id,			String, :key => true
-#	property :created_at,		DateTime
-#	property :updated_at,		DateTime
-# common auth properties
-#	property :user_id,			Integer		# pointer to User record
-#	property :created_on,		DateTime, :default => lambda { |r,p| Time.now }
-#	property :last_login,		DateTime, :default => lambda { |r,p| Time.now }
-	
-	set_primary_key :login_id
-
-	many_to_one :user # user this authoricazion is for
-
-	# creates login
-	def self.create_with_user(login_id)
-		DB.transaction do
-			user = User.new({:display_name => login_id})
-			user.is_administrator = true if login_id.eql? "atotic"
-			user.save
-			unrestrict_primary_key
-			auth = AuthLogin.new({:login_id => login_id, :user_id => user.id} )
-			auth.save
-			restrict_primary_key
-			auth
+		if auth.nil?
+			name = omniauth['info']['name'] || "Unknown"
+			email = omniauth['info']['email'] || ""
+			DB.transaction do
+				user = User.new( { :display_name => name, :email => email})
+				user.is_administrator = true if email.eql? "a@totic.org"
+				user.save
+				auth = OmniauthToken.new( {
+					:user_id => user.pk,
+					:strategy => strategy_id,
+					:strategy_uid => omniauth['uid'],
+					:auth_data => omniauth.to_json
+					})
+				auth.save
+				[user, true]
+			end
+		else
+			DB.transaction do
+				auth.auth_data = omniauth.to_json
+				auth.save
+				[auth.user, false]
+			end
 		end
 	end
 
-	def login
-	end
+	plugin :timestamps
+
+	many_to_one :user # user this authorization is for
+
 end
 
 end

@@ -9,7 +9,7 @@ module PB
 
 		def initialize(recipient, sender, subject, body)
 			@recipient = recipient # PB::User
-			@sender = sender || "servers@pb4us.com" # string
+			@sender = sender || "pb4us photobooks <servers@pb4us.com>" # string
 			@subject = subject
 			@body = body
 		end

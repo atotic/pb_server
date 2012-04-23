@@ -9,11 +9,10 @@ options = {}
 db_config = {
 		:adapter => 'mysql2',
 		:default_schema => 'public',
-		:user => 'sveg',
-		:password => 'svegsveg',
+		:user => PB::Secrets::MYSQL_USER,
+		:password => PB::Secrets::MYSQL_PW,
 		:host => 'localhost',
 		:database => "sveg_#{SvegSettings.environment}",
 		:max_connections => 5
 }
-DB = Sequel.connect("mysql2://sveg:svegsveg@localhost/sveg_#{SvegSettings.environment}",
-	options)
+DB = Sequel.connect(db_config, options)

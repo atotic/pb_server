@@ -6,6 +6,8 @@ require 'erb'
 require 'json'
 require 'base64'
 require 'thin'
+require 'omniauth-facebook'
+require 'omniauth-google-oauth2'
 
 require_relative 'config/settings'
 require_relative 'config/db'
@@ -103,8 +105,32 @@ class SvegApp < Sinatra::Base
 			end
 			body
 		end
+
+		get '/auth/:strategy/callback' do
+			# plain_response(env.to_json)
+			auth_intent = :login
+			login_duration = :session
+			if env['omniauth.origin']
+				case
+					when 'omniauth.origin'.eql?('/login/session') then login_duration = :session
+					when 'omniauth.origin'.eql?('/login/long') then login_duration = :long
+				end
+			end
+			omniauth = env['omniauth.auth']
+			if auth_intent == :login then
+				user, is_new = OmniauthToken.login_with_omniauth(omniauth)
+				user.save_to_session(env, login_duration)
+				env['x-rack.flash'][:notice] = (is_new ? \
+					"thank you for joining our site" : "thank you for logging in")
+				redirect '/'
+			else
+				# we are being authorized for something else,
+				raise "Unimplemented"
+			end
+		end
 	end
 end
+
 
 #
 # Main application
@@ -298,7 +324,6 @@ class SvegApp < Sinatra::Base
 			end
 		else
 		# login exists, just log in
-			authlogin.last_login = Time.now
 			authlogin.save
 			authlogin.user.login(env)
 			flash[:notice]="Logged in successfully"
@@ -491,6 +516,10 @@ class SvegApp < Sinatra::Base
 	use Rack::CommonLogger, access_log_file
 	use Rack::ShowExceptions if SvegSettings.development?
 	use Rack::Session::Cookie, PB::SvegMiddleware::COOKIE_OPTIONS
+	use OmniAuth::Builder do
+		provider :developer if SvegSettings.development?
+		provider :facebook, PB::Secrets::FB_APP_ID, PB::Secrets::FB_SECRET, :scope => 'email,'
+	end
 	use Rack::Flash
 	use PB::SvegMiddleware
 end

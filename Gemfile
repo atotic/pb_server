@@ -19,7 +19,9 @@ gem 'delayed_job', "~> 3.0" # :git => "git://github.com/atotic/delayed_job.git"
 gem 'delayed_job_sequel', :git => "git://github.com/atotic/delayed_job_sequel.git"
 #gem 'delayed_job_sequel', :path => "../../delayed_job_sequel"
 gem 'daemons'
-gem 'pony'
+gem 'pony' # email
+gem 'omniauth-facebook'
+gem 'omniauth-google-oauth2'
 
 group :development do
 	gem "ruby-debug", :platforms => :ruby_18

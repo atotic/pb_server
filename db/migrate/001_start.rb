@@ -8,20 +8,24 @@ Sequel.migration do
 			String :display_name, :size=>128, :null=>false
 			String :email, :size=>128
 			TrueClass :is_administrator, :default=>false
+
+			index [:email], :name => :index_users_email
 		end
 
-		create_table(:auth_logins, :ignore_index_errors=>true) do
-			String :login_id, :null=>false, :size=>128
+		create_table(:omniauth_tokens) do
+			primary_key :id
 			DateTime :created_at
 			DateTime :updated_at
-			DateTime :last_login
-			Integer :user_id, :null=>false
-			
-			primary_key [:login_id]
-			
-			index [:user_id], :name=>:index_auth_logins_user
+			Integer :user_id
+
+			Integer :strategy # 0 developer, 1 facebook, 2 google
+			String :strategy_uid, :null=>false, :size=>128 # unique user id per strategy
+			String :auth_data, :text=>true # JSON created by omniauth
+
+			index [:strategy], :name => :index_omniauth_strategy
+			index [:strategy_uid], :name => :index_omniauth_uid
+			index [:user_id], :name => :index_omniauth_user
 		end
-		
 
 		create_table(:browser_commands, :ignore_index_errors=>true) do
 			primary_key :id

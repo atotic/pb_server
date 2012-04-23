@@ -37,35 +37,19 @@ Install on Ubuntu
   Chrome inside xvft
 Capacity testing: how many simultaneous broadcast clients
 
-Next
-A) Prerequisites
-Build 64bit chrome on ubuntu
-Install ruby 1.9.3 using rvm
-Install mariadb, pdftk, xvfd, imagemagick, graphicsmagick
-Install nginx. Make nginx work on development/production mac/linux, point to different dirs
-
-B) Booting the system
-Create databases
-
-C) Later
-Create master git template when I understand how to do it
-Install ubuntu server, and run everything on it. Just use Linode
-Email
-Authentication/SSL
-
-Next
-Email: create pb4us domain on google apps. Use it to send mail
+Next:
+Cookies for *.pb4us.com
+Email sending as delayed_job (make it higher priority than other tasks)
+Username/pw authentication
+Simple signup
+Facebook/Google authentication
 
 Apr 19
+Created Google Apps pb4us domain
 removed 1.8 compatibility
 added email field to user
 Mail sending works.
 servers@pb4us.com
-
-Apr 18
-update db to contain email
-send mail using a@totic.org
-create pb4us domain
 
 Apr 17
 cleaning up move to pb4us master project
@@ -89,6 +73,7 @@ Setting up chromium extension as rake task
 
 Apr 10
 everything works on ubuntu
+
 Apr 9
 Logging tests finished. It is a large test suite, each server
 has to be tested for access/error in debug and daemon configuration.

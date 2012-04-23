@@ -122,17 +122,9 @@ PRINTING
 Reviews http://insig.ht/2009/06/print-on-demand-review/
 Print resources for independent art publishers: http://print-resources.tumblr.com/
 
-SVG - image/svg+xml
-Mozilla SVG tutorial https://developer.mozilla.org/en/SVG/Tutorial/
-D3 is amazingly beautiful, Mike Bostock is super smart. Must play with it some more.
-Interesting SVG vector graphics library: http://raphaeljs.com/
-Going through this is better than reading a book: http://srufaculty.sru.edu/david.dailey/svg/SVGAnimations.htm
-SVG to canvas: http://www.svgopen.org/2010/papers/62-From_SVG_to_Canvas_and_Back/index.html
-HOWTO for JS & SVG http://www.w3.org/Graphics/SVG/IG/resources/svgprimer.html
-Mediawiki wrestling with SVG -> PNG conversion http://www.mediawiki.org/wiki/Manual:$wgSVGConverters
-
-
 BUSINESS
+Naming your company: http://thenextweb.com/entrepreneur/2012/04/22/before-naming-your-startup-read-this/
+Luke http://www.linkedin.com/pub/luke-knowland/0/771/861
 Apago: looks like the place to get PDF optimization done http://www.apagoinc.com/prod_home.php?prod_id=37
 Designer fund: funds for designers, maybe find me a co-founder here http://designerfund.com/
 Minted: they are designer focused, my solution would be a great fit

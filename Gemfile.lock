@@ -24,7 +24,13 @@ GEM
     delayed_job (3.0.2)
       activesupport (~> 3.0)
     eventmachine (0.12.10)
+    faraday (0.7.6)
+      addressable (~> 2.2)
+      multipart-post (~> 1.1)
+      rack (~> 1.1)
     growl (1.0.3)
+    hashie (1.2.0)
+    httpauth (0.1)
     i18n (0.6.0)
     json (1.6.6)
     linecache (0.46)
@@ -38,8 +44,24 @@ GEM
       treetop (~> 1.4.8)
     mime-types (1.18)
     multi_json (1.2.0)
+    multipart-post (1.1.5)
     mysql2 (0.3.11)
     nokogiri (1.5.2)
+    oauth2 (0.6.0)
+      faraday (~> 0.7)
+      httpauth (~> 0.1)
+      multi_json (~> 1.0)
+    omniauth (1.1.0)
+      hashie (~> 1.2)
+      rack
+    omniauth-facebook (1.2.0)
+      omniauth-oauth2 (~> 1.0.0)
+    omniauth-google-oauth2 (0.1.9)
+      omniauth (~> 1.0)
+      omniauth-oauth2
+    omniauth-oauth2 (1.0.1)
+      oauth2 (~> 0.6.0)
+      omniauth (~> 1.0)
     polyglot (0.3.3)
     pony (1.4)
       mail (> 2.0)
@@ -98,6 +120,8 @@ DEPENDENCIES
   log4r
   mysql2
   nokogiri
+  omniauth-facebook
+  omniauth-google-oauth2
   pony
   rack
   rack-flash3
