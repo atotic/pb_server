@@ -1,6 +1,13 @@
 DEPLOYMENT
 logrotate for logrotation
 monit server monitor
+email sending as delayed_job
+capacity testing
+error pages on nginx
 
 FEATURES
+cookies for *.pb4us.com
+switching page layouts
+
+FUTURE
 DropBox image import/storage

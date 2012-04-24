@@ -9,8 +9,6 @@
 1 week: dropbox integration?
 
 Featuritis:
-image frame resize?
-printing text: hide default text
 switching page/book layouts (template matching), use nokogiri for it
 hash bangs for pages
 - assets css/js that comes with the book
@@ -19,30 +17,15 @@ migrating albums: use nokogiri for html manipulation
 Add page|delete|change layout
 Book pane: scrolling, page padding
 
-Deployment milestone:
-Split git into templates, chrome patch
-	Compile chrome on Ubuntu
-Logs: rotation, cleanup. Errors should be clearly marked
-Error pages: development vs production
-- Register domain
-Nginx: localhost vs domain
-Keeping servers up: restart in download mode
-Email: email via Google Apps
-Login via FB, username/pw
-Comprehensive test (create user, books, pdf)
 Use max-age in our cache?
-Install on Ubuntu
-	Deployment scripts
-		install binaries, check out from git, ssh, rollback
-  Chrome inside xvft
-Capacity testing: how many simultaneous broadcast clients
+
 
 Next:
-Cookies for *.pb4us.com
-Email sending as delayed_job (make it higher priority than other tasks)
-Username/pw authentication
-Simple signup
-Facebook/Google authentication
+Push to Linode
+New UI
+
+Apr 23
+Facebook/Google/Developer authentication done
 
 Apr 19
 Created Google Apps pb4us domain

@@ -106,28 +106,15 @@ class SvegApp < Sinatra::Base
 			body
 		end
 
-		get '/auth/:strategy/callback' do
-#			return plain_response(env.to_json)
-			auth_intent = :login
-			login_duration = :session
-			if env['omniauth.origin']
-				case
-					when 'omniauth.origin'.eql?('/login/session') then login_duration = :session
-					when 'omniauth.origin'.eql?('/login/long') then login_duration = :long
-				end
-			end
+		post '/auth/developer/callback' do
 			omniauth = env['omniauth.auth']
-			if auth_intent == :login then
-				user, is_new = OmniauthToken.login_with_omniauth(omniauth)
-				user.save_to_session(env, login_duration)
-				env['x-rack.flash'][:notice] = (is_new ? \
+			user, is_new = OmniauthToken.login_with_omniauth(omniauth)
+			user.save_to_session(env, :long)
+			env['x-rack.flash'][:notice] = (is_new ? \
 					"thank you for joining our site" : "thank you for logging in")
-				redirect '/'
-			else
-				# we are being authorized for something else,
-				raise "Unimplemented"
-			end
+			redirect '/account'
 		end
+
 	end
 end
 
@@ -295,42 +282,31 @@ class SvegApp < Sinatra::Base
 	get '/auth/login' do
 		erb :login, :layout => :'layout/plain'
 	end
-	
-	post '/auth/login' do
-		PB::User.logout(env)
 
-		login_id = params[:login_id]
-		if !login_id || login_id.empty?
-			flash.now[:error]="User id cannot be blank"
-			return erb :login, :layout => :'layout/plain'
-		end
-		authlogin = AuthLogin[login_id]
-		nextPage = :login
-		if !authlogin
-		# no login, create new user
-			begin
-				DB.transaction do
-					auth = AuthLogin.create_with_user(login_id)
-					user = auth.user
-					user.login(env)
-					flash[:notice]="Created a new account"
-				end
-				redirect to("/account")
-			rescue => ex
-				LOGGER.error(ex.message)
-				ex.backtrace
-				flash[:error]="Unexpected error creating the user"
-				redirect to("/auth/login")
+	# OmniAuth authentication callback
+	get '/auth/:strategy/callback' do
+#			return plain_response(env.to_json)
+		auth_intent = :login
+		login_duration = :session
+		if env['omniauth.origin']
+			case
+				when 'omniauth.origin'.eql?('/login/session') then login_duration = :session
+				when 'omniauth.origin'.eql?('/login/long') then login_duration = :long
 			end
+		end
+		omniauth = env['omniauth.auth']
+		if auth_intent == :login then
+			user, is_new = OmniauthToken.login_with_omniauth(omniauth)
+			user.save_to_session(env, login_duration)
+			env['x-rack.flash'][:notice] = (is_new ? \
+				"thank you for joining our site" : "thank you for logging in")
+			redirect '/account'
 		else
-		# login exists, just log in
-			authlogin.save
-			authlogin.user.login(env)
-			flash[:notice]="Logged in successfully"
-			redirect to("/account")
+			# we are being authorized for something else,
+			raise "Unimplemented"
 		end
 	end
-			
+
 	get '/books/new' do
 		user_must_be_logged_in
 		@book = Book.new({:user_id => current_user.pk})

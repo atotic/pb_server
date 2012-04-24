@@ -6,3 +6,13 @@ Will need XSS security review once I do it.
 
 Make sure all our out-strings are escaped
 Check referer, nothing gets through without it
+
+AUTHENTICATION
+
+We use Omniauth to support different providers.
+
+Each external login corresponds to OmniauthToken
+Each token points to a user
+Multiple tokens can point to the same user, so user can have multiple accounts
+
+In the future, we'll allow users to access different services through different logins.
