@@ -23,6 +23,10 @@
 <hr>
 <p>Name: <%= locals[:user].display_name %></p>
 <p>Email: <%= locals[:user].email %></p>
+<p>Logins: <% PB::OmniauthToken.get_tokens(locals[:user]).each do |strategy| %>
+	<%= "<span> #{strategy} </span>" %>
+	<% end %>
+</p>
 <h2>Books [<a href='/books/new'>new</a>|<a href="/templates">templates</a>]</h2>
 <hr>
 <% books = current_user.books %>

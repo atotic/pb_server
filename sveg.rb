@@ -107,7 +107,7 @@ class SvegApp < Sinatra::Base
 		end
 
 		get '/auth/:strategy/callback' do
-			# plain_response(env.to_json)
+#			return plain_response(env.to_json)
 			auth_intent = :login
 			login_duration = :session
 			if env['omniauth.origin']
@@ -519,6 +519,7 @@ class SvegApp < Sinatra::Base
 	use OmniAuth::Builder do
 		provider :developer if SvegSettings.development?
 		provider :facebook, PB::Secrets::FB_APP_ID, PB::Secrets::FB_SECRET, :scope => 'email,'
+		provider :google_oauth2, PB::Secrets::GOOGLE_KEY, PB::Secrets::GOOGLE_SECRET, {}
 	end
 	use Rack::Flash
 	use PB::SvegMiddleware

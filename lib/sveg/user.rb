@@ -51,15 +51,25 @@ end
 # For now, it is just username.
 class OmniauthToken < Sequel::Model(:omniauth_tokens)
 	
+
+	STRATEGY_CODES = {
+		0 => :developer,
+		1 => :facebook,
+		2 => :'google_oauth2'
+	}
+
+	STRATEGY_NAMES = {
+		:developer => 0,
+		:facebook => 1,
+		:'google_oauth2' => 2
+	}
+
 	def self.get_strategy_id(strategy)
-		strategy = strategy.to_sym
-		case
-			when strategy == :developer then 0
-			when strategy == :facebook then 1
-			when strategy == :'google-oauth2' then 2
-			else raise "unknown strategy"
-		end
+		strategy_id = STRATEGY_NAMES[strategy.to_sym]		
+		raise "unknown strategy #{strategy.to_s}" unless !strategy_id.nil?
+		strategy_id
 	end
+
 	# returns [user, is_new?]
 	# throws string exceptions 
 	def self.login_with_omniauth(omniauth)
@@ -89,6 +99,11 @@ class OmniauthToken < Sequel::Model(:omniauth_tokens)
 				[auth.user, false]
 			end
 		end
+	end
+
+	# returns an array of strategies
+	def self.get_tokens(user)
+		self.filter(:user_id => user.pk).all.map { |token| STRATEGY_CODES[token.strategy].to_s }
 	end
 
 	plugin :timestamps
