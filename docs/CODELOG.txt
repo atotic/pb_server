@@ -2,11 +2,11 @@
 2 weeks: comet, image resizing delayed, nginx
 1 week: kill datamapper, use sequel http://rhnh.net/2011/11/29/datamapper-retrospective
 2 weeks: unix deployment
-2 weeks: log in to fb/browser_id
+2 weeks: log in to fb/browser_id 
+Finished on Apr 23rd. 7 week estimate, 9 week completion
+8 weeks: editor rewrite, touch style, drop images from anywhere
 1 week: security/sharing
-6 weeks: editor rewrite, touch style, drop images from anywhere
 2 weeks: own store
-1 week: dropbox integration?
 
 Featuritis:
 switching page/book layouts (template matching), use nokogiri for it
@@ -15,14 +15,20 @@ hash bangs for pages
 - assets css/js that comes with the page
 migrating albums: use nokogiri for html manipulation
 Add page|delete|change layout
-Book pane: scrolling, page padding
-
-Use max-age in our cache?
 
 
-Next:
-Push to Linode
-New UI
+This week:
+- Books as json
+- json diff/patch/notify
+
+Apr 25
+Authentication works on Mac
+nginx must run on port 80 for oauth2 redirects
+See this for setting up nginx on Mac startup: http://superuser.com/questions/304206/how-do-i-start-nginx-on-port-80-at-os-x-login
+
+Starting UI 2.0 design
+Using Synology as a DNS server for iPhone. Use SynDnsmasq, gave up on config file
+
 
 Apr 23
 Facebook/Google/Developer authentication done

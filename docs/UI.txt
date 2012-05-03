@@ -1,6 +1,82 @@
-We are using jquery + jquery ui.
-UI theme is smoothness with mods: 
-Font settings: font-family: Arial, Helvetica, sans-serif;font-size: 1em;
-Modal screen for overlays: overlay opacity: 70%
-Header/Toolbar:background color 0%
-Content: background color 0%
+# UI, the new architecture
+
+3 platforms: PC, iPhone, iPad
+
+## Current setup
+
+Book has:
+
+* list of images (as :book_pages table)
+* list of pages (key on page object, ordered by :page_order attribute, )
+
+	* page has :html, :icon, :width, :height
+
+* template pointer
+
+Images are tricky. On file upload, the url points to local file until upload completes. imgsrc's are then patched to point to server image (icons and html)
+
+Page load: CSS prefixes are patched
+Page save: Patches IMG src, removes drag/drop and other artifacts
+Printing: img src patched. Would need background, etc.
+
+Missing parts:
+
+* transforming template from one style to another
+* templates were images + text only, no backgrounds, frames, etc
+
+## UI 2.0 changes
+
+Page is no longer primarily viewed in WYSIWYG mode. We have 3 main modes:
+
+* rough: visual representation of assets
+* display_html
+* print_html
+
+rough contains raw materials that template transforms into display_html
+
+Transformations are:
+
+* rough + template -> display_html
+* display_html + template -> print_html
+* rough + new_template + old_template + display_html -> new_display_html
+
+What is a page in new architecture?
+
+User drags pictures between rough pages, arranging them in order.
+User drags pages, rearranging them.
+User creates text, rearranging it.
+User goes into visual mode, tweaking the html: move/resize picture|text
+
+What is a template?
+
+* page html generators
+* backgrounds 
+* frames
+* gadgets
+
+States:
+Book starts off with no images, just a template
+
+Data structures
+
+###`Book`
+
+FUNCTIONALITY
+
+* Keep sorted list of images
+* Keep sorted list of pages
+
+DATA
+
+* :images (many_to_many :images)
+* :image_order attribute
+* :pages (one_to_many :books)
+* :page_order attribute
+
+###`Page`
+
+# The Key
+
+the key to UI2.0 are the templates. Everything else is a known quantity.
+
+Templates: dynamically reconfigure themselves 

@@ -15,6 +15,11 @@ comet, pdf_saver_server, delayed_job
 	git installed in /home/deploy/pb/pb_server
 	conf files in /home/deploy/pb/pb_server/config
 
+DEVELOPMENT setup
+nginx needs to run on port 80 for fb/chrome authentication
+
+
+
 BINARIES
 chrome custom build, checked into pb_chrome/bin -- chromium built with pageCapture.saveAsPDF patch
 pdftk -- pdf toolkit, for merging pdf pages

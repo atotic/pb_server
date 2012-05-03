@@ -1,3 +1,40 @@
+Document storage
+Book
+	- images
+	- roughs
+	- html pages
+
+Maintenance of book data structure in sql is complex.
+Could it be simpler to store the entire book as json?
+Differences between structs would be json diffs.
+Same diff can be equally applied on client and server.
+
+JsonPath : xpath for json
+https://github.com/joshbuddy/jsonpath
+xmldiff disertation:
+http://sourceforge.net/projects/diffxml/files/documentation/1.0/dissertation.ps/download
+
+Book is json:
+{
+	id:
+	title:
+	images: [
+	]
+	pages: [
+	]
+	rough: [
+	]
+}
+
+Usage cases:
+- page added
+- page deleted
+- page moved
+- title changed
+
+
+SEQUEL/MARIADB installation
+
 Sequel model attributes are documented in migration files
 
 Switching to sequel from datamapper
@@ -24,8 +61,6 @@ mysql -u root -p < config/setup.sql
 rake db:migrate RACK_ENV=test
 rake db:migrate RACK_ENV=development
 rake db:migrate RACK_ENV=production
-
-mysql seems slower than sqlite, datamapper takes 5 seconds to start up. Enough of the datamapper, switching to sequel
 
 gem install sequel
 # installing the gem:

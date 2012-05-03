@@ -1,0 +1,46 @@
+<head>
+	<title>pbdiff </title>
+	<script src='/js/jsonpath-0.8.0.js'></script>
+	<script src='/js/diff.js'></script>
+</head>
+<body>
+<h1>pbdiff</h1>
+<script>
+
+function clone(obj) {
+	JSON.parse(JSON.stringify(obj));
+}
+
+var book = {
+	'title': "book title",
+	'pages': [
+		{
+			'id': 1,
+			'images' : [
+				5,6,7,8 // image ids
+			],
+			'text' : {
+				0 : "some text",			// text only exists
+				1 : "more text"
+			},
+			'html': {
+				'tag': {
+					'attrs' : [],
+					'children' : []
+				}
+			}
+		},
+		{
+			'id': 2,
+			'images': [
+				5,6,7,8
+			],
+			'text': {},
+			'html': {}
+		}
+	]
+}
+
+
+</script>
+</body>

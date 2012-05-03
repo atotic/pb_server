@@ -1,8 +1,0 @@
-Business:
-Blurb, or http://www.myphotocreations.com/
-
-Logging in via Google, Facebook
-
-Importing from photo sites: Facebook, Smugmug, Picasaweb, Flickr
-
-Retry on failure for network errors

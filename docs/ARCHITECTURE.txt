@@ -60,7 +60,7 @@ Each addressable object needs to get an element id assigned at birth.
 SQL based objects have to have their id's assigned at server. Server cannot be always
 contacted immediately, which causes the problem of "offline ids"
 
-SOLUTION: OFFLINE IDS
+SOLUTION:
 	- on browser, never use ids as pointers. Always store reference to an object (or a proxy) itself, not an id.
 		Convert references to ids when object is saved on server.
 	- when generating json for saving, get id's from object references

@@ -1,4 +1,5 @@
 SECURITY.txt
+for xss testing, use string ><img src=x onerror=prompt(1);> username
 
 Rack::Protection has been disabled in Sveg. It was causing errors in nginx deployment.
 

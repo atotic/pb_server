@@ -264,7 +264,7 @@ eos
 	end
 	
 	# delayed_job callback. Creates the PDFs
-	def perform()
+	def perform
 		begin
 			@logger = Delayed::Worker.logger
 			@logger.info("Book2PdfPrep started #{@book_id}");

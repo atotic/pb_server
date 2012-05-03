@@ -8,6 +8,8 @@ error pages on nginx
 FEATURES
 cookies for *.pb4us.com
 switching page layouts
+upload photos via email
 
 FUTURE
-DropBox image import/storage
+NOT: DropBox image import/storage, Google docs instead
+Importing from photo sites: Facebook, Smugmug, Picasaweb, Flickr
