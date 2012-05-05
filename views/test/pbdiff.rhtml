@@ -1,11 +1,89 @@
 <head>
 	<title>pbdiff </title>
+	<%= asset_link("jquery.js") %>
+	<%= asset_link("qunit") %>
 	<script src='/js/jsonpath-0.8.0.js'></script>
 	<script src='/js/diff.js'></script>
-</head>
-<body>
-<h1>pbdiff</h1>
 <script>
+
+// oX - old X
+// nX - new X
+// dX - diff X
+// 
+function myclone(x) {
+	return JSON.parse(JSON.stringify(x));
+}
+
+
+module("Simple object tests");
+var o1 = {
+	'a':'a',
+	'b':'b',
+	'c':'c'
+}
+test("simple object, no change", function() {
+	var n = myclone(o1);
+	var diff = JsonDiff.diff(o1, n);
+	equal(diff.length, 0, "no diffs here");	
+});
+
+test("simple object, attribute change", function() {
+	var n = myclone(o1);
+	n.a = 'A';
+	var diff = JsonDiff.diff(o1, n);
+	var patched = JsonDiff.patch(o1, diff);
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
+});
+
+test("simple object, attribute removal", function() {
+	var n = myclone(o1);
+	delete n.a;
+	ok(true, "yes");
+	var diff = JsonDiff.diff(o1, n);
+	var patched = JsonDiff.patch(o1, diff);
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
+});
+
+test("simple object, attribute insertion", function() {
+	var n = myclone(o1);
+	n['d'] = 'D';
+	var diff = JsonDiff.diff(o1, n);
+	var patched = JsonDiff.patch(o1, diff);
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
+});
+
+module("Simple array tests");
+var a1 = [1,2,3,4];
+
+test("simple array, no change", function() {
+	var n = myclone(a1);
+	var diff = JsonDiff.diff(a1, n);
+	equal(diff.length, 0, "no diffs here");	
+});
+
+test("simple array, extend new", function() {
+	var n = myclone(a1);
+	n.push(5);
+	var diff = JsonDiff.diff(a1, n);
+	var patched = JsonDiff.patch(a1, diff);
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
+});
+
+test("simple array, shorten new", function() {
+	var n = myclone(a1);
+	n.splice(n.length - 1, 1);
+	var diff = JsonDiff.diff(a1, n);
+	var patched = JsonDiff.patch(a1, diff);
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
+});
+
+test("simple array, remove first element in new", function() {
+	var n = myclone(a1);
+	n.splice(0, 1);
+	var diff = JsonDiff.diff(a1, n);
+	var patched = JsonDiff.patch(a1, diff);
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
+});
 
 function clone(obj) {
 	JSON.parse(JSON.stringify(obj));
@@ -43,4 +121,13 @@ var book = {
 
 
 </script>
+
+</head>
+<body>
+	<h1 id="qunit-header">QUnit example</h1>
+	<h2 id="qunit-banner"></h2>
+	<div id="qunit-testrunner-toolbar"></div>
+	<h2 id="qunit-userAgent"></h2>
+	<ol id="qunit-tests"></ol>
+	<div id="qunit-fixture">test markup, will be hidden</div>
 </body>
