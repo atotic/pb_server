@@ -36,8 +36,11 @@ Use box sizing for width/padding: http://paulirish.com/2012/box-sizing-border-bo
 Simple CSS sizing framework: https://github.com/robertpiira/ingrid
 LoremPixel: placeholder images: http://lorempixel.com/
 1366 x 768 most popular screen size http://gs.statcounter.com/press/screen-resolution-alert-for-web-developers
+CSS arrow please: http://cssarrowplease.com/
 
 JS
+JSPerf: faster js performance
+Offline application cache: http://www.alistapart.com/articles/application-cache-is-a-douchebag/
 Stop paying jquery tax, loading jquery at the bottom: http://samsaffron.com/archive/2012/02/17/stop-paying-your-jquery-tax
 Touch gestures: https://github.com/eightmedia/hammer.js#readme
 HTML5 flipping pages animation: http://studio.html5rocks.com/#Flip
@@ -64,6 +67,10 @@ Fullscreen: http://hacks.mozilla.org/2012/01/using-the-fullscreen-api-in-web-bro
 Image to canvas: http://hacks.mozilla.org/2012/02/creating-thumbnails-with-drag-and-drop-and-html5-canvas/
 Operational Transformation is an official name for type of editor I am building  http://sharejs.org/
 Page turning in JS: http://www.turnjs.com/#usage
+
+TESTING
+qunit: jquery unit testing framework
+jquery-simulate: simulate browser mouse & keyboard events https://github.com/eduardolundgren/jquery-simulate. There is a touch pull
 
 RUBY
 Ruby tail: http://www.ruby-forum.com/topic/98731

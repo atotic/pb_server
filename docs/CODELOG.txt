@@ -18,8 +18,19 @@ Add page|delete|change layout
 
 
 This week:
-- Books as json
-- json diff/patch/notify
+
+May 9
+Lots of JSON work: diff.js, and pbdiff.rhtml
+JSONPath: js implementation of jsonpath. Wrote from scratch to support set/path API
+JSONDiff: simple object diff through insert/delete
+I've tried to optimize diffs with move, but it did not work. Idea was
+that insert+delete => move. This did not work because operation order matter:
+- insert requires parent to already be inserted
+- delete must happen before parent is deleted
+This was done to optimize movement of pages within the array.
+Instead, I'll avoid arrays, and try to use index to sort elements
+Used qunit extensively, it was awesome. Loved the quick debug cycle.
+Will try using it for GUI too.
 
 Apr 25
 Authentication works on Mac

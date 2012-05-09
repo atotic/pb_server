@@ -10,12 +10,13 @@
 // nX - new X
 // dX - diff X
 // 
+"use strict";
 function myclone(x) {
 	return JSON.parse(JSON.stringify(x));
 }
 
 
-module("Simple object tests");
+module("Simple object");
 var o1 = {
 	'a':'a',
 	'b':'b',
@@ -52,8 +53,8 @@ test("simple object, attribute insertion", function() {
 	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
 });
 
-module("Simple array tests");
-var a1 = [1,2,3,4];
+module("Simple array");
+var a1 = ['a','b','c','d'];
 
 test("simple array, no change", function() {
 	var n = myclone(a1);
@@ -63,7 +64,8 @@ test("simple array, no change", function() {
 
 test("simple array, extend new", function() {
 	var n = myclone(a1);
-	n.push(5);
+	n.push('e');
+	n.push('f');
 	var diff = JsonDiff.diff(a1, n);
 	var patched = JsonDiff.patch(a1, diff);
 	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
@@ -81,13 +83,134 @@ test("simple array, remove first element in new", function() {
 	var n = myclone(a1);
 	n.splice(0, 1);
 	var diff = JsonDiff.diff(a1, n);
+//	JsonDiff.prettyPrint(diff);
 	var patched = JsonDiff.patch(a1, diff);
 	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
 });
 
-function clone(obj) {
-	JSON.parse(JSON.stringify(obj));
+test("simple array, remove middle elements", function() {
+	var n = myclone(a1);
+	n.splice(1, n.length - 2);
+	var diff = JsonDiff.diff(a1, n);
+	var patched = JsonDiff.patch(a1, diff);
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
+});
+
+test("simple array, insert middle elements", function() {
+	var n = myclone(a1);
+	n.splice(1, 0, 'a','b');
+	var diff = JsonDiff.diff(a1, n);
+	var patched = JsonDiff.patch(a1, diff);
+//	JsonDiff.prettyPrint(diff);
+//	console.log(n, a1);
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
+});
+
+module("Complex inserts");
+var ci = {
+	'a' : 'a'
 }
+test("insert object", function() {
+	var n = myclone(ci);
+	n.b = {'c': 'c'};
+	var diff = JsonDiff.diff(ci, n);
+	var patched = JsonDiff.patch(ci, diff);
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
+});
+
+test("insert array", function() {
+	var n = myclone(ci);
+	n.b = ['b','c','d'];
+	var diff = JsonDiff.diff(ci, n);
+	var patched = JsonDiff.patch(ci, diff);
+//	JsonDiff.prettyPrint(diff);
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
+});
+
+test("insert array of objects", function() {
+	var n = myclone(ci);
+	n.b = [{'b':'b'},{'c':'c'},{'d':'d'}];
+	var diff = JsonDiff.diff(ci, n);
+	var patched = JsonDiff.patch(ci, diff);
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
+});
+
+module("Complex delete");
+var cd = {
+	'a' : { 'a1' : 'a1'},
+	'b' : ['b1', 'b2', 'b3'],
+	'c' : [ { 'c1': 'c1'}, {'c2': 'c2'} ]
+}
+
+test("delete object" , function() {
+	var n = myclone(cd);
+	delete n.a;
+	var diff = JsonDiff.diff(cd, n);
+	var patched = JsonDiff.patch(cd, diff);
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");	
+});
+
+test("delete array" , function() {
+	var n = myclone(cd);
+	delete n.b;
+	var diff = JsonDiff.diff(cd, n);
+	var patched = JsonDiff.patch(cd, diff);
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");	
+});
+
+test("delete mixed" , function() {
+	var n = myclone(cd);
+	delete n.a;
+	delete n.b;
+	delete n.c;
+	var diff = JsonDiff.diff(cd, n);
+	var patched = JsonDiff.patch(cd, diff);
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");	
+});
+
+module("move");
+var m1 = { 
+	'a': 1,
+	'b': 2
+}
+test("move property", function() {
+	var n = myclone(m1);
+	n.a = n.b;
+	delete n.b;
+	var diff = JsonDiff.diff(m1, n);
+	var patched = JsonDiff.patch(m1, diff);
+	JsonDiff.prettyPrint(diff);
+//	console.log(patched, n);
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");	
+});
+
+test("move object", function() {
+	var m1 = {
+		a: { a1: 'a1', a2:'a2', a3: [1,2,3]},
+		b: {}
+	}
+	var n = myclone(m1);
+	n.b = n.a;
+	n.a = {};
+	var diff = JsonDiff.diff(m1, n);
+	var patched = JsonDiff.patch(m1, diff);
+//	JsonDiff.prettyPrint(diff);
+//	console.log(patched, n);
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");		
+});
+
+test("move array", function() {
+	var m1 = [ ['A','B','C'], 'A1','B1', 'C1'];
+	var n = myclone(m1);
+	n[3] = n[0];
+	n[0] = null;
+	var diff = JsonDiff.diff(m1, n);
+//	JsonDiff.prettyPrint(diff);
+	var patched = JsonDiff.patch(m1, diff);
+//	console.log(patched, n);
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");		
+
+});
 
 var book = {
 	'title': "book title",
