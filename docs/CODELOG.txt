@@ -16,8 +16,61 @@ hash bangs for pages
 migrating albums: use nokogiri for html manipulation
 Add page|delete|change layout
 
+Next:
+The new photobook framework. There will be lots of rewriting.
+I like unit-testing, we'll see if it works for GUI.
+Developing 3 GUI editors simultaneously:
 
-This week:
+Touch (mobile)
+TouchXL (tablet)
+Mouse (wimp)
+
+Would like my code to be service oriented:
+
+Basic functionality:
+setup
+- bookmarks for testing on phone
+: use ip configuration on Verisign
+library
+- upload queue
+- streaming
+- flash/notify framework
+- image upload
+- patching
+- events
+- undo/redo commands
+- gui widgets
+
+gui, in flux
+- widgets
+- drag'n'drop
+- what will our gui look like
+
+testing
+- qunit server. straight api testing
+
+GUI design
+Templates:
+- backgrounds
+- gadgets
+
+Next:
+serve different pages for touch, touchxl, wimp
+
+May 15
+Missed work, did Boot2Gecko privacy. Got to meet with some guys at Mozilla
+Implemented 'sveg.touch' middleware check
+Automatically load *.touch.erb on touch sites.
+javascript touch redirect
+
+May 10
+hosts:
+www.pb4us.com: wimp site
+touch.pb4us.com: touch site
+dev.pb4us.com: development, points to macbook
+touchdev.pb4us.com: development, points to macbook
+
+
 
 May 9
 Lots of JSON work: diff.js, and pbdiff.rhtml

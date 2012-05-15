@@ -140,6 +140,24 @@ class SvegApp < Sinatra::Base
 	configure do
 		set :protection, false
 	end
+
+	def render_erb(template, options={}, locals={})
+		# TODO layout option
+		return erb(template, options, locals) unless env['sveg.touch']
+
+		@missed_templates = @missed_templates || {}	# keep track of missing templates
+
+		touch_template = (template.to_s + ".touch").to_sym
+		retVal = false
+		unless @missed_templates.key? touch_template
+			begin
+				retVal = erb(touch_template, options, locals)
+			rescue
+				@missed_templates[touch_template] = true
+			end
+		end
+		retVal || erb(template, options, locals)
+	end
 		
 	helpers do
 		include Rack::Utils
@@ -265,12 +283,12 @@ class SvegApp < Sinatra::Base
 				redirect to("/admin")
 			end
 		end
-		erb :account, {:layout => :'layout/plain'}, {:locals => { :user => targetuser }}
+		render_erb :account, {:layout => :'layout/plain'}, {:locals => { :user => targetuser }}
 	end
 	
 	get '/admin' do
 		user_must_be_admin
-		erb :admin, :layout => :'layout/plain'	
+		render_erb :admin, :layout => :'layout/plain'	
 	end
 	
 	get '/logout' do
@@ -280,7 +298,7 @@ class SvegApp < Sinatra::Base
 	end
 
 	get '/auth/login' do
-		erb :login, :layout => :'layout/plain'
+		render_erb :login, :layout => :'layout/plain'
 	end
 
 	# OmniAuth authentication callback
@@ -310,7 +328,7 @@ class SvegApp < Sinatra::Base
 	get '/books/new' do
 		user_must_be_logged_in
 		@book = Book.new({:user_id => current_user.pk})
-		erb :book_new, {:layout => :'layout/plain'}
+		render_erb :book_new, {:layout => :'layout/plain'}
 	end
 
 	delete '/books/:id' do
@@ -327,7 +345,7 @@ class SvegApp < Sinatra::Base
 		if request.xhr?
 			json_response(@book)
 		else
-			erb :book_editor
+			render_erb :book_editor
 		end
 	end
 
@@ -349,7 +367,7 @@ class SvegApp < Sinatra::Base
 			LOGGER.error(ex.backtrace[0..5] )
 			flash.now[:error]= "Errors prevented the book from being created. Please fix them and try again."
 			@book = Book.new unless @book
-			erb :book_new, {:layout => :'layout/plain'}
+			render_erb :book_new, {:layout => :'layout/plain'}
 		end
 	end
 
@@ -473,7 +491,7 @@ class SvegApp < Sinatra::Base
 	end
 	
 	get '/templates' do
-		erb :template_list, {:layout => :'layout/plain'}
+		render_erb :template_list, {:layout => :'layout/plain'}
 	end
 
 	get '/templates/:id' do

@@ -170,7 +170,7 @@ module PB
 		def log(env, status, time_taken, headers={})
 			return unless @do_log
 			now = Time.now
-			return if env['sinatra.static_file']
+	#		return if env['sinatra.static_file']
 			return unless env['PATH_INFO']
 			return if /assets/ =~ env["PATH_INFO"] 
 			debugger unless status.class.eql? Fixnum
@@ -210,6 +210,7 @@ module PB
 				PB::User.restore_from_session(env)
 				PB::BrowserCommand.restore_from_headers(env)
 			end
+			env['sveg.touch'] = env['SERVER_NAME'].start_with? 'touch'
 		end
 
 		def after(env, request, status, headers, body)

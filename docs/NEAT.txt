@@ -39,6 +39,7 @@ LoremPixel: placeholder images: http://lorempixel.com/
 CSS arrow please: http://cssarrowplease.com/
 
 JS
+JQuery knobs: http://anthonyterrien.com/knob/
 JSPerf: faster js performance
 Offline application cache: http://www.alistapart.com/articles/application-cache-is-a-douchebag/
 Stop paying jquery tax, loading jquery at the bottom: http://samsaffron.com/archive/2012/02/17/stop-paying-your-jquery-tax
@@ -66,7 +67,7 @@ FileAPI resumable uploads https://github.com/23/resumable.js
 Fullscreen: http://hacks.mozilla.org/2012/01/using-the-fullscreen-api-in-web-browsers/
 Image to canvas: http://hacks.mozilla.org/2012/02/creating-thumbnails-with-drag-and-drop-and-html5-canvas/
 Operational Transformation is an official name for type of editor I am building  http://sharejs.org/
-Page turning in JS: http://www.turnjs.com/#usage
+Page turning in JS: http://www.turnjs.com/#usage, http://tympanus.net/Development/FlipboardPageLayout/?page=0
 
 TESTING
 qunit: jquery unit testing framework
@@ -92,6 +93,7 @@ http://hacks.mozilla.org/2011/03/the-shortest-image-uploader-ever/
 S3 command line https://github.com/pcorliss/s3cmd-modification
 
 HTML
+Like these guys toolkit: http://www.googleventures.com/humans.txt
 Context menus in firefox, HTML5 menu markup: http://hacks.mozilla.org/2011/11/html5-context-menus-in-firefox-screencast-and-code/
 PDF converter: https://github.com/ento/wkpdf/network
 Use Chromium for PDF generation: http://www.chromium.org/developers/design-documents/print-preview

@@ -1,5 +1,23 @@
 var PB = {
-
+	// True if we are on touch device
+	detectTouch: function() {
+		return 'ontouchstart' in window;
+	},
+	// redirects to touch or wimp site
+	redirectToProperHost: function() {
+		var hasTouch = PB.detectTouch();
+		var hasTouchHost = window.location.hostname.match(/^touch/) != null;
+		if (hasTouch != hasTouchHost) {
+			var isDev = window.location.hostname.match(/dev/);
+			var desiredHost = hasTouch ? ( isDev ? 'touchdev.pb4us.com' : 'touch.pb4us.com') 
+														: (isDev ? 'dev.pb4us.com' : 'www.pb4us.com');
+			var url = window.location.protocol + '//' + desiredHost 
+							+ (window.location.port != "" ? ':' + window.location.port : '')
+							+ window.location.pathname;
+			//alert('want ' + url);
+			window.location.replace(url);
+		}
+	},
 	notice: function(text) {
 //		$('#error').hide();
 		$('#notice').html(text).clearQueue().show('blind');
