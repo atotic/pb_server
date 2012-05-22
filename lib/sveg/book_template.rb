@@ -98,18 +98,8 @@ class BookTemplate
 		self.get_image_assets.each do |img| 
 			m = @@IMAGE_MATCH.match(img)
 			old_file_name = File.join(self.assets_folder_name, img)
-			new_file_name = File.join(self.assets_folder_name, m[1] + "_display." + m[2])
-			unless File.exists?(new_file_name)
-				cmd_line = PhotoStorage.get_cmd_resize(1024, old_file_name, new_file_name)
-				success = Kernel.system cmd_line
-				raise ("Multisize image resize #{img} failed" + $?.to_s) unless success
-			end
-			new_file_name = File.join(self.assets_folder_name, m[1] + "_icon." + m[2])
-			unless File.exists?(new_file_name)
-					cmd_line = PhotoStorage.get_cmd_resize(128, old_file_name, new_file_name)
-					success = Kernel.system cmd_line
-					raise ("Multisize image resize #{img} failed" + $?.to_s) unless success
-			end
+			PhotoStorage.auto_orient(old_file_name)
+			PhotoStorage.multi_resize(old_file_name, { 128 => :icon, 1024 => :display })
 		end
 	end
 	

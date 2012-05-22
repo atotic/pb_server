@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Mockup</title>
+	<%= asset_link("jquery.js", "transform.js" ) %>
+	<% asset_link("bootstrap") %>
+	<%= asset_link("application.css") %>
+
+<style type='text/less'>
+/* bootstrap tweaks */
+.navbar {
+	display: none;
+}
+html, body {
+	height: 100%;
+	width: 100%;
+}
+#pb {
+	position:relative;
+	height: 100%;
+	min-height: 100%;
+	background-color: red;
+}
+@palette-height: 150px;
+
+#pb-palette {
+	position: absolute;
+	top: 0;
+	height: @palette-height;
+	width: 100%;
+	background-color:white;
+}
+#pb-work-area {
+	height: 100%;
+	padding-top: @palette-height;
+	overflow: auto;
+	background-color: gray;
+	-moz-box-sizing: padding-box;
+	box-sizing: border-box;
+}
+
+@arrow-width: 28px;
+#photo-list-container {	/* holds the scrollbar */
+	overflow: auto;
+	margin-left:@arrow-width + 2;
+	margin-right:@arrow-width + 2;
+	max-height: @palette-height;
+}
+#photo-list-back {
+	position: absolute;
+	width: @arrow-width;
+	height:46px;
+	top: (@palette-height - 46) / 2;
+	left: 0px;
+	background: url('/img/arrows.png') -28px 2px;
+}
+#photo-list-back:hover {
+	background:  url('/img/arrows.png') 0 0, url('/img/arrows.png') -28px 2px;	
+}
+#photo-list-forward {
+	position: absolute;
+	width: @arrow-width;
+	height:46px;
+	top: (@palette-height - 46) / 2;
+	right:-1px;
+	background: url('/img/arrows.png') -85px 2px;
+}
+#photo-list-forward:hover {
+	background:  url('/img/arrows.png') -57px 0, url('/img/arrows.png') -85px 2px;	
+}
+
+#photo-list {
+/*	max-height: @palette-height;
+	width: 30000px;*/
+	width: 100%;
+}
+.rough-page {
+	float:left;
+	width: 100px;
+	height: 100px;
+	border: 1px solid black;
+}
+
+</style>
+	<script src='http://lesscss.googlecode.com/files/less-1.3.0.min.js'></script>
+
+</head>
+<body>
+	<div class="navbar">
+		<div class="navbar-inner">
+			<div class="container">
+				<ul class="nav">
+					<li class="active">
+						<a href="/">sveg's photo</a>
+					</li>
+				</ul>
+				<ul class="nav pull-right">
+<% if current_user %>
+					<li><a href="/account"><%= current_user.display_name %></a>
+					<li><a href="/logout">log out</a>
+<% if current_user.is_administrator %>
+					<li><a href="/admin" class="admin">admin</a>
+<% end %>
+<% else %>
+					<li><a href="/auth/login">log in</a>			
+<% end %>
+					<li><a href="">about</a>
+					<li><a href="">faq</a>
+				</ul>
+		</div>
+	</div>
+</div>
+<div id='pb'>
+	<div id='pb-work-area'>
+		<div class='rough-page'></div>
+		<div class='rough-page'></div>
+		<div class='rough-page'></div>
+		<div class='rough-page'></div>
+		<div class='rough-page'></div>
+		<div class='rough-page'></div>
+	</div>
+	<div id='pb-palette'>
+		<div id='photo-list-container'>
+			<div id='photo-list-back'></div>
+			<div id='photo-list-forward'></div>
+			<div id='photo-list'>
+				<img src='/assets/common/h1.png?size=icon'>
+				<img src='/assets/common/v1.png?size=icon'>
+				<img src='/assets/common/h1.png?size=icon'>
+			</div>
+		</div>
+	</div>
+
+</div>
+<script>
+
+function insertImages() {
+	function resetWidth() {
+		var allWidths = $('#photo-list').children().map(function(i, el) { return $(el).width()}).get();
+		for (var i =0; i< allWidths.length; i++) // images not loaded yet
+			if (allWidths[i] == 0) {
+				window.setTimeout(resetWidth, 200);
+				return;
+			}
+		var total = allWidths.reduce( function(prev, cur) { return prev+cur}, 0);
+		$('#photo-list').width(total + 20);
+	}
+	var html ="";
+	for (var i=0; i<200; i++)
+		html += "<img src='/assets/test/" + i + ".jpg?size=icon'>"
+	$('#photo-list').append(html);
+	//resetWidth();
+}
+
+function PhotoScroller(button, container, list, direction) {
+	this.button = button;
+	this.container = container;
+	this.photoList = list;
+	this.direction = direction;
+	this.done = true;
+	this.fast = false;
+	this.bind();
+}
+PhotoScroller.prototype = {
+	start: function() {
+		$(this.container).clearQueue();
+		this.done = false;
+		this.perform();
+	},
+	stop: function() {
+		$(this.container).clearQueue();
+		this.done = true;
+		this.fast = false;
+	},
+	speedUp: function() {
+		this.fast = true;
+	},
+	slowDown: function() {
+		this.fast = false;
+	},
+	perform: function() {
+		if (this.done)
+			return;
+		var nextPhotoEdge = this.findNextEdge();
+		console.log("next edge is ", nextPhotoEdge);
+		var THIS = this;
+		var timing = this.fast ? 200 : 500;
+		var distance  = Math.abs(container.scrollLeft - nextPhotoEdge);
+		$(this.container).animate( {scrollLeft: nextPhotoEdge}, 
+				timing, this.fast ?  'swing' : 'linear',
+			function() { 
+				setTimeout( function() { THIS.perform()},this.fast ? 0 : 100);	// pause after each scroll
+			}
+		);
+	},
+	findNextEdge: function() {
+		var currLeft = this.container.scrollLeft;
+		var children = $(this.photoList).children().get();
+		var containerStyle = getComputedStyle(this.container);
+		var marginLeft = parseInt(containerStyle.getPropertyValue('margin-left'));
+		var retVal = currLeft; 
+		if (this.direction == 'left') {
+			var target = currLeft + 5 + marginLeft;
+			for (var i=0; i < children.length; i++)	// find first child whose offset left is beyond us
+				if (children[i].offsetLeft > target) {
+					retVal = children[i].offsetLeft - marginLeft;
+					break;
+				}
+		}
+		else {
+			var target = currLeft - 5 + marginLeft;
+			for (var i = children.length - 1; i >= 0; i--)
+				if (children[i].offsetLeft < target) {
+					retVal = children[i].offsetLeft - marginLeft;
+					break;
+				}
+		}
+		return retVal;
+	},
+	bind: function() {
+		$(this.button).on({
+			'mouseenter': function(ev) {
+			ev.data.start();
+			},
+			'mouseleave': function(ev) {
+				ev.data.stop();
+			},
+			'mousedown': function(ev) {
+				ev.data.speedUp();
+			},
+			'mouseup': function(ev) {
+				ev.data.slowDown();
+			}
+		}, this);
+	}
+}
+var scroller = new PhotoScroller(
+	$('#photo-list-back'),
+	document.getElementById('photo-list-container'), 
+	document.getElementById('photo-list'),
+	'left');
+var scroller = new PhotoScroller(
+	$('#photo-list-forward'),
+	document.getElementById('photo-list-container'), 
+	document.getElementById('photo-list'),
+	'right');
+
+insertImages();
+
+</script>
+</body>

@@ -211,6 +211,8 @@ class SvegApp < Sinatra::Base
 					retVal += asset_link("editor-base", "editor.manipulators.js",\
 					 "editor.ui.js", "editor.ui.phototab.js","editor.ui.pagetab.js",\
 					 "editor.ui.bookpage.js", "editor.page-dialog.js");
+				elsif arg.eql? "bootstrap"
+					retVal += asset_link( "bootstrap.css", "bootstrap.js")
 				else
 					raise "Unknown asset #{arg}"
 				end

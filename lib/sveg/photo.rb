@@ -59,14 +59,13 @@ class PhotoStorage
 		dir
 	end
 	
-	def self.auto_orient(photo)
-		path = File.expand_path(photo.file_path)
+	def self.auto_orient(path)
 		# ImageMagick takes 1.3s to start up, so we query with gm to see if rotation is necessary
 		cmd_query = "#{SvegSettings.graphicsmagick_binary} identify \"#{path}\" -format \"%[EXIF:Orientation]\""
 		result  = `#{cmd_query}`.chomp
 		raise ("Could not query orientation " + $?.to_s) unless $? == 0
 		return if (result.eql?("unknown") || result.eql?("1")) # photo property oriented
-		LOGGER.info("auto-orienting image")
+		PB.logger.info("auto-orienting image")
 # would like to use GraphicsMagick after all, see http://stackoverflow.com/questions/4263758/does-graphicsmagick-have-an-equivalent-to-imagemagick-convert-auto-orient-opt
 #		transformation = case 
 #			when result.eql?("2") then "-flip horizontal"
@@ -80,7 +79,7 @@ class PhotoStorage
 #		end
 #		cmd_line = "#{SvegSettings.graphicsmagick_binary} convert \"#{path}\""
 # would need tool like exiv2 to set exif data, it'll probably shave off a second, and remove imagemagick dependency
-		cmd_line = "#{SvegSettings.convert_binary} \"#{path}\"  \"#{path}\""
+		cmd_line = "#{SvegSettings.convert_binary} -auto-orient \"#{path}\"  \"#{path}\""
 		success = Kernel.system cmd_line
 		raise("Photo orient failed" + $?.to_s) unless success
 	end
@@ -92,20 +91,46 @@ class PhotoStorage
 		cmd_line
 	end
 
-	def self.resize(photo)
-		# try thumbnail option too
-		src = File.expand_path(photo.file_path)
-		dest_icon = File.expand_path(photo.file_path('icon'))
-		dest_display = File.expand_path(photo.file_path('display'))
-		cmd_line = "#{SvegSettings.graphicsmagick_binary} convert"
+	# conversts photo to various sizes
+	# src: photo file path
+	# sizes: { 128 => :icon, 1024 => :display }
+	# returns: array of new files
+	def self.multi_resize(src, sizes)
+		src = File.expand_path(src)
+
+		ext = File.extname(src)
+		basename = File.basename(src, ext)
+		dirname = File.dirname(src)
+		ext = ext.downcase
+
+		resized_files = {}
+		keys = sizes.keys.sort.reverse
+		cmd_line =  "#{SvegSettings.graphicsmagick_binary} convert"
 		# read in file, remove exif data
-		cmd_line += " -size #{Photo::DISPLAY_SIZE}X#{Photo::DISPLAY_SIZE} #{src} +profile \"*\""
-		# convert display, write it out
-		cmd_line += " -geometry \"#{Photo::DISPLAY_SIZE}X#{Photo::DISPLAY_SIZE}>\" -write #{dest_display}"
-		# convert icon, write out
-		cmd_line += " -geometry \"#{Photo::ICON_SIZE}X#{Photo::ICON_SIZE}>\" #{dest_icon}"
-		success = Kernel.system cmd_line
-		raise("Photo resize failed" + $?.to_s) unless success
+		cmd_line += " -size #{keys.first}X#{keys.first} #{src} +profile \"*\""
+		0.upto(keys.length - 1) do |i|
+			dest_name = "#{dirname}/#{basename}_#{sizes[keys[i]].to_s}#{ext}"
+			next if File.exists? dest_name
+			cmd_line += "  -geometry \"#{(keys[i] * 1.33).to_i}X#{keys[i]}>\" -write #{dest_name}"
+			resized_files[keys[i]] = dest_name
+		end
+		dest_name = "#{dirname}/#{basename}_#{sizes[keys.last].to_s}#{ext}"
+		unless File.exists? dest_name 
+			cmd_line += " -geometry \"#{(keys.last * 1.33).to_i}X#{keys.last}>\" #{dest_name}"
+			resized_files[keys[0]] = dest_name
+		end
+
+		if cmd_line.match(/geometry/) # there is something to convert
+			success = Kernel.system cmd_line 
+			raise("Photo resize failed" + $?.to_s) unless success
+		end
+
+		return resized_files
+	end
+
+	def self.resize(photo)
+		src = File.expand_path(photo.file_path)
+		self.multi_resize(src, { Photo::ICON_SIZE => :icon, Photo::DISPLAY_SIZE => :display })
 	end
 	
 	def self.storeFile(photo, file_path)
@@ -120,7 +145,7 @@ class PhotoStorage
 		photo.storage = destName
 		photo.save
 		# file post-processing: orient, and generate sizes
-		self.auto_orient(photo) 
+		self.auto_orient(photo.file_path) 
 		self.resize(photo)
 	end
 	
