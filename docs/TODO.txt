@@ -8,7 +8,7 @@ error pages on nginx
 FEATURES
 cookies for *.pb4us.com
 switching page layouts
-upload photos via email
+upload photos via email mailgun.net, should be a couple of days worth of work
 
 FUTURE
 NOT: DropBox image import/storage, Google docs instead

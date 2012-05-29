@@ -14,7 +14,7 @@ class User < Sequel::Model
 	end
 
 	def save_to_session(env, expire = :session)
-		expire_in = 1*24*3600	# one day
+		expire_in = (SvegSettings.development? ? 5 : 1) * 24 * 3600	# one day
 		env['rack.session']['user_id'] = self.pk
 		# our session has expiration baked in
 		env['rack.session']['user_id_expires'] = ( Time.now + expire_in).to_i

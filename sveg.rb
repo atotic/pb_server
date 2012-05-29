@@ -68,6 +68,7 @@ class SvegApp < Sinatra::Base
 		end
 		
 		get '/test/:id' do
+			user_must_be_logged_in
 			erb :"test/#{params[:id]}"	
 		end
 		

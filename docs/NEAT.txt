@@ -34,11 +34,14 @@ CSS Patterns, might use in book backgrounds: http://leaverou.me/css3patterns/#
 CSS Fonts as icons: fun icon effects with fonts http://css-tricks.com/15099-using-fonts-for-icons/
 Use box sizing for width/padding: http://paulirish.com/2012/box-sizing-border-box-ftw/
 Simple CSS sizing framework: https://github.com/robertpiira/ingrid
-LoremPixel: placeholder images: http://lorempixel.com/
+All about lorem ipsum http://www.codinghorror.com/blog/2012/05/the-eternal-lorem-ipsum.html
 1366 x 768 most popular screen size http://gs.statcounter.com/press/screen-resolution-alert-for-web-developers
 CSS arrow please: http://cssarrowplease.com/
-
+Prefix free: patches stylesheets with prefixes after load http://leaverou.github.com/prefixfree/
 JS
+JPEG parsing is javascript: http://code.google.com/p/jsjpegmeta/downloads/detail?name=jpegmeta.js
+RequireJS: when I get serious about performance, this is a js include framework
+http://requirejs.org/docs/optimization.html
 JQuery knobs: http://anthonyterrien.com/knob/
 JSPerf: faster js performance
 Offline application cache: http://www.alistapart.com/articles/application-cache-is-a-douchebag/
@@ -107,6 +110,7 @@ Developing a nice mobile site: http://davidbcalhoun.com/2011/mobile-performance-
 Touch event history and future: http://blog.jquery.com/2012/04/10/getting-touchy-about-patents/
 
 OTHER
+MailGun for photo upload: mailgun.net
 Google Cloud Storage looks great. Looks like I could run the entire site for less than $10K a month.
 Open source freelancers, where to register non-seizable domain: http://gun.io/
 PlentyOfFish website run by one guy, 10M page views a month. http://highscalability.com/blog/2011/12/27/plentyoffish-update-6-billion-pageviews-and-32-billion-image.html
@@ -132,6 +136,7 @@ Reviews http://insig.ht/2009/06/print-on-demand-review/
 Print resources for independent art publishers: http://print-resources.tumblr.com/
 
 BUSINESS
+Photobook reviews: http://www.photobookgirl.com/blog/photo-book-paper-quality-compared-photo-book-company-prints-best-paper/. Link bait iste, but she did do a bit of work.
 Naming your company: http://thenextweb.com/entrepreneur/2012/04/22/before-naming-your-startup-read-this/
 Luke http://www.linkedin.com/pub/luke-knowland/0/771/861
 Apago: looks like the place to get PDF optimization done http://www.apagoinc.com/prod_home.php?prod_id=37

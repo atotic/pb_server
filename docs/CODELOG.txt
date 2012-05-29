@@ -55,10 +55,30 @@ Templates:
 - gadgets
 
 Next:
-serve different pages for touch, touchxl, wimp
+mockup: simple basic layout on 3 platforms
+Images - scroll through them
+Tools - popup
+Pages - list & scroll
+Use bootstrap
+
+May 25
+Image scrolling done. Like the vertical multiple image scroll a lot
+Popup is there
+Working on drag'n'drop
+
+May 18
+Got 250 images as assets/test/X.jpg
+
+May 17
+Getting bootstrapped
+Compiled it from scratch with node. 
+make bootstrap # does it
+You can also download customized from http://twitter.github.com/bootstrap/download.html
+
 
 May 15
 Missed work, did Boot2Gecko privacy. Got to meet with some guys at Mozilla
+serve different pages for touch, touchxl, wimp
 Implemented 'sveg.touch' middleware check
 Automatically load *.touch.erb on touch sites.
 javascript touch redirect
