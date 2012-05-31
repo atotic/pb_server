@@ -5,14 +5,21 @@
 	<%= asset_link("jquery.js", "transform.js" ) %>
 	<%= asset_link("bootstrap") %>
 
-<style type='text/less'>
+<style type='text/less' title='inline'>
 /* bootstrap tweaks */
 .navbar {
-	display: none;
+	margin-bottom: 0px;
 }
 html, body {
 	height: 100%;
 	width: 100%;
+}
+/* draw a line under navigation bar to make it look like big tabs */
+.nav-tabs {
+	border-bottom: 0px solid #DDDDDD;
+}
+.navbar {
+	border-bottom: 1px solid #DDDDDD;
 }
 
 .no-selection {
@@ -37,10 +44,16 @@ html, body {
 
 #toolmenu {
 	position: absolute;
+	display: none;
 	top: 8px;
 	left: 8px;
 }
-@palette-height: 140px;
+
+@navbar-height: 41px;
+@image-height: 128px;
+@image-padding: 12px;
+@photo-list-height: @image-height + @image-padding;
+@palette-height: @navbar-height + @photo-list-height;
 
 @arrow-width: 28px;
 
@@ -49,7 +62,45 @@ html, body {
 	top: 0;
 	height: @palette-height;
 	width: 100%;
-	background-color:white;
+	background-color:#2C2C2C;
+}
+
+.pb-palette-container {
+	overflow: auto;
+	margin-left:16px;
+	top: @navbar-height;
+	max-height: @photo-list-height;	
+}
+#photo-list-container {
+	.pb-palette-container;
+}
+	#photo-list-navigator {
+		display: none;
+		position: absolute;
+		left: 0px;
+		top: 50px;
+		width: 28px;
+		height: 50px;
+	}
+
+	#photo-list {
+		margin-top: 8px;
+		width: 100%;
+	}
+		#photo-list img {
+			margin: 2px;
+		}
+	#photo-list-up-cmd:hover, #photo-list-down-cmd:hover, #photo-list-center-cmd:hover {
+		background-image: url("../img/glyphicons-halflings-white.png");
+	}
+#background-list-container {
+	.pb-palette-container;
+}
+#layout-list-container {
+	.pb-palette-container;
+}
+#gadget-list-container {
+	.pb-palette-container;
 }
 
 #pb-work-area {
@@ -83,29 +134,6 @@ html, body {
 		background:  url('/img/arrows.png') -57px 0, url('/img/arrows.png') -85px 2px;	
 	}
 
-#photo-list-container {	/* holds the scrollbar */
-	overflow: auto;
-	margin-left:100px;
-	max-height: @palette-height;
-}
-	#photo-list-navigator {
-		position: absolute;
-		left: 0px;
-		top: 50px;
-		width: 28px;
-		height: 50px;
-	}
-
-	#photo-list {
-		margin-top: 8px;
-		width: 100%;
-	}
-		#photo-list img {
-			margin: 2px;
-		}
-	#photo-list-up-cmd:hover, #photo-list-down-cmd:hover, #photo-list-center-cmd:hover {
-		background-image: url("../img/glyphicons-halflings-white.png");
-	}
 
 	#work-area-rough {
 		margin: 24px 16px 4px 24px;
@@ -196,30 +224,6 @@ html, body {
 
 </head>
 <body>
-	<div class="navbar">
-		<div class="navbar-inner">
-			<div class="container">
-				<ul class="nav">
-					<li class="active">
-						<a href="/">sveg's photo</a>
-					</li>
-				</ul>
-				<ul class="nav pull-right">
-<% if current_user %>
-					<li><a href="/account"><%= current_user.display_name %></a>
-					<li><a href="/logout">log out</a>
-<% if current_user.is_administrator %>
-					<li><a href="/admin" class="admin">admin</a>
-<% end %>
-<% else %>
-					<li><a href="/auth/login">log in</a>			
-<% end %>
-					<li><a href="">about</a>
-					<li><a href="">faq</a>
-				</ul>
-		</div>
-	</div>
-</div>
 
 <div id='pb'>
 	<div id='pb-work-area'>
@@ -233,6 +237,69 @@ html, body {
 		</div>
 	</div>
 	<div id='pb-palette'>
+	<div class="navbar">
+		<div class="navbar-inner">
+			<div class="container">
+				<ul class="nav">
+					<li class="dropdown">
+						<a class='dropdown-toggle' data-toggle='dropdown' href="#">sveg's photo
+						<b class="caret icon-white"></b>
+						</a>
+						<ul class='dropdown-menu'>
+							<li><a href="">about</a></li>
+							<li><a href="/">home</a></li>
+						</ul>
+					</li>
+					<li class='dropdown'>
+						<a class='dropdown-toggle' data-toggle='dropdown' href='#'>
+							Toolbox<b class="caret icon-white"></b>
+						</a>
+						<ul class="dropdown-menu">
+			  	  	<li><a href='javascript:alert("add photo")'>Add photo</a></li>
+			  	  	<li>Show
+			  	  		<ul>
+			  	  			<li><a href='javascript:alert("all")'>all photos</a></li>
+			  	  			<li><a href='javascript:alert("unused")'>unused photos</a></li>
+			  	  		</ul>
+			  	  	</li>
+			  	  	<li>View
+			  	  		<ul>
+			  	  			<li><a href='javascript:doMenu("viewBiggerImages")'>Bigger images</a></li>
+			  	  			<li><a href='javascript:doMenu("viewSmallerImages")'>Smaller images</a></li>
+			  	  			<li><a href='javascript:doMenu("viewMoreImages")'>More images</a></li>
+			  	  			<li><a href='javascript:doMenu("viewFewerImages")'>Fewer images</a></li>
+			  	  		</ul>
+			  	  	</li>
+			  		</ul>
+			  	</li>
+				</ul>
+				<ul id='palette-tabs' class='nav nav-tabs'>
+					<li class='active'><a data-toggle='tab' href='#photo-list-container'>Your photos</a></li>
+					<li><a data-toggle='tab' href='#background-list-container'>Backgrounds</a></li>
+					<li><a data-toggle='tab' href='#layout-list-container'>Layouts</a></li>
+					<li><a data-toggle='tab' href='#gadget-list-container'>Gadgets</a></li>
+				</ul>
+				<ul class="nav pull-right">
+<% if current_user %>
+					<li class='dropdown'>
+						<a class='dropdown-toggle' data-toggle='dropdown' href='#'>
+							<%= current_user.display_name %><b class="caret"></b></a>
+						<ul class='dropdown-menu'>
+							<li><a href="/account">account</a>
+							<li><a href="/logout">log out</a>
+<% if current_user.is_administrator %>
+							<li><a href="/admin" class="admin">admin</a>
+<% end %>
+						</ul>
+					</li>
+<% else %>
+					<li><a href="/auth/login">log in</a>			
+<% end %>
+				</ul>
+		</div>
+	</div>
+</div>
+
 		<div id='toolmenu' class="btn-group">
   		<a class="btn dropdown-toggle" data-toggle="dropdown" href="#"><i class='icon-wrench'></i><span class="caret"></span></a>
 	  	<ul class="dropdown-menu">
@@ -244,13 +311,25 @@ html, body {
   	  		</ul>
   		</ul>
 		</div>
-		<div id='photo-list-container'>
-			<div id='photo-list-navigator'>
-				<a id='photo-list-up-cmd' class='icon-arrow-up'></a><br>
-				<a id='photo-list-center-cmd' class='icon-ok-circle'></a><br>
-				<a id='photo-list-down-cmd'class='icon-arrow-down'></a><br>
+		<div id='palette-tabs-container' class='tab-content'>
+			<div class="tab-pane active"  id='photo-list-container'>
+				<div id='photo-list-navigator'>
+					<a id='photo-list-up-cmd' class='icon-arrow-up'></a><br>
+					<a id='photo-list-center-cmd' class='icon-ok-circle'></a><br>
+					<a id='photo-list-down-cmd'class='icon-arrow-down'></a><br>
+				</div>
+				<div id='photo-list'>
+				</div>
 			</div>
-			<div id='photo-list'>
+
+			<div class="tab-pane" id='background-list-container'>
+				Backgrounds!
+			</div>
+			<div class="tab-pane"  id='layout-list-container'>
+				Layouts!
+			</div>
+			<div class="tab-pane" id='gadget-list-container'>
+				Gadgets!
 			</div>
 		</div>
 	</div>
@@ -305,6 +384,97 @@ function makeDraggable() {
 		}
 	});
 }
+
+(function(window) {
+	var baseImageHeight = 128;
+	var imagePadding = 12;
+	var navbarHeight = 41;
+	var imageHeight = baseImageHeight;
+	var imageHeightScaler = 1.1;
+	var shortcuts = null;
+
+	var Wimp = {
+		// Grow photo-list-container
+		setContainerHeight: function(height, animate) {
+			var paletteHeight = navbarHeight + height;
+			var newProps = [
+				['#palette-tabs-container .tab-pane', 'max-height', height],
+				['#pb-palette', 'height', paletteHeight],
+				['#pb-work-area', 'padding-top', paletteHeight]
+			]
+			newProps.forEach(function(arry) {
+				if (animate) {
+					var o = {};
+					o[arry[1]] = arry[2];
+					$(arry[0]).animate(o, 100);
+				}
+				else
+					$(arry[0]).css(arry[1], arry[2]);
+			});
+		},
+		setImageHeight: function(height) {
+			var scale = height / imageHeight;
+			$('#photo-list-container img').each(function() {
+				var el = $(this);
+				var nh = Math.floor(el.height() * scale);
+				var nw = Math.floor(el.width() * scale);
+				el.css('height', nh);
+				el.css('width', nw);
+			});
+			imageHeight = height;
+			// find the smallest size that encloses images
+		},
+		viewMoreImages: function() {
+			var nextSize = $('#photo-list-container').height() + imageHeight;
+			var maxSize = $('body').height() - 200;
+			if (nextSize < maxSize)
+				this.setContainerHeight(nextSize, true);
+		},
+		viewFewerImages: function() {
+			var nextSize = $('#photo-list-container').height() - imageHeight;
+			if (nextSize > imageHeight)
+				this.setContainerHeight(nextSize, true);
+		},
+		viewBiggerImages: function() {
+			var nextSize = Math.floor(imageHeight * imageHeightScaler);
+			if (nextSize < 256)
+				this.setImageHeight(nextSize);
+		},
+		viewSmallerImages: function() {
+			var nextSize = Math.floor(imageHeight / imageHeightScaler);
+			if (nextSize > baseImageHeight / 2)
+				this.setImageHeight(nextSize);
+		},
+		addShortcut: function(key, action, modifiers) {
+			if (shortcuts == null) {
+				$('body').keydown( function(ev) {
+
+				});
+			}
+		}
+	};
+	window.Wimp = Wimp;
+})(window);
+
+function doMenu(cmd ) {
+	switch(cmd) {
+		case 'viewBiggerImages':
+			Wimp.viewBiggerImages();
+		break;
+		case 'viewSmallerImages':
+			Wimp.viewSmallerImages();
+		break;
+		case 'viewMoreImages':
+			Wimp.viewMoreImages();
+		break;
+		case 'viewFewerImages':
+			Wimp.viewFewerImages();
+		break;
+		default:
+			console.error('unknown menu command ' + cmd);
+	}
+}
+
 
 function makeDroppable() {
 	// dropping rough pages on page
@@ -380,11 +550,15 @@ function makeDroppable() {
 			setTarget();	// reset the drag visuals
 			if (DragStore.roughPage) {
 				var src = $(DragStore.roughPage);
-				src.detach();
-				if (t.direction == 'left')
-					$(t.target).before(src);
-				else
-					$(t.target).after(src);
+				src.hide(100, function() {
+					src.detach();
+					if (t.direction == 'left')
+						$(t.target).before(src);
+					else
+						$(t.target).after(src);
+					$(src).show(100);
+	
+				});
 			}
 			else if (DragStore.image) {
 				var src = $(DragStore.image);
@@ -425,6 +599,12 @@ function makeDroppable() {
 			return this;
 		},
 		clear: function() {
+			var dropClasses = [
+				'drop-rough-on-rough-right',
+				'drop-rough-on-rough-left',
+				'drop-img-on-rough'
+			];
+			dropClasses.forEach(function(c) { $('.' + c).removeClass(c)});
 			this.start();
 		},
 		get roughPage() {return this._roughPage},
