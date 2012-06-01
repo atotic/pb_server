@@ -54,15 +54,17 @@ html, body {
 @image-padding: 12px;
 @photo-list-height: @image-height + @image-padding;
 @palette-height: @navbar-height + @photo-list-height;
-
+@side-tool-width: 120px;
 @arrow-width: 28px;
+
+@dark-bg-color: #2C2C2C;
 
 #pb-palette {
 	position: absolute;
 	top: 0;
 	height: @palette-height;
 	width: 100%;
-	background-color:#2C2C2C;
+	background-color:@dark-bg-color;
 }
 
 .pb-palette-container {
@@ -74,14 +76,6 @@ html, body {
 #photo-list-container {
 	.pb-palette-container;
 }
-	#photo-list-navigator {
-		display: none;
-		position: absolute;
-		left: 0px;
-		top: 50px;
-		width: 28px;
-		height: 50px;
-	}
 
 	#photo-list {
 		margin-top: 8px;
@@ -90,9 +84,7 @@ html, body {
 		#photo-list img {
 			margin: 2px;
 		}
-	#photo-list-up-cmd:hover, #photo-list-down-cmd:hover, #photo-list-center-cmd:hover {
-		background-image: url("../img/glyphicons-halflings-white.png");
-	}
+
 #background-list-container {
 	.pb-palette-container;
 }
@@ -134,9 +126,24 @@ html, body {
 		background:  url('/img/arrows.png') -57px 0, url('/img/arrows.png') -85px 2px;	
 	}
 
+	#work-area-tools {
+		position:fixed;
+		left: 0;
+		top: 0;
+		padding: 8px;
+		padding-top: @palette-height;
+		margin-top: 24px;
+		width: @side-tool-width;
+		height: 100%;
+		background-color: @dark-bg-color;
+	}
+	#work-area-tools > .btn {
+		width:80%;
+		text-align: left;
+	}
 
 	#work-area-rough {
-		margin: 24px 16px 4px 24px;
+		margin: 24px 16px 4px @side-tool-width + 24px;
 	}
 
 @rough-size: 128px;
@@ -200,25 +207,25 @@ html, body {
     background-size: 100% auto;
 		background-color: none;
 	}
-	.drop-rough-on-rough-left {
-		border-left: 10px solid yellow;
+	.drop-target {
+		position:relative;
 	}
-	.drop-rough-on-rough-right {
-		border-right: 10px solid yellow;
-	}
-	.drop-img-on-rough {
-	}
-	.drop-img-on-rough:after {
+	.drop-target:after {
+		box-sizing: border-box;
 		content: "";
 		position: absolute;
-		width: 85%;
-		height: 70%;
 		top: 0;
 		left: 0;
-		border: 10px solid rgba(255, 0, 0, 0.5);
-		border-radius: 36px; 
+		bottom:0;
+		right:0;
+		box-shadow: inset 0 0 20px red;
 	}
+	.drop-target-btn {
+	}
+	.drop-target-btn:after {
+		content: "";
 
+	}
 </style>
 	<script src='http://lesscss.googlecode.com/files/less-1.3.0.min.js'></script>
 
@@ -227,6 +234,10 @@ html, body {
 
 <div id='pb'>
 	<div id='pb-work-area'>
+		<div id='work-area-tools'>
+			<div id='add-page-btn' class='btn' rel="tooltip" title="Drag and drop the button to insert pages in the middle"><i class='icon-plus-sign'></i> Add page</div>
+			<div id='remove-page-btn' class='btn' rel='tooltip' title='Drag anything over this button to remove it'><i class='icon-minus-sign'></i> Remove </div>
+		</div>
 		<div id='work-area-rough'>
 			<div class='rough-page rough-page-cover' draggable='true'><p>cover</p></div><div class='rough-page rough-page-cover-flap'><p>flap</p></div>
 			<div class='rough-page rough-page-back-flap'><p>flap</p></div><div class='rough-page rough-page-back'><p>back cover</p></div>
@@ -264,10 +275,10 @@ html, body {
 			  	  	</li>
 			  	  	<li>View
 			  	  		<ul>
-			  	  			<li><a href='javascript:doMenu("viewBiggerImages")'>Bigger images</a></li>
-			  	  			<li><a href='javascript:doMenu("viewSmallerImages")'>Smaller images</a></li>
-			  	  			<li><a href='javascript:doMenu("viewMoreImages")'>More images</a></li>
-			  	  			<li><a href='javascript:doMenu("viewFewerImages")'>Fewer images</a></li>
+			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewBiggerImages")'>Bigger images</a></li>
+			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewSmallerImages")'>Smaller images</a></li>
+			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewMoreImages")'>More images</a></li>
+			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewFewerImages")'>Fewer images</a></li>
 			  	  		</ul>
 			  	  	</li>
 			  		</ul>
@@ -313,11 +324,6 @@ html, body {
 		</div>
 		<div id='palette-tabs-container' class='tab-content'>
 			<div class="tab-pane active"  id='photo-list-container'>
-				<div id='photo-list-navigator'>
-					<a id='photo-list-up-cmd' class='icon-arrow-up'></a><br>
-					<a id='photo-list-center-cmd' class='icon-ok-circle'></a><br>
-					<a id='photo-list-down-cmd'class='icon-arrow-down'></a><br>
-				</div>
 				<div id='photo-list'>
 				</div>
 			</div>
@@ -358,19 +364,6 @@ function insertImages() {
 
 function makeDraggable() {
 	// dragging rough pages
-	$('.rough-page').prop('draggable', true).on( {
-		'dragstart': function(ev) {
-			ev = ev.originalEvent;
-			ev.dataTransfer.setData('text/plain', "my text");
-			DragStore.start().roughPage = this;
-			// TODO hide the page, create drag image from canvas
-//			ev.dataTransfer.setDragImage(clone, 0, 0);
-			ev.dataTransfer.effectAllowed = "move";
-		},
-		'dragend': function(ev) {
-			DragStore.clear();
-		}
-	});
 	// dragging photos out of photo-list
 	$('#photo-list img').prop('draggable', true).on( {
 		'dragstart': function(ev) {
@@ -386,21 +379,75 @@ function makeDraggable() {
 }
 
 (function(window) {
-	var baseImageHeight = 128;
-	var imagePadding = 12;
-	var navbarHeight = 41;
+	var WimpShortcut = function(name, key, ctrl, callback) {
+		this.name = name;
+		this.key = key;
+		this.ctrl = ctrl;
+		this.callback = callback;
+	};
+
+	var shortcuts = null;	// hash of shortcuts
+	var commands = {};
+
+	$.extend(WimpShortcut, {
+		hashString: function(key, ctrl) {
+			if (!key)
+				return 0;
+			var s = ctrl ? 'ctrl-' : '';
+			s += key.toLowerCase();
+			return s;
+		},
+		add: function(shortcut) {
+			if (shortcuts == null) {
+				$('body').keypress( function(ev) {
+					ev = ev.originalEvent;
+					if (ev.repeat)
+						return;
+					var key = ev.char || ev.charCode || ev.which;
+					if (!key) return;
+					if (typeof key != 'string')
+						key = String.fromCharCode(key); 
+					var s = WimpShortcut.hashString(key, ev.ctrlKey);
+					if (shortcuts[s])
+						shortcuts[s].callback();
+				});
+				shortcuts = {};
+			}
+			if (shortcut.key)
+				shortcuts[WimpShortcut.hashString(shortcut.key, shortcut.ctrl)] = shortcut;
+			if (shortcut.name)
+				commands[shortcut.name] = shortcut;
+		},
+		doCommand: function(cmd ) {
+			if (commands[cmd])
+				commands[cmd].callback();
+			else
+				console.error('unknown command ' + cmd);
+		}
+	});
+	window.WimpShortcut = WimpShortcut;
+})(window);
+
+// Wimp is window/mouse commands manipulation
+(function(window) {
+
+	var navbarHeight = 41; // @navbar-height in less
+	// Image palette variables
+	var baseImageHeight = 128; 	// @image-height
+	var imagePadding = 12;			// @image-padding
 	var imageHeight = baseImageHeight;
 	var imageHeightScaler = 1.1;
-	var shortcuts = null;
 
 	var Wimp = {
+
 		// Grow photo-list-container
 		setContainerHeight: function(height, animate) {
 			var paletteHeight = navbarHeight + height;
 			var newProps = [
 				['#palette-tabs-container .tab-pane', 'max-height', height],
 				['#pb-palette', 'height', paletteHeight],
-				['#pb-work-area', 'padding-top', paletteHeight]
+				['#pb-work-area', 'padding-top', paletteHeight],
+				['#work-area-tools', 'padding-top', paletteHeight]
 			]
 			newProps.forEach(function(arry) {
 				if (animate) {
@@ -416,6 +463,7 @@ function makeDraggable() {
 			var scale = height / imageHeight;
 			$('#photo-list-container img').each(function() {
 				var el = $(this);
+				el.stop();
 				var nh = Math.floor(el.height() * scale);
 				var nw = Math.floor(el.width() * scale);
 				el.css('height', nh);
@@ -424,14 +472,53 @@ function makeDraggable() {
 			imageHeight = height;
 			// find the smallest size that encloses images
 		},
+		renumberRoughPages: function() {
+			$('#work-area-rough .rough-page').each(function(idx) {
+				if (idx < 4)
+					return;
+				var pNum = idx - 3;
+				$(this).children('p').text(idx - 3);
+				if (pNum % 2 == 1)
+					$(this).removeClass('left-rough').addClass('right-rough');
+				else
+					$(this).removeClass('right-rough').addClass('left-rough');
+			});
+		},
+		revealByScrolling: function(el, container) {
+			el = $(el).get(0);
+			container = $(container).get(0);
+			var elTop = el.offsetTop;
+			var elBottom = elTop + el.offsetHeight;
+			var containerTop = container.scrollTop;
+			var containerBottom = containerTop + container.offsetHeight;
+			if (elTop < containerTop)
+				$(container).animate({ 'scrollTop' : elTop - 4});
+			else if (elBottom > containerBottom)
+				$(container).animate({'scrollTop' : elBottom - container.offsetHeight});
+		},
+		tileRoughInsideTiles: function (roughDiv) {
+			roughDiv = $(roughDiv);
+			var tiles = roughDiv.children('.rough-tile');
+			var totalWidth = roughDiv.width();
+			var totalHeight = roughDiv.height() - roughDiv.children('p').height();
+			var tileCount = tiles.length;
+			// Perfect fit edge length
+			var edgeLength = Math.floor(Math.sqrt(totalWidth * totalHeight / tileCount));
+			// shrink the edge until all tiles fit
+			// Number of tiles that fits: floor(width / edge) * floor(height / edge)
+			while (edgeLength > 8 
+				&& (Math.floor(totalWidth / edgeLength) * Math.floor(totalHeight / edgeLength)) < tileCount)
+				edgeLength -= 1;
+			tiles.animate({height: edgeLength + 'px', width: edgeLength + 'px'});
+		},
 		viewMoreImages: function() {
-			var nextSize = $('#photo-list-container').height() + imageHeight;
+			var nextSize = $('#photo-list-container').stop().height() + imageHeight;
 			var maxSize = $('body').height() - 200;
 			if (nextSize < maxSize)
 				this.setContainerHeight(nextSize, true);
 		},
 		viewFewerImages: function() {
-			var nextSize = $('#photo-list-container').height() - imageHeight;
+			var nextSize = $('#photo-list-container').stop().height() - imageHeight;
 			if (nextSize > imageHeight)
 				this.setContainerHeight(nextSize, true);
 		},
@@ -445,74 +532,106 @@ function makeDraggable() {
 			if (nextSize > baseImageHeight / 2)
 				this.setImageHeight(nextSize);
 		},
-		addShortcut: function(key, action, modifiers) {
-			if (shortcuts == null) {
-				$('body').keydown( function(ev) {
-
-				});
+		addRoughPage: function(targetPage, direction) {
+			direction = direction || 'after';
+			targetPage = targetPage || $('#work-area-rough > .rough-page:last').get(0);
+			var pos = 'right';
+			var pageNumber = 0;
+			if (targetPage && targetPage.className.match(/right/))
+				pos = 'left';
+			var newPage = $("<div class='rough-page " + pos +"-rough'><p>" + pageNumber + "</p></div>");
+			if (targetPage) {
+				if (direction == 'before')
+					$(targetPage).before(newPage);
+				else
+					$(targetPage).after(newPage);
 			}
+			else {
+				$('#work-area-rough').append(newPage);
+			}
+			// cleanup: make it look nice
+			window.Dnd.RoughWorkArea.makeDraggable(newPage);
+			this.revealByScrolling(newPage, $('#pb-work-area'));
+			this.renumberRoughPages();
+		},
+		removeRoughPage: function(roughPage) {
+			$(roughPage).animate({width:0}, function() {
+				$(roughPage).detach();
+				Wimp.renumberRoughPages();
+			});
+		},
+		removeImage: function(image) {
+			$(image).animate({width: 0}, function() {
+				$(image).detach();
+			});
+		},
+		removeRoughImage: function(roughImage) {
+			roughImage = $(roughImage);
+			var parent = $(roughImage).parent();
+			roughImage.animate({width:0}, function() {
+				roughImage.detach();
+				Wimp.tileRoughInsideTiles(parent);
+			});
 		}
 	};
+
 	window.Wimp = Wimp;
+	window.WimpShortcut = WimpShortcut;
+
 })(window);
 
-function doMenu(cmd ) {
-	switch(cmd) {
-		case 'viewBiggerImages':
-			Wimp.viewBiggerImages();
-		break;
-		case 'viewSmallerImages':
-			Wimp.viewSmallerImages();
-		break;
-		case 'viewMoreImages':
-			Wimp.viewMoreImages();
-		break;
-		case 'viewFewerImages':
-			Wimp.viewFewerImages();
-		break;
-		default:
-			console.error('unknown menu command ' + cmd);
-	}
-}
-
-
-function makeDroppable() {
-	// dropping rough pages on page
-	// dropping images on rough pages
+// Rough work area drop handling
+(function(window) {
 	var roughPageTarget = { target: null, direction: 0, dropFeedback: "" };
 
-	function setTarget(target, direction, dropFeedback) {
-		if (roughPageTarget.target == target && roughPageTarget.direction == direction)
-			return;
-		if (roughPageTarget.target) {
-			$(roughPageTarget.target).removeClass(roughPageTarget.dropFeedback);
+	var RoughPageImageDnd = {
+		makeDraggable: function(el) {
+			$(el).prop('draggable', true).on( {
+				dragstart: function(ev) {
+					ev = ev.originalEvent;
+					ev.dataTransfer.setData('text/uri-list', this.src);
+					DragStore.start().roughImage = this;
+					ev.dataTransfer.effectAllowed = 'move';
+					ev.stopPropagation();
+				},
+				dragend: function(ev) {
+					DragStore.clear();
+					ev.stopPropagation();
+				}
+			});
 		}
-		roughPageTarget = { target: target, direction: direction, dropFeedback: dropFeedback }
-		if (target)
-			$(target).addClass(dropFeedback);
 	}
-
-	function tileRoughInsideTiles(roughDiv) {
-		roughDiv = $(roughDiv);
-		var tiles = roughDiv.children('.rough-tile');
-		var totalWidth = roughDiv.width();
-		var totalHeight = roughDiv.height() - roughDiv.children('p').height();
-		var tileCount = tiles.length;
-		// Perfect fit edge length
-		var edgeLength = Math.floor(Math.sqrt(totalWidth * totalHeight / tileCount));
-		// shrink the edge until all tiles fit
-		// Number of tiles that fits: floor(width / edge) * floor(height / edge)
-		while (edgeLength > 8 
-			&& (Math.floor(totalWidth / edgeLength) * Math.floor(totalHeight / edgeLength)) < tileCount)
-			edgeLength -= 1;
-		tiles.animate({height: edgeLength + 'px', width: edgeLength + 'px'});
-	}
-
-	$('#work-area-rough').prop('dropzone', true).on( {
-		'dragover': function(ev) {
+	var RoughWorkAreaDnd = {
+		init: function() {
+			$('#work-area-rough').prop('dropzone', true).on( {
+				dragover: this.dragover,
+				dragleave: this.dragleave,
+				drop: this.drop
+			});
+			RoughWorkAreaDnd.makeDraggable($('.rough-page'));
+		},
+		makeDraggable: function(el) {
+			$(el).prop('draggable', true).on( {
+				'dragstart': function(ev) {
+					ev = ev.originalEvent;
+					ev.dataTransfer.setData('text/plain', "my text");
+					DragStore.start().roughPage = this;
+					// TODO hide the page, create drag image from canvas
+		//			ev.dataTransfer.setDragImage(clone, 0, 0);
+					ev.dataTransfer.effectAllowed = "move";
+				},
+				'dragend': function(ev) {
+					DragStore.clear();
+				}
+			});
+		},
+		dragover: function(ev) {
 			ev = ev.originalEvent;
 			// Ignore unless drag has the right flavor
-			if (!(DragStore.roughPage || DragStore.image))
+			if (!(DragStore.roughPage 
+				|| DragStore.image 
+				|| DragStore.addRoughPage
+				|| DragStore.roughImage))
 				return;
 			ev.preventDefault();
 
@@ -525,51 +644,99 @@ function makeDroppable() {
 				if (direction) {
 					newTarget = this;
 					newDirection = direction;
+					return false;
 				}
 			});
 			// Display visual feedback
-			if (DragStore.roughPage) {
+			if (DragStore.roughPage || DragStore.addRoughPage) {
 				if (newTarget && newTarget != DragStore.roughPage)
-					setTarget(newTarget, newDirection, 'drop-rough-on-rough-' + newDirection);
+					RoughWorkAreaDnd.setTarget(newTarget, newDirection, 'drop-target');
 				else
-					setTarget();
+					RoughWorkAreaDnd.setTarget();
 			}
 			else if (DragStore.image) {
 				if (newTarget) 
-					setTarget(newTarget, null, 'drop-img-on-rough');
+					RoughWorkAreaDnd.setTarget(newTarget, null, 'drop-target');
 				else 
-					setTarget();
+					RoughWorkAreaDnd.setTarget();
 			}
+			else if (DragStore.roughImage) {
+				if (newTarget && newTarget != $(DragStore.roughImage).parent('.rough-page').get(0))
+					RoughWorkAreaDnd.setTarget(newTarget, null, 'drop-target');
+				else
+					RoughWorkAreaDnd.setTarget();
+			}
+		},
+		dragleave: function(ev) {
+			ev = ev.originalEvent;
+			RoughWorkAreaDnd.setTarget();
 		},
 		drop: function(ev) {
 			ev = ev.originalEvent;
 			ev.preventDefault();
 			if (!roughPageTarget.target)
 				return;
-			var t = roughPageTarget;
-			setTarget();	// reset the drag visuals
+			var t = {target: roughPageTarget.target, direction: roughPageTarget.direction};
+			RoughWorkAreaDnd.setTarget();	// reset the drag visuals
 			if (DragStore.roughPage) {
+				t.target = $(t.target);
 				var src = $(DragStore.roughPage);
-				src.hide(100, function() {
+				// patch the location if src is before destination
+				// to preserve visual consistency
+				if (src.parent().children().get().indexOf(src.get(0)) < 
+					t.target.parent().children().get().indexOf(t.target.get(0)))
+					t.direction = 'after';
+
+				var oldWidth = src.width();
+				src.animate({width: 0}, function() { // hide old
 					src.detach();
-					if (t.direction == 'left')
-						$(t.target).before(src);
+					if (t.direction == 'before')
+						t.target.before(src);
 					else
-						$(t.target).after(src);
-					$(src).show(100);
-	
+						t.target.after(src);
+					src.animate({width: oldWidth}); // show new
+					Wimp.renumberRoughPages();
 				});
+			}
+			else if (DragStore.addRoughPage) {
+				Wimp.addRoughPage(t.target, t.direction);
 			}
 			else if (DragStore.image) {
 				var src = $(DragStore.image);
 				var newImg = $("<div class='rough-tile'/>");
 				newImg.css('background-image', 'url("' + src.prop('src') + '")');
 				newImg.appendTo(t.target);
-				tileRoughInsideTiles(t.target);
+				RoughPageImageDnd.makeDraggable(newImg);
+				Wimp.tileRoughInsideTiles(t.target);
 			}
+			else if (DragStore.roughImage) {
+				// move image from one rough to another
+				var oldParent = $(DragStore.roughImage).parent();
+				$(DragStore.roughImage).detach();
+				Wimp.tileRoughInsideTiles(oldParent);
+				$(t.target).append(DragStore.roughImage);
+				Wimp.tileRoughInsideTiles(t.target);
+			}
+		},
+		setTarget:	function (target, direction, dropFeedback) {
+			direction = 'before';	// decided to ignore direction for now
+			if (roughPageTarget.target == target && roughPageTarget.direction == direction)
+				return;
+			if (roughPageTarget.target) {
+				$(roughPageTarget.target).removeClass(roughPageTarget.dropFeedback);
+			}
+			roughPageTarget = { target: target, direction: direction, dropFeedback: dropFeedback }
+			if (target)
+				$(target).addClass(dropFeedback);
 		}
-	})
-}
+	}
+	if (!('Dnd' in window))
+		window.Dnd = {};
+	window.Dnd.RoughWorkArea = RoughWorkAreaDnd;
+	window.Dnd.RoughPageImage = RoughPageImageDnd;
+
+})(window);
+
 
 // Utilities
 (function(window) {
@@ -578,9 +745,9 @@ function makeDroppable() {
 		pointInClientRect: function(x, y, r) {
 			var inRect = y >= r.top && y <= r.bottom && x >= r.left && x <= r.right;
 			if (inRect) {
-				var midpoint = r.left + (r.right - r.left) / 2;
-//				console.log(x, ' mid ', midpoint,  x < midpoint ? 'left' : 'right');
-				return x < midpoint ? 'left' : 'right';
+				var midpoint = r.left + (r.right - r.left) / 10;
+//				console.log(x, ' mid ', midpoint,  x < midpoint ? 'before' : 'after');
+				return x < midpoint ? 'before' : 'after';
 			}
 			else
 				return false;
@@ -596,160 +763,83 @@ function makeDroppable() {
 	var DragStore = {
 		start: function() {
 			this._roughPage = null;
+			this._image = null;
+			this._roughImage = null;
+			this._addRoughPage = null;
 			return this;
 		},
 		clear: function() {
-			var dropClasses = [
-				'drop-rough-on-rough-right',
-				'drop-rough-on-rough-left',
-				'drop-img-on-rough'
-			];
-			dropClasses.forEach(function(c) { $('.' + c).removeClass(c)});
 			this.start();
 		},
 		get roughPage() {return this._roughPage},
-		set roughPage(val) { this._roughPage = val},
+		set roughPage(val) { this._roughPage = val;},
 		get image() { return this._image},
-		set image(val) { this._image = val}
+		set image(val) { this._image = val;},
+		get addRoughPage() { return this._addRoughPage},
+		set addRoughPage(val) { this._addRoughPage = val },
+		get roughImage() { return this._roughImage },
+		set roughImage(val) { this._roughImage = val }
 	}
 	window.DragStore = DragStore;
 })(window);
 
-/* PhotoScroller scrolls #photo-list vertically
- Usage: 
-new PhotoScroller( $('#photo-list-up-cmd'),
-		document.getElementById('photo-list-container'), 
-		document.getElementById('photo-list'),
-		'up'));
-*/
-(function(window) {
-	function PhotoScroller(button, container, list, direction) {
-		this.button = button;
-		this.container = container;
-		this.photoList = list;
-		this.direction = direction;
-		this.done = true;
-		this.fast = false;
-		this.bind();
-	};
-
-	PhotoScroller.prototype = {
-		start: function() {
-			$(this.container).clearQueue();
-			this.done = false;
-			this.perform();
-		},
-		stop: function() {
-			$(this.container).clearQueue();
-			this.done = true;
-			this.fast = false;
-		},
-		speedUp: function() {
-			this.fast = true;
-		},
-		slowDown: function() {
-			this.fast = false;
-		},
-		perform: function() {
-			if (this.done)
-				return;
-			var nextPhotoEdge = this.findNextEdge();
-			if (nextPhotoEdge == -1)
-				return;
-			var THIS = this;
-			var distance  = Math.abs(this.container.scrollTop - nextPhotoEdge);
-			var timing = this.fast ? distance * 2 : distance * 5;
-		//	this.container.scrollTop = nextPhotoEdge;
-			$(this.container).animate( {scrollTop: nextPhotoEdge}, 
-					timing, this.fast ?  'swing' : 'linear',
-					function() {
-						window.setTimeout(function() {THIS.perform()}, timing);
-					}
-			);
-		},
-		between: function(num, low, high) {
-			return num > low && num <= high;
-		},
-		scrollToCenterLocation: function(img) {
-			return img.offsetTop + img.offsetHeight - this.container.offsetHeight + 4;
-		},
-		findNextEdge: function() {
-			var visTop = this.container.scrollTop;
-			var visBottom = this.container.offsetHeight + visTop;
-			var photos = $(this.photoList).children().get();
-			var targetPhoto = null;
-			var targetScore = 0;
-			for (var i=0, done = false; i < photos.length && !done; i++) {
-				var imgTop = photos[i].offsetTop;
-				var imgBottom = photos[i].offsetHeight + imgTop;
-				switch(this.direction) {
-					case 'up': // find first element whose bottom is not visible
-						if (imgBottom > visBottom) {
-							targetPhoto = photos[i];
-							done = true;
-						}
-						break;
-					case 'down': // find last element whose top is not visible
-						if (imgTop < visTop)
-							targetPhoto = photos[i];
-						if (imgBottom > visTop)
-							done = true;
-						break;
-					case 'center': // find largest partially occluded element
-						var score = 0;
-						if (this.between(imgBottom, visTop, visBottom)) {
-							score = imgBottom - visTop;
-							if (this.between(imgTop, visTop, visBottom))
-								score -= imgTop - visTop;
-						}
-						else if (this.between(imgTop, visTop, visBottom))
-							score = visBottom - imgTop;
-						if (score > targetScore) {
-							targetPhoto = photos[i];
-							targetScore = score;
-						}
-						if (imgTop > visTop)
-							done = true;
-						break;
-				}
-			}
-			if (targetPhoto)
-				return this.scrollToCenterLocation(targetPhoto);
-			else
-				return -1;
-		},
-		bind: function() {
-			$(this.button).on({
-				'mouseenter': function(ev) {
-					ev.data.start();
-				},
-				'mouseleave': function(ev) {
-						ev.data.stop();
-				},
-				'mousedown': function(ev) {
-						ev.data.speedUp();
-				},
-				'mouseup': function(ev) {
-						ev.data.slowDown();
-				}
-				}, this);
-		}
-	};
-
-	window.PhotoScroller = PhotoScroller;
-})(this);
-
-var scrollers = new Array;
-['up', 'down', 'center'].forEach(function(dir) {
-	scrollers.push(new PhotoScroller(
-		$('#photo-list-' + dir + '-cmd'),
-		document.getElementById('photo-list-container'), 
-		document.getElementById('photo-list'),
-		dir));
-});
-
 insertImages();
 makeDraggable();
-makeDroppable();
+Dnd.RoughWorkArea.init();
+$('#add-page-btn').prop('draggable', true).on({
+	click: function(ev) {
+		Wimp.addRoughPage();
+	},
+	dragstart: function(ev) {
+		ev = ev.originalEvent;
+		ev.dataTransfer.setData('text/plain', "my text");
+		DragStore.start().addRoughPage = true;
+		ev.dataTransfer.effectAllowed = "move";
+	},
+	dragend: function(ev) {
+		DragStore.clear();
+	}
+});
+$('#remove-page-btn').prop('dropzone', true).on( {
+	dragover: function(ev) {
+		ev = ev.originalEvent;
+		ev.preventDefault();
+		if (!(DragStore.roughPage 
+				|| DragStore.image 
+				|| DragStore.roughImage))
+			return;
+		$(this).addClass('drop-target');
+		ev.stopPropagation();
+	},
+	dragleave: function(ev) {
+		$(this).removeClass('drop-target');
+	},
+	drop: function(ev) {
+		ev.preventDefault();
+		ev.stopPropagation();
+		$(this).removeClass('drop-target');
+		if (DragStore.roughPage)
+			Wimp.removeRoughPage(DragStore.roughPage);
+		else if (DragStore.image)
+			Wimp.removeImage(DragStore.image);
+		else if (DragStore.roughImage)
+			Wimp.removeRoughImage(DragStore.roughImage);
+	}
+});
+WimpShortcut.add(new WimpShortcut('viewMoreImages', '+', false, 
+	function() {Wimp.viewMoreImages()}));
+WimpShortcut.add(new WimpShortcut('viewMoreImages', '=', false, 
+	function() {Wimp.viewMoreImages()}));
+WimpShortcut.add(new WimpShortcut('viewFewerImages', '-', false, 
+	function() {Wimp.viewFewerImages()}));
+WimpShortcut.add(new WimpShortcut('viewBiggerImages', '+', true, 
+	function() {Wimp.viewBiggerImages()}));
+WimpShortcut.add(new WimpShortcut('viewBiggerImages', '=', true, 
+	function() {Wimp.viewBiggerImages()}));
+WimpShortcut.add(new WimpShortcut('viewSmallerImages', '-', true, 
+	function() {Wimp.viewSmallerImages()}));
+WimpShortcut.add(new WimpShortcut('addRoughPage', 'p', false,
+	function() {Wimp.addRoughPage()}))
+
 </script>
 </body>

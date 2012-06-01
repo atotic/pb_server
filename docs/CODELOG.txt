@@ -55,11 +55,20 @@ Templates:
 - gadgets
 
 Next:
+Fix Chrome dragging bugs
+Rework resizing on bigger/smaller
 mockup: simple basic layout on 3 platforms
-Images - scroll through them
-Tools - popup
-Pages - list & scroll
-Use bootstrap
+
+May 31
+Add button hooked up
+Keyboard shortcuts (keyPress is the only event where I can reliable get charCode)
+More dnd work, looks nice.
+Drag small images
+Deleting pages
+Editing looks really good now!
+
+May 30
+mockup is looking good, page add/remove left to implement
 
 May 25
 Image scrolling done. Like the vertical multiple image scroll a lot
