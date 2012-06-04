@@ -71,7 +71,7 @@ html, body {
 	overflow: auto;
 	margin-left:16px;
 	top: @navbar-height;
-	max-height: @photo-list-height;	
+	max-height: @photo-list-height;
 }
 #photo-list-container {
 	.pb-palette-container;
@@ -112,7 +112,7 @@ html, body {
 		background: url('/img/arrows.png') -28px 2px;
 	}
 	#work-area-back:hover {
-		background:  url('/img/arrows.png') 0 0, url('/img/arrows.png') -28px 2px;	
+		background:  url('/img/arrows.png') 0 0, url('/img/arrows.png') -28px 2px;
 	}
 	#work-area-forward {
 		position: absolute;
@@ -123,7 +123,7 @@ html, body {
 		background: url('/img/arrows.png') -85px 2px;
 	}
 	#work-area-forward:hover {
-		background:  url('/img/arrows.png') -57px 0, url('/img/arrows.png') -85px 2px;	
+		background:  url('/img/arrows.png') -57px 0, url('/img/arrows.png') -85px 2px;
 	}
 
 	#work-area-tools {
@@ -304,7 +304,7 @@ html, body {
 						</ul>
 					</li>
 <% else %>
-					<li><a href="/auth/login">log in</a>			
+					<li><a href="/auth/login">log in</a>
 <% end %>
 				</ul>
 		</div>
@@ -369,20 +369,22 @@ function makeDraggable() {
 		'dragstart': function(ev) {
 			ev = ev.originalEvent;
 			ev.dataTransfer.setData('text/uri-list', this.src);
+//			console.log("DragStore.start photo-list img");
 			DragStore.start().image = this;
 			ev.effectAllowed = 'move';
 		},
 		'dragend': function(ev) {
+//			console.log("DragStore.clear photo-list img");
 			DragStore.clear();
 		}
 	});
 }
 
 (function(window) {
-	var WimpShortcut = function(name, key, ctrl, callback) {
+	var WimpShortcut = function(name, key, meta, callback) {
 		this.name = name;
 		this.key = key;
-		this.ctrl = ctrl;
+		this.meta = meta;
 		this.callback = callback;
 	};
 
@@ -390,10 +392,18 @@ function makeDraggable() {
 	var commands = {};
 
 	$.extend(WimpShortcut, {
-		hashString: function(key, ctrl) {
-			if (!key)
+		hashString: function(rawKey, meta) {
+			if (!rawKey)
 				return 0;
-			var s = ctrl ? 'ctrl-' : '';
+			var key = rawKey;
+			if (typeof key != 'string') {
+				switch(key) {
+					case 8800: key = '='; break;	// Mac option key randomness
+					case 8211: key = '-'; break;
+					default: key = String.fromCharCode(rawKey);
+				}
+			}
+			var s = meta ? 'meta-' : '';
 			s += key.toLowerCase();
 			return s;
 		},
@@ -404,17 +414,15 @@ function makeDraggable() {
 					if (ev.repeat)
 						return;
 					var key = ev.char || ev.charCode || ev.which;
-					if (!key) return;
-					if (typeof key != 'string')
-						key = String.fromCharCode(key); 
-					var s = WimpShortcut.hashString(key, ev.ctrlKey);
+					var s = WimpShortcut.hashString(key, ev.altKey);	// TODO revise for windows
+	//				console.log('shortcut: ', s);
 					if (shortcuts[s])
 						shortcuts[s].callback();
 				});
 				shortcuts = {};
 			}
 			if (shortcut.key)
-				shortcuts[WimpShortcut.hashString(shortcut.key, shortcut.ctrl)] = shortcut;
+				shortcuts[WimpShortcut.hashString(shortcut.key, shortcut.meta)] = shortcut;
 			if (shortcut.name)
 				commands[shortcut.name] = shortcut;
 		},
@@ -464,8 +472,8 @@ function makeDraggable() {
 			$('#photo-list-container img').each(function() {
 				var el = $(this);
 				el.stop();
-				var nh = Math.floor(el.height() * scale);
-				var nw = Math.floor(el.width() * scale);
+				var nh = el.height() * scale;
+				var nw = el.width() * scale;
 				el.css('height', nh);
 				el.css('width', nw);
 			});
@@ -506,31 +514,51 @@ function makeDraggable() {
 			var edgeLength = Math.floor(Math.sqrt(totalWidth * totalHeight / tileCount));
 			// shrink the edge until all tiles fit
 			// Number of tiles that fits: floor(width / edge) * floor(height / edge)
-			while (edgeLength > 8 
+			while (edgeLength > 8
 				&& (Math.floor(totalWidth / edgeLength) * Math.floor(totalHeight / edgeLength)) < tileCount)
 				edgeLength -= 1;
 			tiles.animate({height: edgeLength + 'px', width: edgeLength + 'px'});
 		},
+		getPossiblePhotoContainerHeights: function(imageHeight) {
+			$('#photo-list-container').stop();
+			var max = $('body').height() - 200;
+			var curr = imageHeight + imagePadding;
+			var all = [ curr ];
+			while ((curr += imageHeight) < max)
+				all.push( curr);
+			return all;
+		},
 		viewMoreImages: function() {
-			var nextSize = $('#photo-list-container').stop().height() + imageHeight;
-			var maxSize = $('body').height() - 200;
-			if (nextSize < maxSize)
-				this.setContainerHeight(nextSize, true);
+			var sizes = this.getPossiblePhotoContainerHeights(imageHeight);
+			var height = $('#photo-list-container').height();
+			for (var i=0; i< sizes.length; i++) // find next larger size
+				if (sizes[i] > height) {
+					this.setContainerHeight(sizes[i], true);
+					return;
+				}
 		},
 		viewFewerImages: function() {
-			var nextSize = $('#photo-list-container').stop().height() - imageHeight;
-			if (nextSize > imageHeight)
-				this.setContainerHeight(nextSize, true);
+			var sizes = this.getPossiblePhotoContainerHeights(imageHeight);
+			var height = $('#photo-list-container').height();
+			for (var i=sizes.length -1; i >= 0; i--) // find previous smaller size
+				if (sizes[i] < height) {
+					this.setContainerHeight(sizes[i], true);
+					return;
+				}
 		},
 		viewBiggerImages: function() {
-			var nextSize = Math.floor(imageHeight * imageHeightScaler);
-			if (nextSize < 256)
-				this.setImageHeight(nextSize);
+			var nextImgSize = Math.floor(imageHeight * imageHeightScaler);
+			if (nextImgSize < 256) {
+				this.setImageHeight(nextImgSize);
+				this.viewMoreImages();
+			}
 		},
 		viewSmallerImages: function() {
 			var nextSize = Math.floor(imageHeight / imageHeightScaler);
-			if (nextSize > baseImageHeight / 2)
+			if (nextSize > baseImageHeight / 2) {
 				this.setImageHeight(nextSize);
+				this.viewFewerImages();
+			}
 		},
 		addRoughPage: function(targetPage, direction) {
 			direction = direction || 'after';
@@ -588,13 +616,16 @@ function makeDraggable() {
 		makeDraggable: function(el) {
 			$(el).prop('draggable', true).on( {
 				dragstart: function(ev) {
+//					console.log("DragStore.start rough-page-image");
 					ev = ev.originalEvent;
+					ev.dataTransfer.setData('text/plain', this.src);// chrome does not work without this
 					ev.dataTransfer.setData('text/uri-list', this.src);
 					DragStore.start().roughImage = this;
 					ev.dataTransfer.effectAllowed = 'move';
 					ev.stopPropagation();
 				},
 				dragend: function(ev) {
+//					console.log("DragStore.clear rough-page-image");
 					DragStore.clear();
 					ev.stopPropagation();
 				}
@@ -606,40 +637,59 @@ function makeDraggable() {
 			$('#work-area-rough').prop('dropzone', true).on( {
 				dragover: this.dragover,
 				dragleave: this.dragleave,
-				drop: this.drop
+				drop: this.drop,
+				dragenter: this.dragenter
 			});
 			RoughWorkAreaDnd.makeDraggable($('.rough-page'));
 		},
-		makeDraggable: function(el) {
+		makeDraggable: function(el) {	// makes rough-page draggable
 			$(el).prop('draggable', true).on( {
 				'dragstart': function(ev) {
 					ev = ev.originalEvent;
 					ev.dataTransfer.setData('text/plain', "my text");
+//					console.log("DragStore.start rough-page");
 					DragStore.start().roughPage = this;
 					// TODO hide the page, create drag image from canvas
 		//			ev.dataTransfer.setDragImage(clone, 0, 0);
 					ev.dataTransfer.effectAllowed = "move";
 				},
 				'dragend': function(ev) {
+//					console.log("DragStore.clear rough-page");
 					DragStore.clear();
 				}
 			});
 		},
+		logTargets: function(prefix, ev) {
+			var s = prefix;
+			if (ev.target)
+				s += ' target: ' + ev.target.id + ' ' + ev.target.className;
+			else
+				s += ' target: null';
+			if (ev.currentTarget)
+				s += ' current: ' + ev.currentTarget.id + ' ' + ev.currentTarget.className;
+			else
+				s += ' current: null';
+			console.log(s);
+		},
+		dragenter: function(ev) {
+			ev = ev.originalEvent;
+			ev.stopPropagation();
+			ev.preventDefault();
+		},
 		dragover: function(ev) {
 			ev = ev.originalEvent;
 			// Ignore unless drag has the right flavor
-			if (!(DragStore.roughPage 
-				|| DragStore.image 
+			if (!(DragStore.roughPage
+				|| DragStore.image
 				|| DragStore.addRoughPage
 				|| DragStore.roughImage))
 				return;
 			ev.preventDefault();
-
 			// Find the current drop location
 			var newTarget = null;
 			var newDirection = null;
-			$(this).children('.rough-page').each(function() {
-				var direction = GUtil.pointInClientRect(ev.pageX, ev.pageY, 
+			$(ev.currentTarget).children('.rough-page').each(function() {
+				var direction = GUtil.pointInClientRect(ev.pageX, ev.pageY,
 					this.getBoundingClientRect());
 				if (direction) {
 					newTarget = this;
@@ -649,15 +699,17 @@ function makeDraggable() {
 			});
 			// Display visual feedback
 			if (DragStore.roughPage || DragStore.addRoughPage) {
-				if (newTarget && newTarget != DragStore.roughPage)
-					RoughWorkAreaDnd.setTarget(newTarget, newDirection, 'drop-target');
+				if (newTarget) {
+					if (newTarget != DragStore.roughPage)
+						RoughWorkAreaDnd.setTarget(newTarget, newDirection, 'drop-target');
+				}
 				else
 					RoughWorkAreaDnd.setTarget();
 			}
 			else if (DragStore.image) {
-				if (newTarget) 
+				if (newTarget)
 					RoughWorkAreaDnd.setTarget(newTarget, null, 'drop-target');
-				else 
+				else
 					RoughWorkAreaDnd.setTarget();
 			}
 			else if (DragStore.roughImage) {
@@ -668,8 +720,8 @@ function makeDraggable() {
 			}
 		},
 		dragleave: function(ev) {
-			ev = ev.originalEvent;
-			RoughWorkAreaDnd.setTarget();
+			// This will cause a dragover with an empty target
+			RoughWorkAreaDnd.dragover(ev);
 		},
 		drop: function(ev) {
 			ev = ev.originalEvent;
@@ -683,7 +735,7 @@ function makeDraggable() {
 				var src = $(DragStore.roughPage);
 				// patch the location if src is before destination
 				// to preserve visual consistency
-				if (src.parent().children().get().indexOf(src.get(0)) < 
+				if (src.parent().children().get().indexOf(src.get(0)) <
 					t.target.parent().children().get().indexOf(t.target.get(0)))
 					t.direction = 'after';
 
@@ -762,6 +814,7 @@ function makeDraggable() {
 (function(window) {
 	var DragStore = {
 		start: function() {
+//			console.log("DragStore.start");
 			this._roughPage = null;
 			this._image = null;
 			this._roughImage = null;
@@ -778,7 +831,7 @@ function makeDraggable() {
 		get addRoughPage() { return this._addRoughPage},
 		set addRoughPage(val) { this._addRoughPage = val },
 		get roughImage() { return this._roughImage },
-		set roughImage(val) { this._roughImage = val }
+		set roughImage(val) { this._roughImage = val}
 	}
 	window.DragStore = DragStore;
 })(window);
@@ -804,8 +857,8 @@ $('#remove-page-btn').prop('dropzone', true).on( {
 	dragover: function(ev) {
 		ev = ev.originalEvent;
 		ev.preventDefault();
-		if (!(DragStore.roughPage 
-				|| DragStore.image 
+		if (!(DragStore.roughPage
+				|| DragStore.image
 				|| DragStore.roughImage))
 			return;
 		$(this).addClass('drop-target');
@@ -826,17 +879,17 @@ $('#remove-page-btn').prop('dropzone', true).on( {
 			Wimp.removeRoughImage(DragStore.roughImage);
 	}
 });
-WimpShortcut.add(new WimpShortcut('viewMoreImages', '+', false, 
+WimpShortcut.add(new WimpShortcut('viewMoreImages', '+', false,
 	function() {Wimp.viewMoreImages()}));
-WimpShortcut.add(new WimpShortcut('viewMoreImages', '=', false, 
+WimpShortcut.add(new WimpShortcut('viewMoreImages', '=', false,
 	function() {Wimp.viewMoreImages()}));
-WimpShortcut.add(new WimpShortcut('viewFewerImages', '-', false, 
+WimpShortcut.add(new WimpShortcut('viewFewerImages', '-', false,
 	function() {Wimp.viewFewerImages()}));
-WimpShortcut.add(new WimpShortcut('viewBiggerImages', '+', true, 
+WimpShortcut.add(new WimpShortcut('viewBiggerImages', '+', true,
 	function() {Wimp.viewBiggerImages()}));
-WimpShortcut.add(new WimpShortcut('viewBiggerImages', '=', true, 
+WimpShortcut.add(new WimpShortcut('viewBiggerImages', '=', true,
 	function() {Wimp.viewBiggerImages()}));
-WimpShortcut.add(new WimpShortcut('viewSmallerImages', '-', true, 
+WimpShortcut.add(new WimpShortcut('viewSmallerImages', '-', true,
 	function() {Wimp.viewSmallerImages()}));
 WimpShortcut.add(new WimpShortcut('addRoughPage', 'p', false,
 	function() {Wimp.addRoughPage()}))
