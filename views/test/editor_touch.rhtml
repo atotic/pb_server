@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Mockup</title>
+	<title>Touch Mockup</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 	<%= asset_link("jquery.js") %>
 	<%= asset_link("bootstrap") %>
 	<%= asset_link("editor.gui.js") %>
 
-<scripts src="http://dev.pb4us.com:9000/target/target-script-min.js"></script>
+<script src="http://dev.pb4us.com:9000/target/target-script-min.js"></script>
 <style type='text/less' title='inline'>
 /* bootstrap tweaks */
 .navbar {
@@ -231,6 +231,7 @@ html, body {
 	}
 	.touch-drag-src {
 		background-color: red;
+		opacity: 0.5;
 	}
 </style>
 	<script src='http://lesscss.googlecode.com/files/less-1.3.0.min.js'></script>
@@ -281,10 +282,10 @@ html, body {
 			  	  	</li>
 			  	  	<li>View
 			  	  		<ul>
-			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewBiggerImages")'>Bigger images</a></li>
-			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewSmallerImages")'>Smaller images</a></li>
-			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewMoreImages")'>More images</a></li>
-			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewFewerImages")'>Fewer images</a></li>
+			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewBiggerImages")'>Bigger photos</a></li>
+			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewSmallerImages")'>Smaller photos</a></li>
+			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewMoreImages")'>More photos</a></li>
+			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewFewerImages")'>Fewer photos</a></li>
 			  	  		</ul>
 			  	  	</li>
 			  		</ul>
@@ -363,7 +364,7 @@ function insertImages() {
 insertImages();
 GUI.RoughWorkArea.init();
 GUI.AddRemoveButtons.init();
-document.body.addEventListener('touchmove', function(ev) {ev.preventDefault()});
+//document.body.addEventListener('touchmove', function(ev) {ev.preventDefault()});
 
 WimpShortcut.add(new WimpShortcut('viewMoreImages', '+', false,
 	function() {GUI.Controller.viewMoreImages()}));

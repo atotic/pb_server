@@ -19,7 +19,7 @@
 	}
 	var PhotoPaletteDnd = {
 		makeDraggable: function(img) {
-			$(img).prop('draggable', true).on( {
+			$(img).attr('draggable', true).on( {
 				'dragstart': function(ev) {
 					ev = ev.originalEvent;
 					ev.dataTransfer.setData('text/uri-list', this.src);
@@ -71,6 +71,7 @@
 			$('body').append(PhotoPaletteTouch.dragImage);
 		},
 		cancelTouch: function() {
+			window.TouchDrop.touchend();
 			PhotoPaletteTouch.setLastTouch();
 			PhotoPaletteTouch.dragImage.detach();
 			PhotoPaletteTouch.dragImage = null;
@@ -91,23 +92,20 @@
 			return null;
 		},
 		touchmove: function(ev) {
-				var newTouch = this.touchItemById(ev.changedTouches);
+			var newTouch = this.touchItemById(ev.changedTouches);
 			if (!newTouch) {
 				console.log('touchmove ignored');
 				return;
 			}
 			var topDiff = newTouch.pageY - this.lastTouch.pageY;
 			var leftDiff = newTouch.pageX - this.lastTouch.pageX;
-//			console.log("Y: " + newTouch.pageY + " X" + newTouch.pageX);
-//			console.log("oldY: " + PhotoPaletteTouch.lastTouch.pageY + " old X" + PhotoPaletteTouch.lastTouch.pageX);
-//			console.log("topDiff: " + topDiff + " leftDiff" + leftDiff);
 			this.dragImage.css({
 				top: "+=" + topDiff,
 				left: "+=" + leftDiff
 			});
 			this.setLastTouch(newTouch);
-//			console.log('touchmove');
 			ev.preventDefault();
+			window.TouchDrop.touchmove(ev.pageX, ev.pageY);
 		},
 		touchend: function(ev) {
 			console.log('touchend');
@@ -330,6 +328,7 @@
 			if (targetPage && targetPage.className.match(/right/))
 				pos = 'left';
 			var newPage = $("<div class='rough-page " + pos +"-rough'><p>" + pageNumber + "</p></div>");
+			newPage.hide();
 			if (targetPage) {
 				if (direction == 'before')
 					$(targetPage).before(newPage);
@@ -339,9 +338,11 @@
 			else {
 				$('#work-area-rough').append(newPage);
 			}
+			newPage.slideDown(function() {
+				Controller.revealByScrolling(newPage, $('#pb-work-area'));
+			});
 			// cleanup: make it look nice
-			window.GUI.RoughWorkArea.makeDraggable(newPage);
-			this.revealByScrolling(newPage, $('#pb-work-area'));
+			window.RoughWorkArea.makeDraggable(newPage);
 			this.renumberRoughPages();
 		},
 		removeRoughPage: function(roughPage) {
@@ -381,7 +382,7 @@
 
 	var RoughPageImageDnd = {
 		makeDraggable: function(el) {
-			$(el).prop('draggable', true).on( {
+			$(el).attr('draggable', true).on( {
 				dragstart: function(ev) {
 //					console.log("DragStore.start rough-page-image");
 					ev = ev.originalEvent;
@@ -404,36 +405,16 @@
 		init: function() {
 			this.makeDroppable();
 			this.makeDraggable($('.rough-page'));
-		}
-	};
-
-	var RoughWorkAreaDnd = {
+		},
 		makeDroppable: function() {
-			$('#work-area-rough').prop('dropzone', true).on( {
-				dragover: this.dragover,
-				dragleave: this.dragleave,
-				drop: this.drop,
-				dragenter: this.dragenter
+			$('#work-area-rough').attr('dropzone', true).on( {
+				dragover: function(ev) { RoughWorkArea.dragover(ev.originalEvent) },
+				dragleave: function(ev) { RoughWorkArea.dragleave(ev.originalEvent) },
+				drop: function(ev) { RoughWorkArea.drop(ev.originalEvent) },
+				dragenter: function(ev) { RoughWorkArea.dragenter(ev.originalEvent) }
 			});
 		},
-		makeDraggable: function(el) {	// makes rough-page draggable
-			$(el).prop('draggable', true).on( {
-				'dragstart': function(ev) {
-					ev = ev.originalEvent;
-					ev.dataTransfer.setData('text/plain', "my text");
-//					console.log("DragStore.start rough-page");
-					DragStore.start().roughPage = this;
-					// TODO hide the page, create drag image from canvas
-		//			ev.dataTransfer.setDragImage(clone, 0, 0);
-					ev.dataTransfer.effectAllowed = "move";
-				},
-				'dragend': function(ev) {
-//					console.log("DragStore.clear rough-page");
-					DragStore.clear();
-				}
-			});
-		},
-		logTargets: function(prefix, ev) {
+				logTargets: function(prefix, ev) {
 			var s = prefix;
 			if (ev.target)
 				s += ' target: ' + ev.target.id + ' ' + ev.target.className;
@@ -446,12 +427,10 @@
 			console.log(s);
 		},
 		dragenter: function(ev) {
-			ev = ev.originalEvent;
 			ev.stopPropagation();
 			ev.preventDefault();
 		},
 		dragover: function(ev) {
-			ev = ev.originalEvent;
 			// Ignore unless drag has the right flavor
 			if (!(DragStore.roughPage
 				|| DragStore.image
@@ -475,35 +454,34 @@
 			if (DragStore.roughPage || DragStore.addRoughPage) {
 				if (newTarget) {
 					if (newTarget != DragStore.roughPage)
-						RoughWorkAreaDnd.setTarget(newTarget, newDirection, 'drop-target');
+						this.setTarget(newTarget, newDirection, 'drop-target');
 				}
 				else
-					RoughWorkAreaDnd.setTarget();
+					this.setTarget();
 			}
 			else if (DragStore.image) {
 				if (newTarget)
-					RoughWorkAreaDnd.setTarget(newTarget, null, 'drop-target');
+					this.setTarget(newTarget, null, 'drop-target');
 				else
-					RoughWorkAreaDnd.setTarget();
+					this.setTarget();
 			}
 			else if (DragStore.roughImage) {
 				if (newTarget && newTarget != $(DragStore.roughImage).parent('.rough-page').get(0))
-					RoughWorkAreaDnd.setTarget(newTarget, null, 'drop-target');
+					this.setTarget(newTarget, null, 'drop-target');
 				else
-					RoughWorkAreaDnd.setTarget();
+					this.setTarget();
 			}
 		},
 		dragleave: function(ev) {
 			// This will cause a dragover with an empty target
-			RoughWorkAreaDnd.dragover(ev);
+			this.dragover(ev);
 		},
 		drop: function(ev) {
-			ev = ev.originalEvent;
 			ev.preventDefault();
 			if (!roughPageTarget.target)
 				return;
 			var t = {target: roughPageTarget.target, direction: roughPageTarget.direction};
-			RoughWorkAreaDnd.setTarget();	// reset the drag visuals
+			this.setTarget();	// reset the drag visuals
 			if (DragStore.roughPage) {
 				t.target = $(t.target);
 				var src = $(DragStore.roughPage);
@@ -555,22 +533,30 @@
 			if (target)
 				$(target).addClass(dropFeedback);
 		}
+	};
+
+	var RoughWorkAreaDnd = {
+		makeDraggable: function(el) {	// makes rough-page draggable
+			$(el).attr('draggable', true).on( {
+				'dragstart': function(ev) {
+					ev = ev.originalEvent;
+					ev.dataTransfer.setData('text/plain', "my text");
+//					console.log("DragStore.start rough-page");
+					DragStore.start().roughPage = this;
+					// TODO hide the page, create drag image from canvas
+		//			ev.dataTransfer.setDragImage(clone, 0, 0);
+					ev.dataTransfer.effectAllowed = "move";
+				},
+				'dragend': function(ev) {
+//					console.log("DragStore.clear rough-page");
+					DragStore.clear();
+				}
+			});
+		}
 	}
 
 	var RoughWorkAreaTouch = {
 		makeDraggable: function() {
-		},
-		makeDroppable: function() {
-			$('#work-area-rough').on( {
-				'touchmove': function(ev) { RoughWorkAreaTouch.touchmove(ev.originalEvent)},
-				'touchend': function(ev) { RoughWorkAreaTouch.touchend(ev.originalEvent)},
-			});
-		},
-		touchmove: function(ev) {
-			console.log('#rough-work-area touchmove ');
-		},
-		touchend: function(ev) {
-			console.log('#rough-work-area touchend ');
 		}
 	}
 
@@ -585,8 +571,55 @@
 
 })(window.GUI);
 
+(function(window) {
+	var AddRemoveButtons = {
+		init: function() {
+			$('#add-page-btn').click(function() { GUI.Controller.addRoughPage();});
 
-// Utilities
+			$('#add-page-btn').attr('draggable', true).on( {
+				dragstart: function(ev) {
+					ev = ev.originalEvent;
+					ev.dataTransfer.setData('text/plain', "my text");
+					DragStore.start().addRoughPage = true;
+					ev.dataTransfer.effectAllowed = "move";
+				},
+				dragend: function(ev) {
+					DragStore.clear();
+				}
+			});
+
+			$('#remove-page-btn').attr('dropzone', true).on( {
+				dragover: function(ev) {
+					ev = ev.originalEvent;
+					ev.preventDefault();
+					if (!(DragStore.roughPage
+							|| DragStore.image
+							|| DragStore.roughImage))
+						return;
+					$(this).addClass('drop-target');
+					ev.stopPropagation();
+				},
+				dragleave: function(ev) {
+					$(this).removeClass('drop-target');
+				},
+				drop: function(ev) {
+					ev.preventDefault();
+					ev.stopPropagation();
+					$(this).removeClass('drop-target');
+					if (DragStore.roughPage)
+						GUI.Controller.removeRoughPage(DragStore.roughPage);
+					else if (DragStore.image)
+						GUI.Controller.removeImage(DragStore.image);
+					else if (DragStore.roughImage)
+						GUI.Controller.removeRoughImage(DragStore.roughImage);
+				}
+			});
+		}
+	}
+	window.AddRemoveButtons = AddRemoveButtons;
+})(window.GUI);
+
+// Graphics utilities
 (function(window) {
 	var GUtil = {
 		// false not in rect, 'left' to the left, 'right' to the right
@@ -594,7 +627,6 @@
 			var inRect = y >= r.top && y <= r.bottom && x >= r.left && x <= r.right;
 			if (inRect) {
 				var midpoint = r.left + (r.right - r.left) / 10;
-//				console.log(x, ' mid ', midpoint,  x < midpoint ? 'before' : 'after');
 				return x < midpoint ? 'before' : 'after';
 			}
 			else
@@ -603,6 +635,57 @@
 	}
 	window.GUtil = GUtil;
 })(window);
+
+// TouchDrop
+// transfroms touch events into drag and drop events
+(function(window) {
+
+	var dropTarget;
+
+	var TouchDrop = {
+		findTarget: function(pageX, pageY) {
+			var targets = $('[dropzone]').get().filter(function(el) {
+				var r = el.getBoundingClientRect();
+				return pageY >= r.top && pageY <= r.bottom && pageX >= r.left && pageX <= r.right;
+			});
+			switch(targets.length) {
+				case 0: return null;
+				case 1: return targets[0];
+				default: console.log('multiple drop targets'); return targets[0];
+			}
+		},
+		sendEvent: function(target, eventType, pageX, pageY) {
+			if (!target)
+				return;
+			var ev = {
+				preventDefault: function() {},
+				stopPropagation: function() {},
+				pageX: pageX,
+				pageY: pageY,
+				currentTarget: target
+			}
+			var jqEvent = $.Event(eventType);
+			jqEvent.originalEvent = ev;
+			$(target).trigger(jqEvent);
+		},
+		setDropTarget: function(newTarget) {
+			if (dropTarget == newTarget)
+				return;
+			this.sendEvent(dropTarget, 'dragleave');
+			dropTarget = newTarget;
+			this.sendEvent(dropTarget, 'dragstart');
+		},
+		touchmove: function(pageX, pageY) {
+			this.setDropTarget(this.findTarget(pageX, pageY));
+			this.sendEvent(dropTarget, 'dragover', pageX, pageY);
+		},
+		touchend: function() {
+			this.sendEvent(dropTarget, 'drop');
+			this.setDropTarget();
+		}
+	}
+	window.TouchDrop = TouchDrop;
+})(window.GUI);
 
 // DragStore is a global used to store dragged local data
 // Why? Html drag can only drag strings, we need js objects
@@ -632,50 +715,4 @@
 	window.DragStore = DragStore;
 })(window);
 
-(function(window) {
-	var AddRemoveButtons = {
-		init: function() {
-			$('#add-page-btn').click(function() { GUI.Controller.addRoughPage();});
 
-			$('#add-page-btn').prop('draggable', true).on( {
-				dragstart: function(ev) {
-					ev = ev.originalEvent;
-					ev.dataTransfer.setData('text/plain', "my text");
-					DragStore.start().addRoughPage = true;
-					ev.dataTransfer.effectAllowed = "move";
-				},
-				dragend: function(ev) {
-					DragStore.clear();
-				}
-			});
-
-			$('#remove-page-btn').prop('dropzone', true).on( {
-				dragover: function(ev) {
-					ev = ev.originalEvent;
-					ev.preventDefault();
-					if (!(DragStore.roughPage
-							|| DragStore.image
-							|| DragStore.roughImage))
-						return;
-					$(this).addClass('drop-target');
-					ev.stopPropagation();
-				},
-				dragleave: function(ev) {
-					$(this).removeClass('drop-target');
-				},
-				drop: function(ev) {
-					ev.preventDefault();
-					ev.stopPropagation();
-					$(this).removeClass('drop-target');
-					if (DragStore.roughPage)
-						GUI.Controller.removeRoughPage(DragStore.roughPage);
-					else if (DragStore.image)
-						GUI.Controller.removeImage(DragStore.image);
-					else if (DragStore.roughImage)
-						GUI.Controller.removeRoughImage(DragStore.roughImage);
-				}
-			});
-		}
-	}
-	window.GUI.AddRemoveButtons = AddRemoveButtons;
-})(window);
