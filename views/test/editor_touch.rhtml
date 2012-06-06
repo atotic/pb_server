@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Mockup</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+	<%= asset_link("jquery.js") %>
+	<%= asset_link("bootstrap") %>
+	<%= asset_link("editor.gui.js") %>
+
+<scripts src="http://dev.pb4us.com:9000/target/target-script-min.js"></script>
+<style type='text/less' title='inline'>
+/* bootstrap tweaks */
+.navbar {
+	margin-bottom: 0px;
+}
+html, body {
+	height: 100%;
+	width: 100%;
+}
+/* draw a line under navigation bar to make it look like big tabs */
+.nav-tabs {
+	border-bottom: 0px solid #DDDDDD;
+}
+.navbar {
+	border-bottom: 1px solid #DDDDDD;
+}
+
+.no-selection {
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-o-user-select: none;
+	user-select: none;
+}
+
+.hidden {
+	position:relative;
+	top: -500px;
+	left: -500px;
+}
+#pb {
+	position:relative;
+	height: 100%;
+	min-height: 100%;
+	background-color: red;
+}
+
+#toolmenu {
+	position: absolute;
+	display: none;
+	top: 8px;
+	left: 8px;
+}
+
+@navbar-height: 41px;
+@image-height: 128px;
+@image-padding: 12px;
+@photo-list-height: @image-height + @image-padding;
+@palette-height: @navbar-height + @photo-list-height;
+@side-tool-width: 120px;
+@arrow-width: 28px;
+
+@dark-bg-color: #2C2C2C;
+
+#pb-palette {
+	position: absolute;
+	top: 0;
+	height: @palette-height;
+	width: 100%;
+	background-color:@dark-bg-color;
+}
+
+.pb-palette-container {
+	overflow: auto;
+	margin-left:16px;
+	top: @navbar-height;
+	max-height: @photo-list-height;
+}
+#photo-list-container {
+	.pb-palette-container;
+}
+
+	#photo-list {
+		margin-top: 8px;
+		width: 100%;
+	}
+		#photo-list img {
+			margin: 2px;
+		}
+
+#background-list-container {
+	.pb-palette-container;
+}
+#layout-list-container {
+	.pb-palette-container;
+}
+#gadget-list-container {
+	.pb-palette-container;
+}
+
+#pb-work-area {
+	height: 100%;
+	padding-top: @palette-height;
+	overflow: auto;
+	background-color: #DDD;
+	-moz-box-sizing: padding-box;
+	box-sizing: border-box;
+}
+	#work-area-back {
+		position: absolute;
+		width: @arrow-width;
+		height:46px;
+		top: (@palette-height - 46) / 2;
+		left: 0px;
+		background: url('/img/arrows.png') -28px 2px;
+	}
+	#work-area-back:hover {
+		background:  url('/img/arrows.png') 0 0, url('/img/arrows.png') -28px 2px;
+	}
+	#work-area-forward {
+		position: absolute;
+		width: @arrow-width;
+		height:46px;
+		top: (@palette-height - 46) / 2;
+		right:-1px;
+		background: url('/img/arrows.png') -85px 2px;
+	}
+	#work-area-forward:hover {
+		background:  url('/img/arrows.png') -57px 0, url('/img/arrows.png') -85px 2px;
+	}
+
+	#work-area-tools {
+		position:fixed;
+		left: 0;
+		top: 0;
+		padding: 8px;
+		padding-top: @palette-height;
+		margin-top: 24px;
+		width: @side-tool-width;
+		height: 100%;
+		background-color: @dark-bg-color;
+	}
+	#work-area-tools > .btn {
+		width:80%;
+		text-align: left;
+	}
+
+	#work-area-rough {
+		margin: 24px 16px 4px @side-tool-width + 24px;
+	}
+
+@rough-size: 128px;
+@rough-border: 2px solid white;
+@rough-border-fade: 1px solid #DDD;
+
+	.rough-page {
+		position: relative;
+		display: inline-block;
+		width: @rough-size;
+		height: @rough-size;
+		border: 1px solid black;
+		.no-selection;
+	}
+		.rough-page p {
+			position: absolute;
+			text-align: center;
+			width: 100%;
+			bottom: -10px;
+			color: #999 ;
+		}
+		.left-rough {
+			border: @rough-border;
+			border-right: @rough-border-fade;
+			margin-left: 6px;
+			box-shadow:-2px 0px 4px #B3B3B3;
+		}
+
+		.right-rough {
+			border: @rough-border;
+			border-left: @rough-border-fade;
+			margin-right: 10px;
+			box-shadow: 2px 0px 4px #B3B3B3;
+		}
+	.rough-page-cover {
+		border: @rough-border;
+		margin-left: 0px;
+		margin-right: 0px;
+	}
+	.rough-page-cover-flap {
+		width: @rough-size / 3;
+		border: @rough-border;
+		border-left: 0px none;
+	}
+	.rough-page-back {
+		border: @rough-border;
+		margin-right: 32px;
+	}
+	.rough-page-back-flap {
+		border: @rough-border;
+		border-right: 0px none;
+		width: @rough-size / 3;
+	}
+	.rough-tile {
+		position: relative;
+		float: left;
+		width: 30px;
+		height: 30px;
+		background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 100% auto;
+		background-color: none;
+	}
+	.drop-target {
+		position:relative;
+	}
+	.drop-target:after {
+		box-sizing: border-box;
+		content: "";
+		position: absolute;
+		top: 0;
+		left: 0;
+		bottom:0;
+		right:0;
+		box-shadow: inset 0 0 20px red;
+	}
+	.drop-target-btn {
+	}
+	.drop-target-btn:after {
+		content: "";
+
+	}
+	.touch-drag-src {
+		background-color: red;
+	}
+</style>
+	<script src='http://lesscss.googlecode.com/files/less-1.3.0.min.js'></script>
+
+</head>
+<body>
+
+<div id='pb'>
+	<div id='pb-work-area'>
+		<div id='work-area-tools'>
+			<div id='add-page-btn' class='btn' rel="tooltip" title="Drag and drop the button to insert pages in the middle"><i class='icon-plus-sign'></i> Add page</div>
+			<div id='remove-page-btn' class='btn' rel='tooltip' title='Drag anything over this button to remove it'><i class='icon-minus-sign'></i> Remove </div>
+		</div>
+		<div id='work-area-rough'>
+			<div class='rough-page rough-page-cover' draggable='true'><p>cover</p></div><div class='rough-page rough-page-cover-flap'><p>flap</p></div>
+			<div class='rough-page rough-page-back-flap'><p>flap</p></div><div class='rough-page rough-page-back'><p>back cover</p></div>
+			<div class='rough-page right-rough'><p>1</p></div>
+			<div class='rough-page left-rough'><p>2</p></div>
+			<div class='rough-page right-rough'><p>3</p></div>
+			<div class='rough-page left-rough'><p>4 </p></div>
+		</div>
+	</div>
+	<div id='pb-palette'>
+	<div class="navbar">
+		<div class="navbar-inner">
+			<div class="container">
+				<ul class="nav">
+					<li class="dropdown">
+						<a class='dropdown-toggle' data-toggle='dropdown' href="#">sveg's photo
+						<b class="caret icon-white"></b>
+						</a>
+						<ul class='dropdown-menu'>
+							<li><a href="">about</a></li>
+							<li><a href="/">home</a></li>
+						</ul>
+					</li>
+					<li class='dropdown'>
+						<a class='dropdown-toggle' data-toggle='dropdown' href='#'>
+							Toolbox<b class="caret icon-white"></b>
+						</a>
+						<ul class="dropdown-menu">
+			  	  	<li><a href='javascript:alert("add photo")'>Add photo</a></li>
+			  	  	<li>Show
+			  	  		<ul>
+			  	  			<li><a href='javascript:alert("all")'>all photos</a></li>
+			  	  			<li><a href='javascript:alert("unused")'>unused photos</a></li>
+			  	  		</ul>
+			  	  	</li>
+			  	  	<li>View
+			  	  		<ul>
+			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewBiggerImages")'>Bigger images</a></li>
+			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewSmallerImages")'>Smaller images</a></li>
+			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewMoreImages")'>More images</a></li>
+			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewFewerImages")'>Fewer images</a></li>
+			  	  		</ul>
+			  	  	</li>
+			  		</ul>
+			  	</li>
+				</ul>
+				<ul id='palette-tabs' class='nav nav-tabs'>
+					<li class='active'><a data-toggle='tab' href='#photo-list-container'>Your photos</a></li>
+					<li><a data-toggle='tab' href='#background-list-container'>Backgrounds</a></li>
+					<li><a data-toggle='tab' href='#layout-list-container'>Layouts</a></li>
+					<li><a data-toggle='tab' href='#gadget-list-container'>Gadgets</a></li>
+				</ul>
+				<ul class="nav pull-right">
+<% if current_user %>
+					<li class='dropdown'>
+						<a class='dropdown-toggle' data-toggle='dropdown' href='#'>
+							<%= current_user.display_name %><b class="caret"></b></a>
+						<ul class='dropdown-menu'>
+							<li><a href="/account">account</a>
+							<li><a href="/logout">log out</a>
+<% if current_user.is_administrator %>
+							<li><a href="/admin" class="admin">admin</a>
+<% end %>
+						</ul>
+					</li>
+<% else %>
+					<li><a href="/auth/login">log in</a>
+<% end %>
+				</ul>
+		</div>
+	</div>
+</div>
+
+		<div id='toolmenu' class="btn-group">
+  		<a class="btn dropdown-toggle" data-toggle="dropdown" href="#"><i class='icon-wrench'></i><span class="caret"></span></a>
+	  	<ul class="dropdown-menu">
+  	  	<li><a href='javascript:alert("add photo")'>Add photo</a>
+  	  	<li>Show
+  	  		<ul>
+  	  			<li><a href='javascript:alert("all")'>all photos</a>
+  	  			<li><a href='javascript:alert("unused")'>unused photos</a>
+  	  		</ul>
+  		</ul>
+		</div>
+		<div id='palette-tabs-container' class='tab-content'>
+			<div class="tab-pane active"  id='photo-list-container'>
+				<div id='photo-list'>
+				</div>
+			</div>
+
+			<div class="tab-pane" id='background-list-container'>
+				Backgrounds!
+			</div>
+			<div class="tab-pane"  id='layout-list-container'>
+				Layouts!
+			</div>
+			<div class="tab-pane" id='gadget-list-container'>
+				Gadgets!
+			</div>
+		</div>
+	</div>
+
+</div>
+<script>
+
+function insertImages() {
+	var html ="";
+	for (var i=0; i<20; i++)
+		html += "<img src='/assets/test/" + i + ".jpg?size=icon'>"
+	$('#photo-list').append(html);
+	$('#photo-list img').each(function() {
+		GUI.PhotoPalette.makeDraggable(this);
+	});
+}
+
+// Initialization
+insertImages();
+GUI.RoughWorkArea.init();
+GUI.AddRemoveButtons.init();
+document.body.addEventListener('touchmove', function(ev) {ev.preventDefault()});
+
+WimpShortcut.add(new WimpShortcut('viewMoreImages', '+', false,
+	function() {GUI.Controller.viewMoreImages()}));
+WimpShortcut.add(new WimpShortcut('viewMoreImages', '=', false,
+	function() {GUI.Controller.viewMoreImages()}));
+WimpShortcut.add(new WimpShortcut('viewFewerImages', '-', false,
+	function() {GUI.Controller.viewFewerImages()}));
+WimpShortcut.add(new WimpShortcut('viewBiggerImages', '+', true,
+	function() {GUI.Controller.viewBiggerImages()}));
+WimpShortcut.add(new WimpShortcut('viewBiggerImages', '=', true,
+	function() {GUI.Controller.viewBiggerImages()}));
+WimpShortcut.add(new WimpShortcut('viewSmallerImages', '-', true,
+	function() {GUI.Controller.viewSmallerImages()}));
+WimpShortcut.add(new WimpShortcut('addRoughPage', 'p', false,
+	function() {GUI.Controller.addRoughPage()}))
+console.log("editor_touch complete");
+console.error("ready to go");
+</script>
+</body>

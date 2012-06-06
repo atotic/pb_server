@@ -2,7 +2,7 @@
 2 weeks: comet, image resizing delayed, nginx
 1 week: kill datamapper, use sequel http://rhnh.net/2011/11/29/datamapper-retrospective
 2 weeks: unix deployment
-2 weeks: log in to fb/browser_id 
+2 weeks: log in to fb/browser_id
 Finished on Apr 23rd. 7 week estimate, 9 week completion
 8 weeks: editor rewrite, touch style, drop images from anywhere
 1 week: security/sharing
@@ -41,23 +41,20 @@ library
 - undo/redo commands
 - gui widgets
 
-gui, in flux
-- widgets
-- drag'n'drop
-- what will our gui look like
-
 testing
 - qunit server. straight api testing
 
-GUI design
-Templates:
-- backgrounds
-- gadgets
-
 Next:
-Fix Chrome dragging bugs
-Rework resizing on bigger/smaller
+- Image drag:
+- implement delay, better visual drag feedback
+- implement drop
 mockup: simple basic layout on 3 platforms
+Port to real server code
+Template generation
+
+June 5
+Remote debugging with weinre works (ocasionally). console.log on ipad does the job too
+My first touch drag is complete!
 
 May 31
 Add button hooked up
@@ -80,7 +77,7 @@ Got 250 images as assets/test/X.jpg
 
 May 17
 Getting bootstrapped
-Compiled it from scratch with node. 
+Compiled it from scratch with node.
 make bootstrap # does it
 You can also download customized from http://twitter.github.com/bootstrap/download.html
 
@@ -140,7 +137,7 @@ starting on email
 Apr 16
 delayed_job should run as deploy user use change_privilege
 1st successful total run on Ubuntu
-pb4us project as master git template. Did not use git built-in 
+pb4us project as master git template. Did not use git built-in
 submodule management, because submodules do not allow editing of subprojects.
 
 Apr 13
@@ -306,7 +303,7 @@ Jan 18
 Got delayed_job daemon working. No jobs yet.
 
 Jan 16
-working on deployment. Use 
+working on deployment. Use
 Jan 10, 2012
 PDF generation is complete. I've extended Chrome 18 with pageCapture.saveAsPDF extension.
 The commercial potential seems weaker, everyone is trying to do books. Interestingly, no
@@ -325,16 +322,16 @@ Dec 16
 Created Chrome extension autopdfsave:
 - automatically generates PDF files for every window loaded
 - stores PDF on server
-PDFSaver rack-based server, stores 
+PDFSaver rack-based server, stores
 Dec 13
 PDF generation via Chrome
 PDF generation is part of Chrome, not of WebKit's test shell
-Best approach would be to get Chrome to generate the PDFs. 
+Best approach would be to get Chrome to generate the PDFs.
 Write an extension that does this?
 There is no API for extension to print to PDF. Can I create one?
 
 Nov 18
-Saw Keepsy. These guys are awesome. I love decoupling of image placement from 
+Saw Keepsy. These guys are awesome. I love decoupling of image placement from
 layout details. I think I need to sell my project
 Things I did not like: Flash: it'll get harder as time goes on. Inability to
 start the album immediately. Image import should be fluid.
@@ -405,7 +402,7 @@ Oct 12
 	Add page.position to BookPage object (rb/js)
 	Look into cache control. We do not need to get template twice, should be cached. Max-age is set by browser
 	Pretty book page display
-	
+
 Oct 11
 	implemented prev/next on arrows
   filter as text/images/etc
@@ -523,7 +520,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=455308, filed one for Webkit too
 Jun 13
 Experimenting with border-image. We've got a few problems:
 - importing hi-res versions of the photo. Css needs to change. Books should have css associated
-- 
+-
 
 Jun 10
 Image placement hints done, with a beautiful test page in our new test book.
@@ -540,7 +537,7 @@ constraints on everything but zoom
 
 Jun 7
 exposed unmatrix method from transform.js to decompose transformation matrix
-Firefox bug: getClientBoundingRect does not take transform into account. 
+Firefox bug: getClientBoundingRect does not take transform into account.
 This issue is still being discussed in W3C, I'll work around for now.
 Redid the button interaction: click now starts a mode
 fix rotate/pan when image is rotated
@@ -607,11 +604,11 @@ svg.cloneNode(true)
 instead of parsing HTML, deep clone the node, and use DOM operations to clean up
 Center the page horizontally/vertically, and give it a shadow
 gray background on main-container
- 
+
 May 20
 SVG resizing to fit
 
-SVG resize trick discovered 
+SVG resize trick discovered
 s1.viewBox.baseVal.width += 10;
 s1.viewBox.baseVal.height += 10;
 On to implement a nice looking page
@@ -634,7 +631,7 @@ Page save queue: save within 60 seconds|when page switches
 Page save queue: retry on failure.
 Implemented. Still not happy with my code. But it is tough to code
 for async stuff:
-- put page on save-later queue. 
+- put page on save-later queue.
 - move from save-later queue to save-now
 - if save fails, put it back on the save-now queue
 - if page closing, move all to save-now queue
@@ -667,7 +664,7 @@ Implemented rake test:seed
 
 May 10
 Implemented rake db:clean
-rake environment RACK_ENV=development|test db:clean 
+rake environment RACK_ENV=development|test db:clean
 Implementing image resize on demand. Want to test it with unit tests
 Working on test/helper/seed
 Busy day: had to deal with well digging, getting birth certificate, loan refinancing, linda loan
@@ -739,7 +736,7 @@ Apr 20
 Analyzed Thin, to see if we could stream the requests. It can be done.
 thin/request.rb:parse method gets called repeatedly by connection.rb:receive_data when request comes in
 we could override request.rb parse. There are two cases that need to be handled:
-- save the partial post if interrupted 
+- save the partial post if interrupted
 - tell client to only send us remaining part of the body
 Implemented file upload.
 This project is more work than I imagined (of course)
@@ -774,7 +771,7 @@ scenarios:
 * upload to server
   - put the file on the upload queue
     - put file post /images (use sips to rotate/resize images)
-    
+
 * book is loaded
   $("image.book_image").each( function(image) {
   	imageBroker.loadInto(node);
@@ -795,7 +792,7 @@ delete /book/:book_id/photo/:photo_id -- removes image/book association
 
 JSON:
 image {
-	id: 
+	id:
 	original_id:
 }
 
@@ -833,7 +830,7 @@ Implemented error & notice. They look nice now
 
 Apr 8
 No coding, getting ready for Mendicino
-Got 
+Got
 Apr 6
 Finished sessions. I've coded a custom session middleware. This is because I did not
 like the default setup:
@@ -865,7 +862,7 @@ D3 is amazingly beautiful, Mike Bostock is super smart. Must play with it some m
 
 Mar 30
 SVG elements have className that is not DOMString, but SVGAnimatedString
-This messes jQuery up. 
+This messes jQuery up.
 
 Images are being dragged, no drop on SVG yet.
 Hiding some data in the models
@@ -922,7 +919,7 @@ Create 4 svg pages.
 Load them, and see what happens when I drag images.
 
 Take a look at SVG http://people.mozilla.com/~vladimir/demos/photos.svg
-svg converts straight to PDF :), might need 
+svg converts straight to PDF :), might need
 http://www.somebits.com/weblog/tech/good/svg.html
 Nelson discovered SVG around the same time.
 Uploading files in Sintatra
@@ -938,8 +935,8 @@ I could use it to track down what exactly happens.
 Mar 18
 Refactored. Models are separated out:
 Timer - util
-EventListener - mixin 
-Book 
+EventListener - mixin
+Book
 BookImage
 Deferred pattern makes code more understandeable
 Antsy to get started on page layout, but refactored code makes me happy
@@ -964,7 +961,7 @@ Mar 15
 Trying out Sinatra. Pete Warden's "Social Hello World" talked me into this.
 
 Mar 14
-Thinking about moving to Sinatra. Rails documentation sucks in several major ways 
+Thinking about moving to Sinatra. Rails documentation sucks in several major ways
 
 1) All functions take a grab-bag of options
 2) Documentation is a large linear dump of all method calls. There are 6 methods named render, one of which is relevant.
@@ -973,7 +970,7 @@ Thinking about moving to Sinatra. Rails documentation sucks in several major way
 
 With Sinatra, the hope is that the learning curve will taper off.
 
-Deployment: Pete Warden uses heroku, I can start with it. Heroku runs on Amazon. 
+Deployment: Pete Warden uses heroku, I can start with it. Heroku runs on Amazon.
 I think that figuring out deployment will take me a month.
 Heroku will store data in S3 temporarily
 
@@ -982,9 +979,9 @@ Diving back into Rails.
 photo_book_controller::create
 Tricky problem of using a single form to edit two models: photo book + template
 I wanted rails form helpers (error handling, saving of form data between pages for free)
-For two models in a single form you want nested forms. 
+For two models in a single form you want nested forms.
 Template needed to be a photobook nested attribute.
-As PhotoBookTemplates are not ActiveRecords, or inside db, my template fakes being an ActiveRecord. 
+As PhotoBookTemplates are not ActiveRecords, or inside db, my template fakes being an ActiveRecord.
 The fakery happened through several simple routines.
 
 Mar 9
@@ -994,7 +991,7 @@ What does photobook looks like as json?
 Mar 8
 Creating rails framework for books
 Back to rails!
-field_error_proc removal was a surprise. 
+field_error_proc removal was a surprise.
 
 Mar 4
 Thinking about dropping those images, what a page looks like
@@ -1009,7 +1006,7 @@ I investigated by loading 2000x5000 simple PNG images. PNGs were being cleverly 
 An image can be up to 40MB uncompressed (2000x3008x4). Firefox clears its in-memory image
 cache after 10 seconds. Average image takes 1/3s/load.
 That means after 10s, we have 40x30, or 1.5Gb in memory, causing machine to slow down.
-Slowing down the memory 
+Slowing down the memory
 Feb 23
 Implementing tabs
 http://stackoverflow.com/questions/773074/vertical-tabs-with-jquery
@@ -1049,7 +1046,7 @@ FEATURES:
 - Business structure:
 	allow
 
-Idea 1: 
+Idea 1:
 
 PDF generation:
 http://tomayko.com/writings/pining-for-pdf-in-gecko

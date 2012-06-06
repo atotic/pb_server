@@ -24,16 +24,16 @@ module PB
 	::Log4r::Outputter.stdout.formatter = SVEG_FORMATTER if SvegSettings.environment == :development
 
 	@@logger = nil
-	
+
 	def self.logger
 		@@logger || Log4r::Logger.root
 	end
 
-	def self.create_server_logger(name) 
+	def self.create_server_logger(name)
 		return @@logger if @@logger
 		@@logger = Log4r::Logger.new(name)
-#		file_out = Log4r::FileOutputter.new("#{name}.info", { 
-#			:filename => File.join(SvegSettings.log_dir, "#{name}.junk" ), 
+#		file_out = Log4r::FileOutputter.new("#{name}.info", {
+#			:filename => File.join(SvegSettings.log_dir, "#{name}.junk" ),
 #			:formatter => PB::SVEG_FORMATTER })
 		# root outputs everything, so we can use it in libraries
 #		@@logger.add file_out
@@ -70,7 +70,7 @@ module PB
 	require 'etc'
 	def self.change_privilege(user, group=user)
 		puts "Changing process privilege to #{user}:#{group}"
-	
+
 		current_uid, current_gid = Process.euid, Process.egid
 		target_uid = Etc.getpwnam(user).uid
 		target_gid = Etc.getgrnam(group).gid
@@ -86,10 +86,10 @@ module PB
 
 	# command line utilities
 	class CommandLine
-		
+
 		def self.get_chromium_pid
 			ps = `ps -A -o pid,args`.split("\n")
-			ids = ps.collect do |i| 
+			ids = ps.collect do |i|
 				if i.include? SvegSettings.chrome_binary then
 					m = i.match(/(\d+)/)
 					m.length > 0 ? m[0].to_i : nil
@@ -101,7 +101,7 @@ module PB
 			ids.sort
 			ids.length > 0 ? ids[0] : false
 		end
-		
+
 		def self.get_merge_pdfs(target_pdf, pdf_file_list)
 			cmd_line = SvegSettings.pdf_toolkit_binary.dup
 			pdf_file_list.each do |pdf|
@@ -113,7 +113,7 @@ module PB
 	end
 
 	# JSON session encoder, development use only
-	class SvegSessionCoder 
+	class SvegSessionCoder
 		def encode(str)
 			JSON.generate str
 		end
@@ -133,7 +133,7 @@ module PB
 	# Sveg session maintenance
 	# sets env['sveg.user'] to logged in user
 	# Saves flash hash only if it has changed
-	# 
+	#
 	# Canonical middleware stack looks like this
 	# use Rack::Session::Cookie, {
 	#		:key => 'rack.session',
@@ -144,7 +144,7 @@ module PB
 	#	}
 	#	use Rack::Flash
 	#	use SvegMiddleware
-	# 
+	#
 	# api test in svegsession_test.rb
 	class SvegMiddleware
 
@@ -172,7 +172,7 @@ module PB
 			now = Time.now
 	#		return if env['sinatra.static_file']
 			return unless env['PATH_INFO']
-			return if /assets/ =~ env["PATH_INFO"] 
+			return if /assets/ =~ env["PATH_INFO"]
 			debugger unless status.class.eql? Fixnum
 			msg = %{ %s %s %s%s %s" %s %0.3f %s} % [
 						env["sveg.user"] || "-",
@@ -183,7 +183,7 @@ module PB
 						status.to_s[0..3],
 						time_taken,
 						headers && headers['Content-Type'] ? headers['Content-Type'] : "default"]
-			if status >= 400 
+			if status >= 400
 				PB.logger.error msg
 			else
 				PB.logger.info msg
@@ -224,8 +224,14 @@ module PB
 			# set cookie only if cookie has changed, or we are trying to delete it
 			changed = !(env['rack.session'].eql? env['rack.session.unpacked_cookie_data'])
 			changed ||= env['rack.session.options'][:expire_after] == 0
-			env['rack.session.options'][:skip] = false if changed
-			env['rack.session.options'][:defer] = false if changed
+			if (changed)
+				env['rack.session.options'][:skip] = false if changed # rack < 1.4
+				env['rack.session.options'][:defer] = false if changed # rack > 1.4
+				# session expires when our login credentials expire
+				if env['rack.session']['user_id_expires']
+					env['rack.session.options'][:expire_after] = env['rack.session']['user_id_expires'] - Time.now.to_i
+				end
+			end
 #			PB.logger.info "Setting cookie" if changed
 		end
 
@@ -259,7 +265,7 @@ module PB
 			return if env['sveg.user'].is_administrator
 			raise "You must be an administrator to access this resource"
 		end
-		
+
 		def self.user_must_own(env, resource)
 			user_must_be_logged_in(env)
 			raise "No such resource" unless resource

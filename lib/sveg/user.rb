@@ -1,7 +1,7 @@
 require 'sequel'
 require 'active_support'
 module PB
-	
+
 class User < Sequel::Model
 
  	plugin :timestamps
@@ -50,7 +50,7 @@ end
 # OmniauthToken is a simple username/pw login in theory
 # For now, it is just username.
 class OmniauthToken < Sequel::Model(:omniauth_tokens)
-	
+
 
 	STRATEGY_CODES = {
 		0 => :developer,
@@ -65,13 +65,13 @@ class OmniauthToken < Sequel::Model(:omniauth_tokens)
 	}
 
 	def self.get_strategy_id(strategy)
-		strategy_id = STRATEGY_NAMES[strategy.to_sym]		
+		strategy_id = STRATEGY_NAMES[strategy.to_sym]
 		raise "unknown strategy #{strategy.to_s}" unless !strategy_id.nil?
 		strategy_id
 	end
 
 	# returns [user, is_new?]
-	# throws string exceptions 
+	# throws string exceptions
 	def self.login_with_omniauth(omniauth)
 		strategy_id = get_strategy_id(omniauth['provider'])
 		auth = self.filter(:strategy => strategy_id, :strategy_uid => omniauth['uid']).first
