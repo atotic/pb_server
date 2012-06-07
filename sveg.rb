@@ -40,7 +40,7 @@ class SvegApp < Sinatra::Base
 		get '/debugger' do
 			debugger
 		end
-		
+
 		get '/routes' do
 			r = []
 			settings.routes.keys.each do |key|
@@ -50,13 +50,13 @@ class SvegApp < Sinatra::Base
 					path = path.to_s.sub("(?-mix:^\\", "").sub("$)", "").sub("\\", "")
 					vars.each { |var| path = path.sub("([^\\/?#]+)", ":" + var) }
 					path = path.gsub("\\", "")
-					x = { :path => path, 
+					x = { :path => path,
 						:key => key,
 						:vars => vars}
 					r.push x
 				end
 			end
-			r.sort! { |x, y| 
+			r.sort! { |x, y|
 				x[:path] == y[:path] ? x[:key] <=> y[:key] : x[:path] <=> y[:path]
 			}
 			content_type "text/plain"
@@ -66,12 +66,12 @@ class SvegApp < Sinatra::Base
 	#			r.each { |x| body += x[:key] + " " + x[:path] + " " + x[:vars].join(" ") + "\n"}
 			body
 		end
-		
+
 		get '/test/:id' do
 			user_must_be_logged_in
-			erb :"test/#{params[:id]}"	
+			erb :"test/#{params[:id]}"
 		end
-		
+
 	#		get 'test/qunit' do
 	#			Dir[glob].sort.each do |node|
 	#        stat = stat(node)
@@ -79,7 +79,7 @@ class SvegApp < Sinatra::Base
 	#			end
 	#			run Rack::Directory.new("#{Dir.pwd}/views/test/qunit");
 	#		end
-		
+
 		get '/test/qunit/:id' do
 			@filename = params[:id]
 			erb :"test/qunit/#{params[:id]}", {:layout => :'test/qunit/layout'}, {:locals => { :filename => params[:id] }}
@@ -159,21 +159,21 @@ class SvegApp < Sinatra::Base
 		end
 		retVal || erb(template, options, locals)
 	end
-		
+
 	helpers do
 		include Rack::Utils
-		
+
 		alias_method :h, :escape_html
-		
+
 		def show_error(object, prop)
 			"<span class=\"error_message\">#{object.errors[prop].join(" ")}</span>" if (object && !object.errors[prop].empty?)
 		end
-		
+
 		def print_datetime(dt)
 			debugger if dt.nil?
 			dt.strftime "%b %d %I:%M%p"
 		end
-		
+
 		def json_response(object)
 			[200, {'Content-Type' => Rack::Mime::MIME_TYPES['.json']}, [object.to_json]]
 		end
@@ -189,16 +189,16 @@ class SvegApp < Sinatra::Base
 #			redirect request.referer
 		end
 
-		# args are a list of resources 
+		# args are a list of resources
 		# ex: asset_link("jquery.js", "jquery-ui.js", "application.css")
 		def asset_link(*args)
-			retVal = "";		
+			retVal = "";
 			args.each do |arg|
 				arg = arg.to_s if arg.is_a?(Symbol)
 				if arg.end_with?("js")
 					arg = "jquery-1.7.js" if arg.eql? "jquery.js"
 					arg = "jquery-ui-1.8.16.custom.js" if arg.eql? "jquery-ui.js"
-					retVal += "<script src='/js/#{arg}'></script>\n"				
+					retVal += "<script src='/js/#{arg}'></script>\n"
 				elsif arg.end_with?("css")
 					arg = "smoothness/jquery-ui-1.8.16.custom.css" if arg.eql? "jquery-ui.css"
 					retVal += "<link href='/css/#{arg}' rel='stylesheet' type='text/css' />\n"
@@ -220,7 +220,7 @@ class SvegApp < Sinatra::Base
 			end
 			retVal
 		end
-		
+
 		# User access
 		def current_user
 			env['sveg.user']
@@ -231,9 +231,9 @@ class SvegApp < Sinatra::Base
 				Security.user_must_be_logged_in(env)
 			rescue RuntimeError
 				flash[:error] = "You must be logged in to access #{env['REQUEST_PATH']}."
-				if request.xhr? 
+				if request.xhr?
 					halt 401
-				else 
+				else
 					redirect_back
 				end
 			end
@@ -247,7 +247,7 @@ class SvegApp < Sinatra::Base
 				redirect_back
 			end
 		end
-		
+
 		def user_must_own(resource)
 			begin
 				Security.user_must_own(env, resource)
@@ -256,7 +256,7 @@ class SvegApp < Sinatra::Base
 				halt 401
 			end
 		end
-			
+
 		def assert_last_command_up_to_date(request)
 			debugger if env['sveg.stream.last_command'].nil?
 			halt 412, {'Content-Type' => 'text/plain'}, "You must supply last command" if env['sveg.stream.last_command'].nil?
@@ -272,7 +272,7 @@ class SvegApp < Sinatra::Base
 		redirect "/auth/login"
 	end
 
-	get '/die' do 
+	get '/die' do
 		raise "Died right here!"
 	end
 
@@ -288,12 +288,12 @@ class SvegApp < Sinatra::Base
 		end
 		render_erb :account, {:layout => :'layout/plain'}, {:locals => { :user => targetuser }}
 	end
-	
+
 	get '/admin' do
 		user_must_be_admin
-		render_erb :admin, :layout => :'layout/plain'	
+		render_erb :admin, :layout => :'layout/plain'
 	end
-	
+
 	get '/logout' do
 		PB::User.logout(env)
 		flash[:notice] = "You've logged out."
@@ -341,7 +341,7 @@ class SvegApp < Sinatra::Base
 		flash[:notice] = success ? "Book " + book.title + " was deleted" : "Book could not be deleted."
 		plain_response("")
 	end
-	
+
 	get '/books/:id' do
 		@book = PB::Book[params[:id]]
 		user_must_own @book
@@ -380,7 +380,7 @@ class SvegApp < Sinatra::Base
 		user_must_own book
 		send_file book.pdf_path
 	end
-	
+
 	post '/books/:id/pdf' do
 		book = Book[params[:id]]
 		user_must_own book
@@ -399,22 +399,22 @@ class SvegApp < Sinatra::Base
 		return [404, "Photo not found"] unless photo
 		send_file photo.file_path(params[:size])
 	end
-	
+
 	# uploads the photo, returns photo.to_json
 	# if photo already exists, it discards current data, and returns original
 	post '/photos' do
 		user_must_be_logged_in
 		assert_last_command_up_to_date(request)
-		book_id = params.delete('book_id')	
+		book_id = params.delete('book_id')
 		book = Book[book_id]
 		user_must_own(book)
 		begin
 			destroy_me = nil	# destroy must be outside the transaction
 			photo_file = params.delete('photo_file')
-			
+
 			photo = Photo.new(params);
 			photo.user_id = current_user.pk
-			DB.transaction do 
+			DB.transaction do
 				# save photo_file
 				PhotoStorage.storeFile(photo, photo_file[:tempfile].path ) if photo_file
 				photo.save
@@ -433,7 +433,7 @@ class SvegApp < Sinatra::Base
 				end
 			end # transaction
 			destroy_me.destroy if destroy_me
-			
+
 			# broadcast cmd
 			headers( BrowserCommand.createAddPhotoCmd(book.id, photo).broadcast(env))
 			# response
@@ -450,7 +450,7 @@ class SvegApp < Sinatra::Base
 		assert_last_command_up_to_date(request)
 		begin
 			page = nil
-			DB.transaction do 
+			DB.transaction do
 				page_position = Integer(params.delete('page_position'))
 				page = PB::BookPage.new(params);
 				book.insertPage(page, page_position)
@@ -463,7 +463,7 @@ class SvegApp < Sinatra::Base
 			halt 500, "Unexpected server error"
 		end
 	end
-	
+
 	delete '/book_page/:id' do
 		user_must_be_logged_in
 		page = PB::BookPage[params.delete("id")]
@@ -474,7 +474,7 @@ class SvegApp < Sinatra::Base
 		page.destroy
 		plain_response("Delete successful")
 	end
-	
+
 	put '/book_page/:id' do
 		user_must_be_logged_in
 		page = PB::BookPage[params['id']]
@@ -487,12 +487,12 @@ class SvegApp < Sinatra::Base
 		end
 		plain_response("Update successful")
 	end
-	
+
 	get '/assets/:template_name/:asset_file' do
 		user_must_be_logged_in
 		send_file BookTemplate.get(params[:template_name]).get_asset_path(params[:asset_file], params[:size] )
 	end
-	
+
 	get '/templates' do
 		render_erb :template_list, {:layout => :'layout/plain'}
 	end
@@ -501,7 +501,7 @@ class SvegApp < Sinatra::Base
 		template = BookTemplate.get(params[:id])
 		json_response(template)
 	end
-	
+
 	get '/subscribe/book/:book_id' do # async
 		LOGGER.error "Subscriptions should be forwarded to comet"
 		redirect "http://#{SvegSettings.comet_host}:#{SvegSettings.comet_port}/subscribe/book/#{params[:book_id]}?#{env['QUERY_STRING']}"

@@ -14,9 +14,10 @@
 
 // PhotoPalette
 // images can be dragged out
-(function(window){
+(function(scope){
 	var PhotoPalette = {
 	}
+
 	var PhotoPaletteDnd = {
 		makeDraggable: function(img) {
 			$(img).attr('draggable', true).on( {
@@ -36,97 +37,7 @@
 	}
 	var PhotoPaletteTouch = {
 		makeDraggable: function(img) {
-			$(img).on({
-				'touchstart': function(ev) { PhotoPaletteTouch.touchstart(ev.originalEvent)},
-				'touchmove': function(ev) { PhotoPaletteTouch.touchmove(ev.originalEvent)},
-				'touchend': function(ev) { PhotoPaletteTouch.touchend(ev.originalEvent)},
-				'touchcancel': function(ev) { PhotoPaletteTouch.touchcancel(ev.originalEvent)}
-			});
-		},
-		startTouch: null,
-		lastTouch: {pageX: 0, pageY: 0},
-		dragImage: null,
-		touchstart: function(ev) {
-			console.log('touchstart');
-			if (ev.touches.length > 1)
-				return;
-			this.startTouch = ev.touches[0];
-			this.setLastTouch(PhotoPaletteTouch.startTouch);
-			this.createDragImage();
-			DragStore.start().image = this.startTouch.target;
-			ev.preventDefault();
-		},
-		createDragImage: function() {
-			var r = PhotoPaletteTouch.startTouch.target.getBoundingClientRect();
-			PhotoPaletteTouch.dragImage = $(PhotoPaletteTouch.startTouch.target)
-				.clone()
-				.addClass('touch-drag-src')
-				.css({
-				position: 'absolute',
-				top: r.top,
-				left: r.left,
-				width: r.width,
-				height: r.height
-			});
-			$('body').append(PhotoPaletteTouch.dragImage);
-		},
-		cancelTouch: function() {
-			window.TouchDrop.touchend();
-			PhotoPaletteTouch.setLastTouch();
-			PhotoPaletteTouch.dragImage.detach();
-			PhotoPaletteTouch.dragImage = null;
-		},
-		setLastTouch: function(touch) {
-			if (touch == null)
-				PhotoPaletteTouch.lastTouch = {};
-			else {
-				PhotoPaletteTouch.lastTouch.pageX = touch.pageX;
-				PhotoPaletteTouch.lastTouch.pageY = touch.pageY;
-			}
-		},
-		touchItemById: function(touchList, identifier) {
-			identifier = identifier || PhotoPaletteTouch.startTouch.identifier;
-			for (var i=0; i<touchList.length; i++)
-				if (touchList[i].identifier == identifier)
-					return touchList[i];
-			return null;
-		},
-		touchmove: function(ev) {
-			var newTouch = this.touchItemById(ev.changedTouches);
-			if (!newTouch) {
-				console.log('touchmove ignored');
-				return;
-			}
-			var topDiff = newTouch.pageY - this.lastTouch.pageY;
-			var leftDiff = newTouch.pageX - this.lastTouch.pageX;
-			this.dragImage.css({
-				top: "+=" + topDiff,
-				left: "+=" + leftDiff
-			});
-			this.setLastTouch(newTouch);
-			ev.preventDefault();
-			window.TouchDrop.touchmove(ev.pageX, ev.pageY);
-		},
-		touchend: function(ev) {
-			console.log('touchend');
-			var newTouch = PhotoPaletteTouch.touchItemById(ev.changedTouches);
-			if (!newTouch) {
-				console.log('touchend ignored');
-				return;
-			}
-			this.cancelTouch();
-			console.log('touchend');
-			ev.preventDefault();
-		},
-		touchcancel: function(ev) {
-			ev = ev.originalEvent;
-			if (this.touchItemById(ev.changedTouches)) {
-				this.cancelTouch();
-				console.log('touchcancel');
-				ev.preventDefault();
-			}
-			else
-				console.log('touchcancel ignored');
+			scope.TouchDragHandler.makeDraggable(img, 'image');
 		}
 	}
 
@@ -136,11 +47,11 @@
 	else
 		$.extend(PhotoPalette, PhotoPaletteDnd);
 
-	window.PhotoPalette = PhotoPalette;
+	scope.PhotoPalette = PhotoPalette;
 })(window.GUI);
 
 
-(function(window) {
+(function(scope) {
 	var WimpShortcut = function(name, key, meta, callback) {
 		this.name = name;
 		this.key = key;
@@ -193,11 +104,11 @@
 				console.error('unknown command ' + cmd);
 		}
 	});
-	window.WimpShortcut = WimpShortcut;
+	scope.WimpShortcut = WimpShortcut;
 })(window);
 
 // GUI.Controller
-(function(window) {
+(function(scope) {
 
 	var navbarHeight = 41; // @navbar-height in less
 	// Image palette variables
@@ -342,7 +253,7 @@
 				Controller.revealByScrolling(newPage, $('#pb-work-area'));
 			});
 			// cleanup: make it look nice
-			window.RoughWorkArea.makeDraggable(newPage);
+			scope.RoughWorkArea.makeDraggable(newPage);
 			this.renumberRoughPages();
 		},
 		removeRoughPage: function(roughPage) {
@@ -366,7 +277,7 @@
 		}
 	};
 
-	window.Controller = Controller;
+	scope.Controller = Controller;
 
 })(window.GUI);
 
@@ -377,34 +288,33 @@
 // Rough page image
 // Drag destinations:
 // Rough page
-(function(window) {
+(function(scope) {
 	var roughPageTarget = { target: null, direction: 0, dropFeedback: "" };
-
-	var RoughPageImageDnd = {
-		makeDraggable: function(el) {
-			$(el).attr('draggable', true).on( {
-				dragstart: function(ev) {
-//					console.log("DragStore.start rough-page-image");
-					ev = ev.originalEvent;
-					ev.dataTransfer.setData('text/plain', this.src);// chrome does not work without this
-					ev.dataTransfer.setData('text/uri-list', this.src);
-					DragStore.start().roughImage = this;
-					ev.dataTransfer.effectAllowed = 'move';
-					ev.stopPropagation();
-				},
-				dragend: function(ev) {
-//					console.log("DragStore.clear rough-page-image");
-					DragStore.clear();
-					ev.stopPropagation();
-				}
-			});
-		}
-	}
 
 	var RoughWorkArea = {
 		init: function() {
 			this.makeDroppable();
-			this.makeDraggable($('.rough-page'));
+			$('.rough-page').each(function() {
+				RoughWorkArea.makeDraggable(this);
+			});
+		},
+		getDragTarget: function(roughPage, clientX, clientY) {
+			var roughPage = $(roughPage).get(0);
+			var r = roughPage.getBoundingClientRect();
+			var retVal = { dom: $(roughPage).get(0), type: 'roughPage',
+				offsetX: clientX - r.left, offsetY: clientY - r.top }
+			$(roughPage).children().each(function() {
+				var r = this.getBoundingClientRect();
+				if ( GUtil.pointInClientRect(clientX, clientY, r)) {
+					if ($(this).hasClass('rough-tile')) {
+						retVal.dom = this;
+						retVal.type = 'roughImage';
+						retVal.offsetX = clientX - r.left;
+						retVal.offsetY = clientY - r.top;
+					}
+				}
+			});
+			return retVal;
 		},
 		makeDroppable: function() {
 			$('#work-area-rough').attr('dropzone', true).on( {
@@ -414,7 +324,7 @@
 				dragenter: function(ev) { RoughWorkArea.dragenter(ev.originalEvent) }
 			});
 		},
-				logTargets: function(prefix, ev) {
+		logTargets: function(prefix, ev) {
 			var s = prefix;
 			if (ev.target)
 				s += ' target: ' + ev.target.id + ' ' + ev.target.className;
@@ -442,7 +352,7 @@
 			var newTarget = null;
 			var newDirection = null;
 			$(ev.currentTarget).children('.rough-page').each(function() {
-				var direction = GUtil.pointInClientRect(ev.pageX, ev.pageY,
+				var direction = GUtil.pointInClientRect(ev.clientX, ev.clientY,
 					this.getBoundingClientRect());
 				if (direction) {
 					newTarget = this;
@@ -510,7 +420,6 @@
 				var newImg = $("<div class='rough-tile'/>");
 				newImg.css('background-image', 'url("' + src.prop('src') + '")');
 				newImg.appendTo(t.target);
-				RoughPageImageDnd.makeDraggable(newImg);
 				GUI.Controller.tileRoughInsideTiles(t.target);
 			}
 			else if (DragStore.roughImage) {
@@ -521,6 +430,7 @@
 				$(t.target).append(DragStore.roughImage);
 				GUI.Controller.tileRoughInsideTiles(t.target);
 			}
+			DragStore.hadDrop = true;
 		},
 		setTarget:	function (target, direction, dropFeedback) {
 			direction = 'before';	// decided to ignore direction for now
@@ -540,11 +450,12 @@
 			$(el).attr('draggable', true).on( {
 				'dragstart': function(ev) {
 					ev = ev.originalEvent;
-					ev.dataTransfer.setData('text/plain', "my text");
+					var target = RoughWorkArea.getDragTarget(this, ev.clientX, ev.clientY);
+					ev.dataTransfer.setData('text/plain', "page drag");
 //					console.log("DragStore.start rough-page");
-					DragStore.start().roughPage = this;
+					DragStore.start()[target.type] = target.dom;
 					// TODO hide the page, create drag image from canvas
-		//			ev.dataTransfer.setDragImage(clone, 0, 0);
+					ev.dataTransfer.setDragImage(target.dom, target.offsetX, target.offsetY);
 					ev.dataTransfer.effectAllowed = "move";
 				},
 				'dragend': function(ev) {
@@ -556,37 +467,46 @@
 	}
 
 	var RoughWorkAreaTouch = {
-		makeDraggable: function() {
+		makeDraggable: function(el) {
+			$(el).each(function() {
+				var src = this;
+				scope.TouchDragHandler.makeDraggable(src, function(element, clientX, clientY) {
+					return RoughWorkArea.getDragTarget(element, clientX, clientY);
+				});
+			});
 		}
 	}
 
 	if (PB.detectTouch()) {
 		$.extend(RoughWorkArea, RoughWorkAreaTouch);
 	}
-	else
+	else {
 		$.extend(RoughWorkArea, RoughWorkAreaDnd);
-
-	window.RoughWorkArea = RoughWorkArea;
-	window.RoughPageImage = RoughPageImageDnd;
+	}
+	scope.RoughWorkArea = RoughWorkArea;
 
 })(window.GUI);
 
-(function(window) {
+(function(scope) {
 	var AddRemoveButtons = {
 		init: function() {
-			$('#add-page-btn').click(function() { GUI.Controller.addRoughPage();});
+			var addBtn = $('#add-page-btn');
+			addBtn.click(function() { GUI.Controller.addRoughPage();});
 
-			$('#add-page-btn').attr('draggable', true).on( {
-				dragstart: function(ev) {
-					ev = ev.originalEvent;
-					ev.dataTransfer.setData('text/plain', "my text");
-					DragStore.start().addRoughPage = true;
-					ev.dataTransfer.effectAllowed = "move";
-				},
-				dragend: function(ev) {
-					DragStore.clear();
-				}
-			});
+			if (PB.detectTouch())
+				scope.TouchDragHandler.makeDraggable(addBtn, 'addRoughPage');
+			else
+				addBtn.attr('draggable', true).on( {
+					dragstart: function(ev) {
+						ev = ev.originalEvent;
+						ev.dataTransfer.setData('text/plain', "my text");
+						DragStore.start().addRoughPage = true;
+						ev.dataTransfer.effectAllowed = "move";
+					},
+					dragend: function(ev) {
+						DragStore.clear();
+					}
+				});
 
 			$('#remove-page-btn').attr('dropzone', true).on( {
 				dragover: function(ev) {
@@ -616,11 +536,11 @@
 			});
 		}
 	}
-	window.AddRemoveButtons = AddRemoveButtons;
+	scope.AddRemoveButtons = AddRemoveButtons;
 })(window.GUI);
 
 // Graphics utilities
-(function(window) {
+(function(scope) {
 	var GUtil = {
 		// false not in rect, 'left' to the left, 'right' to the right
 		pointInClientRect: function(x, y, r) {
@@ -633,20 +553,19 @@
 				return false;
 		}
 	}
-	window.GUtil = GUtil;
+	scope.GUtil = GUtil;
 })(window);
 
-// TouchDrop
-// transfroms touch events into drag and drop events
-(function(window) {
+// TouchDrop: transfroms touch events into drag and drop events
+(function(scope) {
 
 	var dropTarget;
 
 	var TouchDrop = {
-		findTarget: function(pageX, pageY) {
+		findTarget: function(clientX, clientY) {
 			var targets = $('[dropzone]').get().filter(function(el) {
 				var r = el.getBoundingClientRect();
-				return pageY >= r.top && pageY <= r.bottom && pageX >= r.left && pageX <= r.right;
+				return clientY >= r.top && clientY <= r.bottom && clientX >= r.left && clientX <= r.right;
 			});
 			switch(targets.length) {
 				case 0: return null;
@@ -654,14 +573,14 @@
 				default: console.log('multiple drop targets'); return targets[0];
 			}
 		},
-		sendEvent: function(target, eventType, pageX, pageY) {
+		sendEvent: function(target, eventType, clientX, clientY) {
 			if (!target)
 				return;
 			var ev = {
 				preventDefault: function() {},
 				stopPropagation: function() {},
-				pageX: pageX,
-				pageY: pageY,
+				clientX: clientX,
+				clientY: clientY,
 				currentTarget: target
 			}
 			var jqEvent = $.Event(eventType);
@@ -675,17 +594,192 @@
 			dropTarget = newTarget;
 			this.sendEvent(dropTarget, 'dragstart');
 		},
-		touchmove: function(pageX, pageY) {
-			this.setDropTarget(this.findTarget(pageX, pageY));
-			this.sendEvent(dropTarget, 'dragover', pageX, pageY);
+		touchmove: function(clientX, clientY) {
+			this.setDropTarget(this.findTarget(clientX, clientY));
+			this.sendEvent(dropTarget, 'dragover', clientX, clientY);
 		},
 		touchend: function() {
 			this.sendEvent(dropTarget, 'drop');
 			this.setDropTarget();
 		}
 	}
-	window.TouchDrop = TouchDrop;
+	scope.TouchDrop = TouchDrop;
 })(window.GUI);
+
+(function(scope) {
+
+	var TouchTrack = function(findTargetCb) {
+		if (typeof findTargetCb == 'string')
+		{
+			var targetType = findTargetCb;
+			findTargetCb = function(element, clientX, clientY) {
+				element = $(element).get(0);
+				var r = element.getBoundingClientRect();
+				return { dom: element, type: targetType,
+					offsetX: clientX - r.left, offsetY: clientY - r.top }
+			}
+		}
+		this._findTargetCb = findTargetCb;
+		this._start = null; // first touch event
+		this._last = { clientX: 0, clientY: 0}; // location of last touch event
+		this._domCopy = null; // clone of the element we are dragging
+		this._source = null; // element we are dragging
+		this._delayed = false;	// delayed start of tracking, holds id of delayTimeotu
+	}
+
+	TouchTrack.prototype = {
+		startTracking: function(element, touchEvent, delayed) {
+			this.start = touchEvent;
+			this.last = touchEvent;
+			this.findSource(element, touchEvent.clientX, touchEvent.clientY);
+			var THIS = this;
+			function finishStart() {
+				THIS.createDragImage();
+				DragStore.start();
+				DragStore[THIS._source.type] = THIS._source.dom;
+				THIS._delayed = false;
+			}
+			if (delayed)
+				this._delayed = window.setTimeout(finishStart, 500);
+			else
+				finishStart();
+		},
+		track: function(touchEvent) {
+			if (this.delayed)
+				return;
+			var topDiff = touchEvent.clientY - this._last.clientY;
+			var leftDiff = touchEvent.clientX - this._last.clientX;
+			this._domCopy.css({
+				top: "+=" + topDiff,
+				left: "+=" + leftDiff
+			});
+			this.last = touchEvent;
+		},
+		stopTracking: function() {
+			if (this.delayed) {
+				window.clearTimeout(this._delayed);
+				this._delayed = false;
+			}
+			if (!DragStore.hadDrop) {
+				// Animate snap item back if there was no drop
+				var r = this._source.dom.getBoundingClientRect();
+				var THIS = this;
+				$(this._domCopy).animate({ top: r.top, left: r.left }, 50,
+					function() {
+						THIS.domCopy = null;
+					});
+			}
+			else
+				this.domCopy = null;
+			this.last = null;
+			this._source = null;
+		},
+		createDragImage: function(touchTrack) {
+			var r = this._source.dom.getBoundingClientRect();
+			this.domCopy = $(this._source.dom).clone();
+			this.domCopy.addClass('touch-drag-src')
+				.css({
+				position: 'absolute',
+//				top:0, left:0, width: '100px', height: '100px'
+				top: r.top, left: r.left, width: r.width, height: r.height
+			});
+			$('body').append(this._domCopy);
+		},
+
+		findSource: function(element, clientX, clientY) {
+			this._source = this._findTargetCb(element, clientX, clientY);
+		},
+
+		get identifier() { return this._start.identifier; },
+		get delayed() { return this._delayed; },
+
+		get last() { return this._last },
+		set last(touchEvent) {
+			if (touchEvent) {
+				this._last.clientX = touchEvent.clientX;
+				this._last.clientY = touchEvent.clientY
+			}
+			else
+				this._last = {}
+		},
+
+		get start() { return this._start; },
+		set start(touchEvent) {
+			this._start = touchEvent;
+		},
+
+		get domCopy() { return this._domCopy },
+		set domCopy(el) {
+			if (this._domCopy)
+				this._domCopy.stop().detach();
+			this._domCopy = el;
+		}
+	}
+	var TouchDragHandler = {
+		makeDraggable: function(el, findTargetCb) {
+
+			var touchTrack = new TouchTrack(findTargetCb);
+			$(el).attr('draggable', true).on({
+				touchstart: function(ev) { TouchDragHandler.touchstart(ev.originalEvent, touchTrack)},
+				touchmove: function(ev) { TouchDragHandler.touchmove(ev.originalEvent, touchTrack)},
+				touchend: function(ev) { TouchDragHandler.touchend(ev.originalEvent, touchTrack)},
+				touchcancel: function(ev) { TouchDragHandler.touchcancel(ev.originalEvent, touchTrack)}
+			});
+		},
+		touchItemById: function(touchList, identifier) {
+			for (var i=0; i<touchList.length; i++)
+				if (touchList[i].identifier == identifier)
+					return touchList[i];
+			return null;
+		},
+		touchstart: function(ev, touchTrack) {
+			//console.log('touchstart', ev.currentTarget);
+			if (ev.touches.length > 1)
+				return;
+			touchTrack.startTracking(ev.currentTarget,
+				ev.touches[0],
+				$(ev.currentTarget).data('events').click);
+			ev.preventDefault();
+		},
+		touchmove: function(ev, touchTrack) {
+			var newTouch = this.touchItemById(ev.changedTouches, touchTrack.identifier);
+			if (!newTouch) {
+				console.log('touchmove ignored');
+				return;
+			}
+		//	console.log('touchmove');
+			touchTrack.track(newTouch);
+			if (!touchTrack.delayed)
+				ev.preventDefault();
+			scope.TouchDrop.touchmove(newTouch.clientX, newTouch.clientY);
+		},
+		touchend: function(ev, touchTrack) {
+			var newTouch = this.touchItemById(ev.changedTouches, touchTrack.identifier);
+			if (!newTouch) {
+				console.log('touchend ignored');
+				return;
+			}
+			scope.TouchDrop.touchend();
+//			console.log('touchend');
+			if (touchTrack.delayed && $(ev.target).data('events').click) {
+				$(ev.target).click();
+			}
+			ev.preventDefault();
+			touchTrack.stopTracking();
+		},
+		touchcancel: function(ev, touchTrack) {
+			if (this.touchItemById(ev.changedTouches, touchTrack.identifier)) {
+				touchTrack.stopTracking();
+				console.log('touchcancel');
+				ev.preventDefault();
+			}
+			else
+				console.log('touchcancel ignored');
+		}
+	}
+	scope.TouchDragHandler = TouchDragHandler;
+})(window.GUI);
+
 
 // DragStore is a global used to store dragged local data
 // Why? Html drag can only drag strings, we need js objects
@@ -698,6 +792,7 @@
 			this._image = null;
 			this._roughImage = null;
 			this._addRoughPage = null;
+			this._hadDrop = false;
 			return this;
 		},
 		clear: function() {
@@ -710,7 +805,9 @@
 		get addRoughPage() { return this._addRoughPage},
 		set addRoughPage(val) { this._addRoughPage = val },
 		get roughImage() { return this._roughImage },
-		set roughImage(val) { this._roughImage = val}
+		set roughImage(val) { this._roughImage = val},
+		get hadDrop() { return this._hadDrop },
+		set hadDrop(val) { this._hadDrop = val }
 	}
 	window.DragStore = DragStore;
 })(window);
