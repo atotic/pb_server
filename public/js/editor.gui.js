@@ -116,6 +116,7 @@
 	var imagePadding = 12;			// @image-padding
 	var imageHeight = baseImageHeight;
 	var imageHeightScaler = 1.1;
+	var roughPageHeight = 128;
 
 	var Controller = {
 
@@ -239,7 +240,7 @@
 			if (targetPage && targetPage.className.match(/right/))
 				pos = 'left';
 			var newPage = $("<div class='rough-page " + pos +"-rough'><p>" + pageNumber + "</p></div>");
-			newPage.hide();
+			newPage.css('height', 0);
 			if (targetPage) {
 				if (direction == 'before')
 					$(targetPage).before(newPage);
@@ -249,9 +250,11 @@
 			else {
 				$('#work-area-rough').append(newPage);
 			}
-			newPage.slideDown(function() {
+			newPage.animate({height: roughPageHeight},function() {
+				newPage.css('display', 'auto');
 				Controller.revealByScrolling(newPage, $('#pb-work-area'));
 			});
+
 			// cleanup: make it look nice
 			scope.RoughWorkArea.makeDraggable(newPage);
 			this.renumberRoughPages();
