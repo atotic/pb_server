@@ -308,7 +308,7 @@
 				offsetX: clientX - r.left, offsetY: clientY - r.top }
 			$(roughPage).children().each(function() {
 				var r = this.getBoundingClientRect();
-				if ( GUtil.pointInClientRect(clientX, clientY, r)) {
+				if ( scope.GUtil.pointInClientRect(clientX, clientY, r)) {
 					if ($(this).hasClass('rough-tile')) {
 						retVal.dom = this;
 						retVal.type = 'roughImage';
@@ -355,7 +355,7 @@
 			var newTarget = null;
 			var newDirection = null;
 			$(ev.currentTarget).children('.rough-page').each(function() {
-				var direction = GUtil.pointInClientRect(ev.clientX, ev.clientY,
+				var direction = scope.GUtil.pointInClientRect(ev.clientX, ev.clientY,
 					this.getBoundingClientRect());
 				if (direction) {
 					newTarget = this;
@@ -406,11 +406,12 @@
 
 				var oldWidth = src.width();
 				src.animate({width: 0}, function() { // hide old
-					src.detach();
-					if (t.direction == 'before')
-						t.target.before(src);
-					else
-						t.target.after(src);
+					scope.GUtil.moveNode(src, t.target, t.direction);
+					// src.detach();
+					// if (t.direction == 'before')
+					// 	t.target.before(src);
+					// else
+					// 	t.target.after(src);
 					src.animate({width: oldWidth}); // show new
 					GUI.Controller.renumberRoughPages();
 				});
@@ -455,7 +456,7 @@
 					ev = ev.originalEvent;
 					var target = RoughWorkArea.getDragTarget(this, ev.clientX, ev.clientY);
 					ev.dataTransfer.setData('text/plain', "page drag");
-//					console.log("DragStore.start rough-page");
+					console.log("dragstart rough-page");
 					DragStore.start()[target.type] = target.dom;
 					// TODO hide the page, create drag image from canvas
 					ev.dataTransfer.setDragImage(target.dom, target.offsetX, target.offsetY);
@@ -554,10 +555,41 @@
 			}
 			else
 				return false;
+		},
+		// Workaround for iPad bug 11619581. We must reregister event handlers if node is moved in dom
+		// https://bugreport.apple.com/cgi-bin/WebObjects/RadarWeb.woa/56/wo/RGiDXCcK1TeSzthooVQzbw/13.66
+		// direction is before or after
+		moveNode: function(src, dest, direction) {
+			// Remove from DOM
+			src.detach();
+			// Save all the events
+			var events = src.data('events');
+			var handlers = [];
+			for (var eventType in events)
+				events[eventType].forEach(function(event) {
+					var record = {};
+					record[eventType] = event.handler;
+					handlers.push(record);
+				});
+			// Detach all the events
+			handlers.forEach(function(h) {
+				var x = src.off(h);
+			});
+			// Insert into DOM
+			if (direction == 'before')
+				dest.before(src);
+			else
+				dest.after(src);
+			// Reattach the events
+			handlers.forEach(function(h) {
+				src.bind(h);
+			});
 		}
 	}
+
+
 	scope.GUtil = GUtil;
-})(window);
+})(window.GUI);
 
 // TouchDrop: transfroms touch events into drag and drop events
 (function(scope) {
