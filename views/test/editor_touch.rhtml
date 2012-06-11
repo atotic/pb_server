@@ -33,6 +33,9 @@ html, body {
 	user-select: none;
 }
 
+body {
+	.no-selection;
+}
 .hidden {
 	position:relative;
 	top: -500px;
@@ -207,7 +210,7 @@ html, body {
 		height: 30px;
 		background-position: center center;
     background-repeat: no-repeat;
-    background-size: 100% auto;
+    background-size: contain;
 		background-color: none;
 	}
 	.drop-target {

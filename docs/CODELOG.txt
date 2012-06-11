@@ -5,6 +5,8 @@
 2 weeks: log in to fb/browser_id
 Finished on Apr 23rd. 7 week estimate, 9 week completion
 8 weeks: editor rewrite, touch style, drop images from anywhere
+	jun 8th, 6 weeks into rewrite, just have the bare bones ui, jsdiff
+	reason for slip is that UI needed complete rewrite
 1 week: security/sharing
 2 weeks: own store
 
@@ -44,13 +46,28 @@ library
 testing
 - qunit server. straight api testing
 
+Plan:
+Implement the rest of the functionality. Total rewrite, old code will get reimported.
+Want the old code around to see how it used to work. Tag it as 1_0alpha.
+Stage 1: get everything working for rough
+	- define rough (new book)
+	- editing:
+		add images (auto rotate right away)
+		delete images
+	- will need jsdiff, jspatch change broadcasts, jspatches on the server
+	- saving of the edits
+3 half-time weeks
+
+Stage 2: get templates/printing
+5 weeks
+Google Drive integration? https://developers.google.com/drive/
 Next:
-- Image drag:
-- implement delay, better visual drag feedback
-- implement drop
-mockup: simple basic layout on 3 platforms
-Port to real server code
-Template generation
+Resize fingerprint drag control. Just too cute.
+Define rough structure (images, pages, add/remove)
+
+June 7
+All touch drags work. It was not as much work as I've thought.
+Had to work around iOS bug.
 
 June 5
 Remote debugging with weinre works (ocasionally). console.log on ipad does the job too

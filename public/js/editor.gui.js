@@ -8,7 +8,7 @@
 		detectTouch: function() {
 			return 'ontouchstart' in window;
 		}
-	}
+	};
 
 })(window);
 
@@ -25,12 +25,12 @@
 					ev = ev.originalEvent;
 					ev.dataTransfer.setData('text/uri-list', this.src);
 		//			console.log("DragStore.start photo-list img");
-					DragStore.start().image = this;
+					window.DragStore.start().image = this;
 					ev.effectAllowed = 'move';
 				},
 				'dragend': function(ev) {
 		//			console.log("DragStore.clear photo-list img");
-					DragStore.clear();
+					window.DragStore.clear();
 				}
 			});
 		}
@@ -302,7 +302,7 @@
 			});
 		},
 		getDragTarget: function(roughPage, clientX, clientY) {
-			var roughPage = $(roughPage).get(0);
+			roughPage = $(roughPage).get(0);
 			var r = roughPage.getBoundingClientRect();
 			var retVal = { dom: $(roughPage).get(0), type: 'roughPage',
 				offsetX: clientX - r.left, offsetY: clientY - r.top }
@@ -840,10 +840,10 @@
 		get addRoughPage() { return this._addRoughPage},
 		set addRoughPage(val) { this._addRoughPage = val },
 		get roughImage() { return this._roughImage },
-		set roughImage(val) { this._roughImage = val},
-		get hadDrop() { return this._hadDrop },
-		set hadDrop(val) { this._hadDrop = val }
-	}
+		set roughImage(val) { this._roughImage = val;},
+		get hadDrop() { return this._hadDrop; },
+		set hadDrop(val) { this._hadDrop = val; }
+	};
 	window.DragStore = DragStore;
 })(window);
 

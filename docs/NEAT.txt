@@ -1,6 +1,9 @@
 http://caniuse.com/
 
 CSS
+How web design pros do it: http://css-tricks.com/notes-from-my-web-designers-workflow-workshop-at-interlink-2012/
+CodeKit for continuous less integration, icons served as fonts
+Subtle patterns: might use this for backgrounds: http://subtlepatterns.com/
 filters: could I use this? http://www.html5rocks.com/en/tutorials/filters/understanding-css/
 :target pseudo class might be useful http://css-tricks.com/on-target/
 WebGL clouds, our something went wrong page: http://www.clicktorelease.com/code/css3dclouds/#?utm_source=html5weekly&utm_medium=email
@@ -19,7 +22,7 @@ Nice way to do captions, HTML5 style http://css-tricks.com/slide-in-image-captio
 http://www.trymyui.com/ great UI testing place
 Very neat background patterns: http://leaverou.me/css3patterns/#
 Gradient editor: http://www.colorzilla.com/gradient-editor/
-CSS easing is cool: http://matthewlein.com/ceaser/
+ easing is cool: http://matthewlein.com/ceaser/
 Buttons can be made unselectable with : -webkit-user-select: none; (CSS3 property
 Buttons http://webdesignledger.com/tutorials/12-excellent-css3-button-and-menu-techniques
 CSS Fonts: http://www.w3.org/Style/Examples/007/fonts.en.html
@@ -77,6 +80,13 @@ Image to canvas: http://hacks.mozilla.org/2012/02/creating-thumbnails-with-drag-
 Operational Transformation is an official name for type of editor I am building  http://sharejs.org/
 Page turning in JS: http://www.turnjs.com/#usage, http://tympanus.net/Development/FlipboardPageLayout/?page=0
 
+TOUCH
+Preparing Web Content for iPad https://developer.apple.com/library/safari/#technotes/tn2010/tn2262/_index.html
+Safari handling events http://developer.apple.com/library/ios/#DOCUMENTATION/AppleApplications/Reference/SafariWebContent/HandlingEvents/HandlingEvents.html
+Using drag and drop from javascript https://developer.apple.com/library/mac/#documentation/appleapplications/conceptual/safarijsprogtopics/tasks/draganddrop.html
+http://www.html5rocks.com/en/mobile/mobifying/
+http://www.html5rocks.com/en/mobile
+
 TESTING
 qunit: jquery unit testing framework
 jquery-simulate: simulate browser mouse & keyboard events https://github.com/eduardolundgren/jquery-simulate. There is a touch pull
@@ -113,10 +123,14 @@ MOBILE
 Viewport scoller https://github.com/zynga/scroller
 Developing a nice mobile site: http://davidbcalhoun.com/2011/mobile-performance-manifesto
 Touch event history and future: http://blog.jquery.com/2012/04/10/getting-touchy-about-patents/
+Free DNS redirects for everyone: http://xip.io/
 
 OTHER
+Google drive integration: https://developers.google.com/drive/get_started#integrate_with_the_drive_ui
+Use Picasa Web API for storage?
+Hire people through https://www.odesk.com/
 Common sense development guidelines for web apps http://www.12factor.net/
-MailGun for photo upload: mailgun.net
+MailGun for photo upload via email: mailgun.net
 Google Cloud Storage looks great. Looks like I could run the entire site for less than $10K a month.
 Open source freelancers, where to register non-seizable domain: http://gun.io/
 PlentyOfFish website run by one guy, 10M page views a month. http://highscalability.com/blog/2011/12/27/plentyoffish-update-6-billion-pageviews-and-32-billion-image.html
