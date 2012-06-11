@@ -5,7 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 	<%= asset_link("jquery.js") %>
 	<%= asset_link("bootstrap") %>
-	<%= asset_link("editor.gui.js") %>
+	<%= asset_link("editor.js") %>
 
 <scripts src="http://dev.pb4us.com:9000/target/target-script-min.js"></script>
 <style type='text/less' title='inline'>
@@ -17,6 +17,9 @@ html, body {
 	height: 100%;
 	width: 100%;
 }
+
+* { -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box; }
+
 /* draw a line under navigation bar to make it look like big tabs */
 .nav-tabs {
 	border-bottom: 0px solid #DDDDDD;
@@ -62,8 +65,9 @@ body {
 @palette-height: @navbar-height + @photo-list-height;
 @side-tool-width: 120px;
 @arrow-width: 28px;
-
-@dark-bg-color: #2C2C2C;
+@work-area-color: #ddd;
+@dark-bg-color: #2c2c2c;
+@dark-bg-color-lighten: #5c5c5c;
 
 #pb-palette {
 	position: absolute;
@@ -73,9 +77,25 @@ body {
 	background-color:@dark-bg-color;
 }
 
+@palette-resize-btn-radius: 20px;
+
+#palette-resize-btn {
+	position: absolute;
+	width: @palette-resize-btn-radius * 2;
+	height: @palette-resize-btn-radius * 2;
+	border-radius: @palette-resize-btn-radius;
+	background-color: @dark-bg-color;
+	bottom: -@palette-resize-btn-radius;
+	right: @palette-resize-btn-radius;
+	border: 1px solid @work-area-color;
+}
+#palette-resize-btn:hover, .resize-hover{
+	background-color: @dark-bg-color-lighten;
+}
+
 .pb-palette-container {
 	overflow: auto;
-	margin-left:16px;
+	margin-left:0px;
 	top: @navbar-height;
 	max-height: @photo-list-height;
 }
@@ -85,6 +105,8 @@ body {
 
 	#photo-list {
 		margin-top: 8px;
+		padding-left: @side-tool-width;
+		padding-right: @palette-resize-btn-radius / 2;
 		width: 100%;
 	}
 		#photo-list img {
@@ -144,7 +166,7 @@ body {
 		background-color: @dark-bg-color;
 	}
 	#work-area-tools > .btn {
-		width:80%;
+		width:100%;
 		text-align: left;
 	}
 
@@ -285,10 +307,10 @@ body {
 			  	  	</li>
 			  	  	<li>View
 			  	  		<ul>
-			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewBiggerImages")'>Bigger photos</a></li>
-			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewSmallerImages")'>Smaller photos</a></li>
-			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewMoreImages")'>More photos</a></li>
-			  	  			<li><a href='javascript:WimpShortcut.doCommand("viewFewerImages")'>Fewer photos</a></li>
+			  	  			<li><a href='javascript:GUI.CommandManager.doCommand("viewBiggerImages")'>Bigger photos</a></li>
+			  	  			<li><a href='javascript:GUI.CommandManager.doCommand("viewSmallerImages")'>Smaller photos</a></li>
+			  	  			<li><a href='javascript:GUI.CommandManager.doCommand("viewMoreImages")'>More photos</a></li>
+			  	  			<li><a href='javascript:GUI.CommandManager.doCommand("viewFewerImages")'>Fewer photos</a></li>
 			  	  		</ul>
 			  	  	</li>
 			  		</ul>
@@ -348,8 +370,9 @@ body {
 				Gadgets!
 			</div>
 		</div>
+		<div id='palette-resize-btn'>
+		</div>
 	</div>
-
 </div>
 <script>
 
@@ -365,23 +388,9 @@ function insertImages() {
 
 // Initialization
 insertImages();
-GUI.RoughWorkArea.init();
-GUI.AddRemoveButtons.init();
+GUI.init();
 
-WimpShortcut.add(new WimpShortcut('viewMoreImages', '+', false,
-	function() {GUI.Controller.viewMoreImages()}));
-WimpShortcut.add(new WimpShortcut('viewMoreImages', '=', false,
-	function() {GUI.Controller.viewMoreImages()}));
-WimpShortcut.add(new WimpShortcut('viewFewerImages', '-', false,
-	function() {GUI.Controller.viewFewerImages()}));
-WimpShortcut.add(new WimpShortcut('viewBiggerImages', '+', true,
-	function() {GUI.Controller.viewBiggerImages()}));
-WimpShortcut.add(new WimpShortcut('viewBiggerImages', '=', true,
-	function() {GUI.Controller.viewBiggerImages()}));
-WimpShortcut.add(new WimpShortcut('viewSmallerImages', '-', true,
-	function() {GUI.Controller.viewSmallerImages()}));
-WimpShortcut.add(new WimpShortcut('addRoughPage', 'p', false,
-	function() {GUI.Controller.addRoughPage()}))
+
 console.log("editor_touch complete");
 console.warn("ready to go");
 </script>

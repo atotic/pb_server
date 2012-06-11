@@ -195,7 +195,9 @@ class SvegApp < Sinatra::Base
 			retVal = "";
 			args.each do |arg|
 				arg = arg.to_s if arg.is_a?(Symbol)
-				if arg.end_with?("js")
+				if arg.eql? "editor.js"
+					retVal += asset_link("editor.gui.js", "editor.gui.touch.js", "editor.gui.buttons.js");
+				elsif arg.end_with?("js")
 					arg = "jquery-1.7.js" if arg.eql? "jquery.js"
 					arg = "jquery-ui-1.8.16.custom.js" if arg.eql? "jquery-ui.js"
 					retVal += "<script src='/js/#{arg}'></script>\n"
