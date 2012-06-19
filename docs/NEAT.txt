@@ -1,52 +1,36 @@
 http://caniuse.com/
 
 CSS
+Building books with CSS3: http://www.alistapart.com/articles/building-books-with-css3/
+There is
+Circular buttons http://css-tricks.com/circular-3d-buttons/
 How web design pros do it: http://css-tricks.com/notes-from-my-web-designers-workflow-workshop-at-interlink-2012/
 CodeKit for continuous less integration, icons served as fonts
 Subtle patterns: might use this for backgrounds: http://subtlepatterns.com/
-filters: could I use this? http://www.html5rocks.com/en/tutorials/filters/understanding-css/
+Filters: could I use this? http://www.html5rocks.com/en/tutorials/filters/understanding-css/
 :target pseudo class might be useful http://css-tricks.com/on-target/
 WebGL clouds, our something went wrong page: http://www.clicktorelease.com/code/css3dclouds/#?utm_source=html5weekly&utm_medium=email
-Mutli-device layout patterns http://jasonweaver.name/lab/offcanvas/technical/
-Talks about bootstrap & color, CSS layout frameworks http://drawar.com/d/great-another-bootstrap-site/
 Pure CSS page turn: http://www.romancortes.com/ficheros/page-flip.html
-Pure CSS progress bars http://dipperstove.com/design/css3-progress-bars.html
 Get value of rotation from transform matrix: http://css-tricks.com/get-value-of-css-rotation-through-javascript/
-Fun CSS generators: http://www.awcore.com/html/news/14/25-Time-saving-Generators_en
-Scalable/modular CSS howto: http://smacss.com/book/
 Free web app developer resources: http://www.webappers.com/category/design/icons/
 Border image: http://www.css3.info/preview/border-image/
 Border image in depth: http://www.useragentman.com/blog/2011/03/29/pixel-perfect-css3-border-image-in-depth/
 Best border image overview: http://css-tricks.com/understanding-border-image/
 Nice way to do captions, HTML5 style http://css-tricks.com/slide-in-image-captions/
 http://www.trymyui.com/ great UI testing place
-Very neat background patterns: http://leaverou.me/css3patterns/#
-Gradient editor: http://www.colorzilla.com/gradient-editor/
- easing is cool: http://matthewlein.com/ceaser/
-Buttons can be made unselectable with : -webkit-user-select: none; (CSS3 property
-Buttons http://webdesignledger.com/tutorials/12-excellent-css3-button-and-menu-techniques
-CSS Fonts: http://www.w3.org/Style/Examples/007/fonts.en.html
 Experiment with font sizes: http://lamb.cc/typograph/ --
-http://www.dafont.com/my-underwood.font - just like an old typewriter font
 Font sizes with REM http://snook.ca/archives/html_and_css/font-size-with-rem
 Icon resource: http://www.iconseeker.com/
-Patterns resource: http://subtlepatterns.com/
 Pure CSS drawing library: https://github.com/dnewcome/Donatello
 Excellent CSS effects: bounce, rotate, etc. If I ever need visual candy http://blackberry.github.com/Alice/demos.html
-CSS Patterns, might use in book backgrounds: http://leaverou.me/css3patterns/#
 3D Photo rollover: http://thewebrocks.com/demos/3D-photo-rollover/
-CSS Fonts as icons: fun icon effects with fonts http://css-tricks.com/15099-using-fonts-for-icons/
-Use box sizing for width/padding: http://paulirish.com/2012/box-sizing-border-box-ftw/
-Simple CSS sizing framework: https://github.com/robertpiira/ingrid
-All about lorem ipsum http://www.codinghorror.com/blog/2012/05/the-eternal-lorem-ipsum.html
 1366 x 768 most popular screen size http://gs.statcounter.com/press/screen-resolution-alert-for-web-developers
 CSS arrow please: http://cssarrowplease.com/
-Prefix free: patches stylesheets with prefixes after load http://leaverou.github.com/prefixfree/
 
 JS
- window.matchMedia media queries through js
-Javascript key event madness: http://unixpapa.com/js/key.html. Came upon this while debugging my key events.
-Zero comparasance in JS: http://zero.milosz.ca/
+HTMLK Media Capture: upload photos from your phone! http://www.w3.org/TR/html-media-capture/
+window.matchMedia media queries through js
+Zero comparasance table for JS: http://zero.milosz.ca/
 JPEG parsing is javascript: http://code.google.com/p/jsjpegmeta/downloads/detail?name=jpegmeta.js
 RequireJS: when I get serious about performance, this is a js include framework
 http://requirejs.org/docs/optimization.html
@@ -126,6 +110,7 @@ Touch event history and future: http://blog.jquery.com/2012/04/10/getting-touchy
 Free DNS redirects for everyone: http://xip.io/
 
 OTHER
+Redirect file from nginx http://wiki.nginx.org/XSendfile
 Google drive integration: https://developers.google.com/drive/get_started#integrate_with_the_drive_ui
 Use Picasa Web API for storage?
 Hire people through https://www.odesk.com/

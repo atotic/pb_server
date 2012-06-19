@@ -65,9 +65,23 @@ Next:
 Resize fingerprint drag control. Just too cute.
 Define rough structure (images, pages, add/remove)
 
+June 13
+Started coding new architecture.
+Using less, need less gems, rake deploy:css generates css files
+Ripped out jquery-ui
+Book stores json_data as mediumblob
+
+June 12
+Working on architecture, see UI.txt
+
+June 11
+Created branch release/first_editor
+Starting the new new editor
+Implemented fingerprint drag, refactored code.
+
 June 7
 All touch drags work. It was not as much work as I've thought.
-Had to work around iOS bug.
+Had to work around iOS bug where events were not being transfered as part of DOM move (detach, insert)
 
 June 5
 Remote debugging with weinre works (ocasionally). console.log on ipad does the job too

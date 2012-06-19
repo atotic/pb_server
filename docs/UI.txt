@@ -1,4 +1,63 @@
-# UI, the new architecture
+June 11 design notes
+- want to implement complete rough editing functionality + sharing
+- what happens with images.
+
+book_talk:
+book_json:
+	title:
+
+	photo_list: [list of photo_id] // image info might be loaded on demand
+	photos {
+		photo_id: { photo_json}
+	}
+
+	rough_page_list [list of rough_page_id]  // rough pages in order,
+	// first four are cover, front_flap, back_flap, back, cannot be deleted, changed
+	rough_pages {
+		rough_page_id: { rough_page_json }
+	}
+
+	photo_db
+
+book_api: // start with all page mods go through book API
+	getPageNumber(rough_page_id)
+	addPhotoFromLocalFile()
+		- creates an upload_task
+		- inserts new image
+
+rough_page_json:
+	_book: pointer to book
+	id:
+	photo_list: [list of photo_id]
+	html: { page html encoded as json}
+
+rough_page_api
+	getDisplayHTML
+
+photo_talk:
+	photos are uploaded
+	when image is created, we want to embed it in the book immediately
+		before embedding, image is rotated
+
+photo_json
+	_book: pointer to book
+	id: photo_id
+	name:	// inits to file name
+	caption:
+	date:
+	width:
+	height:
+	md5:
+	upload_task:
+
+photo_api:
+	getUrl(size) // for local images, this might be deferred
+
+upload_task
+	upload_task is created when photo is getting uploaded
+
+
+# Original design notes: UI, the new architecture
 
 3 platforms: PC, iPhone, iPad
 
@@ -50,7 +109,7 @@ User goes into visual mode, tweaking the html: move/resize picture|text
 What is a template?
 
 * page html generators
-* backgrounds 
+* backgrounds
 * frames
 * gadgets
 
@@ -79,4 +138,4 @@ DATA
 
 the key to UI2.0 are the templates. Everything else is a known quantity.
 
-Templates: dynamically reconfigure themselves 
+Templates: dynamically reconfigure themselves
