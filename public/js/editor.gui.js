@@ -3,9 +3,9 @@
 	Classes:
 	window.GUI: Container for event handling
 
-	window.GUI.Buttons // button events
-	window.GUI.Command // keyboard shortcuts
-	window.GUI.CommandManager // commands, keyboard shortcuts
+	window.GUI.Buttons // button event handlers
+	window.GUI.Command // command definitions
+	window.GUI.CommandManager // command execution (keyboard shortcuts)
 	window.GUI.Util // misc
 
 	window.GUI.Controller // implements command actions (resizes, dom manipulation, broadcast to model)
@@ -110,6 +110,7 @@
 			this.add(new Command('addRoughPage', 'p', false,
 				function() {scope.Controller.addRoughPage()}))
 		},
+		// see http://unixpapa.com/js/key.html for the madness that is js key handling
 		hashString: function(rawKey, meta) {
 			if (!rawKey)
 				return 0;
@@ -242,7 +243,7 @@
 		getPossiblePhotoContainerHeights: function(imageHeight) {
 			$('#photo-list-container').stop();
 			var max = Math.min($('body').height() - 200, $('#photo-list').height() + imagePadding + 12 + 8);
-			var curr = 12 + imageHeight + imagePadding;
+			var curr = 8 + imageHeight + imagePadding / 2;
 			var all = [ curr ];
 			while ((curr += imageHeight + imagePadding) < max)
 				all.push( curr);

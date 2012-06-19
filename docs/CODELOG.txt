@@ -52,7 +52,7 @@ Want the old code around to see how it used to work. Tag it as 1_0alpha.
 Stage 1: get everything working for rough
 	- define rough (new book)
 	- editing:
-		add images (auto rotate right away)
+		add images (auto rotate right away, resizing as delayed job)
 		delete images
 	- will need jsdiff, jspatch change broadcasts, jspatches on the server
 	- saving of the edits

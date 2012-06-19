@@ -117,9 +117,6 @@
 			var loc = GUI.Util.clamp(clientY, clientMinMax.min - yOffset, clientMinMax.max - yOffset);
 			var diff = loc - lastMouse;
 			lastMouse = loc;
-			$('#palette-resize-btn').css({
-				top: "+=" + diff,
-			});
 			GUI.Controller.setContainerHeight($('#palette-tabs-container').height() + diff, false);
 		},
 		endDrag: function(clientY) {

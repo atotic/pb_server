@@ -83,9 +83,8 @@ Ruby command shell http://rdoc.info/github/banister/pry/master/file/README.markd
 Will I ever need a state machine https://github.com/pluginaweek/state_machine
 
 Security
+OAuth2 playground, now with Google Docs: http://googledevelopers.blogspot.com/2012/06/oauth-20-playground-and-google-drive.html
 Use pbkdf2 for passwords https://github.com/emerose/pbkdf2-ruby
-OAuth2 playground: https://code.google.com/oauthplayground/
-OAuth2: http://googlecode.blogspot.com/2011/11/oauth-20-playground-open-to-developers.html
 Free ssl cert https://www.startssl.com/?app=40
 Use bcrypt to store passwords http://codahale.com/how-to-safely-store-a-password/
 

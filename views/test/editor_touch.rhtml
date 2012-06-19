@@ -10,9 +10,6 @@
 <scripts src="http://dev.pb4us.com:9000/target/target-script-min.js"></script>
 <style type='text/less' title='inline'>
 /* bootstrap tweaks */
-.navbar {
-	margin-bottom: 0px;
-}
 html, body {
 	height: 100%;
 	width: 100%;
@@ -20,13 +17,6 @@ html, body {
 
 * { -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box; }
 
-/* draw a line under navigation bar to make it look like big tabs */
-.nav-tabs {
-	border-bottom: 0px solid #DDDDDD;
-}
-.navbar {
-	border-bottom: 1px solid #DDDDDD;
-}
 
 .no-selection {
 	-webkit-user-select: none;
@@ -39,11 +29,19 @@ html, body {
 body {
 	.no-selection;
 }
-.hidden {
-	position:relative;
-	top: -500px;
-	left: -500px;
+
+.navbar {
+	margin-bottom: 0px;
 }
+
+/* draw a line under navigation bar to make it look like big tabs */
+.nav-tabs {
+	border-bottom: 0px solid #DDDDDD;
+}
+.navbar {
+	border-bottom: 1px solid #DDDDDD;
+}
+
 #pb {
 	position:relative;
 	height: 100%;
@@ -88,6 +86,7 @@ body {
 	bottom: -@palette-resize-btn-radius;
 	right: @palette-resize-btn-radius;
 	border: 1px solid @work-area-color;
+	cursor: row-resize;
 }
 #palette-resize-btn:hover, .resize-hover{
 	background-color: @dark-bg-color-lighten;
@@ -184,9 +183,9 @@ body {
 		width: @rough-size;
 		height: @rough-size;
 		border: 1px solid black;
-		.no-selection;
 	}
 		.rough-page p {
+			.no-selection;
 			position: absolute;
 			text-align: center;
 			width: 100%;

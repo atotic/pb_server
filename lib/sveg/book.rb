@@ -2,13 +2,12 @@ require 'json'
 require 'sequel'
 
 module PB
-	
+
 class Book < Sequel::Model(:books)
-	
+
 	plugin :timestamps
-	
+
 	many_to_one :user
-	one_to_many :pages, :class => 'PB::BookPage'
 	many_to_many :photos
 	one_to_many :chrome_pdf_tasks, :class => 'PB::ChromePDFTask'
 	one_to_many :browser_commands, :class => 'PB::BrowserCommand'
@@ -32,7 +31,7 @@ class Book < Sequel::Model(:books)
 			PB.logger.error "Could not destroy photo #{photo.id}" unless success
 		end
 	end
-	
+
 	def sorted_pages
 		self.page_order.split(",").collect { |i| PB::BookPage[i]}
 	end
@@ -45,7 +44,7 @@ class Book < Sequel::Model(:books)
 		end
 		errors.add(:pages, "Pages did not validate #{page_error.to_s}") unless page_errors.empty?
 	end
-	
+
 	def to_json(*a)
 		last_cmd_id = BrowserCommand.last_command_id(self.pk)
 		{
@@ -72,10 +71,10 @@ class Book < Sequel::Model(:books)
 		else
 			self.page_order = ""
 		end
-		self.page_order = self.page_order.split(',').insert(page_number, page.id).join(',') 
+		self.page_order = self.page_order.split(',').insert(page_number, page.id).join(',')
 		self.save
 	end
-	
+
 	def generate_pdf(force = false)
 		return "Book PDF generation not started. There is already a build in progress." if self.pdf_generate_in_progress && !force
 		self.pdf_location = nil
@@ -85,14 +84,14 @@ class Book < Sequel::Model(:books)
 		Delayed::Job.enqueue BookToPdfPrepJob.new(self.id)
 		return "Book PDF proof will be ready in a few minutes."
 	end
-	
+
 	def generate_pdf_done(pdf_path)
 		self.pdf_location = pdf_path
 		self.pdf_generate_error = nil
 		self.pdf_generate_in_progress = false
 		self.save
 	end
-	
+
 	def generate_pdf_fail(err_msg)
 		self.pdf_location = ""
 		self.pdf_generate_error = err_msg[0..49]
@@ -109,8 +108,8 @@ class Book < Sequel::Model(:books)
 end
 
 class BookPage < Sequel::Model(:book_pages)
-	
-#	property :id,					 Serial 
+
+#	property :id,					 Serial
 #	property :created_at,		DateTime
 #	property :updated_at,		DateTime
 
@@ -122,8 +121,7 @@ class BookPage < Sequel::Model(:book_pages)
 
 	plugin :timestamps
 
-	many_to_one :book
-	
+
 	def to_json(*a)
 		{
 			:id => self.pk,
@@ -134,7 +132,7 @@ class BookPage < Sequel::Model(:book_pages)
 			:position => self.position
 		}.to_json(*a)
 	end
-	
+
 	def before_destroy
 		# removes page from book page order
 		b = self.book
