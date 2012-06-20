@@ -1,3 +1,4 @@
 .bundle
 docs/*.tiff
 docs/iPhoto templates
+public/css/editor.css
