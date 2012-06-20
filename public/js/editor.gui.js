@@ -4,6 +4,7 @@
 	window.GUI: Container for event handling
 
 	window.GUI.Buttons // button event handlers
+
 	window.GUI.Command // command definitions
 	window.GUI.CommandManager // command execution (keyboard shortcuts)
 	window.GUI.Util // misc
@@ -24,20 +25,30 @@
 
 
 (function(window) {
-	window.GUI = {
+	var GUI = {
 		init: function() {
 			this.Buttons.init();
 			this.CommandManager.init();
 			this.PhotoPalette.init();
 			this.RoughWorkArea.init();
+		},
+		bindToBook: function(book) {
+			var photoList = book.photoList;
+			// display images
+			for (var i =0; i< photoList.length; i++) {
+				var photo = book.photo( photoList[i] );
+				GUI.PhotoPalette.addPhoto(photo);
+			}
+			// display pages
+			var roughPageList = book.roughPageList;
+			for (var i=0; i< roughPageList.length; i++) {
+				var page = book.page( roughPageList[i] );
+				GUI.RoughWorkArea.addPage(page);
+			}
+			// set window title
 		}
 	};
-	window.PB = {
-		// True if we are on touch device
-		detectTouch: function() {
-			return 'ontouchstart' in window;
-		}
-	};
+	window.GUI = GUI;
 
 })(window);
 
@@ -46,6 +57,11 @@
 (function(scope){
 	var PhotoPalette = {
 		init: function() {
+		},
+		addPhoto: function(photo) {
+			var img = $("<img src='" + photo.getUrl(128) + "'>");
+			$('#photo-list').append(img);
+			GUI.PhotoPalette.makeDraggable(img);
 		}
 	}
 
@@ -72,7 +88,7 @@
 		}
 	}
 
-	if (PB.detectTouch()) {
+	if (PB.hasTouch()) {
 		$.extend(PhotoPalette, PhotoPaletteTouch);
 	}
 	else
@@ -498,6 +514,49 @@
 			roughPageTarget = { target: target, direction: direction, dropFeedback: dropFeedback }
 			if (target)
 				$(target).addClass(dropFeedback);
+		},
+		addPage: function(roughPage, options) {
+			var defaults = {
+				target: null,
+				animate: false,
+				renumber: true,
+				direction: 'after',
+			}
+			$.extend(defaults, options);
+
+			var newPage = $("<div class='rough-page'><p>" + roughPage.pageTitle() + "</p></div>");
+			if (roughPage.type() === 'pages')
+				newPage.attr('draggable', true);
+			if (roughPage.pageClass() !== 'page')
+				newPage.addClass('rough-page-' + roughPage.pageClass());
+
+			if (defaults.animate)
+				newPage.css('height', 0);
+
+			// insert in the right spot
+			if (defaults.target) {
+				if (defaults.direction == 'before')
+					$(defaults.target).before(newPage);
+				else
+					$(defaults.target).after(newPage);
+			}
+			else {
+				$('#work-area-rough').append(newPage);
+			}
+
+			if (defaults.animate) {
+				newPage.animate({height: roughPageHeight},function() {
+					newPage.css('display', 'auto');
+					Controller.revealByScrolling(newPage, $('#pb-work-area'));
+				});
+			}
+
+			if (roughPage.isDraggable)
+				this.makeDraggable(newPage);
+
+			// need to add left or right
+			if (defaults.renumber)
+				GUI.Controller.renumberRoughPages();
 		}
 	};
 
@@ -533,7 +592,7 @@
 		}
 	}
 
-	if (PB.detectTouch()) {
+	if (PB.hasTouch()) {
 		$.extend(RoughWorkArea, RoughWorkAreaTouch);
 	}
 	else {

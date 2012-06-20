@@ -61,9 +61,16 @@ Stage 1: get everything working for rough
 Stage 2: get templates/printing
 5 weeks
 Google Drive integration? https://developers.google.com/drive/
+
 Next:
-Resize fingerprint drag control. Just too cute.
-Define rough structure (images, pages, add/remove)
+Display rough pages
+Modify model
+Display only images not on pages
+Model change notification framework
+
+June 19
+Back into swing of things after 5 days off (Tahoe, etc)
+Implementing the real editor now, images have been displayed.
 
 June 13
 Started coding new architecture.

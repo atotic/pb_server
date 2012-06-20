@@ -1,33 +1,41 @@
-<div id="header_bar" class="ui-helper-clearfix">
-	<div id="logo">
-		<b>sveg</b>'s photo
+<div class="navbar">
+	<div class="navbar-inner">
+		<div class="container">
+			<ul class="nav">
+				<li class="dropdown">
+					<a class='dropdown-toggle' data-toggle='dropdown' href="#">sveg's photo
+						<b class="caret icon-white"></b>
+					</a>
+					<ul class='dropdown-menu'>
+						<li><a href="">about</a></li>
+						<li><a href="/">home</a></li>
+					</ul>
+				</li>
+			</ul>
+			<ul class="nav pull-right">
+<% if current_user %>
+				<li class='dropdown'>
+					<a class='dropdown-toggle' data-toggle='dropdown' href='#'>
+						<%= current_user.display_name %><b class="caret"></b></a>
+					<ul class='dropdown-menu'>
+						<li><a href="/account">account</a>
+						<li><a href="/logout">log out</a>
+<% if current_user.is_administrator %>
+						<li><a href="/admin" class="admin">admin</a>
+<% end %>
+					</ul>
+				</li>
+<% else %>
+				<li><a href="/auth/login">log in</a>
+<% end %>
+			</ul>
+		</div>
 	</div>
+</div>
+
 	<div id="messages">
 		<div id="progress">
 			<div id="progress_bar"></div>
 			<div id="progress_cancel"></div>
 			<div id="progress_message"></div>
 		</div>
-		<div id="notice" class="ui-widget" <%= " style='display:block'" if flash[:notice] %> >
-			<%= flash[:notice] if flash[:notice] %>
-		</div>
-		<div id="error" class="ui-widget" <%= " style='display:block'" if flash[:error] %>>
-				<%= flash[:error] if flash[:error] %>
-		</div>
-	</div>
-	<div id="topmenu" >
-		<nav>
-			<% if current_user %>
-				<a href="/account"><%= current_user.display_name %></a>
-				<a href="/logout">log out</a>
-				<% if current_user.is_administrator %>
-					<a href="/admin" class="admin">admin</a>
-				<% end %>
-			<% else %>
-				<a href="/auth/login">log in</a>			
-			<% end %>
-			<a href="">about</a>
-			<a href="">faq</a>
-		</nav>
-	</div>
-</div>

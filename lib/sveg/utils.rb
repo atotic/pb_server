@@ -210,7 +210,7 @@ module PB
 				PB::User.restore_from_session(env)
 				PB::BrowserCommand.restore_from_headers(env)
 			end
-			env['sveg.touch'] = env['SERVER_NAME'].start_with? 'touch'
+			env['sveg.mobile'] = env['SERVER_NAME'].start_with? 'touch'
 		end
 
 		def after(env, request, status, headers, body)

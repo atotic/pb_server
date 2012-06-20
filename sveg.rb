@@ -142,9 +142,10 @@ class SvegApp < Sinatra::Base
 		set :protection, false
 	end
 
+	# extends erb method: renders mobile templates on mobile site if present
 	def render_erb(template, options={}, locals={})
 		# TODO layout option
-		return erb(template, options, locals) unless env['sveg.touch']
+		return erb(template, options, locals) unless env['sveg.mobile']
 
 		@missed_templates = @missed_templates || {}	# keep track of missing templates
 
@@ -170,8 +171,8 @@ class SvegApp < Sinatra::Base
 		end
 
 		def print_datetime(dt)
-			debugger if dt.nil?
-			dt.strftime "%b %d %I:%M%p"
+			#debugger if dt.nil?
+			dt.nil? ? 'unknown' : (dt.strftime "%b %d %I:%M%p")
 		end
 
 		def json_response(object)
@@ -196,7 +197,8 @@ class SvegApp < Sinatra::Base
 			args.each do |arg|
 				arg = arg.to_s if arg.is_a?(Symbol)
 				if arg.eql? "editor.js"
-					retVal += asset_link("editor.gui.js",
+					retVal += asset_link("editor.pb.js",
+						"editor.gui.js",
 						"editor.gui.touch.js",
 						"editor.gui.buttons.js")
 				elsif arg.end_with?("js")
@@ -358,10 +360,11 @@ class SvegApp < Sinatra::Base
 
 	post '/books' do
 		user_must_be_logged_in
+		@book = Book.new()
 		begin
 			DB.transaction do
-				template = BookTemplate.new(params["template"])
-				@book = template.create_book(current_user, params["book"]);
+				@book.set_fields({ :user_id => current_user.pk, :title => params['title']}, [:user_id, :title])
+				@book.save
 				if request.xhr?
 					content_type :json
 					[200, {'Content-Type' => 'application/json'} ,["{ \"id\" : #{@book.id} }"]]
@@ -373,8 +376,8 @@ class SvegApp < Sinatra::Base
 			LOGGER.error(ex.message)
 			LOGGER.error(ex.backtrace[0..5] )
 			flash.now[:error]= "Errors prevented the book from being created. Please fix them and try again."
-			@book = Book.new unless @book
-			render_erb :book_new, {:layout => :'layout/plain'}
+			@book = Book.new unless book
+			redirect :account
 		end
 	end
 

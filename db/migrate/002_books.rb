@@ -11,7 +11,7 @@ Sequel.migration do
 			String :pdf_generate_error, :size=>255
 			TrueClass :pdf_generate_in_progress, :default=>false
 
-			File :json_data, :size => :medium # book stored as json, :mediumblob size
+			File :document, :size => :medium # book stored as json, :mediumblob size
 
 			# Delete these when done
 			String :page_order, :text=>true # comma separated list of page ids.

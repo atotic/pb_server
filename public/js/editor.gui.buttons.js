@@ -13,7 +13,7 @@
 			var addBtn = $('#add-page-btn');
 			addBtn.click(function() { GUI.Controller.addRoughPage();});
 
-			if (PB.detectTouch())
+			if (PB.hasTouch())
 				scope.TouchDragHandler.makeDraggable(addBtn, 'addRoughPage');
 			else
 				addBtn.attr('draggable', true).on( {
@@ -62,7 +62,7 @@
 	var touchId = 0;
 	var ResizePaletteButton = {
 		init: function() {
-			if (PB.detectTouch()) {
+			if (PB.hasTouch()) {
 				$('#palette-resize-btn').on({
 					touchstart: function(ev) {
 						ev = ev.originalEvent;

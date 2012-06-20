@@ -1,319 +1,141 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Photobook</title>
-	<%= asset_link("jquery.js", "jquery-ui.js", "transform.js", "application.js" ) %>
-	<%= asset_link("editor-all" ) %>
-	<%= asset_link("jquery-ui.css", "application.css") %>
+	<title>Touch Mockup</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+	<%= asset_link("bootstrap.css", "application.css", "editor.css") %>
+	<%= asset_link("jquery.js") %>
+	<%= asset_link("bootstrap.js") %>
+	<%= asset_link("application.js") %>
+	<%= asset_link("editor.js") %>
+<scripts src="http://dev.pb4us.com:9000/target/target-script-min.js"></script>
 </head>
 <body>
-	<%= erb :'layout/header_bar' %>
-<div id="pages-slab" class="slab">
-	<div class="slab_top">
-		<div class="slab_title">
-			<span class="flippy" state="closed"></span>Book
-		</div>
-		<div class="slab_tools">
-			<button id="add-page-button">Add...</button>
-			<button id="delete-page-button">Delete</button>
-			<button id="layout-page-button">Layout...</button>
-		</div>
-	</div>
-	<div id="pages-tab" class='slab_content'>
-		<div class="intro">Paging Dr. Guttenberg...</div>
-		<div id="page-list-container">
-			<div id="page-list"></div>
-		</div>
-	</div>
-</div>
-<div id="photos-slab" class="slab">
-	<div class="slab_top">
-		<div class="slab_title">
-			<span class="flippy" state="closed"></span>Photos
-		</div>
-		<div class="slab_tools">
-			<button id="add-image-file-button">Add file...</button>
-		</div>
-	</div>
-	<div id="photos-tab" class='slab_content'>
-		<div class="intro">Drag your photos here</div>
-		<div id="photo-list-slider"></div>
-		<div id="photo-list-container">
-			<div id="photo-list"></div>
-		</div>
-	</div>
-</div>
-<input type="file" id="file-dialog" multiple="true" accept="image/*" style="display:none">
 
-<div id="pick-page-dialog" style="display:none">
-	<div id="pick-page-filter">
-		<input id="pick-page-text" type="checkbox" ><label for='pick-page-text'> with text</label>
-		| <label for='pick-page-count'>pages to add</label> <select id='pick-page-count'>
-			<option value="1" checked>1</option>
-			<option value="2">2</option>
-			<option value="3">3</option>
-			<option value="4">4</option>
-			<option value="5">5</option>
-			<option value="10">10</option>
-		</select>
-		<div style="float:right">
-			<button id="pick-page-ok" >ok</button>
-			<button id="pick-page-cancel">cancel</button>
+<div id='pb'>
+	<div id='pb-work-area'>
+		<div id='work-area-tools'>
+			<div id='add-page-btn' class='btn' rel="tooltip" title="Drag and drop the button to insert pages in the middle"><i class='icon-plus-sign'></i> Add page</div>
+			<div id='remove-page-btn' class='btn' rel='tooltip' title='Drag anything over this button to remove it'><i class='icon-minus-sign'></i> Remove </div>
+		</div>
+		<div id='work-area-rough'>
+			</div>
+	</div>
+	<div id='pb-palette'>
+	<div class="navbar">
+		<div class="navbar-inner">
+			<div class="container">
+				<ul class="nav">
+					<li class="dropdown">
+						<a class='dropdown-toggle' data-toggle='dropdown' href="#">sveg's photo
+						<b class="caret icon-white"></b>
+						</a>
+						<ul class='dropdown-menu'>
+							<li><a href="">about</a></li>
+							<li><a href="/">home</a></li>
+						</ul>
+					</li>
+					<li class='dropdown'>
+						<a class='dropdown-toggle' data-toggle='dropdown' href='#'>
+							Toolbox<b class="caret icon-white"></b>
+						</a>
+						<ul class="dropdown-menu">
+			  	  	<li><a href='javascript:alert("add photo")'>Add photo</a></li>
+			  	  	<li>Show
+			  	  		<ul>
+			  	  			<li><a href='javascript:alert("all")'>all photos</a></li>
+			  	  			<li><a href='javascript:alert("unused")'>unused photos</a></li>
+			  	  		</ul>
+			  	  	</li>
+			  	  	<li>View
+			  	  		<ul>
+			  	  			<li><a href='javascript:GUI.CommandManager.doCommand("viewBiggerImages")'>Bigger photos</a></li>
+			  	  			<li><a href='javascript:GUI.CommandManager.doCommand("viewSmallerImages")'>Smaller photos</a></li>
+			  	  			<li><a href='javascript:GUI.CommandManager.doCommand("viewMoreImages")'>More photos</a></li>
+			  	  			<li><a href='javascript:GUI.CommandManager.doCommand("viewFewerImages")'>Fewer photos</a></li>
+			  	  		</ul>
+			  	  	</li>
+			  		</ul>
+			  	</li>
+				</ul>
+				<ul id='palette-tabs' class='nav nav-tabs'>
+					<li class='active'><a data-toggle='tab' href='#photo-list-container'>Your photos</a></li>
+					<li><a data-toggle='tab' href='#background-list-container'>Backgrounds</a></li>
+					<li><a data-toggle='tab' href='#layout-list-container'>Layouts</a></li>
+					<li><a data-toggle='tab' href='#gadget-list-container'>Gadgets</a></li>
+				</ul>
+				<ul class="nav pull-right">
+<% if current_user %>
+					<li class='dropdown'>
+						<a class='dropdown-toggle' data-toggle='dropdown' href='#'>
+							<%= current_user.display_name %><b class="caret"></b></a>
+						<ul class='dropdown-menu'>
+							<li><a href="/account">account</a>
+							<li><a href="/logout">log out</a>
+<% if current_user.is_administrator %>
+							<li><a href="/admin" class="admin">admin</a>
+<% end %>
+						</ul>
+					</li>
+<% else %>
+					<li><a href="/auth/login">log in</a>
+<% end %>
+				</ul>
 		</div>
 	</div>
-	<div id="pick-page-icons"></div>
 </div>
 
-<div id="content-slab">
-	<div class="slab_top">
-		<div class="slab_title" style="padding-left:32px;width:118px">
-			Page
+		<div id='toolmenu' class="btn-group">
+  		<a class="btn dropdown-toggle" data-toggle="dropdown" href="#"><i class='icon-wrench'></i><span class="caret"></span></a>
+	  	<ul class="dropdown-menu">
+  	  	<li><a href='javascript:alert("add photo")'>Add photo</a>
+  	  	<li>Show
+  	  		<ul>
+  	  			<li><a href='javascript:alert("all")'>all photos</a>
+  	  			<li><a href='javascript:alert("unused")'>unused photos</a>
+  	  		</ul>
+  		</ul>
 		</div>
-		<div class="slab_tools">
-			<button id="undo-button">Undo</button>
-			<button id="redo-button">Redo</button>
+		<div id='palette-tabs-container' class='tab-content'>
+			<div class="tab-pane active"  id='photo-list-container'>
+				<div id='photo-list'>
+				</div>
+			</div>
+
+			<div class="tab-pane" id='background-list-container'>
+				Backgrounds!
+			</div>
+			<div class="tab-pane"  id='layout-list-container'>
+				Layouts!
+			</div>
+			<div class="tab-pane" id='gadget-list-container'>
+				Gadgets!
+			</div>
 		</div>
-	</div>		
-	<div id="main-container">
-		<p>This is main</p>
+		<div id='palette-resize-btn'>
+		</div>
 	</div>
 </div>
-<script type="text/javascript">
-"use strict"
+<script>
 
-$(document).ready( function() {
-	// Load the book
-	PB.setBookFromJson(<%= @book.to_json %>);
-});
+
+function insertImages() {
+	var html ="";
+	for (var i=0; i<20; i++)
+		html += "<img src='/assets/test/" + i + ".jpg?size=icon'>"
+	$('#photo-list').append(html);
+	$('#photo-list img').each(function() {
+		GUI.PhotoPalette.makeDraggable(this);
+	});
+}
+
+// Initialization
+PB.init();
+GUI.init();
+var book = new PB.Book(<%= @book.to_json %>);
+GUI.bindToBook(book);
+
+//insertImages();
 
 </script>
-<style type="text/css" contenteditable style="display:none;white-space:pre; font-size: 13px; font-family:Monaco, Mono-Space;border-top: 5px solid gray">
-@charset "utf-8";
-/* GENERAL */
-body {
-	height:100%;
-	background-color: #EEE;
-}
-.chrome {
-	font-family: arial, serif;	
-}
-.flippy {
-	padding: 0 10px 0 10px;
-	font-size: 20px;
-	font-weight: normal;
-	width:16px;
-}
-.flippy[state="closed"]:after {
-	font-family: arial, serif;
-	content: "\25B8";
-}
-.flippy[state="open"]:after {
-	font-family: arial, serif;
-	content: "\25BE";
-}
-
-.slab_top {
-	background-color: #BBB;
-	font-family: arial, serif;
-	padding: 0 0 4px;
-	border-bottom: 1px solid #999;
-}
-.slab_title {
-	display: inline-block;
-	font-size: 100%;
-	font-weight: bold;
-	width: 150px;
-	height: 20px;
-}
-.slab_tools {
-	display: inline-block;
-}
-
-.slab_tools button {
-	border: 1px none;
-	border-radius: 2px;
-	background-color: #D5D5D5;
-	cursor:default;
-}
-.slab_tools button:hover:enabled {
-	background-color: #FFF;
-	cursor:pointer;
-}
-.slab_content {
-	padding: 0px 10px 4px 10px;
-}
-
-/* Photos tab */
-#photos-tab {
-	padding-right: 1px;
-	min-height: 128px;
-}
-#photo-list-container {
-	overflow-y: hidden;
-	overflow-x: hidden;
-	position: relative;
-}
-#photo-list {
-	max-height: 128px;
-}
-#photo-list > div {
-	padding: 0 3px 0 3px;
-	display: inline-block;
-}
-
-#photo-list-slider {
-	display:none;
-	margin-bottom: 4px;
-}
-#photo-list-slider .ui-slider-handle {
-	background: none; 
-	background-color: rgba(100,100,0,0.5);
-	border: 2px solid yellow;
-	height:14px;
-	top:-2px;
-	margin-left:0px;
-}
-
-.page-icon img {
-	position: absolute;
-}
-
-#pages-tab {
-	padding-right: 1px;
-}
-#page-list-container {
-	margin-top: 8px;
-	overflow-y: hidden;
-	overflow-x: hidden;
-	position: relative;
-}
-#page-list {
-	cursor: move;
-}
-#page-list .page-icon {
-	display: inline-block;
-	position: relative;
-}
-#page-list .left-page-icon {
-	border: 2px solid white;
-	border-right: 1px solid #DDD;
-	margin-left: 6px;
-	box-shadow:-2px 0px 4px #B3B3B3;
-}
-
-#page-list .right-page-icon {
-	border: 2px solid white;
-	border-left: 1px solid #DDD;
-	margin-right: 10px;
-	box-shadow: 2px 0px 4px #B3B3B3;
-}
-
-#page-list .page-icon.selected {
-	border-color: yellow;
-}
-
-
-/* Book page */
-#main-container {
-	position: relative;
-	background-color: #EEE;
-	width: 100%;
-	overflow: hidden;
-}
-.page-enclosure {
-	border: 1px solid gray;
-	box-shadow: 0 0 5px gray;
-}
-.book-page {
-	display:block;
-	position:relative;
-}
-.book-image {
-	position: absolute;
-	background-color:gray;
-	overflow:hidden;
-}
-.actual-image {
-	position: absolute;
-}
-.book-text {
-	position: absolute;
-	border: 1px solid transparent;
-	font-size: 12px;
-	height: auto;
-}
-.book-text:hover {
-	border: 1px solid Highlight;
-}
-
-.book-text[contentEditable=true] {
-	border: 1px dashed Highlight;
-}
-
-.manipulator-button {
-	position: relative;
-	border: 1px none;
-	border-radius: 2px;
-	background-color: #D5D5D5;
-	z-index: 1;
-}
-
-.actual-image {
-	top: 0px;
-	left: 0px;
-}
-
-/* Pick page dialog */
-
-#pick-page-dialog {
-	height: 500px;
-	width: 900px
-}
-
-#pick-page-filter {
-	margin: 4px 4px 8px 8px;
-}
-#pick-page-icons .page-icon, #pick-page-icons .pick-page-numbers {
-	display: inline-block;
-	border: 1px solid #ccc;
-	vertical-align: top;
-	margin:4px;
-}
-
-#pick-page-icons *.selected {
-	border: 1px solid yellow;
-}
-#pick-page-count {
-	font-size: 80%;
-}
-#add-random {
-	width: 64px;
-	height: 64px;
-	background-image: url(/img/surprise.png);
-	background-size: 64px 64px;
-	background-position: 0 -4px;
-	background-repeat: no-repeat;
-}
-#add-random p {
-	position: relative;
-	font-size: 80%;
-	top: 48px;
-	text-align:center;
-}
-
-.pick-page-numbers {
-	border: 1px solid #ccc;
-	border-radius: 32px;
-	position: relative;
-	width: 64px;
-	height: 64px;
-	font-size: 60px;
-	overflow:hidden;
-	text-align:center;
-	color:#ccc;
-}
-.pick-page-numbers p {
-	margin-top: -6px;
-}
-
-</style>
+</body>

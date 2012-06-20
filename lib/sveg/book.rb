@@ -12,10 +12,40 @@ class Book < Sequel::Model(:books)
 	one_to_many :chrome_pdf_tasks, :class => 'PB::ChromePDFTask'
 	one_to_many :browser_commands, :class => 'PB::BrowserCommand'
 
+	def before_create
+		super
+		debugger
+		self.title ||= 'untitled'
+		self.document ||=
+<<-eos
+{
+	'title': #{self.title.to_json},
+	'photoList': ['1','2','3','4', '5'],
+	'photos': {
+		'1': { url: { l: '/assets/test/1.jpg'} },
+		'2': { url: { l: '/assets/test/2.jpg'} },
+		'3': { url: { l: '/assets/test/3.jpg'} },
+		'4': { url: { l: '/assets/test/4.jpg'} },
+		'5': { url: { l: '/assets/test/5.jpg'} },
+		},
+	'roughPageList': ['cover', 'cover-flap', 'back-flap', 'back','1','2','3','4'],
+	'roughPages': {
+		'cover': { 'photoList': [] },
+		'cover-flap': { 'photoList': [] },
+		'back-flap': { 'photoList': [] },
+		'back': {'photoList': [] },
+		'1': {'photoList': [] },
+		'2': {'photoList': [] },
+		'3': {'photoList': [] },
+		'4': {'photoList': [] }
+	}
+}
+eos
+	end
+
 	# manual removal of all associations
 	def before_destroy
-		# remove all dependent objects
-		pages.each { |p| p.delete } # delete, not destroy, because pages update book when destroyed
+		super
 		chrome_pdf_tasks.each { |t| t.destroy }
 		browser_commands.each { |c| c.destroy }
 
@@ -32,47 +62,23 @@ class Book < Sequel::Model(:books)
 		end
 	end
 
-	def sorted_pages
-		self.page_order.split(",").collect { |i| PB::BookPage[i]}
-	end
-
 	def validate
-		page_errors = []
-		pages.each do |p|
-			p.validate
-			page_error.concat p.full_messages if (p.errors.count > 0)
-		end
-		errors.add(:pages, "Pages did not validate #{page_error.to_s}") unless page_errors.empty?
+		super
 	end
 
 	def to_json(*a)
-		last_cmd_id = BrowserCommand.last_command_id(self.pk)
-		{
-			:id => self.pk,
-			:title => self.title,
-			:pages => self.pages.to_a,
-			:photos => self.photos.to_a,
-			:page_order => self.page_order.split(",").map { |x| x.to_i },
-			:template_id => self.template_name,
-			:last_server_cmd_id => (last_cmd_id ? last_cmd_id : 0)
-		}.to_json(*a)
+		# TODO insert photos into document
+<<-eos
+{
+	'id': #{self.pk},
+	'last_server_cmd_id' : #{BrowserCommand.last_command_id(self.pk)},
+	'document': #{self.document}
+}
+eos
 	end
 
 	def pdf_path
 		self.pdf_location
-	end
-
-	def insertPage(page, page_number)
-		page_number ||= 0;
-		self.add_page page
-		page.save # id is created here
-		if self.page_order
-			self.page_order += ","
-		else
-			self.page_order = ""
-		end
-		self.page_order = self.page_order.split(',').insert(page_number, page.id).join(',')
-		self.save
 	end
 
 	def generate_pdf(force = false)

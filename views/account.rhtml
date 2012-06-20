@@ -21,7 +21,8 @@
 </script>
 <h1>Your account</h1>
 <a href='/test/editor_mockup'>Editor mockup</a><br>
-<a href='/test/editor_touch'>Editor touch</a>
+<a href='/test/editor_touch'>Editor touch</a><br>
+<a href="/templates">Templates</a></br>
 <hr>
 <p>Name: <%= locals[:user].display_name %></p>
 <p>Email: <%= locals[:user].email %></p>
@@ -29,13 +30,17 @@
 	<%= "<span> #{strategy} </span>" %>
 	<% end %>
 </p>
-<h2>Books [<a href='/books/new'>new</a>|<a href="/templates">templates</a>]</h2>
-<hr>
+<h2>Books</h2>
 <% books = current_user.books %>
 <% if books.size == 0 %>
 	<p>None yet. Would you like to <a href="/books/new">make</a> your first?</p>
-<% else %>
-<p></p>
+<% end %>
+	<form action="/books" method="post" class="well form-inline">
+		<input type='text' name='title' placeholder='title' required='true'>
+		<button type="submit" class="btn">New</button>
+	</form>
+<hr>
+<% if books.size != 0 %>
 <table>
 	<thead>
 		<tr>
