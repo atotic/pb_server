@@ -9,7 +9,7 @@
 // oX - old X
 // nX - new X
 // dX - diff X
-// 
+//
 "use strict";
 function myclone(x) {
 	return JSON.parse(JSON.stringify(x));
@@ -25,7 +25,7 @@ var o1 = {
 test("simple object, no change", function() {
 	var n = myclone(o1);
 	var diff = JsonDiff.diff(o1, n);
-	equal(diff.length, 0, "no diffs here");	
+	equal(diff.length, 0, "no diffs here");
 });
 
 test("simple object, attribute change", function() {
@@ -59,7 +59,7 @@ var a1 = ['a','b','c','d'];
 test("simple array, no change", function() {
 	var n = myclone(a1);
 	var diff = JsonDiff.diff(a1, n);
-	equal(diff.length, 0, "no diffs here");	
+	equal(diff.length, 0, "no diffs here");
 });
 
 test("simple array, extend new", function() {
@@ -92,6 +92,7 @@ test("simple array, remove middle elements", function() {
 	var n = myclone(a1);
 	n.splice(1, n.length - 2);
 	var diff = JsonDiff.diff(a1, n);
+//	JsonDiff.prettyPrint(diff);
 	var patched = JsonDiff.patch(a1, diff);
 	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
 });
@@ -101,7 +102,7 @@ test("simple array, insert middle elements", function() {
 	n.splice(1, 0, 'a','b');
 	var diff = JsonDiff.diff(a1, n);
 	var patched = JsonDiff.patch(a1, diff);
-//	JsonDiff.prettyPrint(diff);
+	JsonDiff.prettyPrint(diff);
 //	console.log(n, a1);
 	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
 });
@@ -147,7 +148,7 @@ test("delete object" , function() {
 	delete n.a;
 	var diff = JsonDiff.diff(cd, n);
 	var patched = JsonDiff.patch(cd, diff);
-	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");	
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
 });
 
 test("delete array" , function() {
@@ -155,7 +156,7 @@ test("delete array" , function() {
 	delete n.b;
 	var diff = JsonDiff.diff(cd, n);
 	var patched = JsonDiff.patch(cd, diff);
-	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");	
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
 });
 
 test("delete mixed" , function() {
@@ -165,11 +166,11 @@ test("delete mixed" , function() {
 	delete n.c;
 	var diff = JsonDiff.diff(cd, n);
 	var patched = JsonDiff.patch(cd, diff);
-	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");	
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
 });
 
-module("move");
-var m1 = { 
+module("array diffs");
+var m1 = {
 	'a': 1,
 	'b': 2
 }
@@ -181,7 +182,7 @@ test("move property", function() {
 	var patched = JsonDiff.patch(m1, diff);
 	JsonDiff.prettyPrint(diff);
 //	console.log(patched, n);
-	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");	
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
 });
 
 test("move object", function() {
@@ -196,7 +197,7 @@ test("move object", function() {
 	var patched = JsonDiff.patch(m1, diff);
 //	JsonDiff.prettyPrint(diff);
 //	console.log(patched, n);
-	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");		
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
 });
 
 test("move array", function() {
@@ -208,7 +209,7 @@ test("move array", function() {
 //	JsonDiff.prettyPrint(diff);
 	var patched = JsonDiff.patch(m1, diff);
 //	console.log(patched, n);
-	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");		
+	ok(JSON.stringify(n) == JSON.stringify(patched), "patched objects are the same");
 
 });
 

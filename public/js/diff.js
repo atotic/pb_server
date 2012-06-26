@@ -6,21 +6,25 @@ patch format:
 [
 	{
 		'path' : '', // jsonpath
-		'op': 'add/remove', //
-		'op_args': {} 
+		'op': 'set/delete/insert/swap', //
+		'op_args': {}
 	}
 ]
+- set: sets the value to new value
+- delete: deletes the value (if array, shrinks)
+- insert: inserts a new value (if array, grows)
+- swap: swaps values
 http://c2.com/cgi/wiki?DiffAlgorithm
 */
 
 /************************************************************************************
 	JsonPath implementation
 
-	JsonPath(obj, path) => [ encapsulated_results* ]
+	JsonPath(obj, path) => [ proxied_results* ]
 		returns an array of matched objects.
 		throws errors on failure
 
-		For matched object api, see encapsulator.prototype: val(), set(), path().
+		For proxy api, see proxy.prototype: val(), set(), path().
 
   Path syntax: (bare, see http://code.google.com/p/jsonpath/wiki/ExprSyntax for full path)
 
@@ -44,43 +48,51 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 (function(window) {
 
 	// Encapsulate the results, so we can set the values, get their paths
-	function encapsulator(obj, prop, path) {
+	function proxy(obj, prop, path) {
 		this._obj = obj;
 		this._prop = prop;
 		this._path = path;
 	}
-	encapsulator.prototype = {
+	proxy.prototype = {
+		toString: function() {
+			return this.path() + " : " + this.val();
+		},
 		val: function() {
 			if (this._prop != undefined ) return this._obj[this._prop];
 			return this._obj;
+		},
+		// property name
+		prop: function() {
+			return this._prop;
+		},
+		// path to the property
+		path: function() {
+			var r = this._path.join('.');
+			if (this._prop != undefined ) r += "." + this._prop;
+			return r;
 		},
 		set: function(val) {
 			if (this._prop != undefined ) return this._obj[this._prop] = val;
 			throw "Can't set root object";
 		},
+		insert: function(val) {
+			if (this._obj instanceof Array) {
+				this._obj.splice(this._prop, 0, val);
+			}
+			else
+				this.set(val);
+		},
 		delete: function(val) {
-			if (this._prop != undefined ) 
+			if (this._prop != undefined )
 			{
 				if (this._obj instanceof Array) {
-					// array delete is a splice
-					if (this._obj.length-1 != parseInt(this._prop))
-						throw "Deletion from middle of array attempted";
-					else
-						this._obj.splice(this._prop, 1);
+					this._obj.splice(this._prop, 1);
 				}
 				else
 					delete this._obj[this._prop];
 			}
 			else
 				throw "Can't delete root object";
-		},
-		path: function() {
-			var r = this._path.join('.');
-			if (this._prop != undefined ) r += "." + this._prop;
-			return r;
-		},
-		toString: function() {
-			return this.path() + " : " + this.val();
 		}
 	}
 
@@ -105,17 +117,17 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 			return null;
 		else if (path_array.length == 1) { // leaf, return values
 			if (path_array[0] == "$") // $
-				el.push(new encapsulator(obj, null, path_to_here));
+				el.push(new proxy(obj, null, path_to_here));
 			else if (path_array[0] == "*") { // *
 				switch(getType(obj)) {
 					case 'Array':
 						for (var i = 0; i < obj.length; i++)
-							el.push(new encapsulator(obj, i, path_to_here));
+							el.push(new proxy(obj, i, path_to_here));
 						break;
 					case 'Object':
 						for (var propName in obj)
 							if (obj.hasOwnProperty(propName))
-								el.push(new encapsulator(obj, propName, path_to_here));
+								el.push(new proxy(obj, propName, path_to_here));
 						break;
 					case 'Basic':
 						throw "Nothing to traverse at" + path_to_here.join('.') + '.*';
@@ -124,14 +136,14 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 			}
 			else { // common case
 				if (options['ghost_props'] || obj.hasOwnProperty(path_array[0]))
-					el.push(new encapsulator(obj, path_array[0], path_to_here));
+					el.push(new proxy(obj, path_array[0], path_to_here));
 			}
 		}
 		else // branch, keep on traversing
 		{
 			if (path_array[0] == "$") {
-				el = traverse(obj, 
-					path_array.slice(1), 
+				el = traverse(obj,
+					path_array.slice(1),
 					array_clone_push(path_to_here, path_array[0]),
 					options);
 			}
@@ -140,10 +152,10 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 					case 'Array':
 						var trim_path = path_array.slice(1);
 						for (var i=0; i < obj.length; i++) {
-							el = el.concat( 
-								traverse(obj[i], 
-									trim_path, 
-									array_clone_push(path_to_here, i), 
+							el = el.concat(
+								traverse(obj[i],
+									trim_path,
+									array_clone_push(path_to_here, i),
 									options));
 						}
 						break;
@@ -152,9 +164,9 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 						for (var propName in obj)
 							if (obj.hasOwnProperty(propName))
 								el = el.concat(
-									traverse(obj[propName], 
-										trim_path, 
-										array_clone_push(path_to_here, propName), 
+									traverse(obj[propName],
+										trim_path,
+										array_clone_push(path_to_here, propName),
 										options));
 						break;
 					case 'Basic':
@@ -164,8 +176,8 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 			else {
 				var o2 = obj[path_array[0]];
 				if (o2)
-					el = traverse(o2, 
-						path_array.slice(1), 
+					el = traverse(o2,
+						path_array.slice(1),
 						array_clone_push(path_to_here, path_array[0]),
 						options);
 			}
@@ -182,7 +194,7 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 		return p.split(';');
 	}
 
-	function jsonPath(obj, path, options) {
+	function queryPath(obj, path, options) {
 		options = options || {};
 		var defaults = {
 			'just_one': false,
@@ -203,84 +215,14 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 		return retVal;
 	}
 
-	window.JsonPath = jsonPath;
+	window.JsonPath = {
+		query: queryPath
+	};
 
 })(this);
-
-/*
-// DoublyLinkedList
-// simple homemade implementation
-(function(window) {
-	function DoublyLinkedListItem(val) {
-		this.prev = null;
-		this.next = null;
-		this.val = val;
-	}
-	function DoublyLinkedList() {
-		this.first = null;
-		this.last = null;
-	}
-	DoublyLinkedList.fromArray = function(arry) {
-		var list = new DoublyLinkedList();
-		for (var i =0; i< arry.length; i++)
-			list.pushVal(arry[i]);
-		return list;
-	}
-	DoublyLinkedList.prototype = {
-		// Returns array of DoublyLinkedListItems, if you want that kind of thing
-		toItemArray: function() {
-			var array = [];
-			this.each(function(item) {
-				array.push(item);
-			});
-			return array;
-		},
-		// Returns item values as array. If asItems true, returns array of DoublyLinkedListItem
-		toArray: function(asItems) {
-			var array = [];
-			this.each( function(item) {
-				array.push(asItems ? item : item.val);
-			});
-			return array;
-		},
-		each: function(cb) {
-			var item = this.first;
-			while (item) {
-				cb(item);
-				item = item.next;
-			}
-		},
-
-		pushVal: function(val) {
-			var item = new DoublyLinkedListItem(val);
-			if (this.first == null) {
-				this.first = this.last = item;
-			}
-			else {
-				this.last.next = item;
-				item.prev = this.last;
-				this.last = item;				
-			}
-			return item;
-		},
-		remove: function(item) {
-			if (item == this.first)
-				this.first = item.next;
-			else if (item == this.last)
-				this.last = item.prev;
-			if (item.prev)
-				item.prev.next = item.next;
-			if (item.next)
-				item.next.prev = item.prev;
-		}
-	}
-
-	window.DoublyLinkedList = DoublyLinkedList;
-})(this);
-*/
 
 // JsonDiff
-(function(window) {
+(function(scope) {
 
 	function mergeOptions(options, defaults)
 	{
@@ -300,6 +242,13 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 			return 'Basic';
 	}
 
+	function getArrayType(arry) {
+		for (var i=0; i<arry.length; i++)
+			if (getType(arry[i]) != 'Basic')
+				return 'Object';
+		return 'Basic';
+	}
+
 	function iterateObject(obj, callback) {
 		switch(getType(obj)) {
 			case 'Array':
@@ -307,102 +256,61 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 					callback(obj, i);
 		}
 	}
-	function createUpdate(path, value, oldValue) {
-/*		var retVal = createDelete(path, oldValue, {'implicit': true}); 
-		var retVal = retVal.concat( createInsert(path, value));*/
-		return createInsert(path, value);
-//		return retVal;
-	}
 
-	function createSimpleInsert(path, value) {
-		return { 'op' : 'insert', 'path': path, 'args' : value }
+	function createSet(path, value) {
+		return { op: 'set', path: path, args: value }
 	}
 
 	function createInsert(path, value) {
-		var retVal = [];
-		switch(getType(value)) {
-			case 'Object': // Insert empty object, populate props
-				retVal.push( createSimpleInsert(path, {}));
-				for (var p in value)
-					retVal = retVal.concat( createInsert(path + "." + p, value[p]));
-				break;
-			case 'Array': // Insert empty array, populate props
-				retVal.push( createSimpleInsert(path, []));
-				for (var i = 0; i<value.length; i++)
-					retVal = retVal.concat(createInsert(path + "." + i, value[i]));
-				break;
-			case 'Basic':
-				retVal.push( createSimpleInsert(path, value));
-				break;
-		}
-		return retVal;
+		return { op: 'insert', path: path, args: value}
 	}
 
-	function createSimpleDelete(path, value, options) {
-		return { 'op': 'delete', 'path': path, 'args': value, 'implicit': options['implicit'] }
+	function createDelete(path, value) {
+		return { op: 'delete', path: path, args: value }
 	}
 
-	// options: implicit: true|false
-	// implicit means that the delete can be discarded without changing patch results
-	//    implicit is used to record values 'implicitly' deleted when field is updated
-	//    createUpdate function uses this.
-	function createDelete(path, value, options) {
-		options = mergeOptions(options, {implicit: false});
-
-		var retVal = [];
-
-		switch (getType(value)) {
-			case 'Object':
-				for (var p in value)
-					retVal = retVal.concat( createDelete(path + "." + p, value[p], options));
-				retVal.push( createSimpleDelete(path, value, options));
-				break;
-			case 'Array':
-				for (var i=value.length-1; i>=0; i--)
-					retVal = retVal.concat( createDelete(path + "." + i, value[i], options));
-				retVal.push( createSimpleDelete(path, value, options));
-				break;
-			case 'Basic':
-				retVal.push( createSimpleDelete(path, value, options));
-				break;
-		}
-		return retVal;
+	function createSwap(src, dest) {
+		return { op: 'swap', path: src, args: dest}
 	}
-/*
-	function createMove(src, dest) {
-		return { op: 'move', path: src, args: dest}
-	}
-*/
+
 	function applyDiff(obj, diff) {
 		switch(diff.op) {
-			case 'insert':
-				var target = JsonPath(obj, diff.path, {'just_one': true, 'ghost_props': true});
+			case 'set':
+				var target = JsonPath.query(obj, diff.path, {'just_one': true, 'ghost_props': true});
 				if (target)
 					target.set(diff.args);
+				else
+					throw "Could not SET, target not found";
+				break;
+			case 'insert':
+				var target = JsonPath.query(obj, diff.path, {'just_one': true, 'ghost_props': true});
+				if (target)
+					target.insert(diff.args);
 				else
 					throw "Could not INSERT, target not found";
 				break;
 			case 'delete':
 				if (diff.implicit)
 					break;
-				var target = JsonPath(obj, diff.path, {'just_one':true });
+				var target = JsonPath.query(obj, diff.path, {'just_one':true });
 				if (target)
 					target.delete();
 				else
 					throw "Could not DELETE, target not found";
 				break;
-/*			case 'move':
-				var src = JsonPath(obj, diff.path, {'just_one':true});
-				var dest = JsonPath(obj, diff.args, {'just_one': true, 'ghost_props':true});
+			case 'swap':
+				var src = JsonPath.query(obj, diff.path, {'just_one': true});
+				var dest = JsonPath.query(obj, diff.args, {'just_one': true});
 				if (src && dest) {
-					dest.set(src.val());
-					src.delete();
+					var tmp = src.val();
+					src.set(dest.val());
+					val.set(tmp);
 				}
 				else
-					throw "Could not MOVE" 
-						+ (src ? "" : diff.path + " not found ") 
+					throw "Could not MOVE"
+						+ (src ? "" : diff.path + " not found ")
 						+ (dest ? "" : diff.args + " not found ");
-				break; */
+					break;
 			default:
 				throw "Unknown operation " + diff.op;
 		}
@@ -436,13 +344,13 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 				justNew.push(prop);
 
 		var diff = [];
-		justOld.forEach( function(p) { 
+		justOld.forEach( function(p) {
 			diff = diff.concat(
 				createDelete(path + "." + p, oldObj[p]));
 		});
 		justNew.forEach( function(p) {
 			diff = diff.concat(
-					createInsert( path + "." + p, newObj[p] ));
+					createSet( path + "." + p, newObj[p] ));
 			});
 		inBoth.forEach( function(p) {
 			diff = diff.concat( jsonDiffHelper( oldObj[p], newObj[p], path + "." + p));
@@ -450,25 +358,84 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 		return diff;
 	}
 
-	function jsonArrayDiff(oldObj, newObj, path)
+	function jsonArrayDiff(oldObj, newObj, path) {
+		function jsPath(index) { return path + '[' + index + ']'};
+		function indexOfAfter(arry, el, afterPoint) {
+			for (var i=afterPoint; i< arry.length; i++)
+				if (arry[i] == el)
+					return i;
+			return -1;
+		}
+		function swap(arry, i, j) {
+			var tmp = arry[i];
+			arry[i] = arry[j];
+			arry[j] = tmp;
+		}
+
+		// algorithm:
+		// stage 1: treat src/dest as sets, equilize them
+		// - delete any extras in src
+		// - add any extras in dest to src
+		// stage 2: move elements to proper position
+
+		// ex: src = [1,2,3,4], dest = [4,2,5]
+
+		if (getArrayType(oldObj) != 'Basic' || getArrayType(newObj) != 'Basic')
+			return jsonComplexArrayDiff(oldObj, newObj, path);
+
+		var patch = [];
+		var newSrc = [].concat(oldObj);
+		var tmpDest = [].concat(newObj);
+		// delete extras in oldObj
+		for (var i=0; i< newSrc.length; i++) {
+			var index = tmpDest.indexOf(newSrc[i]);
+			if (index === -1) { // delete element missing from destination
+				patch.push({ op: 'delete', path: jsPath(i)});
+				newSrc.splice(i, 1);
+				i -= 1;
+			}
+			else
+				tmpDest.splice(index, 1);
+		};
+		// ex: newSrc is [2,4]
+		tmpDest = [].concat(newObj);
+		var dupSrc = [].concat(newSrc);
+		// add extras in dest to src
+		for (var i=0; i< newObj.length; i++) {
+			var index = dupSrc.indexOf(newObj[i]);
+			if (index == -1) {
+				var insertLoc = i > newSrc.length ? newSrc.length : i;
+				patch.push({op: 'insert', path: jsPath(insertLoc), args: newObj[i]});
+				newSrc.splice(insertLoc, 0, newObj[i]);
+			}
+			else
+				dupSrc.splice(index, 1);
+		}
+		// ex: newSrc is now [2,4,5], same length as dest (possibly shuffled)
+		// move elements to proper position
+		for (var i=0; i< newSrc.length; i++) {
+			if (newSrc[i] != newObj[i]) {
+				var swapFrom = indexOfAfter(newSrc, newObj[i], i);
+				if (swapFrom == -1)
+					throw "Unexpected error while planning a swap";
+				patch.push({ op: 'swap', path: jsPath(i), args: jsPath(swapFrom)});
+				swap(newSrc, i, swapFrom);
+			}
+		}
+		// ex: oldObj and newObj should now be the same
+		return patch;
+	}
+	function jsonComplexArrayDiff(oldObj, newObj, path)
 	{
 		var diff = [];
-		// backward iteration because items can only be removed from end of an array
-		for (var i= oldObj.length - 1; i >= 0; i--) 
+		for (var i=0; i < oldObj.length; i++)
 		{
 			var newPath = path + "." + i;
 			if (i < newObj.length) {
-				diff = diff.concat( 
-									jsonDiffHelper(oldObj[i], newObj[i], newPath));
+				diff = diff.concat( jsonDiffHelper(oldObj[i], newObj[i], newPath));
 			}
 			else
 				diff = diff.concat( createDelete(newPath, oldObj[i]));
-		}
-		// TODO remove items backward
-		for (var i = oldObj.length; i < newObj.length; i++) 
-		{
-			var newPath = path + "." + i;
-			diff = diff.concat( createInsert(newPath, newObj[i]));			
 		}
 		return diff;
 	}
@@ -482,12 +449,12 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 		var newType = getType(newObj);
 		var retVal = [];
 		if (oldType != newType)
-			retVal = createUpdate(path, newObj, oldObj);
-		else switch(oldType) 
+			retVal = createSet(path, newObj, oldObj);
+		else switch(oldType)
 		{
 			case 'Basic':
 				if (newObj != oldObj)
-					retVal = createUpdate(path, newObj, oldObj); break;
+					retVal = createSet(path, newObj, oldObj); break;
 			case 'Array':
 				retVal = jsonArrayDiff(oldObj, newObj, path); break;
 			case 'Object':
@@ -496,30 +463,19 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 		return retVal;
 	}
 
-	// Removes crud: implicit ops, delete args
+	// Removes delete args
 	function cleanupDiff(diff) {
-		var newDiff = [];
 		for (var i=0; i<diff.length; i++) {
-			if (!('implicit' in diff[i]) || (diff[i].implicit == false)) {
-				if ('implicit' in diff[i])
-					delete diff[i].implicit;
-				switch(diff[i].op) {
-					case 'delete':
-						diff[i].args = null;
-						break;
-					default:
-						break;
-				}
-				newDiff.push(diff[i]);
-			}
+			if (diff[i].op == 'delete')
+				diff[i].args = null;
 		}
-		return newDiff;
+		return diff;
 	}
 
 	function compareDiffArgs(a,b) {
 		var type_a = getType(a.args);
 		var type_b = getType(b.args);
-		if (type_a == type_b) 
+		if (type_a == type_b)
 			switch(type_a) {
 				case 'Object':
 				case 'Array':
@@ -534,7 +490,7 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 				return 1;
 			else if (type_a == 'Array')
 				return -1;
-			else 
+			else
 				return 1;
 	}
 
@@ -543,7 +499,7 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 			return -1;
 		else if (b.path < a.path)
 			return 1;
-		else 
+		else
 			return 0;
 	}
 
@@ -573,9 +529,9 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 				// match paths that reference the same array
 				// create a matching regex, escape special characted
 				// "a.b.c.1" would create a regex: /(a\.b\.c\.)(\d+)
-				var matchingRegex = new RegExp( 
+				var matchingRegex = new RegExp(
 					"^(" + isArrayMatch[1].replace(/[\\\^\$\*\+\?\(\)\[\]\.\!\:\|\{\}\/]/g, "\\$&") + ")"
-					+ "(\\d+)" + "(.*)$" 
+					+ "(\\d+)" + "(.*)$"
 				);
 				var next = insertOp.next;
 				while (next) {
@@ -643,11 +599,8 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 	}
 	*/
 	function jsonDiff(oldObj, newObj, options) {
-		options = mergeOptions(options, {optimize: false, cleanup: false});
+		options = mergeOptions(options, {verbose: false});
 		var diff = jsonDiffHelper(oldObj, newObj, "$");
-/*		if (options.optimize)
-			diff = optimizeDiff(oldObj, newObj, diff);
-*/
 		if (options.cleanup)
 			diff = cleanupDiff(diff)
 		return diff;
@@ -671,19 +624,19 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 		return newObj;
 	}
 
-	window.JsonDiff = {
+	scope.JsonDiff = {
 		'diff': jsonDiff,
 		'patch': jsonPatch,
 		'prettyPrint': printDiff
 	}
 
-})(this);
+})(window);
 
 
 /*
 # Diff architecture notes
 
-Requirements: 
+Requirements:
 - good performance on photobook use cases.
 - no needless changes. if two values are the same, there should be no update
   this would happen if we naively swap entire objects when just part of their
@@ -754,7 +707,7 @@ diff, nice:
  $.0,  'move', $.1
  $.1,	 'move', $.2
  $.2,	 'delete'
- new = [a,c] // 
+ new = [a,c] //
 
 ## Example 2c: 'Array'. item inserted
 new = [a,a1,b,c]

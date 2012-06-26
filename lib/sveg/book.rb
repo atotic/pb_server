@@ -14,19 +14,18 @@ class Book < Sequel::Model(:books)
 
 	def before_create
 		super
-		debugger
 		self.title ||= 'untitled'
 		self.document ||=
 <<-eos
 {
 	'title': #{self.title.to_json},
-	'photoList': ['1','2','3','4', '5'],
+	'photoList': ['A','B','C','D', 'E'],
 	'photos': {
-		'1': { url: { l: '/assets/test/1.jpg'} },
-		'2': { url: { l: '/assets/test/2.jpg'} },
-		'3': { url: { l: '/assets/test/3.jpg'} },
-		'4': { url: { l: '/assets/test/4.jpg'} },
-		'5': { url: { l: '/assets/test/5.jpg'} },
+		'A': { url: { l: '/assets/test/1.jpg'} },
+		'B': { url: { l: '/assets/test/2.jpg'} },
+		'C': { url: { l: '/assets/test/3.jpg'} },
+		'D': { url: { l: '/assets/test/4.jpg'} },
+		'E': { url: { l: '/assets/test/5.jpg'} },
 		},
 	'roughPageList': ['cover', 'cover-flap', 'back-flap', 'back','1','2','3','4'],
 	'roughPages': {
@@ -34,9 +33,9 @@ class Book < Sequel::Model(:books)
 		'cover-flap': { 'photoList': [] },
 		'back-flap': { 'photoList': [] },
 		'back': {'photoList': [] },
-		'1': {'photoList': [] },
-		'2': {'photoList': [] },
-		'3': {'photoList': [] },
+		'1': {'photoList': ['A', 'B'] },
+		'2': {'photoList': ['B', 'C'] },
+		'3': {'photoList': ['D'] },
 		'4': {'photoList': [] }
 	}
 }

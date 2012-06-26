@@ -8,6 +8,18 @@ window.PB.Photo // Photo objects
 */
 "use strict";
 
+// Inserts
+(function(jQuery) {
+	jQuery.fn.insertAt = function(index, content) {
+		var parent = $(this.get(0));
+		var children = parent.children();
+		if ((children.length - 1) < index)
+			$(content).appendTo(parent);
+		else
+			$(children.get(index)).insertBefore(content);
+		return this;
+	}
+})($);
 
 (function(window) {
 	var PB = {
@@ -20,6 +32,16 @@ window.PB.Photo // Photo objects
 		extend: function(target, src) {
 			for (var p in src)
 				target[p] = src[p];
+		},
+		swapDom: function(a, b) {
+			var aparent= a.parentNode;
+			var asibling= a.nextSibling===b? a : a.nextSibling;
+			b.parentNode.insertBefore(a, b);
+			aparent.insertBefore(b, asibling);
+		},
+		MODEL_CHANGED: 'modelchanged',
+		broadcastChange: function(model, propName, options) {
+			$('*:data("model.id=' + model.id + '")').trigger(PB.MODEL_CHANGED, [model, propName, options]);
 		}
 	};
 
@@ -72,6 +94,9 @@ window.PB.Photo // Photo objects
 		},
 		page: function(id) {
 			return this.serverData.document.roughPages[id];
+		},
+		get title() {
+			return this.serverData.document.title || "Untitled";
 		}
 	}
 
@@ -96,15 +121,20 @@ window.PB.Photo // Photo objects
 	var Photo = function(props) {
 		$.extend(this, props);
 	}
-
+	Photo.SMALL = 128;
+	Photo.MEDIUM = 1024;
+	Photo.LARGE = 2000;
 	Photo.prototype = {
 		getUrl: function(size) {
-			if (size < 129)
+			if (size <= Photo.SMALL)
 				return ( 's' in this.url ? this.url.s : this.url.l + "?size=icon");
-			else if (size < 1025)
+			else if (size <= Photo.MEDIUM)
 				return ( 'm' in this.url ? this.url.m : this.url.l + "?size=display");
 			else
 				return this.url;
+		},
+		isDraggable: function() {
+			return true;
 		}
 	}
 
@@ -117,20 +147,20 @@ window.PB.Photo // Photo objects
 		$.extend(this, props);
 	}
 
+	var coverRegex = /^cover|^cover-flap|^back-flap|^back/;
+
 	RoughPage.prototype = {
-		coverRegex: /^cover|^cover-flap|^back-flap|^back/,
 		isDraggable: function() {
-			debugger;
-			return this.id.match(RoughPage.coverRegex) == null;
+			return this.id.match(coverRegex) == null;
 		},
 		type: function() {
-			if ( this.id.match(RoughPage.coverRegex))
+			if ( this.id.match(coverRegex))
 				return 'cover';
 			else
 				return 'pages';
 		},
 		pageClass: function() {
-			if ( this.id.match(RoughPage.coverRegex))
+			if ( this.id.match(coverRegex))
 				return this.id;
 			else
 				return 'page';
@@ -144,6 +174,23 @@ window.PB.Photo // Photo objects
 				default:
 					return this.book.roughPageList.indexOf(this.id) - 3;
 			}
+		},
+		photos: function() {
+			var list = [];
+			for (var i=0; i<this.photoList.length; i++)
+				list.push(this.book.photo(this.photoList[i]));
+			return list;
+		},
+		addPhoto: function(photo, options) {
+			// options = { animate: false}
+			this.photoList.push(photo.id);
+			PB.broadcastChange(this, 'photoList', options);
+		},
+		removePhoto: function(photo, options) {
+			var index = this.photoList.indexOf(photo.id);
+			if (index == -1) throw "no such photo";
+			this.photoList.splice(index, 1);
+			PB.broadcastChange(this, 'photoList', options);
 		}
 	}
 

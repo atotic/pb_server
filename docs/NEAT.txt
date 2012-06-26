@@ -28,6 +28,7 @@ Excellent CSS effects: bounce, rotate, etc. If I ever need visual candy http://b
 CSS arrow please: http://cssarrowplease.com/
 
 JS
+Face detection in JS https://github.com/liuliu/ccv/tree/unstable/js
 HTMLK Media Capture: upload photos from your phone! http://www.w3.org/TR/html-media-capture/
 window.matchMedia media queries through js
 Zero comparasance table for JS: http://zero.milosz.ca/
@@ -89,6 +90,8 @@ Free ssl cert https://www.startssl.com/?app=40
 Use bcrypt to store passwords http://codahale.com/how-to-safely-store-a-password/
 
 S3
+Rackspace Cloudfiles
+How to store millions of images: http://highscalability.com/blog/2012/6/20/ask-highscalability-how-do-i-organize-millions-of-images.html
 Pure html ajax upload: http://zefer.posterous.com/pure-html-ajax-solutions-to-upload-files-to-s
 http://hacks.mozilla.org/2011/03/the-shortest-image-uploader-ever/
 S3 command line https://github.com/pcorliss/s3cmd-modification
@@ -128,12 +131,10 @@ Simple, cheap scalable site: http://highscalability.com/blog/2011/8/1/peecho-arc
 ]BrowserID authentication: https://github.com/mozilla/browserid/wiki/How-to-Use-BrowserID-on-Your-Site
 Stripe payments system: cheap way to accept credit cards
 Graphic designers: http://www.artisantalent.com/find-talent/print-talent/graphic-designers/
-Sending email: http://37signals.com/svn/posts/3096-behind-the-scenes-giving-away-the-secrets-of-email-delivery
 OS X shell tips http://hayne.net/MacDev/Notes/unixFAQ.html#shellStartup
 
 TOUCH INTERFACES
 Sweet & short take on ipad html development http://mir.aculo.us/2010/06/04/making-an-ipad-html5-app-making-it-really-fast/
-jQuery touch http://jqtouch.com/
 
 PRINTING
 Reviews http://insig.ht/2009/06/print-on-demand-review/

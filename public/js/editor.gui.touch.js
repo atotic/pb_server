@@ -183,7 +183,7 @@
 				return;
 			touchTrack.startTracking(ev.currentTarget,
 				ev.touches[0],
-				$(ev.currentTarget).data('events').click);
+				$(ev.currentTarget)._data('events').click);
 			ev.preventDefault();
 		},
 		touchmove: function(ev, touchTrack) {

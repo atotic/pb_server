@@ -63,10 +63,34 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-Display rough pages
-Modify model
+Bugs:
+Make changes to the model:
+- when dragging image to rough page: DONE
+- when dragging image between rough pages: DONE
+- when dragging rough pages around
+- when clicking add button
+- when dragging add button
+- when dragging image to delete button
+- when dragging page to delete button
+
 Display only images not on pages
 Model change notification framework
+
+June 26
+Progress towards model-driven GUI changes
+image to rough page now works
+Design for GUI/MODEL sync is clever, documented in architecture:
+- every GUI element has reference to model as data('model'), and
+listens to PB.MODEL_CHANGED events
+- models broadcast PB.MODEL_CHANGED events, they are
+automatically sent to all dom elements that have matching data('model' id)
+
+June 21
+Display photos inside rough pages on load
+fix: can't drag images out of cover pages
+
+June 20
+Display rough pages
 
 June 19
 Back into swing of things after 5 days off (Tahoe, etc)

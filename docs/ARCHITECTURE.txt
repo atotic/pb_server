@@ -7,13 +7,13 @@ PROBLEM: GROUP EDITING (DOCS, GOOGLE STYLE)
 	different, possibly conficting changes.
 	This problem happens when:
 	- single user edits a document on more than one client. This can easily happen between home
-		and work. 
+		and work.
 	- multiple users edit document at once
 	Although solution is complicated, it solving it helps with many other problems:
 		- multiple client sync,
-		- offline 
-		- group editing, 
-		- undo/redo). 
+		- offline
+		- group editing,
+		- undo/redo).
 	Retrofitting would be a rewrite. We are doing it for the first release.
 	After implementing it, I've learned that some call it Operational Transformation
 
@@ -45,7 +45,7 @@ PROBLEM: OFFLINE IDS
 we need to create and use an object before we got an id from the server.
 we will get an id from server eventually.
 
-use cases: 
+use cases:
 	- images before fully uploaded.
 	- page (if created in browser)
 	- offline (page/image creation), book creation
@@ -66,7 +66,7 @@ SOLUTION:
 	- when generating json for saving, get id's from object references
 	- corner case is http links to user photos. These are stored in page.html, and must use an id.
 		before image is uploaded, we point it to local file url, that has to be fixed before page is saved
-	- for this to work, objects have to be saved in order: 
+	- for this to work, objects have to be saved in order:
 		if book(with id), points to page, and page points to image, and they've all been modified
 		we have to save image first, then page, then book
 		If id dependency is circular, some object will have to be saved multiple times until
@@ -81,27 +81,40 @@ SOLUTION:
 	thumbnail template can reference elements of a real page through data-page attributes
 
 PROBLEM: LOGGING
-	the old "watch the logfile" method does not work once you have a stable of servers. In production, we only 
+	the old "watch the logfile" method does not work once you have a stable of servers. In production, we only
 	need access logs, and error events.
 	Logs should be rotated via logrotate cron job
 	Our logging strategy is:
 	- All logging files are in SvegSettings.log_dir
 	- All servers have two logs:
 		<servername>_access.log : standard http access log
-		<servername>_error.log : stderr. 
+		<servername>_error.log : stderr.
 	SvegSession middleware runs on all http servers
 	SvegSession middleware catches unexpected exceptions, and dumps them to stderr
 
+PROBLEM: GUI/MODEL SYNC
+	Keep GUI in sync with model without continuous event add/remove/listener
+SOLUTION:
+	Implicit event binding:
+	Dom elements intererested in model changes:
+	1) keeps model as data('model'),
+	2) registers PB.MODEL_CHANGED event listener
+	Models broadcast changes using PB.broadcastChange
+
+	PB.broadcastChange finds dom elements interested in the model using
+	:data selector filtered by model id and broadcasts the change
+
+	Corrolary: all models must have unique ids
 
 MODELS
 
-Book: 
+Book:
 - book belongs_to user. If sharing, we'll need another layer of indirection
 	create menu: GET /books/new
 	creation: on a server POST /books
 	get: GET /books/:id, retrieves all the pages.
 	deletion: on a server DELETE /books/:id
- 
+
 	pdf generation: POST /books/:id/pdf
 	pdf retrieval:  GET /books/:id/pdf
 

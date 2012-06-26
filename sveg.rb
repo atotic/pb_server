@@ -200,7 +200,9 @@ class SvegApp < Sinatra::Base
 					retVal += asset_link("editor.pb.js",
 						"editor.gui.js",
 						"editor.gui.touch.js",
-						"editor.gui.buttons.js")
+						"editor.gui.buttons.js",
+						"editor.gui.controller.js",
+						"editor.gui.roughworkarea.js")
 				elsif arg.end_with?("js")
 					arg = "jquery-1.7.js" if arg.eql? "jquery.js"
 					arg = "jquery-ui-1.8.16.custom.js" if arg.eql? "jquery-ui.js"
