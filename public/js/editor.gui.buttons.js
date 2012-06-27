@@ -50,8 +50,12 @@
 						GUI.Controller.removeRoughPage(scope.DragStore.roughPage);
 					else if (scope.DragStore.image)
 						GUI.Controller.removeImage(scope.DragStore.image);
-					else if (scope.DragStore.roughImage)
-						GUI.Controller.removeRoughImage(scope.DragStore.roughImage);
+					else if (scope.DragStore.roughImage) {
+						var ri = $(scope.DragStore.roughImage);
+						var photo = ri.data('model');
+						var roughPage = ri.parent().data('model');
+						roughPage.removePhoto(photo, {animate: true});
+					}
 				}
 			});
 		}

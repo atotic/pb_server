@@ -69,21 +69,6 @@
 			else if (elBottom > containerBottom)
 				$(container).animate({'scrollTop' : elBottom - container.offsetHeight});
 		},
-		tileRoughInsideTiles: function (roughDiv) {
-			roughDiv = $(roughDiv);
-			var tiles = roughDiv.children('.rough-tile');
-			var totalWidth = roughDiv.width();
-			var totalHeight = roughDiv.height() - roughDiv.children('p').height();
-			var tileCount = tiles.length;
-			// Perfect fit edge length
-			var edgeLength = Math.floor(Math.sqrt(totalWidth * totalHeight / tileCount));
-			// shrink the edge until all tiles fit
-			// Number of tiles that fits: floor(width / edge) * floor(height / edge)
-			while (edgeLength > 8
-				&& (Math.floor(totalWidth / edgeLength) * Math.floor(totalHeight / edgeLength)) < tileCount)
-				edgeLength -= 1;
-			tiles.animate({height: edgeLength + 'px', width: edgeLength + 'px'});
-		},
 		getPossiblePhotoContainerHeights: function(imageHeight) {
 			$('#photo-list-container').stop();
 			var max = Math.min($('body').height() - 200, $('#photo-list').height() + imagePadding + 12 + 8);
@@ -165,14 +150,6 @@
 		removeImage: function(image) {
 			$(image).animate({width: 0}, function() {
 				$(image).detach();
-			});
-		},
-		removeRoughImage: function(roughImage) {
-			roughImage = $(roughImage);
-			var parent = $(roughImage).parent();
-			roughImage.animate({width:0}, function() {
-				roughImage.detach();
-				Controller.tileRoughInsideTiles(parent);
 			});
 		}
 	};

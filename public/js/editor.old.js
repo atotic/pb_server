@@ -1,16 +1,16 @@
-"use strict"; // could not do it with jResig 
+"use strict"; // could not do it with jResig
 
 // jQuery extensions
 (function(jQuery){
 
 /*
- * reflowVisible  
+ * reflowVisible
  * Solves the problem of "cannot reflow an hidden element because hidden elements have no dimensions"
  It takes a reflow function, and calls it:
  * a) immediately if element is visible
  * b) before element will be shown, if element is hidden
- * usage: 
- * $().reflowVisible() 
+ * usage:
+ * $().reflowVisible()
  *   call this after show();
  * $().reflowVisible( function(immediate)) sets the reflow function
  *   this is the $(element shown), immediate if the reflow function is immediate (animate here)
@@ -30,7 +30,7 @@
 				showHelper.startMeasure();
 				try {
 					cb.apply(this, [immediate]);
-				} 
+				}
 				catch (e) {
 					console.log("exception in reflow callback");
 				}
@@ -52,22 +52,22 @@
 			return;
 		}
 		var lastChild = this.children().last();
-		var rightmostEdge = lastChild.position().left + lastChild.outerWidth() 
+		var rightmostEdge = lastChild.position().left + lastChild.outerWidth()
 				+ Math.abs(parseInt(this.css("margin-left")));
 		// Limit scrolling to not show empty space on the right
 		var leftLimit = rightmostEdge - this.parent().width();
 		leftLimit = Math.max(0, leftLimit);
-		
+
 		var left = child.position().left + Math.abs(parseInt(this.css("margin-left")));
 		if (left > leftLimit)
 			left = leftLimit;
-		this.clearQueue().animate({ 
+		this.clearQueue().animate({
 			"margin-left": "-" + Math.abs(left) + "px"
 			}, {
 				duration: 200
-			});	
+			});
 	}
-	
+
 	// Scroll by val amount
 	jQuery.fn.scrollMarginLeft = function(val, animate) {
 		var min = - (this.width() - this.parent().width());
@@ -79,7 +79,7 @@
 		else
 			this.css("margin-left", cur + "px");
 	}
-	
+
 	// Creates a "flippy" UI element
 	// state: 'open'|'closed'
 	// flippyContent: content to show when flippy opens
@@ -113,13 +113,13 @@
 		.css("cursor", "pointer");
 		return this;
 	};
-	jQuery.browserCssPrefix = 
+	jQuery.browserCssPrefix =
 	jQuery.browser.webkit ? '-webkit-' :
 	jQuery.browser.mozilla ? '-moz-' :
 	jQuery.browser.opera ? '-o-' :
 	jQuery.browser.msie ? '-ms-' :
   '-webkit-';
-	
+
 })(window.jQuery);
 
 // Timer utility class
@@ -216,16 +216,16 @@ $.extend(PB.EventBroadcaster.prototype, {
 			var f = this.listeners[eventType][i];
 			switch(arguments.length) {
 			case 1:
-				f.call(); 
+				f.call();
 				break;
 			case 2:
-				f.call(null, arguments[1]); 
+				f.call(null, arguments[1]);
 				break;
 			case 3:
-				f.call(null, arguments[1], arguments[2]); 
+				f.call(null, arguments[1], arguments[2]);
 				break;
 			case 4:
-				f.call(null, arguments[1], arguments[2], arguments[3]); 
+				f.call(null, arguments[1], arguments[2], arguments[3]);
 				break;
 			default:
 				throw("Cannot send this many arguments: " +(arguments.length - 1));
@@ -235,7 +235,7 @@ $.extend(PB.EventBroadcaster.prototype, {
 });
 
 $.extend(PB, {
-	
+
 	randomString: function (len, charSet) {
 	  charSet = charSet || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 	  var randomString = '';
@@ -339,12 +339,12 @@ PB.QueueFilter.NetworkErrorFilter = {
 		if (!job.isRejected())
 			this.setNetworkError(0);
 	},
-	
+
 	// xhrFailure is called every time xhr fails
 	xhrFail: function(jqXHR, status, ex) {
 		console.log("Network error: " + jqXHR.status);
 		switch(jqXHR.status) {
-			case 0:	// Network is down 
+			case 0:	// Network is down
 				this.setNetworkError(-1); break;
 			case 412:
 				break;
@@ -358,7 +358,7 @@ PB.QueueFilter.NetworkErrorFilter = {
 	setNetworkError : function(err) {
 		if (err)
 		{
-			if(!this._netDown) 
+			if(!this._netDown)
 			{
 				this._netDown = true;
 				this._initialDelay = 1;	// seconds
@@ -406,7 +406,7 @@ PB.QueueFilter.NetworkErrorFilter = {
 // ServerStreamUpdate processes "ServerStream not up to date" errors
 PB.QueueFilter.ServerStreamUpdate = {
 	_waitingForUpdate: false,
-	
+
 	ready: function(queue) {
 		return ! this._waitingForUpdate;
 	},
@@ -469,7 +469,7 @@ PB.DeferredQueue.prototype = {
 	// execute any jobs we can
 	process: function() {
 		var THIS = this;
-		while (this._waitJobs.length > 0 
+		while (this._waitJobs.length > 0
 			&& this._filters.every(function(el) { return el.ready(THIS);})
 			) {
 			this.execute(this._waitJobs.shift());
@@ -513,7 +513,7 @@ PB.DeferredQueue.prototype = {
 // Limits how many photos:
 // - can be downloaded simultaneusly
 // - can be downloaded in a 10 second window. This is to prevent
-//	 memory trashing, FF keeps all images in used memory for 10 seconds, 
+//	 memory trashing, FF keeps all images in used memory for 10 seconds,
 //   unused for 25. When loading photos off local disk, single image can be
 //   4928 x 3264 x 4 = 60MB undecoded.
 // 	 TestPix loads 100 photos in 64s
@@ -528,19 +528,19 @@ PB.ImageLoadQueue = new PB.DeferredQueue([
 // Uploads book model changes to the server (pages/photos/books)
 // Jobs are uploaded one at a time.
 // UploadQueue used to inherit from deferred queue, but became its own class as design diverged.
-// 
+//
 PB.UploadQueue = function(name) {
 	this._name = name;
 	this._waitJobs = [];
 	this._timeout = null;
 	this._verbose = false;
 	this._concurrentFilter = new PB.QueueFilter.ConcurrentFilter(1);
-	this._filters = [ 
+	this._filters = [
 		PB.QueueFilter.NetworkErrorFilter, this._concurrentFilter, PB.QueueFilter.ServerStreamUpdate ];
 }
 
 $.extend(PB.UploadQueue.prototype, {
-	
+
 	// Queue items need to implement createUploadDeferred() method
 	upload: function(item) {
 		if (this._waitJobs.indexOf(item) != -1)
@@ -548,11 +548,11 @@ $.extend(PB.UploadQueue.prototype, {
 		this._waitJobs.push(item);
 		this.process();
 	},
-	
+
 	// Process picks a job to be executed
 	process: function() {
 		var THIS = this;
-		while (this._waitJobs.length > 0 
+		while (this._waitJobs.length > 0
 			&& this._filters.every(function(el) { return el.ready();})
 			) {
 			this.execute(this._waitJobs.shift());
@@ -570,7 +570,7 @@ $.extend(PB.UploadQueue.prototype, {
 		else
 			;//console.warn("DefferedQueue timeout not empty " + this.timeout);
 	},
-	
+
 	// Starts the upload of the item. Retries in case of network down error
 	execute: function(item) {
 	//		console.log("Execute " + deferredJob.name);
@@ -613,7 +613,7 @@ $.extend(PB.UploadQueue.prototype, {
 		return this._concurrentFilter.jobCount > 0 ||
 			this._waitJobs.length > 0;
 	},
-	
+
 	display_verbose: function() {
 		if (this._verbose) {
 			var imgCount = this._waitJobs.filter(function(e) { e instanceof PB.PhotoBroker}).length;
@@ -625,7 +625,7 @@ $.extend(PB.UploadQueue.prototype, {
 			PB.notice(status);
 		}
 	},
-	
+
 	set verbose(val) {
 		this._verbose = val;
 		this.display_verbose();

@@ -65,12 +65,9 @@ Google Drive integration? https://developers.google.com/drive/
 Next:
 Bugs:
 Make changes to the model:
-- when dragging image to rough page: DONE
-- when dragging image between rough pages: DONE
 - when dragging rough pages around
 - when clicking add button
 - when dragging add button
-- when dragging image to delete button
 - when dragging page to delete button
 
 Display only images not on pages
@@ -84,6 +81,10 @@ Design for GUI/MODEL sync is clever, documented in architecture:
 listens to PB.MODEL_CHANGED events
 - models broadcast PB.MODEL_CHANGED events, they are
 automatically sent to all dom elements that have matching data('model' id)
+Model->GUI broadcast
+- when dragging image to rough page: DONE
+- when dragging image between rough pages: DONE
+- when dragging image to delete button: DONE
 
 June 21
 Display photos inside rough pages on load
