@@ -13,9 +13,20 @@
 	var RoughWorkArea = {
 		init: function() {
 			this.makeDroppable();
-			$('.rough-page').each(function() {
-				RoughWorkArea.makeDraggable(this);
-			});
+		},
+		bindToBook: function(book) {
+			var roughPageList = book.roughPageList;
+			$('#work-area-rough')
+				.data('model', book)
+				.on( PB.MODEL_CHANGED, this.bookChanged);
+			// for (var i=0; i< roughPageList.length; i++) {
+			// 	var page = book.page( roughPageList[i] );
+			// 	this.addPage(page);
+			// }
+			this.synchronizeRoughPageList();
+		},
+		get book() {
+			return $('#work-area-rough').data('model');
 		},
 		getDragTarget: function(roughPage, clientX, clientY) {
 			roughPage = $(roughPage).get(0);
@@ -55,17 +66,31 @@
 				s += ' current: null';
 			console.log(s);
 		},
+		setTarget:	function (target, direction, dropFeedback) {
+			direction = 'before';	// decided to ignore direction for now
+			if (roughPageTarget.target == target && roughPageTarget.direction == direction)
+				return;
+			if (roughPageTarget.target) {
+				$(roughPageTarget.target).removeClass(roughPageTarget.dropFeedback);
+			}
+			roughPageTarget = { target: target, direction: direction, dropFeedback: dropFeedback }
+			if (target)
+				$(target).addClass(dropFeedback);
+		},
+
 		dragenter: function(ev) {
 			ev.stopPropagation();
 			ev.preventDefault();
 		},
 		dragover: function(ev) {
 			// Ignore unless drag has the right flavor
-			if (!(scope.DragStore.roughPage
+			if (!
+				(  scope.DragStore.roughPage
 				|| scope.DragStore.image
 				|| scope.DragStore.addRoughPage
 				|| scope.DragStore.roughImage))
 				return;
+
 			ev.preventDefault();
 			// Find the current drop location
 			var newTarget = null;
@@ -117,7 +142,7 @@
 				this.dropRoughPage(ev, t);
 			}
 			else if (scope.DragStore.addRoughPage) {
-				GUI.Controller.addRoughPage(t.target, t.direction);
+				this.dropAddButton(ev, t);
 			}
 			else if (scope.DragStore.image) {
 				this.dropImage(ev, t);
@@ -129,19 +154,10 @@
 		},
 		dropRoughPage: function(ev, t) {
 			t.target = $(t.target);
-			var src = $(scope.DragStore.roughPage);
-			// patch the location if src is before destination
-			// to preserve visual consistency
-			if (src.parent().children().get().indexOf(src.get(0)) <
-				t.target.parent().children().get().indexOf(t.target.get(0)))
-				t.direction = 'after';
-
-			var oldWidth = src.width();
-			src.animate({width: 0}, function() { // hide old
-				scope.Util.moveNode(src, t.target, t.direction);
-				src.animate({width: oldWidth}); // show new
-				GUI.Controller.renumberRoughPages();
-			});
+			var src = $(scope.DragStore.roughPage).data('model');
+			var dest = $(t.target).data('model');
+			var book = RoughWorkArea.book;
+			book.moveRoughPage(src, book.roughPageList.indexOf(dest.id));
 		},
 		dropImage: function(ev, t) {
 			var src = $(scope.DragStore.image);
@@ -158,17 +174,13 @@
 			oldModel.removePhoto(photo, {animate:true});
 			newModel.addPhoto(photo, {animate:true});
 		},
-		setTarget:	function (target, direction, dropFeedback) {
-			direction = 'before';	// decided to ignore direction for now
-			if (roughPageTarget.target == target && roughPageTarget.direction == direction)
-				return;
-			if (roughPageTarget.target) {
-				$(roughPageTarget.target).removeClass(roughPageTarget.dropFeedback);
-			}
-			roughPageTarget = { target: target, direction: direction, dropFeedback: dropFeedback }
-			if (target)
-				$(target).addClass(dropFeedback);
-		},
+		dropAddButton: function(ev, t) {
+			var destModel = $(t.target).data('model');
+			destModel.book.insertRoughPage(destModel.indexOf(), {animate:true});
+		}
+	};
+
+	var RoughWorkAreaEvents = {
 		layoutRoughInsideTiles: function (domRough, animate) {
 			domRough = $(domRough);
 			var tiles = domRough.children('.rough-tile');
@@ -187,6 +199,31 @@
 			else
 				tiles.css({width: edgeLength + "px", height: edgeLength + "px"});
 		},
+		createRoughPage: function(pageModel) {
+			var domPage = $("<div class='rough-page'><p>" + pageModel.pageTitle() + "</p></div>");
+			if (pageModel.type() === 'pages')
+				domPage.attr('draggable', true);
+			if (pageModel.pageClass() !== 'page')
+				domPage.addClass('rough-page-' + pageModel.pageClass());
+
+			// Hook it up to the model
+			domPage.data('model', pageModel);
+			domPage.on( PB.MODEL_CHANGED, RoughWorkArea.pageChanged);
+			this.makeDraggable(domPage);
+			return domPage;
+		},
+		renumberRoughPages: function() {
+			$('#work-area-rough .rough-page').each(function(idx) {
+				if (idx < 4)
+					return;
+				var pNum = idx - 3;
+				$(this).children('p').text(idx - 3);
+				if (pNum % 2 == 1)
+					$(this).removeClass('left-rough').addClass('right-rough');
+				else
+					$(this).removeClass('right-rough').addClass('left-rough');
+			});
+		},
 		createRoughImageTile: function(photo) {
 			var src = photo.getUrl(PB.Photo.SMALL);
 			var domPhoto = $(document.createElement('div'));
@@ -195,65 +232,133 @@
 			domPhoto.css('background-image', 'url("' + src + '")');
 			return domPhoto;
 		},
-		populateRoughWithTiles: function(domRough) {
-			this.synchronizeRoughPhotoList(domRough, {animate: false});
+		// synchronizeRoughPageList and synchronizeRoughPhotoList
+		// algorithms are almost identical
+		synchronizeRoughPageList: function(options) {
+			options = $.extend({animate:false}, options);
+			var containerDom = $('#work-area-rough');
+			var bookModel = containerDom.data('model');
+
+			var oldChildren = containerDom.children('.rough-page');
+			var oldPages = oldChildren.map(function(i,el) { return $(el).data('model').id}).get();
+			var newPages = bookModel.roughPageList;
+
+			var toId = function(el) { return el.id};
+
+			var diff = JsonDiff.diff(oldPages, newPages);
+
+			var newlyCreatedPages = [];
+			for (var i=0; i< diff.length; i++) {
+				var targetPath = JsonPath.query(oldPages, diff[i].path, {just_one: true, ghost_props: true});
+				var targetIndex = targetPath.prop();
+				var targetId = targetPath.val();
+				switch(diff[i].op) {
+				case 'set':
+					var replaceDom = $(oldChildren.get(targetIndex));
+					var newPage = bookModel.page(diff[i].args);
+					var newDom = RoughWorkArea.createRoughPage(newPage);
+					newlyCreatedPages.push( newDom);
+					replaceDom.replaceWith(newDom);
+				break;
+				case 'insert':
+					var newModel = bookModel.page( diff[i].args );
+					var newDom = RoughWorkArea.createRoughPage(newModel);
+					newlyCreatedPages.push(newDom);
+					var c = containerDom.children('.rough-page');
+					if (c.length <= targetIndex) {
+						if (c.length == 0)
+							containerDom.prepend(newDom);
+						else
+							c.last().after(newDom);
+					}
+					else {
+						$(c.get(targetIndex)).before(newDom);
+					}
+				break;
+				case 'delete':
+					$(containerDom.children().get(targetIndex)).detach();
+				break;
+				case 'swap': // prop: index of old
+					var src = containerDom.children().get(targetIndex);
+					var destIndex = JsonPath.lastProp(diff[i].args);
+					var dest = containerDom.children().get(destIndex);
+					GUI.Util.swapDom(src, dest, options.animate);
+				break;
+				}
+			}
+			if (diff.length > 0)
+				this.renumberRoughPages();
+			if (newlyCreatedPages.length > 0) {
+				for (var i=0; i< newlyCreatedPages.length; i++)
+					this.synchronizeRoughPhotoList(newlyCreatedPages[i]);
+
+				if (options.animate)
+					GUI.Util.revealByScrolling(newlyCreatedPages[0], $('#pb-work-area'));
+			}
 		},
 		// eventCallback when rough page changes
 		// changed element's dom is 'this'
 		synchronizeRoughPhotoList: function(roughDom, options) {
 			options = $.extend( { animate: false }, options);
-			var roughDom = $(roughDom);
-			var pageModel = roughDom.data('model');
+			var containerDom = $(roughDom);
+			var pageModel = containerDom.data('model');
 
-			var oldChildren = roughDom.children('.rough-tile');
+			var oldChildren = containerDom.children('.rough-tile');
 			var oldPhotos = oldChildren.map(function(i, el) { return $(el).data('model')}).get();
 			var newPhotos = pageModel.photos();
-			var photoToId = function(el) { return el.id};
+			var toId = function(el) { return el.id};
 			var diff = JsonDiff.diff(
-				oldPhotos.map(photoToId),
-				newPhotos.map(photoToId) );
+				oldPhotos.map(toId),
+				newPhotos.map(toId) );
 
 			for (var i=0; i < diff.length; i++) {
 				var targetPath = JsonPath.query(oldPhotos, diff[i].path, {just_one: true, ghost_props: true});
 				var targetIndex = targetPath.prop();
 				var targetId = targetPath.val();
 				switch(diff[i].op) {
-					// op.prop() is index of old element
 					// op.args() is new photo id
-					case 'set':
-						var replaceDom = $(oldChildren.get(targetIndex));
-						var newPhoto = pageModel.book.photo(diff[i].args);
-						replaceDom.replaceWith(
-								RoughWorkArea.createRoughImageTile(newPhoto)
-						);
-					break;
-					case 'insert':
-						var newPhoto = pageModel.book.photo( diff[i].args );
-						var newTile = RoughWorkArea.createRoughImageTile(newPhoto);
-						var c = roughDom.children('.rough-tile');
-						if (c.length <= targetIndex) {
-							if (c.length == 0)
-								roughDom.prepend(newTile);
-							else
-								c.last().after(newTile);
-						}
-						else {
-							$(c.get(targetIndex)).before(newTile);
-						}
-					break;
-					case 'delete':
-						$(roughDom.children().get(targetIndex)).detach();
-					break;
-					case 'swap': // prop: index of old
-						PB.swapDom(targetIndex, diff[i].args);
-					break;
+				case 'set':
+					var replaceDom = $(oldChildren.get(targetIndex));
+					var newPhoto = pageModel.book.photo(diff[i].args);
+					replaceDom.replaceWith(
+							RoughWorkArea.createRoughImageTile(newPhoto));
+				break;
+				case 'insert':
+					var newModel = pageModel.book.photo( diff[i].args );
+					var newDom = RoughWorkArea.createRoughImageTile(newModel);
+					var c = containerDom.children('.rough-tile');
+					if (c.length <= targetIndex) {
+						if (c.length == 0)
+							containerDom.prepend(newDom);
+						else
+							c.last().after(newDom);
+					}
+					else {
+						$(c.get(targetIndex)).before(newDom);
+					}
+				break;
+				case 'delete':
+					$(containerDom.children().get(targetIndex)).detach();
+				break;
+				case 'swap': // prop: index of old
+					var src = containerDom.children().get(targetIndex);
+					var destIndex = JsonPath.lastProp(diff[i].args);
+					var dest = contanerDom.children().get(destIndex);
+					GUI.Util.swapDom(src, dest, options.animate);
+				break;
 				}
 			}
 			if (diff.length > 0)
-				this.layoutRoughInsideTiles(roughDom, options.animate);
-			JsonDiff.prettyPrint(diff);
+				this.layoutRoughInsideTiles(containerDom, options.animate);
 		},
-		// roughPageDom is 'this'
+		// #work-area-rough is 'this'
+		bookChanged: function(ev, model, prop, options) {
+			options = $.extend({ animate: false}, options);
+			if (prop === 'roughPageList') {
+				RoughWorkArea.synchronizeRoughPageList(options);
+			}
+		},
+		// .rough-page is 'this'
 		pageChanged: function(ev, model, prop, options) {
 			options = $.extend( { animate: false }, options);
 			var roughDom = $(this);
@@ -297,17 +402,17 @@
 
 			// need to add left or right
 			if (defaults.renumber)
-				GUI.Controller.renumberRoughPages();
+				this.renumberRoughPages();
 
 			if (defaults.animate) {
 				domPage.animate({height: roughPageHeight},function() {
 					domPage.css('display', 'auto');
 					Controller.revealByScrolling(domPage, $('#pb-work-area'));
-					RoughWorkArea.populateRoughWithTiles(domPage);
+					RoughWorkArea.synchronizeRoughPhotoList(domPage);
 				});
 			}
 			else
-				RoughWorkArea.populateRoughWithTiles(domPage);
+				RoughWorkArea.synchronizeRoughPhotoList(domPage);
 		}
 	};
 
@@ -348,6 +453,8 @@
 			});
 		}
 	}
+
+	$.extend(RoughWorkArea, RoughWorkAreaEvents);
 
 	if (PB.hasTouch()) {
 		$.extend(RoughWorkArea, RoughWorkAreaTouch);

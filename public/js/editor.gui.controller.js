@@ -45,18 +45,6 @@
 			imageHeight = height;
 			// find the smallest size that encloses images
 		},
-		renumberRoughPages: function() {
-			$('#work-area-rough .rough-page').each(function(idx) {
-				if (idx < 4)
-					return;
-				var pNum = idx - 3;
-				$(this).children('p').text(idx - 3);
-				if (pNum % 2 == 1)
-					$(this).removeClass('left-rough').addClass('right-rough');
-				else
-					$(this).removeClass('right-rough').addClass('left-rough');
-			});
-		},
 		revealByScrolling: function(el, container) {
 			el = $(el).get(0);
 			container = $(container).get(0);
@@ -113,39 +101,6 @@
 				this.setImageHeight(nextSize);
 				this.viewFewerImages();
 			}
-		},
-		addRoughPage: function(targetPage, direction) {
-			direction = direction || 'after';
-			targetPage = targetPage || $('#work-area-rough > .rough-page:last').get(0);
-			var pos = 'right';
-			var pageNumber = 0;
-			if (targetPage && targetPage.className.match(/right/))
-				pos = 'left';
-			var newPage = $("<div class='rough-page " + pos +"-rough'><p>" + pageNumber + "</p></div>");
-			newPage.css('height', 0);
-			if (targetPage) {
-				if (direction == 'before')
-					$(targetPage).before(newPage);
-				else
-					$(targetPage).after(newPage);
-			}
-			else {
-				$('#work-area-rough').append(newPage);
-			}
-			newPage.animate({height: roughPageHeight},function() {
-				newPage.css('display', 'auto');
-				Controller.revealByScrolling(newPage, $('#pb-work-area'));
-			});
-
-			// cleanup: make it look nice
-			scope.RoughWorkArea.makeDraggable(newPage);
-			this.renumberRoughPages();
-		},
-		removeRoughPage: function(roughPage) {
-			$(roughPage).animate({width:0}, function() {
-				$(roughPage).detach();
-				Controller.renumberRoughPages();
-			});
 		},
 		removeImage: function(image) {
 			$(image).animate({width: 0}, function() {

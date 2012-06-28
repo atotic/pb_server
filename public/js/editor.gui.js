@@ -20,6 +20,14 @@
 	window.GUI.TouchDragHandler // touch dragging framework
 	window.GUI.DragStore // stores dragged items
 
+
+GUI holds references to model objects in $(dom element).data('model')
+The incomplete list of elements and their models:
+.rough-page -> PB.RoughPage
+#photo-list > img -> PB.Photo
+#work-area-rough -> PB.Book
+.rough-tile -> PB.Photo
+Each dom element holding a model listens for PB.MODEL_CHANGED events
 */
 "use strict";
 
@@ -40,11 +48,7 @@
 				GUI.PhotoPalette.addPhoto(photo);
 			}
 			// display pages
-			var roughPageList = book.roughPageList;
-			for (var i=0; i< roughPageList.length; i++) {
-				var page = book.page( roughPageList[i] );
-				GUI.RoughWorkArea.addPage(page);
-			}
+			GUI.RoughWorkArea.bindToBook(book);
 			window.document.title = book.title + " PhotoBook";
 		}
 	};
@@ -96,7 +100,27 @@
 			handlers.forEach(function(h) {
 				src.bind(h);
 			});
+		},
+		revealByScrolling: function(el, container) {
+			el = $(el).get(0);
+			container = container || el.parentNode;
+			container = $(container).get(0);
+			var elTop = el.offsetTop;
+			var elBottom = elTop + el.offsetHeight;
+			var containerTop = container.scrollTop;
+			var containerBottom = containerTop + container.offsetHeight;
+			if (elTop < containerTop)
+				$(container).animate({ 'scrollTop' : elTop - 4});
+			else if (elBottom > containerBottom)
+				$(container).animate({'scrollTop' : elBottom - container.offsetHeight});
+		},
+		swapDom: function(a, b, animate) {
+			var aparent= a.parentNode;
+			var asibling= a.nextSibling===b? a : a.nextSibling;
+			b.parentNode.insertBefore(a, b);
+			aparent.insertBefore(b, asibling);
 		}
+
 	}
 
 	scope.Util = Util;
@@ -109,10 +133,10 @@
 	var DragStore = {
 		start: function() {
 //			console.log("DragStore.start");
-			this._roughPage = null;
-			this._image = null;
-			this._roughImage = null;
-			this._addRoughPage = null;
+			this._roughPage = null;	// .rough-page dom object, model is PB.RoughPage
+			this._image = null; // img dom object, model is PB.Photo
+			this._roughImage = null; // image inside roughPage
+			this._addRoughPage = null; // true if we are dragging addButton
 			this._hadDrop = false;
 			return this;
 		},

@@ -11,7 +11,9 @@
 	var AddRemoveButtons = {
 		init: function() {
 			var addBtn = $('#add-page-btn');
-			addBtn.click(function() { GUI.Controller.addRoughPage();});
+			addBtn.click(
+				function() { GUI.RoughWorkArea.book.insertRoughPage(-1, {animate: true} ); }
+				);
 
 			if (PB.hasTouch())
 				scope.TouchDragHandler.makeDraggable(addBtn, 'addRoughPage');
@@ -47,7 +49,7 @@
 					ev.stopPropagation();
 					$(this).removeClass('drop-target');
 					if (scope.DragStore.roughPage)
-						GUI.Controller.removeRoughPage(scope.DragStore.roughPage);
+						$(scope.DragStore.roughPage).data('model').remove({animate:true});
 					else if (scope.DragStore.image)
 						GUI.Controller.removeImage(scope.DragStore.image);
 					else if (scope.DragStore.roughImage) {

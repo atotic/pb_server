@@ -44,9 +44,9 @@ http://c2.com/cgi/wiki?DiffAlgorithm
   }
 ***************************************************************************************/
 
-"use strict";
-(function(window) {
 
+(function(window) {
+"use strict";
 	// Encapsulate the results, so we can set the values, get their paths
 	function proxy(obj, prop, path) {
 		this._obj = obj;
@@ -187,11 +187,18 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 
 	// Transforms "$.a.b[3].c" into [ '$', 'a', 'b', '[3]', 'c' ]
 	function canonical_path(path) {
+		if (path === null || path === undefined)
+			throw "path cannot be null";
 		var p = path.replace(/\./g, ';'); // a.b => a;b
 		p = p.replace(/\[/g, ';['); // p[2] => p;[2]
 		p = p.replace(/\[([^\]]+)\]/g, "$1"); // [2] => 2
 //		console.log(p);
 		return p.split(';');
+	}
+
+	function last_prop(path) {
+		var c = canonical_path(path);
+		return c.length > 0 ? c[c.length -1] : null;
 	}
 
 	function queryPath(obj, path, options) {
@@ -216,7 +223,9 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 	}
 
 	window.JsonPath = {
-		query: queryPath
+		query: queryPath,
+		parsePath: canonical_path,	// returns parsed path as array
+		lastProp: last_prop	// last property of the path
 	};
 
 })(this);

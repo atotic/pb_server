@@ -3,7 +3,7 @@
 PageDialog = {
 	// Shows the dialog
 	show: function(options) {
-		
+
 		options = $.extend( {
 			filter: function(x) { return true;},
 			ok: function(pages) { pages.forEach(function(p) { console.log("page " + p.id)} ) },
@@ -11,24 +11,24 @@ PageDialog = {
 			showPageCount: true,
 			showTextOption: true
 		}, options);
-		
+
 		if ($("#pick-page-icons .page-icon").length == 0)	{
 			var deferred = PB.BookTemplate.get("modern_lines");
 			deferred.done(function(template) {
 					PageDialog.initializePageDialog(template);
 					PageDialog.show(options);
-				});	
+				});
 		}
 		else {
 			// process options, show dialog
 			$("#pick-page-count").val('1');
 			PageDialog.filterPageDialog(options.filter);
 			PageDialog.filterText();
-			options.showPageCount ? $("#pick-page-count, label[for=pick-page-count]").show() 
+			options.showPageCount ? $("#pick-page-count, label[for=pick-page-count]").show()
 			: $("#pick-page-count, label[for=pick-page-count]").hide();
 			options.showTextOption ? $("#pick-page-text, label[for=pick-page-text]").show()
 			: $("#pick-page-text, label[for=pick-page-text]").hide();
-			
+
 			$("#pick-page-dialog")
 				.data("options", options)
 				.dialog("option", "title", options.title)
@@ -61,7 +61,7 @@ PageDialog = {
 			filter: function(page) {
 				if (typeof page == "string")
 					return pagePosition == "middle" && page == "number";
-				else 
+				else
 					return page.position == pagePosition;
 			},
 			title: "Pick a new layout",
@@ -69,7 +69,7 @@ PageDialog = {
 			showTextField: false
 		}
 	},
-	
+
 	// Filter helper
 	filterPageDialog: function (filter) {
 		$("#pick-page-icons .page-icon").each(function(i, el) {
@@ -87,7 +87,7 @@ PageDialog = {
 		$("#pick-page-icons .pick-page-ready").each(function(i,el) {
 			el = $(el);
 			var page = el.data("page");
-			var show = showText 
+			var show = showText
 				|| (typeof page == "object" && "text_count" in page && page.text_count < 1)
 				|| (typeof page == "string");
 			if (show)
@@ -96,7 +96,7 @@ PageDialog = {
 				el.hide();
 		});
 	},
-	
+
 	// Click event callback
 	clickIcon: function() {
 		var THIS = $(this);
@@ -109,14 +109,14 @@ PageDialog = {
 				$(el).removeClass("selected");
 		});
 	},
-	
+
 	dblClickIcon: function() {
-		PageDialog.close(true);	
+		PageDialog.close(true);
 	},
-	
+
 	// Initializes page dialog from the template
 	// All possible pages are inserted into DOM. Different dialog styles filter them out'
-	// Pages are: 
+	// Pages are:
 	// standard page icons, random icon, and number icons
 	initializePageDialog: function (template) {
 		var dialog = $("#pick-page-dialog");
@@ -152,7 +152,7 @@ PageDialog = {
 			icon.dblclick(PageDialog.dblClickIcon);
 			$("#pick-page-icons").append(icon);
 		});
-		// button events	
+		// button events
 		$("#pick-page-text").change(function() {
 			PageDialog.filterText();
 		}).attr("checked", true);
@@ -161,7 +161,7 @@ PageDialog = {
 		});
 		$("#pick-page-ok")
 			.click(function() { PageDialog.close(true); });
-		
+
 	},
 	close: function(ok) {
 		var d = $("#pick-page-dialog");

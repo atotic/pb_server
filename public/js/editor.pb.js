@@ -8,19 +8,7 @@ window.PB.Photo // Photo objects
 */
 "use strict";
 
-// Inserts
-(function(jQuery) {
-	jQuery.fn.insertAt = function(index, content) {
-		var parent = $(this.get(0));
-		var children = parent.children();
-		if ((children.length - 1) < index)
-			$(content).appendTo(parent);
-		else
-			$(children.get(index)).insertBefore(content);
-		return this;
-	}
-})($);
-
+// PB, general utility routines
 (function(window) {
 	var PB = {
 		init: function() {
@@ -32,12 +20,6 @@ window.PB.Photo // Photo objects
 		extend: function(target, src) {
 			for (var p in src)
 				target[p] = src[p];
-		},
-		swapDom: function(a, b) {
-			var aparent= a.parentNode;
-			var asibling= a.nextSibling===b? a : a.nextSibling;
-			b.parentNode.insertBefore(a, b);
-			aparent.insertBefore(b, asibling);
 		},
 		randomString: function (len, charSet) {
 			charSet = charSet || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -116,18 +98,34 @@ window.PB.Photo // Photo objects
 			return id;
 		},
 		// index: page position for insert. -1 means last
-		// page: if null, new page is created
-		insertRoughPage: function(page, index) {
-			if (page == null)
-				page = new RoughPage();
+		insertRoughPage: function(index, options) {
+			var page = new PB.RoughPage({book: this});
 			var roughPageList = this.roughPageList;
 			if (roughPageList.indexOf(page.id) != -1)
 				throw "page already in book";
 			this.serverData.document.roughPages[page.id] = page;
-			if (index > photoList.length || index == -1)
-				this.serverData.document.roughPageList.push(page);
+			if (index > roughPageList.length || index == -1)
+				this.serverData.document.roughPageList.push(page.id);
 			else
 				this.serverData.document.roughPageList.splice(index, 0, page.id);
+			PB.broadcastChange(this, 'roughPageList', options);
+		},
+		deleteRoughPage: function(page, options) {
+			var index = this.roughPageList.indexOf(page.id);
+			if (index == -1)
+				throw "no such page";
+			this.serverData.document.roughPageList.splice(index, 1);
+			PB.broadcastChange(this, 'roughPageList', options);
+		},
+		moveRoughPage: function(page, dest, options) {
+			var src = this.roughPageList.indexOf(page.id);
+			if (src == -1)
+				throw "no such page";
+			this.serverData.document.roughPageList.splice(src, 1);
+			if (dest == -1 || dest > this.roughPageList.length)
+				this.serverData.document.roughPageList.push(page.id);
+			else
+				this.serverData.document.roughPageList.splice(dest, 0, page.id);
 			PB.broadcastChange(this, 'roughPageList', options);
 		}
 	}
@@ -194,6 +192,10 @@ window.PB.Photo // Photo objects
 			else
 				return 'pages';
 		},
+		// indexOf this page inside the book
+		indexOf: function() {
+			return this.book.roughPageList.indexOf(this.id);
+		},
 		pageClass: function() {
 			if ( this.id.match(coverRegex))
 				return this.id;
@@ -226,6 +228,9 @@ window.PB.Photo // Photo objects
 			if (index == -1) throw "no such photo";
 			this.photoList.splice(index, 1);
 			PB.broadcastChange(this, 'photoList', options);
+		},
+		remove: function(options) {
+			this.book.deleteRoughPage(this, options);
 		}
 	}
 

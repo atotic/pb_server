@@ -63,15 +63,20 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-Bugs:
-Make changes to the model:
-- when dragging rough pages around
-- when clicking add button
-- when dragging add button
-- when dragging page to delete button
+bug: $._data no worky
+Animation of synchronizeRoughPageList: insert/delete/swap
+Drop flavors: rough pages must accept/reject drop flavors
+Model synchronize photoList with book.photoList. Show
+all images, images not in rough
+- dragging image to delete button
+- adding an image
 
-Display only images not on pages
-Model change notification framework
+June 27
+Hooking up roughPageList model changes
+- when clicking add button: DONE
+- when dragging page to delete button: DONE
+- when dragging rough pages around: DONE
+- when dragging add button: DONE
 
 June 26
 Progress towards model-driven GUI changes
