@@ -77,8 +77,49 @@ window.PB.Photo // Photo objects
 		get photoList() {
 			return this.serverData.document.photoList;
 		},
+		// returns hash of images that appear in pages
+		_collectUsedImages: function() {
+			var retVal = {};
+			var pageList = this.roughPageList;
+			for (var i=0; i<pageList.length; i++) {
+				var page = this.page(pageList[i]);
+				for (var j=0; j<page.photoList.length; j++)
+					retVal[page.photoList[j]] = true;
+			}
+			return retVal;
+		},
+		_pagePhotosChanged: function(page, options) {
+			PB.broadcastChange(this, 'photoList', options);
+		},
+		get unusedPhotoList() {
+			var usedHash = this._collectUsedImages();
+			var unusedList = [].concat(this.photoList);
+			for (var i=0; i< unusedList.length; i++) {
+				if (usedHash[unusedList[i]]) {
+					unusedList.splice(i,1);
+					i -= 1;
+				}
+			}
+			return unusedList;
+		},
 		photo: function(id) {
 			return this.serverData.document.photos[id];
+		},
+		removePhoto: function(photo, options) {
+			// Remove photo from all the pages
+			var pageList = this.roughPageList;
+			for (var i=0; i<pageList.length; i++) {
+				var page = this.page(pageList[i]);
+				if (page.photoList.indexOf(photo.id) != -1)
+					page.removePhoto(photo, options);
+			}
+			// Remove it from the book
+			var index = this.serverData.document.photoList.indexOf(photo.id);
+			if (index == -1)
+				throw "no such photo";
+			this.serverData.document.photoList.splice(index, 1);
+			delete this.serverData.document.roughPages[photo.id];
+			PB.broadcastChange(this, 'photoList', options);
 		},
 		get roughPageList() {
 			return this.serverData.document.roughPageList;
@@ -115,6 +156,7 @@ window.PB.Photo // Photo objects
 			if (index == -1)
 				throw "no such page";
 			this.serverData.document.roughPageList.splice(index, 1);
+			this._pagePhotosChanged(page, options);
 			PB.broadcastChange(this, 'roughPageList', options);
 		},
 		moveRoughPage: function(page, dest, options) {
@@ -221,12 +263,14 @@ window.PB.Photo // Photo objects
 		addPhoto: function(photo, options) {
 			// options = { animate: false}
 			this.photoList.push(photo.id);
+			this.book._pagePhotosChanged(this, options);
 			PB.broadcastChange(this, 'photoList', options);
 		},
 		removePhoto: function(photo, options) {
 			var index = this.photoList.indexOf(photo.id);
 			if (index == -1) throw "no such photo";
 			this.photoList.splice(index, 1);
+			this.book._pagePhotosChanged(this, options);
 			PB.broadcastChange(this, 'photoList', options);
 		},
 		remove: function(options) {

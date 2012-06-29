@@ -50,8 +50,10 @@
 					$(this).removeClass('drop-target');
 					if (scope.DragStore.roughPage)
 						$(scope.DragStore.roughPage).data('model').remove({animate:true});
-					else if (scope.DragStore.image)
-						GUI.Controller.removeImage(scope.DragStore.image);
+					else if (scope.DragStore.image) {
+						GUI.RoughWorkArea.book.removePhoto(
+							$(scope.DragStore.image).data('model'), {animate: true});
+					}
 					else if (scope.DragStore.roughImage) {
 						var ri = $(scope.DragStore.roughImage);
 						var photo = ri.data('model');

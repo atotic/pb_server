@@ -183,7 +183,7 @@
 				return;
 			touchTrack.startTracking(ev.currentTarget,
 				ev.touches[0],
-				$(ev.currentTarget)._data('events').click);
+				$._data(ev.currentTarget, 'events').click);
 			ev.preventDefault();
 		},
 		touchmove: function(ev, touchTrack) {
@@ -206,7 +206,7 @@
 			}
 			scope.TouchDrop.touchend();
 //			console.log('touchend');
-			if (touchTrack.delayed && $(ev.target).data('events').click) {
+			if (touchTrack.delayed && $._data(ev.target, 'events').click) {
 				$(ev.target).click();
 			}
 			ev.preventDefault();

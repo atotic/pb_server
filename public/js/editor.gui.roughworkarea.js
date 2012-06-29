@@ -11,10 +11,8 @@
 	var roughPageTarget = { target: null, direction: 0, dropFeedback: "" };
 
 	var RoughWorkArea = {
-		init: function() {
-			this.makeDroppable();
-		},
 		bindToBook: function(book) {
+			this.makeDroppable();
 			var roughPageList = book.roughPageList;
 			$('#work-area-rough')
 				.data('model', book)
@@ -238,8 +236,9 @@
 			options = $.extend({animate:false}, options);
 			var containerDom = $('#work-area-rough');
 			var bookModel = containerDom.data('model');
+			var sel = '.rough-page';
 
-			var oldChildren = containerDom.children('.rough-page');
+			var oldChildren = containerDom.children( sel );
 			var oldPages = oldChildren.map(function(i,el) { return $(el).data('model').id}).get();
 			var newPages = bookModel.roughPageList;
 
@@ -264,7 +263,7 @@
 					var newModel = bookModel.page( diff[i].args );
 					var newDom = RoughWorkArea.createRoughPage(newModel);
 					newlyCreatedPages.push(newDom);
-					var c = containerDom.children('.rough-page');
+					var c = containerDom.children(sel);
 					if (c.length <= targetIndex) {
 						if (c.length == 0)
 							containerDom.prepend(newDom);
@@ -276,12 +275,12 @@
 					}
 				break;
 				case 'delete':
-					$(containerDom.children().get(targetIndex)).detach();
+					$(containerDom.children(sel).get(targetIndex)).detach();
 				break;
 				case 'swap': // prop: index of old
-					var src = containerDom.children().get(targetIndex);
+					var src = containerDom.children(sel).get(targetIndex);
 					var destIndex = JsonPath.lastProp(diff[i].args);
-					var dest = containerDom.children().get(destIndex);
+					var dest = containerDom.children(sel).get(destIndex);
 					GUI.Util.swapDom(src, dest, options.animate);
 				break;
 				}
@@ -302,8 +301,9 @@
 			options = $.extend( { animate: false }, options);
 			var containerDom = $(roughDom);
 			var pageModel = containerDom.data('model');
+			var sel = '.rough-tile';
 
-			var oldChildren = containerDom.children('.rough-tile');
+			var oldChildren = containerDom.children( sel );
 			var oldPhotos = oldChildren.map(function(i, el) { return $(el).data('model')}).get();
 			var newPhotos = pageModel.photos();
 			var toId = function(el) { return el.id};
@@ -326,7 +326,7 @@
 				case 'insert':
 					var newModel = pageModel.book.photo( diff[i].args );
 					var newDom = RoughWorkArea.createRoughImageTile(newModel);
-					var c = containerDom.children('.rough-tile');
+					var c = containerDom.children( sel );
 					if (c.length <= targetIndex) {
 						if (c.length == 0)
 							containerDom.prepend(newDom);
@@ -338,12 +338,12 @@
 					}
 				break;
 				case 'delete':
-					$(containerDom.children().get(targetIndex)).detach();
+					$(containerDom.children(sel).get(targetIndex)).detach();
 				break;
 				case 'swap': // prop: index of old
-					var src = containerDom.children().get(targetIndex);
+					var src = containerDom.children(sel).get(targetIndex);
 					var destIndex = JsonPath.lastProp(diff[i].args);
-					var dest = contanerDom.children().get(destIndex);
+					var dest = contanerDom.children(sel).get(destIndex);
 					GUI.Util.swapDom(src, dest, options.animate);
 				break;
 				}
@@ -353,7 +353,6 @@
 		},
 		// #work-area-rough is 'this'
 		bookChanged: function(ev, model, prop, options) {
-			options = $.extend({ animate: false}, options);
 			if (prop === 'roughPageList') {
 				RoughWorkArea.synchronizeRoughPageList(options);
 			}

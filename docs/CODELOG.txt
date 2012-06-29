@@ -66,10 +66,11 @@ Next:
 bug: $._data no worky
 Animation of synchronizeRoughPageList: insert/delete/swap
 Drop flavors: rough pages must accept/reject drop flavors
-Model synchronize photoList with book.photoList. Show
-all images, images not in rough
-- dragging image to delete button
 - adding an image
+
+June 28
+Model synchronize photoList with book.photoList. Show all/unused
+- dragging image to delete button: DONE
 
 June 27
 Hooking up roughPageList model changes

@@ -102,10 +102,11 @@
 				this.viewFewerImages();
 			}
 		},
-		removeImage: function(image) {
-			$(image).animate({width: 0}, function() {
-				$(image).detach();
-			});
+		viewAllPhotos: function() {
+			GUI.PhotoPalette.photoFilter = 'all';
+		},
+		viewUnusedPhotos: function() {
+			GUI.PhotoPalette.photoFilter = 'unused';
 		}
 	};
 

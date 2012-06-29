@@ -37,17 +37,9 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		init: function() {
 			this.Buttons.init();
 			this.CommandManager.init();
-			this.PhotoPalette.init();
-			this.RoughWorkArea.init();
 		},
 		bindToBook: function(book) {
-			var photoList = book.photoList;
-			// display images
-			for (var i =0; i< photoList.length; i++) {
-				var photo = book.photo( photoList[i] );
-				GUI.PhotoPalette.addPhoto(photo);
-			}
-			// display pages
+			GUI.PhotoPalette.bindToBook(book);
 			GUI.RoughWorkArea.bindToBook(book);
 			window.document.title = book.title + " PhotoBook";
 		}
@@ -79,7 +71,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			// Remove from DOM
 			src.detach();
 			// Save all the events
-			var events = src._data('events');
+			var events = $._data(src.get(0), 'events');
 			var handlers = [];
 			for (var eventType in events)
 				events[eventType].forEach(function(event) {
@@ -162,13 +154,85 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 // images can be dragged out
 (function(scope){
 	var PhotoPalette = {
-		init: function() {
+		bindToBook: function(book) {
+			this._photoFilter = 'all';
+			$('#photo-list')
+				.data('model', book)
+				.on(PB.MODEL_CHANGED,
+					function(ev, model, prop, options) {
+						if (prop == 'photoList')
+							PhotoPalette.synchronizePhotoList();
+					});
+			this.synchronizePhotoList();
+		},
+		// valid vals: all|unused
+		set photoFilter(val) {
+			if (this._photoFilter != val) {
+				this._photoFilter = val;
+				this.synchronizePhotoList();
+			}
+		},
+		get photoFilter() {
+			return this._photoFilter;
 		},
 		addPhoto: function(photo) {
+			var img = this.createImageTile(photo);
+			$('#photo-list').append(img);
+		},
+		createImageTile: function(photo) {
 			var img = $("<img src='" + photo.getUrl(128) + "'>");
 			img.data('model', photo);
-			$('#photo-list').append(img);
-			GUI.PhotoPalette.makeDraggable(img);
+			this.makeDraggable(img);
+			return img;
+		},
+		synchronizePhotoList: function(options) {
+			options = $.extend({animate:false}, options);
+			var containerDom = $('#photo-list');
+			var bookModel = containerDom.data('model');
+			var sel = 'img';
+
+			var oldChildren = containerDom.children( sel );
+			var oldPhotos = oldChildren.map(
+				function(i, el) { return $(el).data('model').id}).get();
+			var newPhotos = this._photoFilter == 'all' ? bookModel.photoList : bookModel.unusedPhotoList;
+
+			var diff = JsonDiff.diff(oldPhotos, newPhotos);
+
+			for (var i=0; i<diff.length; i++) {
+				var targetPath = JsonPath.query(oldPhotos, diff[i].path, {just_one: true, ghost_props: true});
+				var targetIndex = targetPath.prop();
+				var targetId = targetPath.val();
+
+				switch(diff[i].op) {
+				case 'set':
+					var replaceDom = $(oldChildren.get(targetIndex));
+					var newPhoto = bookModel.photo(diff[i].args);
+					replaceDom.replaceWith(this.createImageTile(newPhoto));
+				break;
+				case 'insert':
+					var newModel = bookModel.photo(diff[i].args);
+					var newDom = this.createImageTile(newModel);
+					var c = containerDom.children( sel );
+					if (c.length <= targetIndex) {
+						if (c.length == 0)
+							containerDom.prepend(newDom);
+						else
+							c.last().after(newDom);
+					}
+					else
+						$(c.get(targetIndex)).before(newDom);
+				break;
+				case 'delete':
+					$(containerDom.children(sel).get(targetIndex)).detach();
+				break;
+				case 'swap':
+					var src = containerDom.children(sel).get(targetIndex);
+					var destIndex = JsonPath.lastProp(diff[i].args);
+					var dest = contanerDom.children(sel).get(destIndex);
+					GUI.Util.swapDom(src, dest, options.animate);
+				break;
+				}
+			}
 		}
 	}
 
@@ -232,6 +296,10 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				function() {scope.Controller.viewSmallerImages()}));
 			this.add(new Command('addRoughPage', 'p', false,
 				function() {scope.Controller.addRoughPage()}))
+			this.add(new Command('viewAllPhotos', null, false,
+				function() {scope.Controller.viewAllPhotos()}));
+			this.add(new Command('viewUnusedPhotos', null, false,
+				function() {scope.Controller.viewUnusedPhotos()}));
 		},
 		// see http://unixpapa.com/js/key.html for the madness that is js key handling
 		hashString: function(rawKey, meta) {
