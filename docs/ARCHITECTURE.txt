@@ -18,11 +18,9 @@ PROBLEM: GROUP EDITING (DOCS, GOOGLE STYLE)
 	After implementing it, I've learned that some call it Operational Transformation
 
 SOLUTION
-	Change stream.
-	Theoretically, document is no longer represented as a static structure, but as
-	a change stream. Instead of a document being database record, we store a sequence
-	of operations that create that record.
-	Document mutates by appending to the change stream on the server.
+	Diff stream
+	Every document has a diff stream.
+	Document mutates by appending to the diff stream on the server.
 	A client cannot commit any operations to the server until all server operations have been applied
 	on the client. Client gets in sync with the server by applying all the change operations on the client.
 

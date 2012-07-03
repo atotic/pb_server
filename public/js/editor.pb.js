@@ -43,11 +43,13 @@ window.PB.Photo // Photo objects
 })(window);
 
 // PB.Book
+// Book is generated
 (function(scope) {
 
 	var bookCache = [];
 
 	var Book = function(serverJson) {
+		this._dirty = false;
 		this.originalServerData = serverJson;	// keep original data for diffs
 		this.serverData = PB.clone(serverJson); // all data from server are here
 		bookCache.push(this);
@@ -74,6 +76,9 @@ window.PB.Photo // Photo objects
 		get id() {
 			return this.serverData.id;
 		},
+		get dirty() {
+			return this._dirty;
+		},
 		get photoList() {
 			return this.serverData.document.photoList;
 		},
@@ -89,6 +94,7 @@ window.PB.Photo // Photo objects
 			return retVal;
 		},
 		_pagePhotosChanged: function(page, options) {
+			this._dirty = true;
 			PB.broadcastChange(this, 'photoList', options);
 		},
 		get unusedPhotoList() {
@@ -119,6 +125,7 @@ window.PB.Photo // Photo objects
 				throw "no such photo";
 			this.serverData.document.photoList.splice(index, 1);
 			delete this.serverData.document.roughPages[photo.id];
+			this._dirty = true;
 			PB.broadcastChange(this, 'photoList', options);
 		},
 		get roughPageList() {
@@ -138,6 +145,28 @@ window.PB.Photo // Photo objects
 				return this.generateId();
 			return id;
 		},
+		getSaveDeferred: function() {
+			var dataToSave = PB.clone(this.serverData.document);
+			var diff = JsonDiff.diff(this.originalServerData.document, dataToSave);
+			if (diff.length == 0) {
+				this._dirty = false;
+				return null;
+			}
+			else
+				JsonDiff.prettyPrint(diff);
+
+			var ajax = $.ajax('/books/' + this.id, {
+				data: JSON.stringify(diff),
+				type: "PATCH",
+				contentType: 'application/json'
+			});
+			var THIS = this;
+			ajax.done(function(response, msg, jqXHR) {
+				THIS.originalServerData.document = dataToSave;	// book saved, our data are now server data
+			});
+			return ajax;
+		},
+
 		// index: page position for insert. -1 means last
 		insertRoughPage: function(index, options) {
 			var page = new PB.RoughPage({book: this});
@@ -149,6 +178,7 @@ window.PB.Photo // Photo objects
 				this.serverData.document.roughPageList.push(page.id);
 			else
 				this.serverData.document.roughPageList.splice(index, 0, page.id);
+			this._dirty = true;
 			PB.broadcastChange(this, 'roughPageList', options);
 		},
 		deleteRoughPage: function(page, options) {
@@ -157,6 +187,7 @@ window.PB.Photo // Photo objects
 				throw "no such page";
 			this.serverData.document.roughPageList.splice(index, 1);
 			this._pagePhotosChanged(page, options);
+			this._dirty = true;
 			PB.broadcastChange(this, 'roughPageList', options);
 		},
 		moveRoughPage: function(page, dest, options) {
@@ -168,21 +199,17 @@ window.PB.Photo // Photo objects
 				this.serverData.document.roughPageList.push(page.id);
 			else
 				this.serverData.document.roughPageList.splice(dest, 0, page.id);
+			this._dirty = true;
 			PB.broadcastChange(this, 'roughPageList', options);
 		}
 	}
 
-
-	Book.get =  function(id) {
-		if (id === undefined)
-			return bookCache.length > 0 ? bookCache[0] : null;
-		else {
-			for (var i=0; i<bookCache.length; i++)
-				if (bookCache[i].id === id)
-					return bookCache[i];
-		}
-		console.warn("Book.get miss");
-		return null;
+	Book.getDirty = function() {
+		var retVal = [];
+		for (var i=0; i < bookCache.length; i++)
+			if (bookCache[i].dirty)
+				retVal.push(bookCache[i]);
+		return retVal;
 	}
 
 	scope.Book = Book;

@@ -202,7 +202,8 @@ class SvegApp < Sinatra::Base
 						"editor.gui.touch.js",
 						"editor.gui.buttons.js",
 						"editor.gui.controller.js",
-						"editor.gui.roughworkarea.js")
+						"editor.gui.roughworkarea.js",
+						"editor.pb.upload.js")
 				elsif arg.end_with?("js")
 					arg = "jquery-1.7.js" if arg.eql? "jquery.js"
 					arg = "jquery-ui-1.8.16.custom.js" if arg.eql? "jquery-ui.js"
@@ -381,6 +382,15 @@ class SvegApp < Sinatra::Base
 			@book = Book.new unless book
 			redirect :account
 		end
+	end
+
+	patch '/books/:id' do
+		@book = PB::Book[params[:id]]
+		user_must_own @book
+		str_diff = request.body.read
+		json_diff = JSON.parse(str_diff)
+		@book.apply_diff(json_diff)
+		[200, {'Content-Type' => 'application/json'} ,["{ \"id\" : #{@book.id} }"]]
 	end
 
 	get '/books/:id/pdf' do

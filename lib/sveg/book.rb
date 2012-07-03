@@ -110,6 +110,9 @@ eos
 		end
 	end
 
+	def apply_diff(json_diff)
+		PB.logger.debug("Applying diff #{json_diff}")
+	end
 end
 
 class BookPage < Sequel::Model(:book_pages)

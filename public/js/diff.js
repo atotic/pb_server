@@ -481,7 +481,52 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 		return diff;
 	}
 
-	function compareDiffArgs(a,b) {
+
+
+	function jsonDiff(oldObj, newObj, options) {
+		options = mergeOptions(options, {verbose: false});
+		var diff = jsonDiffHelper(oldObj, newObj, "$");
+		if (options.cleanup)
+			diff = cleanupDiff(diff)
+		return diff;
+	}
+
+	// Clones the object, applies diff
+	function jsonPatch(obj, diff) {
+		var newObj = JSON.parse(JSON.stringify(obj));
+		var diff = JSON.parse(JSON.stringify(diff)); // clone the diff because we do not want to modify original diff
+		for (var i =0; i< diff.length ; i++)
+		{
+			try {
+				applyDiff(newObj, diff[i]);
+			}
+			catch(e) {
+				console.log("Patch failed " + e);
+				printDiff(diff[i]);
+				throw e;
+			}
+		}
+		return newObj;
+	}
+
+	scope.JsonDiff = {
+		'diff': jsonDiff,
+		'patch': jsonPatch,
+		'prettyPrint': printDiff
+	}
+
+})(window);
+
+	/* Optimizations did not work
+	I was hoping to replace delete/insert pairs with a single move
+	This fails because delete and insert position in diff queue is important:
+	- insert: parents must be inserted before the child
+	- delete: children must be deleted before the parent
+	The main motivation for move was to avoid massive diffs when an array is shuffled
+	This would happen if pages were kept as an array
+	Takeaway: minimize array use.
+
+function compareDiffArgs(a,b) {
 		var type_a = getType(a.args);
 		var type_b = getType(b.args);
 		if (type_a == type_b)
@@ -511,15 +556,6 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 		else
 			return 0;
 	}
-
-	/* Optimizations did not work
-	I was hoping to replace delete/insert pairs with a single move
-	This fails because delete and insert position in diff queue is important:
-	- insert: parents must be inserted before the child
-	- delete: children must be deleted before the parent
-	The main motivation for move was to avoid massive diffs when an array is shuffled
-	This would happen if pages were kept as an array
-	Takeaway: minimize array use.
 
 	function optimizeDiff(oldObj, newObj, diff)
 	{
@@ -607,41 +643,6 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 		return diffList.toArray();
 	}
 	*/
-	function jsonDiff(oldObj, newObj, options) {
-		options = mergeOptions(options, {verbose: false});
-		var diff = jsonDiffHelper(oldObj, newObj, "$");
-		if (options.cleanup)
-			diff = cleanupDiff(diff)
-		return diff;
-	}
-
-	// Clones the object, applies diff
-	function jsonPatch(obj, diff) {
-		var newObj = JSON.parse(JSON.stringify(obj));
-		var diff = JSON.parse(JSON.stringify(diff)); // clone the diff because we do not want to modify original diff
-		for (var i =0; i< diff.length ; i++)
-		{
-			try {
-				applyDiff(newObj, diff[i]);
-			}
-			catch(e) {
-				console.log("Patch failed " + e);
-				printDiff(diff[i]);
-				throw e;
-			}
-		}
-		return newObj;
-	}
-
-	scope.JsonDiff = {
-		'diff': jsonDiff,
-		'patch': jsonPatch,
-		'prettyPrint': printDiff
-	}
-
-})(window);
-
-
 /*
 # Diff architecture notes
 

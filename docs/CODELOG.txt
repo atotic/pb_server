@@ -63,12 +63,19 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-bug: $._data no worky
-Animation of synchronizeRoughPageList: insert/delete/swap
-Drop flavors: rough pages must accept/reject drop flavors
+Saving to server
+DND cleanup:
+- animations, dragging of cover pages,
+- drop flavors: rough pages must accept/reject drop flavors
 - adding an image
 
+June 29
+Started saving to server, my first experience with "PATCH"
+Codeflow with patching is a lot cleaner
+
+
 June 28
+bug: $._data no worky
 Model synchronize photoList with book.photoList. Show all/unused
 - dragging image to delete button: DONE
 
