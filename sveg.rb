@@ -389,8 +389,14 @@ class SvegApp < Sinatra::Base
 		user_must_own @book
 		str_diff = request.body.read
 		json_diff = JSON.parse(str_diff)
-		@book.apply_diff(json_diff)
-		[200, {'Content-Type' => 'application/json'} ,["{ \"id\" : #{@book.id} }"]]
+		begin
+			@book.apply_diff(json_diff)
+			[200, {'Content-Type' => 'application/json'} ,["{ \"id\" : #{@book.id} }"]]
+		rescue => ex
+			puts ex.message
+			puts ex.backtrace
+			[500, {'Content-Type' => 'text/plain'}, ["Document update failed for unknown reasons #{ex.message}"]]
+		end
 	end
 
 	get '/books/:id/pdf' do

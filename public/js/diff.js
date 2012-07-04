@@ -275,7 +275,7 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 	}
 
 	function createDelete(path, value) {
-		return { op: 'delete', path: path, args: value }
+		return { op: 'delete', path: path, args: null }
 	}
 
 	function createSwap(src, dest) {
@@ -299,8 +299,6 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 					throw "Could not INSERT, target not found";
 				break;
 			case 'delete':
-				if (diff.implicit)
-					break;
 				var target = JsonPath.query(obj, diff.path, {'just_one':true });
 				if (target)
 					target.delete();
@@ -316,7 +314,7 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 					val.set(tmp);
 				}
 				else
-					throw "Could not MOVE"
+					throw "Could not SWAP"
 						+ (src ? "" : diff.path + " not found ")
 						+ (dest ? "" : diff.args + " not found ");
 					break;
@@ -328,12 +326,8 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 	function printDiff(diff) {
 		if (diff instanceof Array)
 			diff.forEach( function(d) { printDiff(d)});
-		else {
-			if (diff.implicit)
-				console.warn(diff.path, " ", diff.op, " ", diff.args);
-			else
-				console.log(diff.path, " ", diff.op, " ", diff.args);
-		}
+		else
+			console.log(diff.path, " ", diff.op, " ", diff.args);
 		return "";
 	}
 
@@ -472,22 +466,9 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 		return retVal;
 	}
 
-	// Removes delete args
-	function cleanupDiff(diff) {
-		for (var i=0; i<diff.length; i++) {
-			if (diff[i].op == 'delete')
-				diff[i].args = null;
-		}
-		return diff;
-	}
-
-
-
 	function jsonDiff(oldObj, newObj, options) {
 		options = mergeOptions(options, {verbose: false});
 		var diff = jsonDiffHelper(oldObj, newObj, "$");
-		if (options.cleanup)
-			diff = cleanupDiff(diff)
 		return diff;
 	}
 

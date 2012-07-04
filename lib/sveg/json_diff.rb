@@ -5,7 +5,7 @@
 module PB
 
 	class JsonPathProxy
-		def initalize(obj, prop, path)
+		def initialize(obj, prop, path)
 			@obj = obj
 			@prop = prop
 			@path = path
@@ -16,7 +16,10 @@ module PB
 		end
 
 		def val
-			return @obj[@prop] if defined? @prop
+			if defined? @prop
+				return @obj[@prop.to_i] if @obj.kind_of? Array
+				return @obj[@prop]
+			end
 			@obj
 		end
 
@@ -24,6 +27,7 @@ module PB
 		def prop
 			@prop
 		end
+
 		# path to the property
 		def path
 			r = @path.join('.')
@@ -31,28 +35,32 @@ module PB
 			r
 		end
 
-		def set
-			return @obj[@prop] = self.val if defined? @prop
+		def set(newVal)
+			if defined? @prop
+				return @obj[@prop.to_i] = newVal if @obj.kind_of? Array
+				return @obj[@prop] = newVal
+			end
 			raise "Can't set root object"
 		end
 
-		def insert
+		def insert(newVal)
 			if @obj.kind_of? Array
-				@obj.insert(@prop, @val)
+				@obj.insert(@prop.to_i, newVal)
 			else
-				self.set(@val)
+				self.set(newVal)
 			end
 		end
 
 		def delete
 			if defined? @prop
 				if @obj.kind_of? Array
-					@obj.slice! @prop
+					@obj.slice! @prop.to_i
 				else
 					@obj.delete @prop
 				end
 			else
 				raise "Can't delete root object";
+			end
 		end
 	end
 
@@ -65,6 +73,7 @@ module PB
 				:Object
 			else
 				:Basic
+			end
 		end
 
 		def self.array_clone_push(arry, element)
@@ -87,9 +96,13 @@ module PB
 					when :Basic
 						raise "Nothing to traverse at" + path_to_here.join('.') + '.*';
 					end
-				else # common case
-					if options['ghost_props'] || obj.has_key?( path_array[0] )
-						el.push(JsonPathProxy.new(obj, path_array[0], path_to_here));
+				else # common case, leaf property
+					type = getType(obj)
+					if (options[:ghost_props] \
+						|| (type == :Object && obj.has_key?( path_array[0] )) \
+						|| (type == :Array && obj.length > path_array[0].to_i) \
+						)
+						el.push(JsonPathProxy.new(obj, path_array[0], path_to_here))
 					end
 				end
 			else # branch, keep on traversing
@@ -103,7 +116,11 @@ module PB
 					when :Array
 						trim_path = path_array.slice(1..-1)
 						0.upto(obj.length-1) do |i|
-							el.concat( traverse(obj[i], trim_path, array_clone_push(path_to_here, i), options)
+							el.concat(
+								traverse(obj[i],
+								 trim_path,
+								 self.array_clone_push(path_to_here, i),
+								 options))
 						end
 					when :Object
 						trim_path = path_array.slice(1..-1)
@@ -118,12 +135,11 @@ module PB
 						raise 'nothing to traverse at' + path_to_here.join('.') + ".*"
 					end
 				else
-					o2 = obj[path_array[0]];
-					if o2
-						el = traverse(o2,
-							path_array.slice(1),
-							array_clone_push(path_to_here, path_array[0]),
-							options)
+					o2 = obj[path_array[0]]
+					el = traverse(o2,
+						path_array.slice(1..-1),
+						array_clone_push(path_to_here, path_array[0]),
+						options) if o2
 				end
 			end
 			return el
@@ -137,11 +153,11 @@ module PB
 			p.split ';'
 		end
 
-		def self.query(obj, path, options)
+		def self.query(obj, path, options=nil)
 			options = {
 				:just_one => false,
 				:ghost_props => false
-				}.merge(options)
+				}.merge(options || {})
 			c_path = canonical_path(path)
 
 			retVal = traverse(obj, c_path, [], options)
@@ -154,6 +170,67 @@ module PB
 	end
 
 	class JsonDiff
+
+	def self.printDiff(diff)
+		if diff.kind_of? Array
+			diff.each { |d| printDiff(d)}
+		else
+			puts diff['path'], " ", diff['op'], " ", diff['args']
+		end
+		return ""
+	end
+
+	def self.applyDiff(obj, diff)
+		case diff['op']
+		when 'set'
+			target = JsonPath.query(obj, diff['path'], {:just_one => true, :ghost_props => true})
+			if target
+				target.set diff['args']
+			else
+				raise "Could not SET, target #{diff['path']} not found"
+			end
+		when 'insert'
+			target = JsonPath.query(obj, diff['path'], {:just_one => true, :ghost_props => true})
+			if target
+				target.insert diff['args']
+			else
+				raise "Could not INSERT, target #{diff['path']} not found";
+			end
+		when 'delete'
+			target = JsonPath.query(obj, diff['path'], {:just_one => true})
+			if target
+				target.delete();
+			else
+				raise "Could not DELETE, target #{diff['path']} not found"
+			end
+		when 'swap'
+			src = JsonPath.query(obj, diff['path'], {:just_one => true});
+			dest = JsonPath.query(obj, diff['args'], {:just_one => true});
+			if (src && dest)
+				var tmp = src.val()
+				src.set(dest.val())
+				val.set(tmp)
+			else
+				raise "Could not MOVE #{src ? '' : diff['path'] + 'not found'} #{dest ? '' : diff['args'] + 'not found'}"
+			end
+		else
+			raise "Unknown operation " + diff['op'];
+		end
+	end
+
+	def self.patch(obj, diff)
+		newObj = JSON.parse(JSON.generate obj)
+		diff = JSON.parse(JSON.generate(diff)) # clone the diff because we do not want to modify original
+		0.upto(diff.length-1) do |i|
+			begin
+				applyDiff(newObj, diff[i])
+			rescue => e
+				printDiff(diff[i])
+				raise "Patch failed #{e.message}"
+			end
+		end
+		newObj
+	end
 
 	end
 end

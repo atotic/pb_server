@@ -84,6 +84,10 @@ module PB
 		raise "Couldn't change user and group to #{user}:#{group}: #{e}"
 	end
 
+	def self.deep_clone(o)
+		Marshal.load( Marshal.dump(o))
+	end
+
 	# command line utilities
 	class CommandLine
 

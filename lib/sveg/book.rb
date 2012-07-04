@@ -18,25 +18,25 @@ class Book < Sequel::Model(:books)
 		self.document ||=
 <<-eos
 {
-	'title': #{self.title.to_json},
-	'photoList': ['A','B','C','D', 'E'],
-	'photos': {
-		'A': { url: { l: '/assets/test/1.jpg'} },
-		'B': { url: { l: '/assets/test/2.jpg'} },
-		'C': { url: { l: '/assets/test/3.jpg'} },
-		'D': { url: { l: '/assets/test/4.jpg'} },
-		'E': { url: { l: '/assets/test/5.jpg'} },
+	"title": #{self.title.to_json},
+	"photoList": ["A","B","C","D", "E"],
+	"photos": {
+		"A": { "url": { "l": "/assets/test/1.jpg"} },
+		"B": { "url": { "l": "/assets/test/2.jpg"} },
+		"C": { "url": { "l": "/assets/test/3.jpg"} },
+		"D": { "url": { "l": "/assets/test/4.jpg"} },
+		"E": { "url": { "l": "/assets/test/5.jpg"} }
 		},
-	'roughPageList': ['cover', 'cover-flap', 'back-flap', 'back','1','2','3','4'],
-	'roughPages': {
-		'cover': { 'photoList': [] },
-		'cover-flap': { 'photoList': [] },
-		'back-flap': { 'photoList': [] },
-		'back': {'photoList': [] },
-		'1': {'photoList': ['A', 'B'] },
-		'2': {'photoList': ['B', 'C'] },
-		'3': {'photoList': ['D'] },
-		'4': {'photoList': [] }
+	"roughPageList": ["cover", "cover-flap", "back-flap", "back","1","2","3","4"],
+	"roughPages": {
+		"cover": { "photoList": [] },
+		"cover-flap": { "photoList": [] },
+		"back-flap": { "photoList": [] },
+		"back": {"photoList": [] },
+		"1": {"photoList": ["A", "B"] },
+		"2": {"photoList": ["B", "C"] },
+		"3": {"photoList": ["D"] },
+		"4": {"photoList": [] }
 	}
 }
 eos
@@ -111,7 +111,11 @@ eos
 	end
 
 	def apply_diff(json_diff)
+		oldDoc = JSON.parse(self.document)
 		PB.logger.debug("Applying diff #{json_diff}")
+		self[:document] = JsonDiff.patch(oldDoc, json_diff).to_json
+		self.save_changes
+		PB.logger.debug("Diff successful")
 	end
 end
 
