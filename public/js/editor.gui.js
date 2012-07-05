@@ -155,7 +155,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 (function(scope){
 	var PhotoPalette = {
 		bindToBook: function(book) {
-			this._photoFilter = 'all';
+			this._photoFilter = 'unused';
 			$('#photo-list')
 				.data('model', book)
 				.on(PB.MODEL_CHANGED,

@@ -69,9 +69,9 @@ eos
 		# TODO insert photos into document
 <<-eos
 {
-	'id': #{self.pk},
-	'last_server_cmd_id' : #{BrowserCommand.last_command_id(self.pk)},
-	'document': #{self.document}
+	"id": #{self.pk},
+	"last_server_cmd_id" : #{BrowserCommand.last_command_id(self.pk)},
+	"document": #{self.document}
 }
 eos
 	end

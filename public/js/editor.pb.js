@@ -241,12 +241,18 @@ window.PB.Photo // Photo objects
 })(window.PB);
 
 // PB.RoughPage
+// Rough pages get serialized and saved
+// Properties that should not be saved are defined as hidden
 (function(scope) {
 	var RoughPage = function(props) {
+		var hiddenProps = { 'book': true, 'id' : true} // non-serializable properties
 		this.photoList = [];
-		$.extend(this, props);
+		for (var p in props) {
+			var enumerable = ! p in hiddenProps;
+			Object.defineProperty(this, p, { value: props[p], enumerable: enumerable });
+		}
 		if (this.id == null)
-			this.id = this.book.generateId();
+			Object.defineProperty(this, 'id', { value: this.book.generateId()});
 	}
 
 	var coverRegex = /^cover|^cover-flap|^back-flap|^back/;

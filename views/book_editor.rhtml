@@ -120,24 +120,16 @@
 <scripts src="http://dev.pb4us.com:9000/target/target-script-min.js"></script>
 <script>
 
-
-function insertImages() {
-	var html ="";
-	for (var i=0; i<20; i++)
-		html += "<img src='/assets/test/" + i + ".jpg?size=icon'>"
-	$('#photo-list').append(html);
-	$('#photo-list img').each(function() {
-		GUI.PhotoPalette.makeDraggable(this);
-	});
-}
-
 // Initialization
 PB.init();
 GUI.init();
-var book = new PB.Book(<%= @book.to_json %>);
-GUI.bindToBook(book);
-
-//insertImages();
+$.ajax('/books/'+ <%= @book.id %> + "?bust_cache=" + Math.random())
+	.done(function(response, msg, jqXHR) {
+		GUI.bindToBook( new PB.Book(response));
+	})
+	.fail(function(response, msg, jsXHR) {
+		PB.error("Unable to load book");
+	});
 
 </script>
 </body>

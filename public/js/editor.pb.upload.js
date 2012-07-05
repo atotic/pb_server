@@ -8,6 +8,9 @@
 	var Uploader = {
 		bookQueue: [],
 		bookActiveRequest: null,
+		hasRequests: function() {
+			return this.bookQueue.length > 0 || this.bookActiveRequest;
+		},
 		saveBook: function(book) {
 			if (this.bookQueue.indexOf(book) == -1)
 				this.bookQueue.push(book);
@@ -43,10 +46,22 @@
 		}
 	}
 
-	// Save modified books every minute.
+	// Save modified books every second.
 	window.setInterval( Uploader.saveAll, 1*1000);
 
 	scope.Uploader = {
 		saveBook: Uploader.saveBook
 	}
+
+	// Save before navigating away
+	window.onbeforeunload = function(e) {
+		Uploader.saveAll();
+		if (Uploader.hasRequests()) {
+			var msg = "You have unsaved changes. Are you sure that you want to leave the page?";
+			if (e)
+				e.returnValue = msg;
+			return msg;
+		}
+	};
+
 })(PB);

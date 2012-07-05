@@ -175,8 +175,10 @@ class SvegApp < Sinatra::Base
 			dt.nil? ? 'unknown' : (dt.strftime "%b %d %I:%M%p")
 		end
 
-		def json_response(object)
-			[200, {'Content-Type' => Rack::Mime::MIME_TYPES['.json']}, [object.to_json]]
+		def json_response(object, no_cache = true)
+			headers = {'Content-Type' => Rack::Mime::MIME_TYPES['.json']}
+			headers['Cache-Control'] = 'no-cache' if no_cache
+			[200, headers, [object.to_json]]
 		end
 
 		def plain_response(msg="")

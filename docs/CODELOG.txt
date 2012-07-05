@@ -63,11 +63,21 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-Saving to server
+Ajax queue: deal with network errors
+Broadcasting changes: 2+ days, when Ollie is in camp
 DND cleanup:
 - animations, dragging of cover pages,
 - drop flavors: rough pages must accept/reject drop flavors
 - adding an image
+
+July 5
+Save before navigating away warning
+Load book with JSON to bypass back/forward cache
+
+July 3
+Saving to server: DONE
+Server document patching works. Need more test coverage for JsonDiff,
+but it'll do for now
 
 June 29
 Started saving to server, my first experience with "PATCH"
