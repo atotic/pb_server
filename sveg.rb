@@ -199,7 +199,9 @@ class SvegApp < Sinatra::Base
 			args.each do |arg|
 				arg = arg.to_s if arg.is_a?(Symbol)
 				if arg.eql? "editor.js"
-					retVal += asset_link("editor.pb.js",
+					retVal += asset_link(
+						"jquery.stream-1.2.js",
+						"editor.pb.js",
 						"editor.gui.js",
 						"editor.gui.touch.js",
 						"editor.gui.buttons.js",
@@ -381,7 +383,7 @@ class SvegApp < Sinatra::Base
 			LOGGER.error(ex.message)
 			LOGGER.error(ex.backtrace[0..5] )
 			flash.now[:error]= "Errors prevented the book from being created. Please fix them and try again."
-			@book = Book.new unless book
+			@book = Book.new unless @book
 			redirect :account
 		end
 	end
@@ -392,8 +394,8 @@ class SvegApp < Sinatra::Base
 		str_diff = request.body.read
 		json_diff = JSON.parse(str_diff)
 		begin
-			@book.apply_diff(json_diff)
-			[200, {'Content-Type' => 'application/json'} ,["{ \"id\" : #{@book.id} }"]]
+			d = PB::BookDiffStream.apply_diff(json_diff, @book.pk)
+			[200, {'Content-Type' => 'application/json'} ,["{ \"diff_stream_id\" : #{d.pk} }"]]
 		rescue => ex
 			puts ex.message
 			puts ex.backtrace

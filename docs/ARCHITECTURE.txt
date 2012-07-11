@@ -39,6 +39,34 @@ SOLUTION
 
 	See command_stream.rb, editor.streaming.js for implementation details.
 
+PROBLEM: BOOK RECORD CONSISTENCY
+	Book record must be in sync with diff stream (book == sum of all diffs)
+
+	Book and diff stream interactions:
+
+	A) Applying a new patch on the server
+		transaction do
+			select book for update
+			apply patch to book
+			save patch
+			save book
+		end
+		broadcast patches
+	B) Broadcasting patches on the server
+		Broadcast server gets patch broadcast notification, sends out all new transactions
+	C) Applying patches on the client
+	D) Saving patches on the client
+
+	Diff stream database design:
+	- book are represented in the database in two tables
+	  1) book record
+	  2) diff stream records
+	  book record must always be equal to combination of all diffs
+	  => book record and diff stream must be updated as a part of single transaction
+
+
+	  Book
+
 PROBLEM: OFFLINE IDS
 we need to create and use an object before we got an id from the server.
 we will get an id from server eventually.

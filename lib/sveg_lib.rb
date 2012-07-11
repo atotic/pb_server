@@ -1,7 +1,7 @@
 require_relative 'sveg/book'
 require_relative 'sveg/book2pdf_job'
 require_relative 'sveg/book_template'
-require_relative 'sveg/command_stream'
+require_relative 'sveg/diff_stream'
 require_relative 'sveg/photo'
 require_relative 'sveg/user'
 require_relative 'sveg/mail'

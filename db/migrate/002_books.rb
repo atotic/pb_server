@@ -11,10 +11,10 @@ Sequel.migration do
 			String :pdf_generate_error, :size=>255
 			TrueClass :pdf_generate_in_progress, :default=>false
 
+			Integer :last_diff
 			File :document, :size => :medium # book stored as json, :mediumblob size
 
 			# Delete these when done
-			String :page_order, :text=>true # comma separated list of page ids.
 			String :template_name, :size=>255 # name of the template
 			String :template, :text=>true 	# template attributes, stored as json
 

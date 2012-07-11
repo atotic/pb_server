@@ -10,11 +10,12 @@ class Book < Sequel::Model(:books)
 	many_to_one :user
 	many_to_many :photos
 	one_to_many :chrome_pdf_tasks, :class => 'PB::ChromePDFTask'
-	one_to_many :browser_commands, :class => 'PB::BrowserCommand'
+	one_to_many :diff_stream, :class => 'PB::BookDiffStream'
 
 	def before_create
 		super
 		self.title ||= 'untitled'
+		self.last_diff ||= 0
 		self.document ||=
 <<-eos
 {
@@ -46,7 +47,7 @@ eos
 	def before_destroy
 		super
 		chrome_pdf_tasks.each { |t| t.destroy }
-		browser_commands.each { |c| c.destroy }
+		diff_stream.each { |c| c.destroy }
 
 		# save photo list, so we can traverse it
 		p = photos.collect { |x| x }
@@ -70,7 +71,7 @@ eos
 <<-eos
 {
 	"id": #{self.pk},
-	"last_server_cmd_id" : #{BrowserCommand.last_command_id(self.pk)},
+	"last_diff" : #{self[:last_diff]},
 	"document": #{self.document}
 }
 eos
@@ -110,13 +111,6 @@ eos
 		end
 	end
 
-	def apply_diff(json_diff)
-		oldDoc = JSON.parse(self.document)
-		PB.logger.debug("Applying diff #{json_diff}")
-		self[:document] = JsonDiff.patch(oldDoc, json_diff).to_json
-		self.save_changes
-		PB.logger.debug("Diff successful")
-	end
 end
 
 class BookPage < Sequel::Model(:book_pages)

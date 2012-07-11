@@ -70,6 +70,7 @@ window.PB.Photo // Photo objects
 			Object.defineProperty(this.serverData.document.roughPages[i], 'book',
 				{ value: this });
 		}
+		PB.DiffStream.connect(this);
 	}
 
 	Book.prototype = {
@@ -81,6 +82,9 @@ window.PB.Photo // Photo objects
 		},
 		get photoList() {
 			return this.serverData.document.photoList;
+		},
+		get last_diff() {
+			return this.serverData.last_diff;
 		},
 		// returns hash of images that appear in pages
 		_collectUsedImages: function() {

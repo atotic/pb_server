@@ -27,19 +27,20 @@ Sequel.migration do
 			index [:user_id], :name => :index_omniauth_user
 		end
 
-		create_table(:browser_commands, :ignore_index_errors=>true) do
+		create_table(:book_diff_stream, :ignore_index_errors => true) do
 			primary_key :id
+			Integer :book_id, :null=>false
 			DateTime :created_at
 			DateTime :updated_at
-			String :payload, :text=>true # command-specific json payload
-			String :type, :size=>128 # used by js to execute commands in browser
-			Integer :book_id, :null=>false
-			
+
+			File :payload, :size=>:medium # command-specific json payload, could be large
+			String :type, :size=>128
+
 			index [:book_id], :name=>:index_server_commands_book
 		end
-		
+
 	end
-	
+
 	down do
 		drop_table(:auth_logins, :server_commands, :users)
 	end

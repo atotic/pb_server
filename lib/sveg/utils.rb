@@ -212,7 +212,6 @@ module PB
 			# load user to sveg.user
 			unless @ignore_sveg_headers
 				PB::User.restore_from_session(env)
-				PB::BrowserCommand.restore_from_headers(env)
 			end
 			env['sveg.mobile'] = env['SERVER_NAME'].start_with? 'touch'
 		end

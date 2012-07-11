@@ -89,12 +89,13 @@ Use pbkdf2 for passwords https://github.com/emerose/pbkdf2-ruby
 Free ssl cert https://www.startssl.com/?app=40
 Use bcrypt to store passwords http://codahale.com/how-to-safely-store-a-password/
 
-S3
+Servers
 Rackspace Cloudfiles
 How to store millions of images: http://highscalability.com/blog/2012/6/20/ask-highscalability-how-do-i-organize-millions-of-images.html
 Pure html ajax upload: http://zefer.posterous.com/pure-html-ajax-solutions-to-upload-files-to-s
 http://hacks.mozilla.org/2011/03/the-shortest-image-uploader-ever/
 S3 command line https://github.com/pcorliss/s3cmd-modification
+nginx internals http://www.aosabook.org/en/nginx.html
 
 HTML
 Like these guys toolkit: http://www.googleventures.com/humans.txt
@@ -110,6 +111,7 @@ Viewport scoller https://github.com/zynga/scroller
 Developing a nice mobile site: http://davidbcalhoun.com/2011/mobile-performance-manifesto
 Touch event history and future: http://blog.jquery.com/2012/04/10/getting-touchy-about-patents/
 Free DNS redirects for everyone: http://xip.io/
+Building iOS hybrid apps: http://www.cocoacontrols.com/posts/a-primer-on-hybrid-apps-for-ios
 
 OTHER
 Redirect file from nginx http://wiki.nginx.org/XSendfile

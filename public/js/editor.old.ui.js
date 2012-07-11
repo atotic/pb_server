@@ -34,7 +34,7 @@ $.extend(PB, {
 		}
 		PB.UI.bookLoaded(this._book);
 	},
-	
+
 	// Loads the book, unused
 	load: function(id) {
 		$("#main-container").html("<h1>Loading...</h1>");
@@ -44,24 +44,24 @@ $.extend(PB, {
 				PB.setBookFromJson(json);
 			})
 			.error( function(jqXHR, textStatus, errorThrown) {
-				PB.error("Unexpected network error loading book." + textStatus);
+				GUI.error("Unexpected network error loading book." + textStatus);
 			});
 	},
 	// The "stop this event" pattern
 	stopEvent: function(e) {
 		e.stopPropagation();
-		e.preventDefault();		
+		e.preventDefault();
 	}
 });
 
 PB.UI = {
-		
+
 	_init: $(document).ready(function() { PB.UI.init() } ),
-	
+
 	init: function() {
 		// Flippies
 		$(".slab").each( function() {
-			var slab = $(this); 
+			var slab = $(this);
 			var slab_content = slab.find('.slab_content');
 			var flippy = slab.find('.flippy');
 			var slab_click = slab.find('.slab_title');
@@ -81,7 +81,7 @@ PB.UI = {
 		});
 		$(window).resize(); // trigger reflow
 	},
-	
+
 	bookLoaded: function(book) {
 		document.title = "Photobook: " + book.title;
 		// Bind the event handlers
@@ -168,7 +168,7 @@ PB.UI.MainContainer = {
 	fitContent: function() {
 		var page = $("#main-container .book-page");
 		if (!page) return;
-		
+
 		var pad = 20;
 		var mainHeight = parseInt($("#main-container").get(0).style.height) - pad;
 		var mainWidth =  $("#main-container").parent().width() - pad;

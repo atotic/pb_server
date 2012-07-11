@@ -107,7 +107,7 @@
 
 	if (! ('PB' in scope)) scope.PB = {};
 	$.extend(scope.PB, PB);
-	$(document).ready(function() {
-		$(document).ajaxComplete(PB.showXhrFlash);
-	});
+	// $(document).ready(function() {
+	// 	$(document).ajaxComplete(PB.showXhrFlash);
+	// });
 })(window);

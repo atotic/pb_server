@@ -1,8 +1,8 @@
 // editor.pb.upload.js
 
 /*
-	Uploading:
-	every book is document + change id
+	Uploader:
+	saves book every SaveInterval seconds
 */
 (function(scope) {
 	var Uploader = {
@@ -45,9 +45,10 @@
 				});
 		}
 	}
+	var SaveInterval = 1;	// Save interval (seconds)
 
 	// Save modified books every second.
-	window.setInterval( Uploader.saveAll, 1*1000);
+	window.setInterval( Uploader.saveAll, SaveInterval*1000);
 
 	scope.Uploader = {
 		saveBook: Uploader.saveBook
@@ -65,3 +66,54 @@
 	};
 
 })(PB);
+
+/* DiffStream
+ * every book listens to diffs from the stream
+ */
+(function(scope){
+	var DiffStream = {
+		init: function() {
+		},
+		url: function(book) {
+			return "/subscribe/book/" + book.id + "?last_diff=" + book.last_diff;
+		},
+		handleMessage: function(book, message) {
+			switch(message.type) {
+			case "StreamUpToDate":
+				break;
+			case "Patch":
+				break;
+			}
+		},
+		connect: function(book) {
+			var stream = $.stream(this.url(book), {
+				context: this,
+				dataType: 'json',
+				type: 'http',
+				reconnect: false,	// we'll handle reconnect
+				handleSend: function() { // no talking back to the server
+					return false;
+				},
+				// Lifecycle callbacks
+				open: function(event, stream) {
+					console.log("ServerStream opened " + stream.id);
+				},
+				message: function(ev) {
+					console.log("Server stream message " + stream.id)
+					DiffStream.handleMessage(book, ev.data);
+				},
+				error: function(ev) {
+					console.log("serverStream error , possible closure " + stream.id);
+				},
+				close: function(ev) {
+					console.warn("server connection closed");
+					book.stream = null;
+				}
+			});
+			return stream;
+
+		}
+	}
+	scope.DiffStream = DiffStream;
+})(PB);
+

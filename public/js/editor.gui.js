@@ -37,11 +37,31 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		init: function() {
 			this.Buttons.init();
 			this.CommandManager.init();
+			$(document).ready(function() {
+				$(document).ajaxComplete(function(event, jqXHR, ajaxOptions) {
+					// Show ajax error headers
+					var msg;
+					if (msg = jqXHR.getResponseHeader('X-FlashError'))
+						GUI.error(msg);
+					if (msg = jqXHR.getResponseHeader('X-FlashNotice'))
+						GUI.notice(msg);
+				});
+			});
 		},
 		bindToBook: function(book) {
 			GUI.PhotoPalette.bindToBook(book);
 			GUI.RoughWorkArea.bindToBook(book);
 			window.document.title = book.title + " PhotoBook";
+		},
+		error: function(text) {
+			var newDiv = $('<div class="alert alert-error"><button class="close" data-dismiss="alert">×</button>' + text + '</div>');
+			newDiv.appendTo('#pb-palette');
+			newDiv.show('blind');
+		},
+		notice: function(text) {
+			var newDiv = $('<div class="alert alert-notice"><button class="close" data-dismiss="alert">×</button>' + text + '</div>');
+			newDiv.appendTo('#pb-palette');
+			newDiv.show('blind');
 		}
 	};
 	window.GUI = GUI;
