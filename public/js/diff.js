@@ -48,12 +48,16 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 (function(window) {
 "use strict";
 	// Encapsulate the results, so we can set the values, get their paths
-	function proxy(obj, prop, path) {
+	function Proxy(obj, prop, path) {
 		this._obj = obj;
 		this._prop = prop;
 		this._path = path;
 	}
-	proxy.prototype = {
+	Proxy.prototype = {
+		_broadcastChange: function(type) {
+			if (this._changeListener)
+				this._changeListener.jsonPatch(type, this);
+		},
 		toString: function() {
 			return this.path() + " : " + this.val();
 		},
@@ -72,7 +76,11 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 			return r;
 		},
 		set: function(val) {
-			if (this._prop != undefined ) return this._obj[this._prop] = val;
+			if (this._prop != undefined ) {
+				this._broadcastChange('set');
+				this._obj[this._prop] = val;
+				return;
+			}
 			throw "Can't set root object";
 		},
 		insert: function(val) {
@@ -81,6 +89,7 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 			}
 			else
 				this.set(val);
+			this._broadcastChange('insert');
 		},
 		delete: function(val) {
 			if (this._prop != undefined )
@@ -90,6 +99,7 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 				}
 				else
 					delete this._obj[this._prop];
+				this._broadcastChange('delete');
 			}
 			else
 				throw "Can't delete root object";
@@ -115,40 +125,45 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 		var el = [];
 		if (path_array.length == 0)
 			return null;
-		else if (path_array.length == 1) { // leaf, return values
-			if (path_array[0] == "$") // $
-				el.push(new proxy(obj, null, path_to_here));
-			else if (path_array[0] == "*") { // *
-				switch(getType(obj)) {
-					case 'Array':
-						for (var i = 0; i < obj.length; i++)
-							el.push(new proxy(obj, i, path_to_here));
+		// leaf, path ends, return found objects
+		if (path_array.length == 1) {
+			switch(path_array[0]) {
+				case "$":
+					el.push(new Proxy(obj, null, path_to_here));
+					break;
+				case "*":
+						switch(getType(obj)) {
+								case 'Array':
+									for (var i = 0; i < obj.length; i++)
+										el.push(new Proxy(obj, i, path_to_here));
+									break;
+								case 'Object':
+									for (var propName in obj)
+										if (obj.hasOwnProperty(propName))
+											el.push(new Proxy(obj, propName, path_to_here));
+									break;
+								case 'Basic':
+									throw "Nothing to traverse at" + path_to_here.join('.') + '.*';
+									break;
+						}
 						break;
-					case 'Object':
-						for (var propName in obj)
-							if (obj.hasOwnProperty(propName))
-								el.push(new proxy(obj, propName, path_to_here));
-						break;
-					case 'Basic':
-						throw "Nothing to traverse at" + path_to_here.join('.') + '.*';
-						break;
-				}
-			}
-			else { // common case
-				if (options['ghost_props'] || obj.hasOwnProperty(path_array[0]))
-					el.push(new proxy(obj, path_array[0], path_to_here));
+				default:
+					if (options['ghost_props'] || obj.hasOwnProperty(path_array[0]))
+						el.push(new Proxy(obj, path_array[0], path_to_here));
+					break;
 			}
 		}
 		else // branch, keep on traversing
 		{
-			if (path_array[0] == "$") {
+			switch(path_array[0]) {
+			case "$":
 				el = traverse(obj,
 					path_array.slice(1),
 					array_clone_push(path_to_here, path_array[0]),
 					options);
-			}
-			else if (path_array[0] == "*") {
-				switch(getType(obj)) {
+				break;
+			case "*": // * => traverse all leafs
+					switch(getType(obj)) {
 					case 'Array':
 						var trim_path = path_array.slice(1);
 						for (var i=0; i < obj.length; i++) {
@@ -171,15 +186,16 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 						break;
 					case 'Basic':
 						throw 'nothing to traverse at' + path_to_here.join('.') + ".*";
-				}
-			}
-			else {
+					}
+				break;
+			default: // everything else => follow property names
 				var o2 = obj[path_array[0]];
 				if (o2)
 					el = traverse(o2,
 						path_array.slice(1),
 						array_clone_push(path_to_here, path_array[0]),
 						options);
+				break;
 			}
 		}
 		return el;
@@ -498,222 +514,4 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 
 })(window);
 
-	/* Optimizations did not work
-	I was hoping to replace delete/insert pairs with a single move
-	This fails because delete and insert position in diff queue is important:
-	- insert: parents must be inserted before the child
-	- delete: children must be deleted before the parent
-	The main motivation for move was to avoid massive diffs when an array is shuffled
-	This would happen if pages were kept as an array
-	Takeaway: minimize array use.
 
-function compareDiffArgs(a,b) {
-		var type_a = getType(a.args);
-		var type_b = getType(b.args);
-		if (type_a == type_b)
-			switch(type_a) {
-				case 'Object':
-				case 'Array':
-					return 0;
-				default:
-					return a.args == b.args ? 0 : a.args < b.args ? -1 : 1;	// a <=> b
-			}
-		else  // Object > Array > Basic
-			if (type_a == 'Basic')
-				return -1;
-			else if (type_b == 'Basic')
-				return 1;
-			else if (type_a == 'Array')
-				return -1;
-			else
-				return 1;
-	}
-
-	function compareDiffPaths(a,b) {
-		if (a.path < b.path)
-			return -1;
-		else if (b.path < a.path)
-			return 1;
-		else
-			return 0;
-	}
-
-	function optimizeDiff(oldObj, newObj, diff)
-	{
-		function optimizeToMove(diffList, insertOp, deleteOp)
-		{
-			var src = deleteOp.val.path;
-			// if src is an array indice path with index X
-
-			// Converting deleteOp to move on an array item will make later indices be off by 1
-			// We must find and patch all of them
-			var isArrayMatch = src.match(/^(.*\.)(\d+)$/);	// "a.b.c.1" means c is an array
-
-			if (isArrayMatch) {
-				// shift all indices into this array in diffs after deleteOp diff
-				var srcIndex = parseInt(isArrayMatch[2]);
-				// match paths that reference the same array
-				// create a matching regex, escape special characted
-				// "a.b.c.1" would create a regex: /(a\.b\.c\.)(\d+)
-				var matchingRegex = new RegExp(
-					"^(" + isArrayMatch[1].replace(/[\\\^\$\*\+\?\(\)\[\]\.\!\:\|\{\}\/]/g, "\\$&") + ")"
-					+ "(\\d+)" + "(.*)$"
-				);
-				var next = insertOp.next;
-				while (next) {
-					var isPathMatch = matchingRegex.exec(next.val.path);
-					if (isPathMatch) {
-						var matchingIndex = parseInt(isPathMatch[2]);
-						if (matchingIndex > srcIndex) {
-							next.val.path = isPathMatch[1] + (matchingIndex - 1) + isPathMatch[3];
-						}
-					}
-					next = next.next;
-				}
-			}
-			// change delete to move, and remove the insertOp
-			var moveDiff = createMove(deleteOp.val.path, insertOp.val.path);
-			deleteOp.val = moveDiff;
-			diffList.remove(insertOp);
-		}
-
-		// Create doubly-linked list of diffs. Used for easy insert/remove
-		var diffList = DoublyLinkedList.fromArray(diff);
-		// Sort diffs by arg values
-		var diffItemArray = diffList.toArray(true);
-		diffItemArray.sort(function(a,b) {
-			return compareDiffArgs(a.val, b.val);
-		});
-		// Separate arg values into buckets
-		var buckets = [];
-		var currBucket = null;
-		for (var i=0; i<diffItemArray.length; i++)
-		{
-			if (currBucket != null && compareDiffArgs(currBucket[0].val, diffItemArray[i].val) == 0)
-				currBucket.push(diffItemArray[i]);
-			else {
-				currBucket = [diffItemArray[i]];
-				buckets.push(currBucket);
-			}
-		}
-		// filter out the non-moving buckets
-		buckets = buckets.filter(function(x) { return x.length > 1});
-		// replace matching delete/inserts with moves
-		for (var i=0; i<buckets.length; i++)
-		{
-			// cannot move arrays or objects yet
-			if (buckets[i].length < 2 || getType(buckets[i][0].val.args) != 'Basic')
-				continue;
-			var inserts = [];
-			var deletes = [];
-			// group values into inserts and deletes
-			for (var j=0; j < buckets[i].length ; j++)
-				switch(buckets[i][j].val.op) {
-					case 'insert':
-						inserts.push(buckets[i][j]); break;
-					case 'delete':
-						deletes.push(buckets[i][j]); break;
-					default:
-						break;
-				}
-			// create the moves
-			var possibleMoves = Math.min(inserts.length, deletes.length);
-			for (var j=0; j < possibleMoves; j++)
-				optimizeToMove(diffList, inserts[j], deletes[j]);
-		}
-		return diffList.toArray();
-	}
-	*/
-/*
-# Diff architecture notes
-
-Requirements:
-- good performance on photobook use cases.
-- no needless changes. if two values are the same, there should be no update
-  this would happen if we naively swap entire objects when just part of their
-  props differs
-
-Algorithm
-- generate raw insert/delete/update diff. Update has an implicit delete
-- compare the insert with deletes. If they match, replace with move
-  - tricky: if insert/delete can be replaced with move/update. (happens when page is edited, then moved)
-
-# Operations
-
-- insert
-- delete
-- update (also created implicit_delete of previous value)
-- implicit_delete (created when update is performed, used to optimize, noop for patch)
-- move
-
-## Example 1: 'Object'
-old {
-	a: a
-	b: a
-	c: a
-}
-## Example 1a: 'Object', attribute value change
-new {
-	a: a
-	b: b
-	c: a
-}
-diff:
-	$.b, 'update', 'b'
-Nested attribute value change would work just as well
-
-## Example 1b: 'Object', attribute deletion
-new {
-	a: a
-	c: a
-}
-diff:
-	$.b, 'delete'
-
-## Example 1c: 'Object', attribute insertions
-new { a: a, b: a, c: a, d: a}
-diff:
-	$.d, 'insert', 'a'
-
-
-## Example 2: 'Array'
-old = [
-	a,b,c
-]
-
-## Example 2a: 'Array', item changed
-new = [
-	A,b,c
-]
-diff:
-	$.1, 'update', 'A'
-
-## Example 2b: 'Array', item deleted
-new = [b,c]
-diff, simple, not acceptable, can be length of array
- $.0, 'update', 'b'  // implicit deletion of a
- $.1, 'update', 'c'  // implicit
- $.2, 'delete'
-diff, nice:
- $.0,  'move', $.1
- $.1,	 'move', $.2
- $.2,	 'delete'
- new = [a,c] //
-
-## Example 2c: 'Array'. item inserted
-new = [a,a1,b,c]
-diff:
-	$.1, 'array-insert', 'a1'
-
-
-What to do when arrays and objects are members of other arrays/objects?
-The simple idea to just replace entire object does not work. Small changes
-would generate large diff. For example, changing a page property would replace
-the entire property array.
-- treat objects as a single thing.
-  pros: simple
-  cons: horrendous performance, change of a single attribute regenerates the whole hierarchy
-
-
-
-*/

@@ -31,8 +31,23 @@ window.PB.Photo // Photo objects
 			return randomString;
 		},
 		MODEL_CHANGED: 'modelchanged',
+		startChangeBatch: function() {
+			this._changeBatch = [];
+		},
+		broadcastChangeBatch: function() {
+			var batch = this._changeBatch;
+			delete this._changeBatch;
+			for (var i=0; i < batch.length; i++)
+				broadcastChange(batch[i].model, batch[i].propName, batch[i].options);
+		},
+		cancelChangeBatch: function() {
+			delete this._changeBatch;
+		},
 		broadcastChange: function(model, propName, options) {
-			$('*:data("model.id=' + model.id + '")').trigger(PB.MODEL_CHANGED, [model, propName, options]);
+			if (this._changeBatch)
+				this._changeBatch.push({model:model, propName:propName, options:options});
+			else
+				$('*:data("model.id=' + model.id + '")').trigger(PB.MODEL_CHANGED, [model, propName, options]);
 		}
 	};
 
@@ -50,41 +65,52 @@ window.PB.Photo // Photo objects
 
 	var Book = function(serverJson) {
 		this._dirty = false;
-		this.originalServerData = serverJson;	// keep original data for diffs
-		this.serverData = PB.clone(serverJson); // all data from server are here
+		this.serverData = serverJson;	// keep original data for diffs
+		this.localData = PB.clone(serverJson); // all data from server are here
 		bookCache.push(this);
 
-		// Extend json with helper functions
-		for (var i in this.serverData.document.photos) {
-			PB.extend(this.serverData.document.photos[i], PB.Photo.prototype);
-			// Let photos know what their id is
-			Object.defineProperty(this.serverData.document.photos[i], 'id',
-				{ value: i });
-
-		}
-		for (var i in this.serverData.document.roughPages) {
-			PB.extend(this.serverData.document.roughPages[i], PB.RoughPage.prototype);
-			// Let pages know what their id is
-			Object.defineProperty(this.serverData.document.roughPages[i], 'id',
-				{ value: i });
-			Object.defineProperty(this.serverData.document.roughPages[i], 'book',
-				{ value: this });
-		}
+		this._extendLocalData();
 		PB.DiffStream.connect(this);
 	}
 
 	Book.prototype = {
 		get id() {
-			return this.serverData.id;
+			return this.localData.id;
 		},
 		get dirty() {
 			return this._dirty;
 		},
 		get photoList() {
-			return this.serverData.document.photoList;
+			return this.localData.document.photoList;
 		},
 		get last_diff() {
-			return this.serverData.last_diff;
+			return this.localData.last_diff;
+		},
+		get stream() {
+			return this._stream;
+		},
+		set stream(val) {
+			this._stream = val;
+		},
+		get roughPageList() {
+			return this.localData.document.roughPageList;
+		},
+		page: function(id) {
+			return this.localData.document.roughPages[id];
+		},
+		get title() {
+			return this.localData.document.title || "Untitled";
+		},
+		get unusedPhotoList() {
+			var usedHash = this._collectUsedImages();
+			var unusedList = [].concat(this.photoList);
+			for (var i=0; i< unusedList.length; i++) {
+				if (usedHash[unusedList[i]]) {
+					unusedList.splice(i,1);
+					i -= 1;
+				}
+			}
+			return unusedList;
 		},
 		// returns hash of images that appear in pages
 		_collectUsedImages: function() {
@@ -101,19 +127,29 @@ window.PB.Photo // Photo objects
 			this._dirty = true;
 			PB.broadcastChange(this, 'photoList', options);
 		},
-		get unusedPhotoList() {
-			var usedHash = this._collectUsedImages();
-			var unusedList = [].concat(this.photoList);
-			for (var i=0; i< unusedList.length; i++) {
-				if (usedHash[unusedList[i]]) {
-					unusedList.splice(i,1);
-					i -= 1;
-				}
+		_extendLocalData: function() {
+			// Extend json with helper functions
+			for (var i in this.localData.document.photos) {
+				if ('id' in this.localData.document.photos[i])
+					continue;
+				PB.extend(this.localData.document.photos[i], PB.Photo.prototype);
+				// Let photos know what their id is
+				Object.defineProperty(this.localData.document.photos[i], 'id',
+					{ value: i });
 			}
-			return unusedList;
+			for (var i in this.localData.document.roughPages) {
+				if ('id' in this.localData.document.roughPages[i])
+					continue;
+				PB.extend(this.localData.document.roughPages[i], PB.RoughPage.prototype);
+				// Let pages know what their id is
+				Object.defineProperty(this.localData.document.roughPages[i], 'id',
+					{ value: i });
+				Object.defineProperty(this.localData.document.roughPages[i], 'book',
+					{ value: this });
+			}
 		},
 		photo: function(id) {
-			return this.serverData.document.photos[id];
+			return this.localData.document.photos[id];
 		},
 		removePhoto: function(photo, options) {
 			// Remove photo from all the pages
@@ -124,22 +160,13 @@ window.PB.Photo // Photo objects
 					page.removePhoto(photo, options);
 			}
 			// Remove it from the book
-			var index = this.serverData.document.photoList.indexOf(photo.id);
+			var index = this.localData.document.photoList.indexOf(photo.id);
 			if (index == -1)
 				throw "no such photo";
-			this.serverData.document.photoList.splice(index, 1);
-			delete this.serverData.document.roughPages[photo.id];
+			this.localData.document.photoList.splice(index, 1);
+			delete this.localData.document.roughPages[photo.id];
 			this._dirty = true;
 			PB.broadcastChange(this, 'photoList', options);
-		},
-		get roughPageList() {
-			return this.serverData.document.roughPageList;
-		},
-		page: function(id) {
-			return this.serverData.document.roughPages[id];
-		},
-		get title() {
-			return this.serverData.document.title || "Untitled";
 		},
 		// generates id unique to this book
 		generateId: function() {
@@ -150,8 +177,8 @@ window.PB.Photo // Photo objects
 			return id;
 		},
 		getSaveDeferred: function() {
-			var dataToSave = PB.clone(this.serverData.document);
-			var diff = JsonDiff.diff(this.originalServerData.document, dataToSave);
+			var dataToSave = PB.clone(this.localData.document);
+			var diff = JsonDiff.diff(this.serverData.document, dataToSave);
 			if (diff.length == 0) {
 				this._dirty = false;
 				return null;
@@ -166,7 +193,7 @@ window.PB.Photo // Photo objects
 			});
 			var THIS = this;
 			ajax.done(function(response, msg, jqXHR) {
-				THIS.originalServerData.document = dataToSave;	// book saved, our data are now server data
+				THIS.serverData.document = dataToSave;	// book saved, our data are now server data
 			});
 			return ajax;
 		},
@@ -177,11 +204,11 @@ window.PB.Photo // Photo objects
 			var roughPageList = this.roughPageList;
 			if (roughPageList.indexOf(page.id) != -1)
 				throw "page already in book";
-			this.serverData.document.roughPages[page.id] = page;
+			this.localData.document.roughPages[page.id] = page;
 			if (index > roughPageList.length || index == -1)
-				this.serverData.document.roughPageList.push(page.id);
+				this.localData.document.roughPageList.push(page.id);
 			else
-				this.serverData.document.roughPageList.splice(index, 0, page.id);
+				this.localData.document.roughPageList.splice(index, 0, page.id);
 			this._dirty = true;
 			PB.broadcastChange(this, 'roughPageList', options);
 		},
@@ -189,7 +216,7 @@ window.PB.Photo // Photo objects
 			var index = this.roughPageList.indexOf(page.id);
 			if (index == -1)
 				throw "no such page";
-			this.serverData.document.roughPageList.splice(index, 1);
+			this.localData.document.roughPageList.splice(index, 1);
 			this._pagePhotosChanged(page, options);
 			this._dirty = true;
 			PB.broadcastChange(this, 'roughPageList', options);
@@ -198,13 +225,41 @@ window.PB.Photo // Photo objects
 			var src = this.roughPageList.indexOf(page.id);
 			if (src == -1)
 				throw "no such page";
-			this.serverData.document.roughPageList.splice(src, 1);
+			this.localData.document.roughPageList.splice(src, 1);
 			if (dest == -1 || dest > this.roughPageList.length)
-				this.serverData.document.roughPageList.push(page.id);
+				this.localData.document.roughPageList.push(page.id);
 			else
-				this.serverData.document.roughPageList.splice(dest, 0, page.id);
+				this.localData.document.roughPageList.splice(dest, 0, page.id);
 			this._dirty = true;
 			PB.broadcastChange(this, 'roughPageList', options);
+		},
+		applyBroadcastPatch: function(patch_id, patch) {
+			if (patchId <= this.last_diff) {
+				console.warn("Received patch we already have");
+				return;
+			}
+			try {
+				PB.startChangeBatch();
+				// patch of serverData, migrate differences to localData
+				var local_changes = JsonDiff.diff(this.serverData.document, this.localData.document);
+				var newOriginal = JsonDiff.patch(this.serverData.document, patch);
+				this.serverData = newOriginal;
+				this.last_diff = patch_id;
+				var newLocal = JsonDiff.patch(this.serverData.document, local_changes);
+				// need to: this.localData = newLocal
+				// we can't, because assignment would not broadcast changes to gui
+				// instead, mutate localData by creating new diff
+				var newDiff = JsonDiff.diff(this.localData.document, newLocal);
+				JsonDiff.patch(this.localData.document, newDiff);
+				this._extendLocalData();
+				PB.broadcastChangeBatch();
+			}
+			catch(e) {
+				console.log(e.message, patch_id, patch);
+				PB.GUI.error("Your document might be corrupted. An edit received from the network failed. This sometimes happens when multiple people are editing the book at the same time. Please reload");
+				PB.cancelChangeBatch();
+				debugger;
+			}
 		}
 	}
 

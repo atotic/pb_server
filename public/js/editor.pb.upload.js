@@ -82,6 +82,7 @@
 			case "StreamUpToDate":
 				break;
 			case "Patch":
+				book.applyBroadcastPatch(message.id, message.payload);
 				break;
 			}
 		},
