@@ -162,7 +162,7 @@
 	}
 	var TouchDragHandler = {
 		makeDraggable: function(el, findTargetCb) {
-
+			console.log("TouchDrag.makeDraggable");
 			var touchTrack = new TouchTrack(findTargetCb);
 			$(el).attr('draggable', true).on({
 				touchstart: function(ev) { TouchDragHandler.touchstart(ev.originalEvent, touchTrack)},
@@ -178,7 +178,7 @@
 			return null;
 		},
 		touchstart: function(ev, touchTrack) {
-			//console.log('touchstart', ev.currentTarget);
+			console.log('touchstart', ev.currentTarget);
 			if (ev.touches.length > 1)
 				return;
 			touchTrack.startTracking(ev.currentTarget,

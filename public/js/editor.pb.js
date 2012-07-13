@@ -466,8 +466,8 @@ window.PB.Photo // Photo objects
 		}
 	}
 	RoughPage.create = function(book) {
-		var page = {};
-		PB.extend(page, {id: book.generateId(), book: book, photoList: []});
+		var page = { photoList:[] };
+		PB.extend(page, {book: book, id: book.generateId()});
 		PB.extend(page, RoughPage.prototype);
 		return page;
 	}
