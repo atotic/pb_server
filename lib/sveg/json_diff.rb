@@ -207,9 +207,9 @@ module PB
 			src = JsonPath.query(obj, diff['path'], {:just_one => true});
 			dest = JsonPath.query(obj, diff['args'], {:just_one => true});
 			if (src && dest)
-				var tmp = src.val()
+				tmp = src.val()
 				src.set(dest.val())
-				val.set(tmp)
+				dest.set(tmp)
 			else
 				raise "Could not MOVE #{src ? '' : diff['path'] + 'not found'} #{dest ? '' : diff['args'] + 'not found'}"
 			end

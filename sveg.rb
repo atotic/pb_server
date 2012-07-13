@@ -395,7 +395,7 @@ class SvegApp < Sinatra::Base
 		json_diff = JSON.parse(str_diff)
 		begin
 			d = PB::BookDiffStream.apply_diff(json_diff, @book.pk)
-			[200, {'Content-Type' => 'application/json'} ,["{ \"diff_stream_id\" : #{d.pk} }"]]
+			[200, {'Content-Type' => 'application/json'} ,["{ \"diff_id\" : #{d.pk} }"]]
 		rescue => ex
 			puts ex.message
 			puts ex.backtrace

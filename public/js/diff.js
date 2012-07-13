@@ -51,13 +51,9 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 	function Proxy(obj, prop, path) {
 		this._obj = obj;
 		this._prop = prop;
-		this._path = path;
+		this._path = path;	// path is an array of [ [path part, object] ]
 	}
 	Proxy.prototype = {
-		_broadcastChange: function(type) {
-			if (this._changeListener)
-				this._changeListener.jsonPatch(type, this);
-		},
 		toString: function() {
 			return this.path() + " : " + this.val();
 		},
@@ -69,15 +65,20 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 		prop: function() {
 			return this._prop;
 		},
-		// path to the property
+		// jsonpath to the property
 		path: function() {
-			var r = this._path.join('.');
+			var r = this._path.map(function(x) { return x[0]}).join('.');
 			if (this._prop != undefined ) r += "." + this._prop;
 			return r;
 		},
+		// array of objects leading to property
+		objectPath: function() {
+			var op = this._path.map(function(x) { return x[1]});
+			if (this._prop != undefined) op.push(this._prop);
+			return op;
+		},
 		set: function(val) {
 			if (this._prop != undefined ) {
-				this._broadcastChange('set');
 				this._obj[this._prop] = val;
 				return;
 			}
@@ -89,7 +90,6 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 			}
 			else
 				this.set(val);
-			this._broadcastChange('insert');
 		},
 		delete: function(val) {
 			if (this._prop != undefined )
@@ -99,7 +99,6 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 				}
 				else
 					delete this._obj[this._prop];
-				this._broadcastChange('delete');
 			}
 			else
 				throw "Can't delete root object";
@@ -159,7 +158,7 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 			case "$":
 				el = traverse(obj,
 					path_array.slice(1),
-					array_clone_push(path_to_here, path_array[0]),
+					array_clone_push(path_to_here, [path_array[0], obj]),
 					options);
 				break;
 			case "*": // * => traverse all leafs
@@ -170,7 +169,7 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 							el = el.concat(
 								traverse(obj[i],
 									trim_path,
-									array_clone_push(path_to_here, i),
+									array_clone_push(path_to_here, [i, obj[i]]),
 									options));
 						}
 						break;
@@ -181,7 +180,7 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 								el = el.concat(
 									traverse(obj[propName],
 										trim_path,
-										array_clone_push(path_to_here, propName),
+										array_clone_push(path_to_here, [propName, obj]),
 										options));
 						break;
 					case 'Basic':
@@ -193,7 +192,7 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 				if (o2)
 					el = traverse(o2,
 						path_array.slice(1),
-						array_clone_push(path_to_here, path_array[0]),
+						array_clone_push(path_to_here, [path_array[0], o2]),
 						options);
 				break;
 			}
@@ -263,6 +262,8 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 			return 'Array';
 		else if (obj instanceof Object)
 			return 'Object';
+		else if (typeof obj == 'function')
+			throw "Cant diff functions";
 		else
 			return 'Basic';
 	}
@@ -298,26 +299,32 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 		return { op: 'swap', path: src, args: dest}
 	}
 
-	function applyDiff(obj, diff) {
+	function applyDiff(obj, diff, change_record) {
 		switch(diff.op) {
 			case 'set':
 				var target = JsonPath.query(obj, diff.path, {'just_one': true, 'ghost_props': true});
-				if (target)
+				if (target) {
+					if (change_record) change_record.push(['set', target]);
 					target.set(diff.args);
+				}
 				else
 					throw "Could not SET, target not found";
 				break;
 			case 'insert':
 				var target = JsonPath.query(obj, diff.path, {'just_one': true, 'ghost_props': true});
-				if (target)
+				if (target) {
+					if (change_record) change_record.push(['insert', target]);
 					target.insert(diff.args);
+				}
 				else
 					throw "Could not INSERT, target not found";
 				break;
 			case 'delete':
 				var target = JsonPath.query(obj, diff.path, {'just_one':true });
-				if (target)
+				if (target) {
+					if (change_record) change_record.push(['delete', target]);
 					target.delete();
+				}
 				else
 					throw "Could not DELETE, target not found";
 				break;
@@ -326,8 +333,10 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 				var dest = JsonPath.query(obj, diff.args, {'just_one': true});
 				if (src && dest) {
 					var tmp = src.val();
+					if (change_record) change_record.push(['set', src]);
+					if (change_record) change_record.push(['set', dest]);
 					src.set(dest.val());
-					val.set(tmp);
+					dest.set(tmp);
 				}
 				else
 					throw "Could not SWAP"
@@ -488,14 +497,20 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 		return diff;
 	}
 
-	// Clones the object, applies diff
-	function jsonPatch(obj, diff) {
+	// Patches the object with diff.
+	// Return: patched copy of the object
+	// Return: [patched_copy, changes] if options.record_changes is true.
+	//
+	// Do not patch in place, because patch can fail half-way, leaving object inconsistent
+	function jsonPatch(obj, diff, options) {
+		options = mergeOptions(options, {record_changes: false})
 		var newObj = JSON.parse(JSON.stringify(obj));
 		var diff = JSON.parse(JSON.stringify(diff)); // clone the diff because we do not want to modify original diff
+		var change_record = options.record_changes ? [] : null;
 		for (var i =0; i< diff.length ; i++)
 		{
 			try {
-				applyDiff(newObj, diff[i]);
+				applyDiff(newObj, diff[i], change_record);
 			}
 			catch(e) {
 				console.log("Patch failed " + e);
@@ -503,6 +518,9 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 				throw e;
 			}
 		}
+		if (change_record)
+			return [newObj, change_record];
+
 		return newObj;
 	}
 

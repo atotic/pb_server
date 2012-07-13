@@ -49,15 +49,15 @@
 					ev.stopPropagation();
 					$(this).removeClass('drop-target');
 					if (scope.DragStore.roughPage)
-						$(scope.DragStore.roughPage).data('model').remove({animate:true});
+						$(scope.DragStore.roughPage).data('modelp').get().remove({animate:true});
 					else if (scope.DragStore.image) {
 						GUI.RoughWorkArea.book.removePhoto(
-							$(scope.DragStore.image).data('model'), {animate: true});
+							$(scope.DragStore.image).data('modelp').get(), {animate: true});
 					}
 					else if (scope.DragStore.roughImage) {
 						var ri = $(scope.DragStore.roughImage);
-						var photo = ri.data('model');
-						var roughPage = ri.parent().data('model');
+						var photo = ri.data('modelp').get();
+						var roughPage = ri.parent().data('modelp').get();
 						roughPage.removePhoto(photo, {animate: true});
 					}
 				}

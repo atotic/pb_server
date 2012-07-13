@@ -21,7 +21,7 @@
 	window.GUI.DragStore // stores dragged items
 
 
-GUI holds references to model objects in $(dom element).data('model')
+GUI holds references to model objects in $(dom element).data('modelp')
 The incomplete list of elements and their models:
 .rough-page -> PB.RoughPage
 #photo-list > img -> PB.Photo
@@ -177,7 +177,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		bindToBook: function(book) {
 			this._photoFilter = 'unused';
 			$('#photo-list')
-				.data('model', book)
+				.data('modelp', book.getProxy())
 				.on(PB.MODEL_CHANGED,
 					function(ev, model, prop, options) {
 						if (prop == 'photoList')
@@ -201,19 +201,19 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		},
 		createImageTile: function(photo) {
 			var img = $("<img src='" + photo.getUrl(128) + "'>");
-			img.data('model', photo);
+			img.data('modelp', photo.getProxy());
 			this.makeDraggable(img);
 			return img;
 		},
 		synchronizePhotoList: function(options) {
 			options = $.extend({animate:false}, options);
 			var containerDom = $('#photo-list');
-			var bookModel = containerDom.data('model');
+			var bookModel = containerDom.data('modelp').get();
 			var sel = 'img';
 
 			var oldChildren = containerDom.children( sel );
 			var oldPhotos = oldChildren.map(
-				function(i, el) { return $(el).data('model').id}).get();
+				function(i, el) { return $(el).data('modelp').id}).get();
 			var newPhotos = this._photoFilter == 'all' ? bookModel.photoList : bookModel.unusedPhotoList;
 
 			var diff = JsonDiff.diff(oldPhotos, newPhotos);

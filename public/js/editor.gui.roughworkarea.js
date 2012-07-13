@@ -15,7 +15,7 @@
 			this.makeDroppable();
 			var roughPageList = book.roughPageList;
 			$('#work-area-rough')
-				.data('model', book)
+				.data('modelp', book.getProxy())
 				.on( PB.MODEL_CHANGED, this.bookChanged);
 			// for (var i=0; i< roughPageList.length; i++) {
 			// 	var page = book.page( roughPageList[i] );
@@ -24,7 +24,7 @@
 			this.synchronizeRoughPageList();
 		},
 		get book() {
-			return $('#work-area-rough').data('model');
+			return $('#work-area-rough').data('modelp').get();
 		},
 		getDragTarget: function(roughPage, clientX, clientY) {
 			roughPage = $(roughPage).get(0);
@@ -152,28 +152,31 @@
 		},
 		dropRoughPage: function(ev, t) {
 			t.target = $(t.target);
-			var src = $(scope.DragStore.roughPage).data('model');
-			var dest = $(t.target).data('model');
+			var src = $(scope.DragStore.roughPage).data('modelp').get();
+			var dest = $(t.target).data('modelp').get();
 			var book = RoughWorkArea.book;
 			book.moveRoughPage(src, book.roughPageList.indexOf(dest.id));
 		},
 		dropImage: function(ev, t) {
 			var src = $(scope.DragStore.image);
-			var roughModel = $(t.target).data('model');
-			var photoModel = $(scope.DragStore.image).data('model');
+			var roughModel = $(t.target).data('modelp').get();
+			var photoModel = $(scope.DragStore.image).data('modelp').get();
 			roughModel.addPhoto(photoModel, {animate: true});
 		},
 		dropRoughImage: function(ev, t) {
 			// move image from one rough to another
 			var oldParent = $(scope.DragStore.roughImage).parent();
-			var photo = $(scope.DragStore.roughImage).data('model');
-			var oldModel = oldParent.data('model');
-			var newModel = $(t.target).data('model');
+			var photo = $(scope.DragStore.roughImage).data('modelp').get();
+			var oldModel = oldParent.data('modelp').get();
+			var newModel = $(t.target).data('modelp').get();
+			PB.startChangeBatch();
 			oldModel.removePhoto(photo, {animate:true});
 			newModel.addPhoto(photo, {animate:true});
+			PB.broadcastChangeBatch();
+
 		},
 		dropAddButton: function(ev, t) {
-			var destModel = $(t.target).data('model');
+			var destModel = $(t.target).data('modelp').get();
 			destModel.book.insertRoughPage(destModel.indexOf(), {animate:true});
 		}
 	};
@@ -205,7 +208,7 @@
 				domPage.addClass('rough-page-' + pageModel.pageClass());
 
 			// Hook it up to the model
-			domPage.data('model', pageModel);
+			domPage.data('modelp', pageModel.getProxy());
 			domPage.on( PB.MODEL_CHANGED, RoughWorkArea.pageChanged);
 			this.makeDraggable(domPage);
 			return domPage;
@@ -226,7 +229,7 @@
 			var src = photo.getUrl(PB.Photo.SMALL);
 			var domPhoto = $(document.createElement('div'));
 			domPhoto.addClass('rough-tile');
-			domPhoto.data('model', photo);
+			domPhoto.data('modelp', photo.getProxy());
 			domPhoto.css('background-image', 'url("' + src + '")');
 			return domPhoto;
 		},
@@ -235,11 +238,11 @@
 		synchronizeRoughPageList: function(options) {
 			options = $.extend({animate:false}, options);
 			var containerDom = $('#work-area-rough');
-			var bookModel = containerDom.data('model');
+			var bookModel = containerDom.data('modelp').get();
 			var sel = '.rough-page';
 
 			var oldChildren = containerDom.children( sel );
-			var oldPages = oldChildren.map(function(i,el) { return $(el).data('model').id}).get();
+			var oldPages = oldChildren.map(function(i,el) { return $(el).data('modelp').id}).get();
 			var newPages = bookModel.roughPageList;
 
 			var toId = function(el) { return el.id};
@@ -300,11 +303,11 @@
 		synchronizeRoughPhotoList: function(roughDom, options) {
 			options = $.extend( { animate: false }, options);
 			var containerDom = $(roughDom);
-			var pageModel = containerDom.data('model');
+			var pageModel = containerDom.data('modelp').get();
 			var sel = '.rough-tile';
 
 			var oldChildren = containerDom.children( sel );
-			var oldPhotos = oldChildren.map(function(i, el) { return $(el).data('model')}).get();
+			var oldPhotos = oldChildren.map(function(i, el) { return $(el).data('modelp').get()}).get();
 			var newPhotos = pageModel.photos();
 			var toId = function(el) { return el.id};
 			var diff = JsonDiff.diff(
@@ -380,7 +383,7 @@
 				domPage.addClass('rough-page-' + roughPage.pageClass());
 
 			// Hook it up to the model
-			domPage.data('model', roughPage);
+			domPage.data('modelp', roughPage.getProxy());
 			domPage.on( PB.MODEL_CHANGED, RoughWorkArea.pageChanged);
 			// Insert into dom
 			if (defaults.animate)
@@ -421,7 +424,7 @@
 				'dragstart': function(ev) {
 					ev = ev.originalEvent;
 					var target = RoughWorkArea.getDragTarget(this, ev.clientX, ev.clientY);
-					var model = $(target.dom).data('model');
+					var model = $(target.dom).data('modelp').get();
 					if (model && !model.isDraggable()) {
 						ev.preventDefault();
 						return;

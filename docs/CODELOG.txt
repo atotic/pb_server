@@ -95,6 +95,24 @@ rb
 
 Next:
 JSON diff: broadcast patches (walk up the tree)
+July 13:
+- patches are broadcast, and work accross devices. All actions seem to work
+- GUI could no longer point directly into model, use proxies instead. Direct pointers
+were broken after patches.
+
+
+July 11:
+- JsonDiff compression optimizations did not work
+- removed/* Optimizations did not work
+	I was hoping to replace delete/insert pairs with a single move
+	This fails because delete and insert position in diff queue is important:
+	- insert: parents must be inserted before the child
+	- delete: children must be deleted before the parent
+	The main motivation for move was to avoid massive diffs when an array is shuffled
+	This would happen if pages were kept as an array
+	Takeaway: minimize array use.
+*/
+
 July 10
 Patching framework
 - database table: book_diff_stream
