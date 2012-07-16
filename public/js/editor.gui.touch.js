@@ -162,10 +162,10 @@
 	}
 	var TouchDragHandler = {
 		makeDraggable: function(el, findTargetCb) {
-			console.log("TouchDrag.makeDraggable");
 			var touchTrack = new TouchTrack(findTargetCb);
+			console.log("TouchDrag.makeDraggable");
 			$(el).attr('draggable', true).on({
-				touchstart: function(ev) { TouchDragHandler.touchstart(ev.originalEvent, touchTrack)},
+				touchstart: function(ev) { console.log("touchStart");TouchDragHandler.touchstart(ev.originalEvent, touchTrack)},
 				touchmove: function(ev) { TouchDragHandler.touchmove(ev.originalEvent, touchTrack)},
 				touchend: function(ev) { TouchDragHandler.touchend(ev.originalEvent, touchTrack)},
 				touchcancel: function(ev) { TouchDragHandler.touchcancel(ev.originalEvent, touchTrack)}

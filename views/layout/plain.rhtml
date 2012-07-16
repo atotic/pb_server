@@ -2,9 +2,9 @@
 <html>
 <head>
 	<title>Photobook</title>
+	<%= asset_link("application.css") %>
 	<%= asset_link("jquery.js", "application.js") %>
-	<%= asset_link("bootstrap") %>
-<style type="text/css" contenteditable style="display:none;white-space:pre; font-size: 13px; font-family:Monaco, Mono-Space;border-top: 5px solid gray">
+<style type="text/css">
 	body {
 		max-width: 1024px;
 	}
@@ -20,4 +20,13 @@
 <div id="main-container">
 	<%= yield %>
 </div>
+<%= asset_link("bootstrap") %>
+<script>
+	<% if env['x-rack.flash'][:error] %>
+	PB.error("<%= env['x-rack.flash'][:error].gsub(/\"/, '\'')%>");
+	<% end %>
+	<% if env['x-rack.flash'][:notice] %>
+	PB.info("<%= env['x-rack.flash'][:notice].gsub(/\"/, '\'')%>");
+	<% end %>
+</script>
 </body>

@@ -1,20 +1,19 @@
-"use strict"
-
 //
 // Permanent connection to server.
 //
 /* Design notes:
-	- server keeps a list of all ServerCmds. Each command has an unique, increasing id, 
-	- document saved on server "matches" the command stream saved on server. 
+	- server keeps a list of all ServerCmds. Each command has an unique, increasing id,
+	- document saved on server "matches" the command stream saved on server.
 		Matches means document state is the product of all server commands being applied
 	- each client can modify server document only if it is up-to-date with server commands
 	- if client is not up-to-date, it must process all server commands before proceeding
 	- client keeps track of last_cmd_id, which is the last command executed on the book
-	
-	
-	
-*/ 
+
+
+
+*/
 PB.ServerStream = {
+	"use strict"
 
 	_init: $(document).ready(function() { PB.ServerStream.init() }),
 	init: function () {
@@ -35,16 +34,16 @@ PB.ServerStream = {
 	url: function(book) {
 		return "/subscribe/book/" + book.id + "?last_cmd_id=" + (book ? book.last_server_cmd_id : 0);
 	},
-	
+
 	connect: function(book) {
 		var stream = $.stream(this.url(book), {
 			context: this,
 			dataType: 'json',
 			type: 'http',
 			reconnect: false,	// we'll handle reconnect
-			handleSend: function() { // no talking back to the server 
-				return false; 
-			}, 
+			handleSend: function() { // no talking back to the server
+				return false;
+			},
 			// Lifecycle callbacks
 			open: function(event, stream) {
 				console.log("ServerStream opened " + stream.id);
@@ -161,7 +160,7 @@ PB.ServerCmd.AddPage = function(json) {
 
 PB.ServerCmd.AddPage.prototype = {
 	initServerCmd: PB.ServerCmd.initServerCmd,
-	
+
 	doIt: function() {
 		var page = new PB.BookPage(this.payload);
 		var book = PB.bookById(this.book_id);
@@ -176,7 +175,7 @@ PB.ServerCmd.DeletePage = function(json) {
 
 PB.ServerCmd.DeletePage.prototype = {
 	initServerCmd: PB.ServerCmd.initServerCmd,
-	
+
 	doIt: function() {
 		var book = PB.bookById(this.book_id);
 		var pages = book.pages;

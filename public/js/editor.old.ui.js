@@ -44,7 +44,7 @@ $.extend(PB, {
 				PB.setBookFromJson(json);
 			})
 			.error( function(jqXHR, textStatus, errorThrown) {
-				GUI.error("Unexpected network error loading book." + textStatus);
+				PB.error("Unexpected network error loading book." + textStatus);
 			});
 	},
 	// The "stop this event" pattern

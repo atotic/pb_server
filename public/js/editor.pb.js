@@ -6,10 +6,10 @@ window.PB // Generic utilities
 window.PB.Book // Book access
 window.PB.Photo // Photo objects
 */
-"use strict";
 
 // PB, general utility routines
 (function(window) {
+"use strict";
 	var PB = {
 		init: function() {
 		},
@@ -62,6 +62,7 @@ window.PB.Photo // Photo objects
 // PB.Book
 // Book is generated
 (function(scope) {
+"use strict";
 
 	var bookCache = [];
 
@@ -313,7 +314,7 @@ window.PB.Photo // Photo objects
 			}
 			catch(e) {
 				console.log(e.message, patch_id, patch);
-				GUI.error("Your document might be corrupted. An edit received from the network failed. This sometimes happens when multiple people are editing the book at the same time. Please reload");
+				PB.error("Your document might be corrupted. An edit received from the network failed. This sometimes happens when multiple people are editing the book at the same time. Please reload");
 				PB.cancelChangeBatch();
 				debugger;
 			}
@@ -383,6 +384,8 @@ window.PB.Photo // Photo objects
 // Rough pages get serialized and saved
 // Properties that should not be saved are defined as hidden
 (function(scope) {
+	"use strict";
+
 	var RoughPage = function(props) {
 		var hiddenProps = { 'book': true, 'id' : true} // non-serializable properties
 		this.photoList = [];

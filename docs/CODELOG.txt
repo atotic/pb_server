@@ -63,7 +63,6 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-Broadcasting changes: 2+ days, when Ollie is in camp
 Error display: rework framework
 Ajax queue: deal with network errors
 DND cleanup:
@@ -71,30 +70,18 @@ DND cleanup:
 - drop flavors: rough pages must accept/reject drop flavors
 - adding an image
 
-Patch work:
-js
-	patching on the client side. When patch is received:
-		we can only patch the original document (mods free)
-		we need to keep our current mods
-		there might be a save in progress right now
-		we can't 'skip' patches, they must be in order
-		patches needs to broadcast all changes to the model
-	algorithm:
-		// apply the patch if its number is higher than originalServerData
-		// find how serverData differs from originalServerData+newPatch
-		// + means patch; - means diff
-		// local_diff = originalServerData - serverData
-		// originalServerData = originalServerData + newPatch
-		// book.last_diff = newPatch.id
-		// new_local_diff = originalServerData - serverData
-		// serverData = originalServerData + new_local_diff
-
-	saving a patch on the client:
-
-rb
-
 Next:
-JSON diff: broadcast patches (walk up the tree)
+Error display on the entire site, proper redirects
+
+Network errors: retry on patch fail, reconnect streams, retry
+when book is out of date.
+
+
+Polishing: better animations, animations when broadcast
+
+July 16:
+- error notifications are working again
+
 July 13:
 - patches are broadcast, and work accross devices. All actions seem to work
 - GUI could no longer point directly into model, use proxies instead. Direct pointers

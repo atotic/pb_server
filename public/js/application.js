@@ -23,25 +23,28 @@
 				window.location.replace(url);
 			}
 		},
-		notice: function(text) {
-	//		$('#error').hide();
-			$('#notice').html(text).clearQueue().show('blind');
+		_makeAlertDiv: function(text, klass) {
+			return $('<div class="alert ' + klass + '">' +
+				'<button class="close" data-dismiss="alert">×</button>'
+				+ text + '</div>');
+		},
+		_getAlertContainer: function() {
+			var c = $('#alert-container');
+			if (c.length == 0)
+				$('body').append("<div id='alert-container'/>");
+			return $('#alert-container');
+		},
+		info: function(text) {
+			var newDiv = this._makeAlertDiv(text, 'alert-info');
+			this._getAlertContainer().append(newDiv);
 		},
 		warn: function(text) {
-			this.notice(text);
+			var newDiv = this._makeAlertDiv(text, 'alert-warning');
+			this._getAlertContainer().append(newDiv);
 		},
 		error: function(text) {
-	//		$('#notice').hide();
-			$('#error').html(text).clearQueue().show('blind');
-		},
-		// Creates a new bar, or returns existing
-		getMessageBar: function(bar_id) {
-			var bar = $('#messages #' + bar_id);
-			if (bar.length > 0)
-				return bar.get(0);
-			bar = $("<div id='" + bar_id + "'></div>");
-			bar.addClass("generic_notice").appendTo($("#messages"));
-			return bar.get(0);
+			var newDiv = this._makeAlertDiv(text, 'alert-error');
+			this._getAlertContainer().append(newDiv);
 		},
 		// shows flash messages from xhr headers
 		showXhrFlash: function(event, jqXHR, ajaxOptions) {
@@ -49,65 +52,15 @@
 			if (msg) PB.error(msg);
 			var msg = jqXHR.getResponseHeader('X-FlashNotice');
 			if (msg) PB.notice(msg);
-		},
-		// progress(val) -- show val
-		// progress(mgs) -- show msg
-		// progress(val, msg) -- show val, msg
-		// progress()	-- hide the bar
-		progress: function(/* optional val:integer msg:text */) {
-			var val = null;
-			var msg = null;
-			switch(arguments.length) {
-				case 0:
-					$("#progress").hide();
-					return;
-				case 1:
-					if (typeof arguments[0] == "number")
-						val = arguments[0];
-					else
-						msg = arguments[0];
-					break;
-				case 2:
-					val = arguments[0];
-					msg = arguments[1];
-					break;
-				default:
-					console.error("wrong number of arguments to progress");
-					break;
-			};
-			if (val != null)
-				$('#progress_bar').progressbar('value', val);
-			if (msg != null)
-				$('#progress_message').html(msg);
-		},
-		// options: show:boolean, max:integer (-1 indeterminate), message:string, interrupt: function cb
-		progressSetup: function(options) {
-			var opts = $.extend({
-				show: true,
-				value: 0,
-				max: 100,
-				message: null,
-				cancelCb: null	// callback function
-			}, options);
-			$('#progress_bar').progressbar({value: opts.value, max: opts.max});
-			if (opts.message != null)
-				$('#progress_message').html(opts.message);
-			if (opts.cancelCb)
-				$('#progress_cancel').unbind().click(opts.cancelCb).show();
-			else
-				$('#progress_cancel').hide();
-			if (opts.show)
-				$('#progress').show();
-			else
-				$('#progress').hide();
 		}
-	};
-
+	}
 	PB.redirectToProperHost();
 
-	if (! ('PB' in scope)) scope.PB = {};
+	if (!('PB' in scope)) scope.PB = {};
 	$.extend(scope.PB, PB);
-	// $(document).ready(function() {
-	// 	$(document).ajaxComplete(PB.showXhrFlash);
-	// });
+
+	$(document).ready(function() {
+		$(document).ajaxComplete(PB.showXhrFlash);
+	});
+
 })(window);

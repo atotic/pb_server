@@ -114,6 +114,8 @@ Free DNS redirects for everyone: http://xip.io/
 Building iOS hybrid apps: http://www.cocoacontrols.com/posts/a-primer-on-hybrid-apps-for-ios
 
 OTHER
+Super resolution from a single image: would be useful filter to run on low-res photos
+http://www.wisdom.weizmann.ac.il/~vision/SingleImageSR.html
 Redirect file from nginx http://wiki.nginx.org/XSendfile
 Google drive integration: https://developers.google.com/drive/get_started#integrate_with_the_drive_ui
 Use Picasa Web API for storage?

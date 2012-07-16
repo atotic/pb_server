@@ -266,7 +266,11 @@ class SvegApp < Sinatra::Base
 				Security.user_must_own(env, resource)
 			rescue RuntimeError => ex
 				flash[:error] = ex.message
-				halt 401
+				if request.xhr?
+					halt 401
+				else
+					redirect '/'
+				end
 			end
 		end
 

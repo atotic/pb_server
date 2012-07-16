@@ -46,7 +46,7 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 
 
 (function(window) {
-"use strict";
+ "use strict";
 	// Encapsulate the results, so we can set the values, get their paths
 	function Proxy(obj, prop, path) {
 		this._obj = obj;
