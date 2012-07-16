@@ -5,6 +5,45 @@
 	saves book every SaveInterval seconds
 */
 (function(scope) {
+
+	var INITIAL_RETRY_INTERVAL = 1;	// How often to retry (seconds)
+	var MAX_RETRY = 60;	// Maximum retry in seconds
+	var SAVE_INTERVAL = 1;	// Save interval (seconds)
+
+	// NetworkErrorRetry is used by Uploader, DiffStream
+	// to backoff when network errors occur
+	var NetworkErrorRetry = {
+		retryAt: 0,
+		retryInterval: INITIAL_RETRY_INTERVAL,
+		retryLater: function() {
+			this.retryAt = Date.now() + this.retryInterval * 1000;
+			this.retryInterval = Math.min(this.retryInterval * 2, MAX_RETRY);
+		},
+		resetRetry: function() {
+			this.retryAt = 0;
+			this.retryInterval = INITIAL_RETRY_INTERVAL;
+		},
+		retryOk: function() {
+			return Date.now() > this.retryAt;
+		},
+		retryNow: function() {
+			this.resetRetry();
+		},
+		wentOffline: function() {
+			this.retryInterval = MAX_RETRY;
+			this.retryLater();
+		}
+	}
+
+	window.ononline = function(e) {
+		NetworkErrorRetry.resetRetry();
+	}
+
+	window.onoffline = function(e) {
+		NetworkErrorRetry.wentOffline();
+	}
+
+
 	var Uploader = {
 		bookQueue: [],
 		bookActiveRequest: null,
@@ -22,7 +61,9 @@
 				Uploader.saveBook(dirty[i]);
 		},
 		processQueue: function() {
-			if (this.bookQueue.length == 0 || this.bookActiveRequest)
+			if (this.bookQueue.length == 0
+				|| this.bookActiveRequest
+				|| !NetworkErrorRetry.retryOk())
 				return;
 			var book = this.bookQueue.pop();
 			this.bookActiveRequest = book.getSaveDeferred();
@@ -34,8 +75,11 @@
 			this.bookActiveRequest
 				.done( function(response, msg, jqXHR) {
 					console.log("ajax done");
+					NetworkErrorRetry.resetRetry();
 				})
-				.fail( function() {
+				.fail( function(jqXHR, textStatus, message) {
+					// TODO handle missing book, server internal error
+					NetworkErrorRetry.retryLater();
 					console.log("ajax fail");
 				})
 				.always( function() {
@@ -45,17 +89,19 @@
 				});
 		}
 	}
-	var SaveInterval = 1;	// Save interval (seconds)
+
 
 	// Save modified books every second.
-	window.setInterval( Uploader.saveAll, SaveInterval*1000);
+	window.setInterval( Uploader.saveAll, SAVE_INTERVAL*1000);
 
 	scope.Uploader = {
 		saveBook: Uploader.saveBook
 	}
+	scope.NetworkErrorRetry = NetworkErrorRetry;
 
 	// Save before navigating away
 	window.onbeforeunload = function(e) {
+		NetworkErrorRetry.resetRetry();
 		Uploader.saveAll();
 		if (Uploader.hasRequests()) {
 			var msg = "You have unsaved changes. Are you sure that you want to leave the page?";
@@ -86,6 +132,16 @@
 				break;
 			}
 		},
+		reconnect: function(book) {
+			if (scope.NetworkErrorRetry.retryOk()) {
+				DiffStream.connect(book);
+			}
+			else {
+				window.setTimeout(function() {
+					DiffStream.connect(book);
+				}, 5000);
+			}
+		},
 		connect: function(book) {
 			var stream = $.stream(this.url(book), {
 				context: this,
@@ -108,7 +164,9 @@
 				},
 				close: function(ev) {
 					console.warn("server connection closed");
+					scope.NetworkErrorRetry.retryLater();
 					book.stream = null;
+					DiffStream.reconnect(book);
 				}
 			});
 			return stream;
