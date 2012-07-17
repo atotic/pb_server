@@ -53,7 +53,7 @@
 
 (function(scope) {
 
-	var TouchTrack = function(findTargetCb) {
+	var TouchTrack = function(findTargetCb, startDragCb, stopDragCb) {
 		if (typeof findTargetCb == 'string')
 		{
 			var targetType = findTargetCb;
@@ -65,6 +65,8 @@
 			}
 		}
 		this._findTargetCb = findTargetCb;
+		this._startDragCb = startDragCb;
+		this._stopDragCb = stopDragCb;
 		this._start = null; // first touch event
 		this._last = { clientX: 0, clientY: 0}; // location of last touch event
 		this._domCopy = null; // clone of the element we are dragging
@@ -83,6 +85,8 @@
 				scope.DragStore.start();
 				scope.DragStore[THIS._source.type] = THIS._source.dom;
 				THIS._delayed = false;
+				if (THIS._startDragCb)
+					THIS._startDragCb(THIS._source.dom);
 			}
 			if (delayed)
 				this._delayed = window.setTimeout(finishStart, 500);
@@ -117,6 +121,8 @@
 			else
 				this.domCopy = null;
 			this.last = null;
+			if (this._stopDragCb)
+				this._stopDragCb(this._source.dom);
 			this._source = null;
 		},
 		createDragImage: function(touchTrack) {
@@ -125,7 +131,6 @@
 			this.domCopy.addClass('touch-drag-src')
 				.css({
 				position: 'absolute',
-//				top:0, left:0, width: '100px', height: '100px'
 				top: r.top, left: r.left, width: r.width, height: r.height
 			});
 			$('body').append(this._domCopy);
@@ -161,8 +166,8 @@
 		}
 	}
 	var TouchDragHandler = {
-		makeDraggable: function(el, findTargetCb) {
-			var touchTrack = new TouchTrack(findTargetCb);
+		makeDraggable: function(el, findTargetCb, startDragCb, stopDragCb) {
+			var touchTrack = new TouchTrack(findTargetCb, startDragCb, stopDragCb);
 			console.log("TouchDrag.makeDraggable");
 			$(el).attr('draggable', true).on({
 				touchstart: function(ev) { console.log("touchStart");TouchDragHandler.touchstart(ev.originalEvent, touchTrack)},

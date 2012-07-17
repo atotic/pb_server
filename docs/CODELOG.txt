@@ -40,7 +40,6 @@ library
 - image upload
 - patching
 - events
-- undo/redo commands
 - gui widgets
 
 testing
@@ -48,39 +47,30 @@ testing
 
 Plan:
 Implement the rest of the functionality. Total rewrite, old code will get reimported.
-Want the old code around to see how it used to work. Tag it as 1_0alpha.
-Stage 1: get everything working for rough
-	- define rough (new book)
 	- editing:
 		add images (auto rotate right away, resizing as delayed job)
 		delete images
-	- will need jsdiff, jspatch change broadcasts, jspatches on the server
-	- saving of the edits
-3 half-time weeks
 
 Stage 2: get templates/printing
 5 weeks
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-Error display: rework framework
-Ajax queue: deal with network errors
 DND cleanup:
 - animations, dragging of cover pages,
 - drop flavors: rough pages must accept/reject drop flavors
 - adding an image
 
 Next:
-Error display on the entire site, proper redirects
-
-Network errors: retry on patch fail, reconnect streams, retry
-when book is out of date.
-
-
+when book is out of date, book lock on corruption
 Polishing: better animations, animations when broadcast
+
+July 17:
+Drag animations: Image -> RoughPage, Image -> Remove
 
 July 16:
 - error notifications are working again
+- network down error retry with backoff implemented
 
 July 13:
 - patches are broadcast, and work accross devices. All actions seem to work

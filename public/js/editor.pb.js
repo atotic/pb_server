@@ -184,21 +184,25 @@ window.PB.Photo // Photo objects
 			}
 			for (var i=0; i<changes.length; i++) {
 				// all the changes to our structure. Need to deduce what has changed
+				var options = {animate: true};
+
 				var objectPath = changes[i][1].objectPath();
 				var document_var= member(objectPath, 1);
 				if (document_var == this.localData.document.roughPageList)
-					PB.broadcastChange(this, 'roughPageList');
+					PB.broadcastChange(this, 'roughPageList', options);
 				else if (document_var == this.localData.document.roughPages) {
 					var roughPage = member(objectPath, 2);
 					var rough_page_var = member(objectPath, 3);
 					if (rough_page_var == roughPage.photoList) {
-						this._pagePhotosChanged(roughPage)
-						PB.broadcastChange(roughPage, 'photoList');
+						this._pagePhotosChanged(roughPage, options);
+						PB.broadcastChange(roughPage, 'photoList', options);
 					}
 					else
 						console.log(changes[i][0], changes[i][1].path());
 				}
-				else
+				else if (document_var == this.localData.document.photoList) {
+					PB.broadcastChange(this, 'photoList', options);
+				}
 					console.log(changes[i][0], changes[i][1].path());
 			}
 		},

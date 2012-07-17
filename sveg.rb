@@ -207,6 +207,7 @@ class SvegApp < Sinatra::Base
 						"editor.gui.buttons.js",
 						"editor.gui.controller.js",
 						"editor.gui.roughworkarea.js",
+						"editor.gui.photopalette.js",
 						"editor.pb.upload.js")
 				elsif arg.end_with?("js")
 					arg = "jquery-1.7.js" if arg.eql? "jquery.js"
