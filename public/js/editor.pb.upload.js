@@ -74,7 +74,7 @@
 			var THIS = this;
 			this.bookActiveRequest
 				.done( function(response, msg, jqXHR) {
-					console.log("ajax done");
+//					console.log("ajax done");
 					NetworkErrorRetry.resetRetry();
 				})
 				.fail( function(jqXHR, textStatus, message) {
@@ -83,7 +83,7 @@
 					console.log("ajax fail");
 				})
 				.always( function() {
-					console.log('ajax always');
+//					console.log('ajax always');
 					THIS.bookActiveRequest = null;
 					THIS.processQueue();
 				});
@@ -153,10 +153,10 @@
 				},
 				// Lifecycle callbacks
 				open: function(event, stream) {
-					console.log("ServerStream opened " + stream.id);
+//					console.log("ServerStream opened " + stream.id);
 				},
 				message: function(ev) {
-					console.log("Server stream message " + stream.id)
+//					console.log("Server stream message " + stream.id)
 					DiffStream.handleMessage(book, ev.data);
 				},
 				error: function(ev) {

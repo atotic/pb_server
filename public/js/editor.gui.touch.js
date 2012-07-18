@@ -82,11 +82,10 @@
 			var THIS = this;
 			function finishStart() {
 				THIS.createDragImage();
-				scope.DragStore.start();
-				scope.DragStore[THIS._source.type] = THIS._source.dom;
+				GUI.DragStore.reset(THIS._source.type, {dom: THIS._source.dom});
 				THIS._delayed = false;
 				if (THIS._startDragCb)
-					THIS._startDragCb(THIS._source.dom);
+					THIS._startDragCb(THIS._source);
 			}
 			if (delayed)
 				this._delayed = window.setTimeout(finishStart, 500);
@@ -109,7 +108,7 @@
 				window.clearTimeout(this._delayed);
 				this._delayed = false;
 			}
-			if (!scope.DragStore.hadDrop) {
+			if (!GUI.DragStore.hadDrop) {
 				// Animate snap item back if there was no drop
 				var r = this._source.dom.getBoundingClientRect();
 				var THIS = this;
@@ -122,7 +121,8 @@
 				this.domCopy = null;
 			this.last = null;
 			if (this._stopDragCb)
-				this._stopDragCb(this._source.dom);
+				this._stopDragCb(this._source);
+			GUI.DragStore.reset();
 			this._source = null;
 		},
 		createDragImage: function(touchTrack) {
@@ -168,9 +168,9 @@
 	var TouchDragHandler = {
 		makeDraggable: function(el, findTargetCb, startDragCb, stopDragCb) {
 			var touchTrack = new TouchTrack(findTargetCb, startDragCb, stopDragCb);
-			console.log("TouchDrag.makeDraggable");
+//			console.log("TouchDrag.makeDraggable");
 			$(el).attr('draggable', true).on({
-				touchstart: function(ev) { console.log("touchStart");TouchDragHandler.touchstart(ev.originalEvent, touchTrack)},
+				touchstart: function(ev) { TouchDragHandler.touchstart(ev.originalEvent, touchTrack)},
 				touchmove: function(ev) { TouchDragHandler.touchmove(ev.originalEvent, touchTrack)},
 				touchend: function(ev) { TouchDragHandler.touchend(ev.originalEvent, touchTrack)},
 				touchcancel: function(ev) { TouchDragHandler.touchcancel(ev.originalEvent, touchTrack)}
@@ -183,7 +183,7 @@
 			return null;
 		},
 		touchstart: function(ev, touchTrack) {
-			console.log('touchstart', ev.currentTarget);
+//			console.log('touchstart', ev.currentTarget);
 			if (ev.touches.length > 1)
 				return;
 			touchTrack.startTracking(ev.currentTarget,

@@ -112,18 +112,17 @@
 				'dragstart': function(ev) {
 					ev = ev.originalEvent;
 					ev.dataTransfer.setData('text/uri-list', this.src);
-		//			console.log("DragStore.start photo-list img");
 					var r = this.getBoundingClientRect();
 					var img = new Image();
 					img.src = this.src;
 					ev.dataTransfer.setDragImage(img,ev.clientX - r.left, ev.clientY - r.top);
 					PhotoPalette.startDragEffect(this);
-					scope.DragStore.start().image = this;
+					GUI.DragStore.reset(GUI.DragStore.IMAGE, {dom: this});
 					ev.effectAllowed = 'move';
 				},
 				'dragend': function(ev) {
 					PhotoPalette.stopDragEffect(this);
-					scope.DragStore.clear();
+					GUI.DragStore.reset();
 				}
 			});
 		}
@@ -131,8 +130,8 @@
 	var PhotoPaletteTouch = {
 		makeDraggable: function(img) {
 			scope.TouchDragHandler.makeDraggable(img, 'image',
-				function(img) { PhotoPalette.startDragEffect(img);},
-				function(img) { PhotoPalette.stopDragEffect(img)}
+				function(target) { PhotoPalette.startDragEffect(target.dom);},
+				function(target) { PhotoPalette.stopDragEffect(target.dom)}
 				);
 		}
 	}

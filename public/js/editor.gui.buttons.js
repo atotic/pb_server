@@ -22,11 +22,11 @@
 					dragstart: function(ev) {
 						ev = ev.originalEvent;
 						ev.dataTransfer.setData('text/plain', "my text");
-						scope.DragStore.start().addRoughPage = true;
+						GUI.DragStore.reset(GUI.DragStore.ADD_PAGE_BUTTON);
 						ev.dataTransfer.effectAllowed = "move";
 					},
 					dragend: function(ev) {
-						scope.DragStore.clear();
+						GUI.DragStore.reset();
 					}
 				});
 
@@ -34,9 +34,8 @@
 				dragover: function(ev) {
 					ev = ev.originalEvent;
 					ev.preventDefault();
-					if (!(scope.DragStore.roughPage
-							|| scope.DragStore.image
-							|| scope.DragStore.roughImage))
+					if (!(GUI.DragStore.hasType(GUI.DragStore.ROUGH_PAGE,
+							GUI.DragStore.IMAGE, GUI.DragStore.ROUGH_IMAGE)))
 						return;
 					$(this).addClass('drop-target');
 					ev.stopPropagation();
@@ -48,17 +47,20 @@
 					ev.preventDefault();
 					ev.stopPropagation();
 					$(this).removeClass('drop-target');
-					if (scope.DragStore.roughPage)
-						$(scope.DragStore.roughPage).data('modelp').get().remove({animate:true});
-					else if (scope.DragStore.image) {
+					switch(GUI.DragStore.type) {
+					case 'roughPage':
+						$(GUI.DragStore.dom).data('modelp').get().remove({animate:true});
+						break;
+					case 'image':
 						GUI.RoughWorkArea.book.removePhoto(
-							$(scope.DragStore.image).data('modelp').get(), {animate: true});
-					}
-					else if (scope.DragStore.roughImage) {
-						var ri = $(scope.DragStore.roughImage);
+							$(GUI.DragStore.dom).data('modelp').get(), {animate: true});
+						break;
+					case 'roughImage':
+						var ri = $(GUI.DragStore.dom);
 						var photo = ri.data('modelp').get();
 						var roughPage = ri.parent().data('modelp').get();
 						roughPage.removePhoto(photo, {animate: true});
+						break;
 					}
 				}
 			});

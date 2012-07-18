@@ -1,12 +1,7 @@
 // editor.gui.roughworkarea.js
 
 // Rough work area drag and drop handling
-// Implements:
-// Drag sources:
-// Rough page
-// Rough page image
-// Drag destinations:
-// Rough page
+
 (function(scope) {
 	var roughPageTarget = { target: null, direction: 0, dropFeedback: "" };
 
@@ -17,10 +12,6 @@
 			$('#work-area-rough')
 				.data('modelp', book.getProxy())
 				.on( PB.MODEL_CHANGED, this.bookChanged);
-			// for (var i=0; i< roughPageList.length; i++) {
-			// 	var page = book.page( roughPageList[i] );
-			// 	this.addPage(page);
-			// }
 			this.synchronizeRoughPageList();
 		},
 		get book() {
@@ -52,6 +43,12 @@
 				dragenter: function(ev) { RoughWorkArea.dragenter(ev.originalEvent) }
 			});
 		},
+		startDragEffect: function(target) {
+
+		},
+		stopDragEffect: function(target) {
+
+		},
 		logTargets: function(prefix, ev) {
 			var s = prefix;
 			if (ev.target)
@@ -82,11 +79,11 @@
 		},
 		dragover: function(ev) {
 			// Ignore unless drag has the right flavor
-			if (!
-				(  scope.DragStore.roughPage
-				|| scope.DragStore.image
-				|| scope.DragStore.addRoughPage
-				|| scope.DragStore.roughImage))
+			if (! GUI.DragStore.hasType(
+						GUI.DragStore.ROUGH_PAGE,
+						GUI.DragStore.IMAGE,
+						GUI.DragStore.ADD_PAGE_BUTTON,
+						GUI.DragStore.ROUGH_IMAGE))
 				return;
 
 			ev.preventDefault();
@@ -94,7 +91,7 @@
 			var newTarget = null;
 			var newDirection = null;
 			$(ev.currentTarget).children('.rough-page').each(function() {
-				var direction = scope.Util.pointInClientRect(ev.clientX, ev.clientY,
+				var direction = GUI.Util.pointInClientRect(ev.clientX, ev.clientY,
 					this.getBoundingClientRect());
 				if (direction) {
 					newTarget = this;
@@ -103,25 +100,30 @@
 				}
 			});
 			// Display visual feedback
-			if (scope.DragStore.roughPage || scope.DragStore.addRoughPage) {
+			switch(GUI.DragStore.type) {
+			case 'roughPage':
+			case 'addRoughPage':
 				if (newTarget) {
-					if (newTarget != scope.DragStore.roughPage)
+					if (newTarget != GUI.DragStore.prop('dom'))
 						this.setTarget(newTarget, newDirection, 'drop-target');
 				}
 				else
 					this.setTarget();
-			}
-			else if (scope.DragStore.image) {
+				break;
+			case 'image':
 				if (newTarget)
 					this.setTarget(newTarget, null, 'drop-target');
 				else
 					this.setTarget();
-			}
-			else if (scope.DragStore.roughImage) {
-				if (newTarget && newTarget != $(scope.DragStore.roughImage).parent('.rough-page').get(0))
+				break;
+			case 'roughImage':
+				if (newTarget && newTarget != $(GUI.DragStore.prop('dom')).parent('.rough-page').get(0))
 					this.setTarget(newTarget, null, 'drop-target');
 				else
 					this.setTarget();
+				break;
+			default:
+				console.error("Unknown drag type", GUI.DragStore.type);
 			}
 		},
 		dragleave: function(ev) {
@@ -136,37 +138,41 @@
 			var t = {target: roughPageTarget.target, direction: roughPageTarget.direction};
 			this.setTarget();	// reset the drag visuals
 
-			if (scope.DragStore.roughPage) {
+			switch(GUI.DragStore.type) {
+			case 'roughPage':
 				this.dropRoughPage(ev, t);
-			}
-			else if (scope.DragStore.addRoughPage) {
+				break;
+			case 'addRoughPage':
 				this.dropAddButton(ev, t);
-			}
-			else if (scope.DragStore.image) {
+				break;
+			case 'image':
 				this.dropImage(ev, t);
-			}
-			else if (scope.DragStore.roughImage) {
+				break;
+			case 'roughImage':
 				this.dropRoughImage(ev, t);
+				break;
+			default:
+				throw "unknown drop type" + GUI.DragStore.type;
 			}
-			scope.DragStore.hadDrop = true;
+			GUI.DragStore.hadDrop = true;
 		},
 		dropRoughPage: function(ev, t) {
 			t.target = $(t.target);
-			var src = $(scope.DragStore.roughPage).data('modelp').get();
+			var src = $(GUI.DragStore.dom).data('modelp').get();
 			var dest = $(t.target).data('modelp').get();
 			var book = RoughWorkArea.book;
 			book.moveRoughPage(src, book.roughPageList.indexOf(dest.id));
 		},
 		dropImage: function(ev, t) {
-			var src = $(scope.DragStore.image);
+			var src = $(GUI.DragStore.dom);
 			var roughModel = $(t.target).data('modelp').get();
-			var photoModel = $(scope.DragStore.image).data('modelp').get();
+			var photoModel = $(scope.DragStore.dom).data('modelp').get();
 			roughModel.addPhoto(photoModel, {animate: true});
 		},
 		dropRoughImage: function(ev, t) {
 			// move image from one rough to another
-			var oldParent = $(scope.DragStore.roughImage).parent();
-			var photo = $(scope.DragStore.roughImage).data('modelp').get();
+			var oldParent = $(GUI.DragStore.dom).parent();
+			var photo = $(GUI.DragStore.dom).data('modelp').get();
 			var oldModel = oldParent.data('modelp').get();
 			var newModel = $(t.target).data('modelp').get();
 			PB.startChangeBatch();
@@ -366,55 +372,6 @@
 			var roughDom = $(this);
 			if (prop === 'photoList')
 				RoughWorkArea.synchronizeRoughPhotoList(roughDom, options);
-		},
-		addPage: function(roughPage, options) {
-			var defaults = {
-				target: null,
-				animate: false,
-				renumber: true,
-				direction: 'after',
-			}
-			$.extend(defaults, options);
-
-			var domPage = $("<div class='rough-page'><p>" + roughPage.pageTitle() + "</p></div>");
-			if (roughPage.type() === 'pages')
-				domPage.attr('draggable', true);
-			if (roughPage.pageClass() !== 'page')
-				domPage.addClass('rough-page-' + roughPage.pageClass());
-
-			// Hook it up to the model
-			domPage.data('modelp', roughPage.getProxy());
-			domPage.on( PB.MODEL_CHANGED, RoughWorkArea.pageChanged);
-			// Insert into dom
-			if (defaults.animate)
-				domPage.css('height', 0);
-
-			// insert in the right spot
-			if (defaults.target) {
-				if (defaults.direction == 'before')
-					$(defaults.target).before(domPage);
-				else
-					$(defaults.target).after(domPage);
-			}
-			else {
-				$('#work-area-rough').append(domPage);
-			}
-
-			this.makeDraggable(domPage);
-
-			// need to add left or right
-			if (defaults.renumber)
-				this.renumberRoughPages();
-
-			if (defaults.animate) {
-				domPage.animate({height: roughPageHeight},function() {
-					domPage.css('display', 'auto');
-					Controller.revealByScrolling(domPage, $('#pb-work-area'));
-					RoughWorkArea.synchronizeRoughPhotoList(domPage);
-				});
-			}
-			else
-				RoughWorkArea.synchronizeRoughPhotoList(domPage);
 		}
 	};
 
@@ -429,16 +386,17 @@
 						ev.preventDefault();
 						return;
 					}
-
+					RoughWorkArea.startDragEffect(target);
 					ev.dataTransfer.setData('text/plain', "page drag");
-					console.log("dragstart rough-page");
-					scope.DragStore.start()[target.type] = target.dom;
+//					console.log("dragstart rough-page");
+					GUI.DragStore.reset(target.type, {dom: target.dom});
 					// TODO hide the page, create drag image from canvas
 					ev.dataTransfer.setDragImage(target.dom, target.offsetX, target.offsetY);
 					ev.dataTransfer.effectAllowed = "move";
 				},
 				'dragend': function(ev) {
 //					console.log("DragStore.clear rough-page");
+					RoughWorkArea.stopDragEffect(target);
 					scope.DragStore.clear();
 				}
 			});

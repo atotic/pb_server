@@ -119,31 +119,46 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 
 // DragStore is a global used to store dragged local data
 // Why? Html drag can only drag strings, we need js objects
-// Drag types are not available dragover callback
 (function(window) {
 	var DragStore = {
-		start: function() {
-//			console.log("DragStore.start");
-			this._roughPage = null;	// .rough-page dom object, model is PB.RoughPage
-			this._image = null; // img dom object, model is PB.Photo
-			this._roughImage = null; // image inside roughPage
-			this._addRoughPage = null; // true if we are dragging addButton
-			this._hadDrop = false;
-			return this;
-		},
-		clear: function() {
-			this.start();
-		},
-		get roughPage() {return this._roughPage},
-		set roughPage(val) { this._roughPage = val;},
-		get image() { return this._image},
-		set image(val) { this._image = val;},
-		get addRoughPage() { return this._addRoughPage},
-		set addRoughPage(val) { this._addRoughPage = val },
-		get roughImage() { return this._roughImage },
-		set roughImage(val) { this._roughImage = val;},
 		get hadDrop() { return this._hadDrop; },
-		set hadDrop(val) { this._hadDrop = val; }
+		set hadDrop(val) { this._hadDrop = val; },
+
+		reset: function(type, element, props) {
+			this._source = null;
+			this._hadDrop = false;
+			if (type)
+				this.setSource(type, element, props);
+		},
+
+		// Drag types:
+		ROUGH_PAGE: 'roughPage',
+		IMAGE: 'image',
+		ADD_PAGE_BUTTON: 'addRoughPage',
+		ROUGH_IMAGE: 'roughImage',
+
+		// Common props:
+		// dom: dom element being dragged
+		setSource: function(type, props) {
+			this._source = { type: type }
+			$.extend(this._source, props);
+		},
+		get type() {
+			return this._source ? this._source.type : null;
+		},
+		prop: function(propName) {
+			return (this._source && (propName in this._source)) ? this._source[propName] : null;
+		},
+		get dom() {
+			return this.prop('dom');
+		},
+		hasType: function() {
+			if (this._source)
+				for (var i=0; i<arguments.length; i++)
+					if (arguments[i] == this._source.type)
+						return true;
+			return false;
+		}
 	};
 	window.DragStore = DragStore;
 })(window.GUI);

@@ -238,9 +238,10 @@ window.PB.Photo // Photo objects
 				this._dirty = false;
 				return null;
 			}
-			else
+			else {
+				console.log("book diff");
 				JsonDiff.prettyPrint(diff);
-
+			}
 			diff[0].localId = this._localId;
 
 			var ajax = $.ajax('/books/' + this.id, {
