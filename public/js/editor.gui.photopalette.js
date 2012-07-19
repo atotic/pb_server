@@ -130,8 +130,8 @@
 	var PhotoPaletteTouch = {
 		makeDraggable: function(img) {
 			scope.TouchDragHandler.makeDraggable(img, 'image',
-				function(target) { PhotoPalette.startDragEffect(target.dom);},
-				function(target) { PhotoPalette.stopDragEffect(target.dom)}
+				function() { PhotoPalette.startDragEffect(GUI.DragStore.dom);},
+				function() { PhotoPalette.stopDragEffect(GUI.DragStore.dom)}
 				);
 		}
 	}

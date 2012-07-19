@@ -43,11 +43,11 @@
 				dragenter: function(ev) { RoughWorkArea.dragenter(ev.originalEvent) }
 			});
 		},
-		startDragEffect: function(target) {
-
+		startDragEffect: function(dom) {
+			$(dom).css('visibility', 'hidden');
 		},
-		stopDragEffect: function(target) {
-
+		stopDragEffect: function(dom) {
+			$(dom).css('visibility', 'visible');
 		},
 		logTargets: function(prefix, ev) {
 			var s = prefix;
@@ -379,6 +379,7 @@
 		makeDraggable: function(el) {	// makes rough-page draggable
 			$(el).attr('draggable', true).on( {
 				'dragstart': function(ev) {
+					try {
 					ev = ev.originalEvent;
 					var target = RoughWorkArea.getDragTarget(this, ev.clientX, ev.clientY);
 					var model = $(target.dom).data('modelp').get();
@@ -386,18 +387,29 @@
 						ev.preventDefault();
 						return;
 					}
-					RoughWorkArea.startDragEffect(target);
+
 					ev.dataTransfer.setData('text/plain', "page drag");
-//					console.log("dragstart rough-page");
-					GUI.DragStore.reset(target.type, {dom: target.dom});
-					// TODO hide the page, create drag image from canvas
 					ev.dataTransfer.setDragImage(target.dom, target.offsetX, target.offsetY);
 					ev.dataTransfer.effectAllowed = "move";
+					GUI.DragStore.reset(target.type, {dom: target.dom});
+					// bug workaround: startDragEffect will hide dom element
+					// browser dom code uses snapshot of the dom element as drag image
+					// the snapshot is taken after this function returns.
+					// if we hide the element before we return, snapshot will be blank
+					// solution: hide it with a timer
+					window.setTimeout(function() {
+						console.log("do");
+						RoughWorkArea.startDragEffect(GUI.DragStore.dom);
+					}, 0);
+					console.log('drag started');
+				}
+				catch(e) {
+					console.log("dragstart exception", e.message)
+				}
 				},
 				'dragend': function(ev) {
-//					console.log("DragStore.clear rough-page");
-					RoughWorkArea.stopDragEffect(target);
-					scope.DragStore.clear();
+					RoughWorkArea.stopDragEffect(GUI.DragStore.dom);
+					GUI.DragStore.reset();
 				}
 			});
 		}
@@ -407,9 +419,12 @@
 		makeDraggable: function(el) {
 			$(el).each(function() {
 				var src = this;
-				scope.TouchDragHandler.makeDraggable(src, function(element, clientX, clientY) {
-					return RoughWorkArea.getDragTarget(element, clientX, clientY);
-				});
+				scope.TouchDragHandler.makeDraggable(
+					src,
+					function(element, clientX, clientY) { return RoughWorkArea.getDragTarget(element, clientX, clientY) },
+					function() { RoughWorkArea.startDragEffect(GUI.DragStore.dom) },
+					function() { RoughWorkArea.stopDragEffect(GUI.DragStore.dom)}
+				);
 			});
 		}
 	}

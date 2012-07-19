@@ -85,7 +85,7 @@
 				GUI.DragStore.reset(THIS._source.type, {dom: THIS._source.dom});
 				THIS._delayed = false;
 				if (THIS._startDragCb)
-					THIS._startDragCb(THIS._source);
+					THIS._startDragCb();
 			}
 			if (delayed)
 				this._delayed = window.setTimeout(finishStart, 500);
@@ -121,7 +121,7 @@
 				this.domCopy = null;
 			this.last = null;
 			if (this._stopDragCb)
-				this._stopDragCb(this._source);
+				this._stopDragCb();
 			GUI.DragStore.reset();
 			this._source = null;
 		},

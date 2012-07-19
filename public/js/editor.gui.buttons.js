@@ -62,6 +62,7 @@
 						roughPage.removePhoto(photo, {animate: true});
 						break;
 					}
+					GUI.DragStore.hadDrop = true;
 				}
 			});
 		}
