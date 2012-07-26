@@ -13,7 +13,6 @@ PROBLEM: GROUP EDITING (DOCS, GOOGLE STYLE)
 		- multiple client sync,
 		- offline
 		- group editing,
-		- undo/redo).
 	Retrofitting would be a rewrite. We are doing it for the first release.
 	After implementing it, I've learned that some call it Operational Transformation
 
@@ -32,12 +31,11 @@ SOLUTION
 	Consequences of this architecture:
 	- Operations must be applied on both client and server. Every operation needs to be implemented
 		in javascript and ruby.
+	- use diff/patch model to express differentes
 	- Clients use comet to monitor server for document changes
-	- Offline is easy, just save the op stream, and stream it back to the server when coming online
-	- Should strive for fine granularity of operations. Smaller operations reduce potential for conflicts.
+	- Offline is easy, just save the diff, and sync back to the server when coming online
 	- Some data can be lost, if two operations with same footprint happen simultaneously.
 
-	See command_stream.rb, editor.streaming.js for implementation details.
 
 PROBLEM: BOOK RECORD CONSISTENCY
 	Book record must be in sync with diff stream (book == sum of all diffs)
@@ -51,9 +49,6 @@ PROBLEM: BOOK RECORD CONSISTENCY
 	  2) diff stream records
 	  book record must always be equal to combination of all diffs
 	  => book record and diff stream must be updated as a part of single transaction
-
-
-	  Book
 
 PROBLEM: OFFLINE IDS
 we need to create and use an object before we got an id from the server.
@@ -119,16 +114,4 @@ SOLUTION:
 	:data selector filtered by model id and broadcasts the change
 
 	Corrolary: all models must have unique ids
-
-MODELS
-
-Book:
-- book belongs_to user. If sharing, we'll need another layer of indirection
-	create menu: GET /books/new
-	creation: on a server POST /books
-	get: GET /books/:id, retrieves all the pages.
-	deletion: on a server DELETE /books/:id
-
-	pdf generation: POST /books/:id/pdf
-	pdf retrieval:  GET /books/:id/pdf
 

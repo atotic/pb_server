@@ -32,6 +32,10 @@
 		wentOffline: function() {
 			this.retryInterval = MAX_RETRY;
 			this.retryLater();
+		},
+		// When will next retry fire
+		get whenToRetry() {
+			return Math.max(0, this.retryAt - Date.now());
 		}
 	}
 
@@ -46,13 +50,23 @@
 
 	var Uploader = {
 		bookQueue: [],
-		bookActiveRequest: null,
+		photoQueue: [],
+		activeRequest: null,
 		hasRequests: function() {
-			return this.bookQueue.length > 0 || this.bookActiveRequest;
+			return this.bookQueue.length > 0 || this.activeRequest;
+		},
+		savePhoto: function(photo) {
+			var idx = this.photoQueue.indexOf(photo) ;
+			if (idx == -1)
+				this.photoQueue.push(photo);
+			this.processQueue();
 		},
 		saveBook: function(book) {
-			if (this.bookQueue.indexOf(book) == -1)
+			var idx = this.bookQueue.indexOf(book) ;
+			if (idx == -1 && !book.locked)
 				this.bookQueue.push(book);
+			else if (idx != -1 && book.locked) // remove locked books from queue
+				this.bookQueue.splice(idx, 1);
 			this.processQueue();
 		},
 		saveAll: function() {
@@ -60,31 +74,41 @@
 			for (var i=0; i < dirty.length; i++)
 				Uploader.saveBook(dirty[i]);
 		},
-		processQueue: function() {
-			if (this.bookQueue.length == 0
-				|| this.bookActiveRequest
-				|| !NetworkErrorRetry.retryOk())
-				return;
-			var book = this.bookQueue.pop();
-			this.bookActiveRequest = book.getSaveDeferred();
-			if (!this.bookActiveRequest) {
-				this.processQueue();
-				return;
+		getNextRequest: function() {
+			if (this.activeRequest || !NetworkErrorRetry.retryOk())
+					return null;
+			var request = null;
+			if (this.photoQueue.length > 0) {
+				var photo = this.photoQueue.pop();
+				request = photo.getSaveDeferred();
 			}
+			if (request == null && this.bookQueue.length > 0) {
+				var book = this.bookQueue.pop();
+				request = book.getSaveDeferred();
+				if (!request) // can happen if no diffs
+					request = getNextRequest();
+			}
+			return request;
+		},
+		processQueue: function() {
+			this.activeRequest = this.getNextRequest();
+			if (!this.activeRequest)
+				return;
 			var THIS = this;
-			this.bookActiveRequest
+			this.activeRequest
 				.done( function(response, msg, jqXHR) {
 //					console.log("ajax done");
 					NetworkErrorRetry.resetRetry();
 				})
 				.fail( function(jqXHR, textStatus, message) {
 					// TODO handle missing book, server internal error
+					console.log("xhr.fail Uploader");
 					NetworkErrorRetry.retryLater();
 					console.log("ajax fail");
 				})
 				.always( function() {
 //					console.log('ajax always');
-					THIS.bookActiveRequest = null;
+					THIS.activeRequest = null;
 					THIS.processQueue();
 				});
 		}
@@ -94,9 +118,7 @@
 	// Save modified books every second.
 	window.setInterval( Uploader.saveAll, SAVE_INTERVAL*1000);
 
-	scope.Uploader = {
-		saveBook: Uploader.saveBook
-	}
+	scope.Uploader = Uploader;
 	scope.NetworkErrorRetry = NetworkErrorRetry;
 
 	// Save before navigating away
@@ -139,7 +161,7 @@
 			else {
 				window.setTimeout(function() {
 					DiffStream.connect(book);
-				}, 5000);
+				}, PB.NetworkErrorRetry.whenToRetry + 10);
 			}
 		},
 		connect: function(book) {

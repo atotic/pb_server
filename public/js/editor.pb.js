@@ -66,16 +66,9 @@ window.PB.Photo // Photo objects
 
 	var bookCache = [];
 
-	var Document = function() {};
-	Document.prototype = {
-		jsonPathChange: function(proxy, type) {
-			this.book.jsonPathChange(proxy, type);
-		}
-	}
-
-
 	var Book = function(serverJson) {
 		this._dirty = false;
+		this._locked = false;
 		this.serverData = serverJson;	// keep original data for diffs
 		this.localData = PB.clone(serverJson); // all data from server are here
 		this._extendLocalData();
@@ -110,6 +103,9 @@ window.PB.Photo // Photo objects
 		get title() {
 			return this.localData.document.title || "Untitled";
 		},
+		get locked() {
+			return this._locked;
+		},
 		get unusedPhotoList() {
 			var usedHash = this._collectUsedImages();
 			var unusedList = [].concat(this.photoList);
@@ -127,11 +123,15 @@ window.PB.Photo // Photo objects
 		photo: function(id) {
 			return this.localData.document.photos[id];
 		},
-		getProxy: function() {
-			return this;	// no need for proxy, books are stable objects
+		getReference: function() {
+			return this;	// ReferenceAPI, book is stable, so it is its own reference
 		},
-		get: function() {
+		get: function() {// reference API
 			return this;
+		},
+		lockUp: function(reason) { // Called when book is corrupted.
+			this._locked = reason;
+			PB.broadcastChange(this, 'locked')
 		},
 		// returns hash of images that appear in pages
 		_collectUsedImages: function() {
@@ -170,10 +170,6 @@ window.PB.Photo // Photo objects
 				Object.defineProperty(this.localData.document.roughPages[i], 'book',
 					{ value: this });
 			}
-			if (!('jsonPathChange' in this.localData.document)) {
-				PB.extend(this.localData.document, Document);
-				Object.defineProperty(this.localData.document, 'book', {value: this});
-			}
 		},
 		_broadcastDiffChanges: function(changes) {
 			function member(arry, index) {
@@ -205,6 +201,10 @@ window.PB.Photo // Photo objects
 				}
 					console.log(changes[i][0], changes[i][1].path());
 			}
+		},
+		addLocalPhoto: function(localFile) {
+			var serverPhoto = PB.ServerPhoto.createFromLocalFile(localFile);
+			// TODO: tie photo to the local photobook
 		},
 		removePhoto: function(photo, options) {
 			// Remove photo from all the pages
@@ -253,6 +253,10 @@ window.PB.Photo // Photo objects
 			ajax.done(function(response, msg, jqXHR) {
 				THIS.applyBroadcastPatch(response.diff_id, diff);
 			});
+			ajax.fail(function(jqXHR, textStatus, message) {
+				if (jqXHR.status == 404)
+					THIS.lockUp("The book was deleted.");
+			});
 			return ajax;
 		},
 
@@ -292,8 +296,12 @@ window.PB.Photo // Photo objects
 			PB.broadcastChange(this, 'roughPageList', options);
 		},
 		applyBroadcastPatch: function(patch_id, patch) {
+			if (this._locked) {
+				console.warn("Ignored patch, book is locked");
+				return;
+			}
 			if (patch_id <= this.last_diff) {
-				console.warn("Received patch we already have");
+//				console.warn("Received patch we already have");
 				return;
 			}
 			try {
@@ -318,16 +326,17 @@ window.PB.Photo // Photo objects
 				}
 			}
 			catch(e) {
+				this.lockUp("Remote book edits were incompatible with your local changes.");
 				console.log(e.message, patch_id, patch);
-				PB.error("Your document might be corrupted. An edit received from the network failed. This sometimes happens when multiple people are editing the book at the same time. Please reload");
 				PB.cancelChangeBatch();
-				debugger;
 			}
 		},
 		jsonPatchChange: function(proxy, type) {
 			console.log("JsonPatchChange", type);
 		}
 	}
+
+	Object.defineProperty(Book, "default", {get: function() { return bookCache[0]}});
 
 	Book.getDirty = function() {
 		var retVal = [];
@@ -336,9 +345,6 @@ window.PB.Photo // Photo objects
 				retVal.push(bookCache[i]);
 		return retVal;
 	}
-	Book.get_debug = function() {
-		return bookCache[0];
-	}
 
 	scope.Book = Book;
 })(window.PB);
@@ -346,11 +352,12 @@ window.PB.Photo // Photo objects
 // PB.Photo
 (function(scope) {
 
-	var PhotoProxy = function(photo) {
+	// See ReferenceAPI
+	var PhotoReference = function(photo) {
 		this.id = photo.id;
 		this.book = photo.book;
 	}
-	PhotoProxy.prototype = {
+	PhotoReference.prototype = {
 		get: function() {
 			return this.book.photo(this.id);
 		}
@@ -374,11 +381,11 @@ window.PB.Photo // Photo objects
 		isDraggable: function() {
 			return true;
 		},
-		getProxy: function() {
-			if (this._proxy)
-				return this._proxy;
-			Object.defineProperty(this, "_proxy", {value: new PhotoProxy(this)});
-			return this._proxy;
+		getReference: function() {
+			if (this._reference)
+				return this._reference;
+			Object.defineProperty(this, "_reference", {value: new PhotoReference(this)});
+			return this._reference;
 		}
 	}
 
@@ -402,12 +409,15 @@ window.PB.Photo // Photo objects
 			Object.defineProperty(this, 'id', { value: this.book.generateId()});
 	}
 
-
-	var RoughPageProxy = function(roughPage) {
+	// ReferenceAPI
+	// Used to hold pointers to book's properties (pages, images)
+	// Book's props are not stable (objects might be replaced)
+	// References are guaranteed to be stable during book's lifetime
+	var RoughPageReference = function(roughPage) {
 		this.id = roughPage.id;
 		this.book = roughPage.book;
 	}
-	RoughPageProxy.prototype = {
+	RoughPageReference.prototype = {
 		get: function() {
 			return this.book.page(this.id);
 		}
@@ -424,11 +434,11 @@ window.PB.Photo // Photo objects
 			else
 				return 'pages';
 		},
-		getProxy: function() {
-			if (this._proxy)
-				return this._proxy;
-			Object.defineProperty(this, "_proxy", { value: new RoughPageProxy(this)});
-			return this._proxy;
+		getReference: function() {
+			if (this._reference)
+				return this._reference;
+			Object.defineProperty(this, "_reference", { value: new RoughPageReference(this)});
+			return this._reference;
 		},
 		// indexOf this page inside the book
 		indexOf: function() {

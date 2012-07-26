@@ -80,7 +80,7 @@
 	</thead>
 <% current_user.photos.each do |photo| %>
 	<tr>
-		<td><img src="<%= photo.url() %>?size=icon" height="128px"></td>
+		<td><img src="<%= photo.url(:icon) %>" height="128px"></td>
 		<td><%= h photo.display_name %></td>
 	</tr>
 <% end %>

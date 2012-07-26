@@ -33,6 +33,21 @@ body {
 	.no-selection;
 }
 
+#locked {
+	display: none;
+	position: absolute;
+	width: 80%;
+	top: 80px;
+	left: 10%;
+	background-image: url('/img/alert.png');
+	background-size: 80px;
+	background-repeat: no-repeat;
+	min-height: 80px;
+	padding-left: 100px;
+}
+#lockedMessage {
+	font-weight: bold;
+}
 .navbar {
 	margin-bottom: 0px;
 }
@@ -103,6 +118,12 @@ body {
 	}
 		#photo-list img {
 			margin: 2px;
+		}
+	#photo-list-tools {
+			position:absolute;
+			padding: 8px;
+			width: @side-tool-width;
+			max-height: @photo-list-height;
 		}
 
 #background-list-container {

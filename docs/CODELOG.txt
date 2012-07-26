@@ -56,14 +56,35 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-DND cleanup:
-- animations, dragging of cover pages,
-- drop flavors: rough pages must accept/reject drop flavors
-- adding an image
+Image Book binding architecture
 
-Next:
-when book is out of date, book lock on corruption
-Polishing: better animations, animations when broadcast
+ServerPhoto
+Image upload
+- upload via FilePicker, or DND
+- images are displayed locally in the book
+- metadata, parse on client and server
+
+Book points to images by /book/:book_id/image/:image_id
+
+How are images and book connected:
+- images are independent resources
+- book can link to these resources
+
+July 23
+Got iPad 3. Had to work around two bugs:
+- moving a node unregisters its touch event handlers
+- images have to be madeDraggable on a timer. Inline
+registration of touch event handlers is ignored. Yet it works for
+others. Could the problem be limited to topmost handler?
+
+July 19
+- Dragging hidden dom images solved (need a timer)
+- drag feedback on touch solved
+- book lock when book patch fails
+- 404 when resources not there
+
+July 18
+Refactored DragStore. Cleaner API, expandable
 
 July 17:
 Drag animations: Image -> RoughPage, Image -> Remove

@@ -7,7 +7,7 @@
 		bindToBook: function(book) {
 			this._photoFilter = 'unused';
 			$('#photo-list')
-				.data('modelp', book.getProxy())
+				.data('modelp', book.getReference())
 				.on(PB.MODEL_CHANGED,
 					function(ev, model, prop, options) {
 						if (prop == 'photoList')
@@ -38,8 +38,12 @@
 		},
 		createImageTile: function(photo) {
 			var img = $("<img src='" + photo.getUrl(128) + "'>");
-			img.data('modelp', photo.getProxy());
-			this.makeDraggable(img);
+			img.data('modelp', photo.getReference());
+			var THIS = this;
+			window.setTimeout(function() {
+				// iPad bug workaround. Without timer, touch handlers are not registered
+				THIS.makeDraggable(img);
+			}, 0);
 			return img;
 		},
 		synchronizePhotoList: function(options) {
@@ -59,7 +63,7 @@
 				var targetPath = JsonPath.query(oldPhotos, diff[i].path, {just_one: true, ghost_props: true});
 				var targetIndex = targetPath.prop();
 				var targetId = targetPath.val();
-
+				console.log('photoop ' + diff[i].op);
 				switch(diff[i].op) {
 				case 'set':
 					var replaceDom = $(oldChildren.get(targetIndex));

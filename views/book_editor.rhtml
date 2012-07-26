@@ -10,8 +10,8 @@
 <div id='pb'>
 	<div id='pb-work-area'>
 		<div id='work-area-tools'>
-			<div id='add-page-btn' class='btn' rel="tooltip" title="Drag and drop the button to insert pages in the middle"><i class='icon-plus-sign'></i> Add page</div>
-			<div id='remove-page-btn' class='btn' rel='tooltip' title='Drag anything over this button to remove it'><i class='icon-minus-sign'></i> Remove </div>
+			<div id='add-page-btn' class='btn' rel="tooltip" title="You can DRAG the button to insert pages in the middle"><i class='icon-plus-sign'></i> Add page</div>
+			<div id='remove-page-btn' class='btn' rel='tooltip' title='Anything dropped here will be removed (images, pages)'><i class='icon-minus-sign'></i> Remove </div>
 		</div>
 		<div id='work-area-rough'>
 			</div>
@@ -94,6 +94,10 @@
 		</div>
 		<div id='palette-tabs-container' class='tab-content'>
 			<div class="tab-pane active"  id='photo-list-container'>
+				<div id='photo-list-tools'>
+					<div id='add-photo-btn' class='btn' rel="tooltip" title="Or you can just drag your photos here"><i class='icon-plus-sign'></i> Add photo</div>
+					<input id="add-photo-input" type="file" multiple="true" accept="image/*" style="display:none">
+				</div>
 				<div id='photo-list'>
 				</div>
 			</div>
@@ -112,7 +116,13 @@
 		</div>
 	</div>
 </div>
-
+<div id='locked' class='alert alert-error'>
+	<p>Uh oh, your book is corrupted. This sometimes happens when your changes conflict with changes made from another browser.</p>
+	<p>You can still look at your book, but you cannot save any changes.</p>
+	<p>To unlock the book, <a href='javascript:window.location.reload()'>reload</a>.</p>
+	<p id='lockedMessage'><p>
+	<p>Developers, look at the console for details.</p>
+</div>
 <%= asset_link("jquery.js") %>
 <%= asset_link("jquery.dataSelector.js") %>
 <%= asset_link("bootstrap.js") %>

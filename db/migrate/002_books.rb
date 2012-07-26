@@ -27,11 +27,24 @@ Sequel.migration do
 			DateTime :updated_at
 			Integer :user_id, :null=>false
 
-			String :display_name, :size=>128
-			String :storage, :size=>128
+			String :display_name, :size=>128	# Original file name
+			File :exif, :size => :medium # json encoded metadata
 			String :md5, :size=>128
 
+			String :original_file, :size=>128	# Original file
+			String :display_file, :size=>128 # Display file (1024)
+			String :icon_file, :size=>128 # Icon file (128)
+
 			index [:user_id], :name=>:index_pb_photos_user
+		end
+
+		create_table(:books_photos, :ignore_index_errors=>true) do
+			Integer :photo_id, :null=>false
+			Integer :book_id, :null=>false
+
+			primary_key [:photo_id, :book_id]
+
+			index [:book_id], :name=>:book_photos_book_fk
 		end
 
 		create_table(:book_pages, :ignore_index_errors=>true) do
@@ -48,14 +61,6 @@ Sequel.migration do
 			index [:book_id], :name=>:index_book_pages_book
 		end
 
-		create_table(:books_photos, :ignore_index_errors=>true) do
-			Integer :photo_id, :null=>false
-			Integer :book_id, :null=>false
-
-			primary_key [:photo_id, :book_id]
-
-			index [:book_id], :name=>:book_photos_book_fk
-		end
 	end
 
 	down do

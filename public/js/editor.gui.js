@@ -39,6 +39,14 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			this.CommandManager.init();
 		},
 		bindToBook: function(book) {
+			$('body')
+				.data('modelp', book.getReference())
+				.on( PB.MODEL_CHANGED, function(ev, model, prop, options) {
+					if (prop === 'locked' && book.locked) {
+						$('#locked').slideDown();
+						$('#lockedMessage').text(book.locked);
+					}
+				});
 			GUI.PhotoPalette.bindToBook(book);
 			GUI.RoughWorkArea.bindToBook(book);
 			window.document.title = book.title + " PhotoBook";
@@ -69,16 +77,19 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		// direction is before or after
 		moveNode: function(src, dest, direction) {
 			// Remove from DOM
+			src = $(src);
+			dest = $(dest);
 			src.detach();
 			// Save all the events
 			var events = $._data(src.get(0), 'events');
 			var handlers = [];
 			for (var eventType in events)
-				events[eventType].forEach(function(event) {
-					var record = {};
-					record[eventType] = event.handler;
-					handlers.push(record);
-				});
+				if (eventType.match(/touch/)) // Only touch events are affected
+					events[eventType].forEach(function(event) {
+						var record = {};
+						record[eventType] = event.handler;
+						handlers.push(record);
+					});
 			// Detach all the events
 			handlers.forEach(function(h) {
 				var x = src.off(h);
@@ -107,10 +118,12 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				$(container).animate({'scrollTop' : elBottom - container.offsetHeight});
 		},
 		swapDom: function(a, b, animate) {
-			var aparent= a.parentNode;
-			var asibling= a.nextSibling===b? a : a.nextSibling;
-			b.parentNode.insertBefore(a, b);
-			aparent.insertBefore(b, asibling);
+			var parent = a.parentNode;
+			var sibling= a.nextSibling === b ? a : a.nextSibling;
+			this.moveNode(a, b, 'before');
+			this.moveNode(b, sibling, 'before');
+//			b.parentNode.insertBefore(a, b);
+//			parent.insertBefore(b, sibling);
 		}
 	}
 

@@ -10,7 +10,7 @@
 			this.makeDroppable();
 			var roughPageList = book.roughPageList;
 			$('#work-area-rough')
-				.data('modelp', book.getProxy())
+				.data('modelp', book.getReference())
 				.on( PB.MODEL_CHANGED, this.bookChanged);
 			this.synchronizeRoughPageList();
 		},
@@ -214,9 +214,12 @@
 				domPage.addClass('rough-page-' + pageModel.pageClass());
 
 			// Hook it up to the model
-			domPage.data('modelp', pageModel.getProxy());
+			domPage.data('modelp', pageModel.getReference());
 			domPage.on( PB.MODEL_CHANGED, RoughWorkArea.pageChanged);
-			this.makeDraggable(domPage);
+			window.setTimeout(function() {
+				RoughWorkArea.makeDraggable(domPage);
+			}, 0);
+//			this.makeDraggable(domPage);
 			return domPage;
 		},
 		renumberRoughPages: function() {
@@ -235,7 +238,7 @@
 			var src = photo.getUrl(PB.Photo.SMALL);
 			var domPhoto = $(document.createElement('div'));
 			domPhoto.addClass('rough-tile');
-			domPhoto.data('modelp', photo.getProxy());
+			domPhoto.data('modelp', photo.getReference());
 			domPhoto.css('background-image', 'url("' + src + '")');
 			return domPhoto;
 		},
@@ -296,10 +299,13 @@
 			}
 			if (diff.length > 0)
 				this.renumberRoughPages();
-			if (newlyCreatedPages.length > 0) {
-				for (var i=0; i< newlyCreatedPages.length; i++)
-					this.synchronizeRoughPhotoList(newlyCreatedPages[i]);
 
+			if (newlyCreatedPages.length > 0) {
+				for (var i=0; i< newlyCreatedPages.length; i++) {
+					this.synchronizeRoughPhotoList(newlyCreatedPages[i]);
+					if (options.animate)
+						newlyCreatedPages[i].css('display', 'none').fadeIn();
+				}
 				if (options.animate)
 					GUI.Util.revealByScrolling(newlyCreatedPages[0], $('#pb-work-area'));
 			}
@@ -352,7 +358,7 @@
 				case 'swap': // prop: index of old
 					var src = containerDom.children(sel).get(targetIndex);
 					var destIndex = JsonPath.lastProp(diff[i].args);
-					var dest = contanerDom.children(sel).get(destIndex);
+					var dest = containerDom.children(sel).get(destIndex);
 					GUI.Util.swapDom(src, dest, options.animate);
 				break;
 				}

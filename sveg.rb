@@ -202,30 +202,23 @@ class SvegApp < Sinatra::Base
 					retVal += asset_link(
 						"jquery.stream-1.2.js",
 						"editor.pb.js",
+						"editor.pb.upload.js",
+						"editor.pb.photos.js",
 						"editor.gui.js",
 						"editor.gui.touch.js",
 						"editor.gui.buttons.js",
 						"editor.gui.controller.js",
 						"editor.gui.roughworkarea.js",
-						"editor.gui.photopalette.js",
-						"editor.pb.upload.js")
+						"editor.gui.photopalette.js"
+						)
 				elsif arg.end_with?("js")
 					arg = "jquery-1.7.js" if arg.eql? "jquery.js"
-					arg = "jquery-ui-1.8.16.custom.js" if arg.eql? "jquery-ui.js"
 					retVal += "<script src='/js/#{arg}'></script>\n"
 				elsif arg.end_with?("css")
-				#	arg = "smoothness/jquery-ui-1.8.16.custom.css" if arg.eql? "jquery-ui.css"
 					retVal += "<link href='/css/#{arg}' rel='stylesheet' type='text/css' />\n"
 				elsif arg.eql? "qunit"
 					retVal += "<script src='http://code.jquery.com/qunit/qunit-git.js'></script>\n"
 					retVal += "<link href='http://code.jquery.com/qunit/qunit-git.css' rel='stylesheet' type='text/css' />\n"
-				elsif arg.eql? "editor-base"
-					retVal += asset_link("editor.js", "editor.model.js", "editor.model.page.js", "editor.model.util.js", "editor.command.js", \
-					"jquery.stream-1.2.js", "editor.streaming.js");
-				elsif arg.eql? "editor-all"
-					retVal += asset_link("editor-base", "editor.manipulators.js",\
-					 "editor.ui.js", "editor.ui.phototab.js","editor.ui.pagetab.js",\
-					 "editor.ui.bookpage.js", "editor.page-dialog.js");
 				elsif arg.eql? "bootstrap"
 					retVal += asset_link( "bootstrap.css", "bootstrap.js")
 				else
@@ -263,6 +256,7 @@ class SvegApp < Sinatra::Base
 		end
 
 		def user_must_own(resource)
+			halt 404 if resource.nil?
 			begin
 				Security.user_must_own(env, resource)
 			rescue RuntimeError => ex
@@ -273,6 +267,10 @@ class SvegApp < Sinatra::Base
 					redirect '/'
 				end
 			end
+		end
+
+		def user_must_have_access(resource)
+			user_must_own(resource)
 		end
 
 		def assert_last_command_up_to_date(request)
@@ -362,7 +360,7 @@ class SvegApp < Sinatra::Base
 
 	get '/books/:id' do
 		@book = PB::Book[params[:id]]
-		user_must_own @book
+		user_must_have_access @book
 		if request.xhr?
 			json_response(@book)
 		else
@@ -395,7 +393,7 @@ class SvegApp < Sinatra::Base
 
 	patch '/books/:id' do
 		@book = PB::Book[params[:id]]
-		user_must_own @book
+		user_must_have_access @book
 		str_diff = request.body.read
 		json_diff = JSON.parse(str_diff)
 		begin
@@ -409,15 +407,14 @@ class SvegApp < Sinatra::Base
 	end
 
 	get '/books/:id/pdf' do
-		user_must_be_logged_in
 		book = Book[params[:id]]
-		user_must_own book
+		user_must_have_access book
 		send_file book.pdf_path
 	end
 
 	post '/books/:id/pdf' do
 		book = Book[params[:id]]
-		user_must_own book
+		user_must_have_access book
 		status = book.generate_pdf
 		if request.xhr?
 			flash.now[:notice] = "<a href='/books/#{book.id}/pdf'>PDF</a> conversion in progress..."
@@ -428,26 +425,38 @@ class SvegApp < Sinatra::Base
 	end
 
 	get '/photo/:id' do
-		user_must_be_logged_in
-		photo = Photo.filter(:user_id => current_user.pk).filter(:id => params[:id]).first
-		return [404, "Photo not found"] unless photo
-		send_file photo.file_path(params[:size])
+		photo = Photo[params[:id]]
+		user_must_have_access photo
+		if (params[:size].eql? 'json')
+			json_response(photo)
+		else
+			begin
+				send_file photo.file_path(params[:size])
+			rescue
+				halt [404, ["Photo in this size is not available #{params[:size]}"]]
+			end
+		end
 	end
 
 	# uploads the photo, returns photo.to_json
 	# if photo already exists, it discards current data, and returns original
 	post '/photos' do
 		user_must_be_logged_in
-		assert_last_command_up_to_date(request)
-		book_id = params.delete('book_id')
-		book = Book[book_id]
-		user_must_own(book)
+		book_id = params.delete('book')
+		photo_owner = nil
+		if book_id
+			book = Book[book_id]
+			user_must_have_access book
+			photo_owner = book.user_id
+		else
+			photo_owner = current_user.pk
+		end
 		begin
 			destroy_me = nil	# destroy must be outside the transaction
 			photo_file = params.delete('photo_file')
 
 			photo = Photo.new(params);
-			photo.user_id = current_user.pk
+			photo.user_id = photo_owner
 			DB.transaction do
 				# save photo_file
 				PhotoStorage.storeFile(photo, photo_file[:tempfile].path ) if photo_file
@@ -459,17 +468,8 @@ class SvegApp < Sinatra::Base
 					photo = dup
 					LOGGER.warn("duplicate photo, using old one #{photo.display_name}")
 				end
-				# associate photo with a book
-				book = Book[book_id] if book_id
-				if book && book.photos.index(photo).nil?
-					book.add_photo photo
-					book.save
-				end
 			end # transaction
 			destroy_me.destroy if destroy_me
-
-			# broadcast cmd
-			headers( BrowserCommand.createAddPhotoCmd(book.id, photo).broadcast(env))
 			# response
 			json_response(photo)
 		rescue => ex

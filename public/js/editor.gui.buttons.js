@@ -6,6 +6,22 @@
 		init: function() {
 			AddRemoveButtons.init();
 			ResizePaletteButton.init();
+			AddPhotoButton.init();
+		}
+	}
+
+	var AddPhotoButton = {
+		init: function() {
+			$('#add-photo-btn').on( {
+				click: function() {
+					$('#add-photo-input').click();
+				}
+			});
+			$("#add-photo-input").on( {
+				change: function(e) {
+					for (var i=0; i<this.files.length; i++)
+						PB.Book.default.addLocalPhoto(this.files[i]);
+				}});
 		}
 	}
 	var AddRemoveButtons = {
@@ -133,6 +149,7 @@
 		endDrag: function(clientY) {
 		}
 	}
+
 	scope.Buttons = Buttons;
 })(window.GUI);
 
