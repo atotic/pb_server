@@ -3,36 +3,35 @@
 (function(scope) {
 
 
-	var ServerPhoto = function(id) {
-		this._id = id;
-		this._modelref = null;
-	}
+	var cache = {};
+	var tempPrefix = 'temp-';
 
-	var serverPhotoCache = {};
-
-	function storeInCache(photo) {
-		// newly saved photos get stored in cache once their id arrives
-		if (!photo.id)
-			throw "storing photo without an id!"
-		if (photo.id in serverPhotoCache)
-			return;	// drop it, already in the cache
-		else
-			serverPhotoCache[photo.id] = photo;
-	}
-
-	// returns the photo
-	ServerPhoto.get = function(id) {
-		if (id in serverPhotoCache)
-			return serverPhotoCache[id];
-		else {
-			serverPhotoCache[id] = new ServerPhoto(id);
-			serverPhotoCache[id].load();
+	var ServerPhotoCache = {
+		get: function(id) {
+			if (id in cache)
+				return cache[id];
+			else {
+				cache[id] = new ServerPhoto(id);
+				cache[id].load();
+			}
+		},
+		replaceTempId: function(photo, newId) {
+			delete cache[photo.id];
+			photo._id = newId;
+			cache[newId] = photo;
+		},
+		createFromLocalFile: function(file) {
+			var id = tempPrefix + PB.randomString(5);
+			cache[id] = new ServerPhoto(id);
+			cache[id].uploadLocalFile(file);
 		}
 	}
 
-	ServerPhoto.createFromLocalFile = function(file) {
-		var photo = new ServerPhoto();
-		photo.uploadLocalFile(file);
+	var ServerPhoto = function(id) {
+		if (!id)
+			throw "ServerPhoto must have an id";
+		this._id = id;
+		this._modelref = null;
 	}
 
 /*
@@ -41,20 +40,15 @@
  * - objects last forever, and are stored in the cache
  * - objects can be patched, and patches are broadcast to modelref
  * - modelref
- * Works:
- * - image loading
  */
 	ServerPhoto.prototype = {
-		bindToModel: function(modelref) {
-			this._modelref = modelref;
-		},
-		broadcastChange: function(prop) {
-			// TODO
+		get id() {
+			return this._id;
 		},
 		set status(msg) {
 			this._status = msg;
-			this.broadcastChange('originalUrl');
-			this.broadcastChange('displayUrl');
+			PB.broadcastChange(this, 'originalUrl');
+			PB.broadcastChange(this, 'displayUrl');
 		},
 		set locked(val) {
 			this.locked = true;
@@ -94,16 +88,21 @@
 					}
 				});
 		},
+		// When temporary id changes, change is broadcast to all the listeners
+		// with options {newId: new_value}. Listeners should reregister their interest
 		loadFromJson: function(json) {
-			if ('id' in this && this.id)
-				if ('id' in json && this.id != id.json)
-					throw "Photo id is immutable once assigned";
+			if ('id' in json && this.id != json.id) {
+				if (!/^temp/.exec(this.id))
+					throw "Photo id is immutable once assigned (unless temp id)";
+				PB.broadcastChange(this, 'id', {newId: json.id});
+				ServerPhotoCache.replaceTempId(this, json.id);
+			}
 			var props = ['id', 'original_url', 'display_url', 'icon_url', 'exif', 'display_name'];
 			for (var i=0; i<props.length; i++)
 				if ( (!(props[i] in this))
 						 || ( (props[i] in this) && this[props[i]] != json[props[i]])) {
-					this[props[i]] = json[props[i]]
-					this.broadcastChange(props[i])
+					this[props[i]] = json[props[i]];
+					PB.broadcastChange(this, props[i]);
 				}
 		},
 		set saveProgress(val) {
@@ -143,7 +142,5 @@
 			});
 		}
 	}
-
-	scope.ServerPhoto = ServerPhoto;
-
+	scope.ServerPhotoCache = ServerPhotoCache;
 })(PB);

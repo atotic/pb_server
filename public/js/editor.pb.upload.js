@@ -86,7 +86,7 @@
 				var book = this.bookQueue.pop();
 				request = book.getSaveDeferred();
 				if (!request) // can happen if no diffs
-					request = getNextRequest();
+					request = this.getNextRequest();
 			}
 			return request;
 		},

@@ -63,7 +63,6 @@
 				var targetPath = JsonPath.query(oldPhotos, diff[i].path, {just_one: true, ghost_props: true});
 				var targetIndex = targetPath.prop();
 				var targetId = targetPath.val();
-				console.log('photoop ' + diff[i].op);
 				switch(diff[i].op) {
 				case 'set':
 					var replaceDom = $(oldChildren.get(targetIndex));

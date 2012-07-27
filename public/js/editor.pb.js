@@ -10,6 +10,9 @@ window.PB.Photo // Photo objects
 // PB, general utility routines
 (function(window) {
 "use strict";
+
+	var changeListeners = {};
+
 	var PB = {
 		init: function() {
 		},
@@ -48,8 +51,27 @@ window.PB.Photo // Photo objects
 		broadcastChange: function(model, propName, options) {
 			if (this._changeBatch)
 				this._changeBatch.push({model:model, propName:propName, options:options});
-			else
+			else {
 				$('*:data("modelp.id=' + model.id + '")').trigger(PB.MODEL_CHANGED, [model, propName, options]);
+				if (model.id in changeListeners)
+					for (var i=0; i<changeListeners.length; i++)
+						changeListeners[i].handleChangeEvent(model, propName, options);
+			}
+		},
+		bindChangeListener: function(id, listener) {
+			if (id in changeListeners)
+				changeListeners[id].push(listener);
+			else
+				changeListeners[id] = [listener];
+		},
+		unbindChangeListener: function(id, listener) {
+			if (id in changeListeners) {
+				var idx = changeListeners[id].indexOf(listener);
+				if (idx != -1)
+					changeListeners[id].slice(idx, 1);
+				else
+					console.warn("could not unregister listener");
+			}
 		}
 	};
 
@@ -203,7 +225,7 @@ window.PB.Photo // Photo objects
 			}
 		},
 		addLocalPhoto: function(localFile) {
-			var serverPhoto = PB.ServerPhoto.createFromLocalFile(localFile);
+			var serverPhoto = PB.ServerPhotoCache.createFromLocalFile(localFile);
 			// TODO: tie photo to the local photobook
 		},
 		removePhoto: function(photo, options) {
@@ -219,7 +241,7 @@ window.PB.Photo // Photo objects
 			if (index == -1)
 				throw "no such photo";
 			this.localData.document.photoList.splice(index, 1);
-			delete this.localData.document.roughPages[photo.id];
+			delete this.localData.document.photos[photo.id];
 			this._dirty = true;
 			PB.broadcastChange(this, 'photoList', options);
 		},

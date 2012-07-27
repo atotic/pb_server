@@ -389,7 +389,7 @@
 					ev = ev.originalEvent;
 					var target = RoughWorkArea.getDragTarget(this, ev.clientX, ev.clientY);
 					var model = $(target.dom).data('modelp').get();
-					if (model && !model.isDraggable()) {
+					if (model && 'isDraggable' in model && !model.isDraggable()) {
 						ev.preventDefault();
 						return;
 					}
