@@ -13,6 +13,7 @@
 			else {
 				cache[id] = new ServerPhoto(id);
 				cache[id].load();
+				return cache[id];
 			}
 		},
 		replaceTempId: function(photo, newId) {
@@ -24,6 +25,7 @@
 			var id = tempPrefix + PB.randomString(5);
 			cache[id] = new ServerPhoto(id);
 			cache[id].uploadLocalFile(file);
+			return cache[id];
 		}
 	}
 
@@ -31,7 +33,6 @@
 		if (!id)
 			throw "ServerPhoto must have an id";
 		this._id = id;
-		this._modelref = null;
 	}
 
 /*
@@ -51,7 +52,7 @@
 			PB.broadcastChange(this, 'displayUrl');
 		},
 		set locked(val) {
-			this.locked = true;
+			this._locked = true;
 		},
 		get originalUrl() {
 			if ('original_url' in this)
@@ -60,10 +61,18 @@
 				debugger; // TODO
 		},
 		get displayUrl() {
-
+			// debugger
 		},
 		get iconUrl() {
-
+			if ('icon_url' in this)
+				return this.icon_url;
+			else if ('_icon_placeholder' in this)
+				return this._icon_placeholder;
+			this._icon_placeholder = this._generatePlaceholder(128, 128);
+			return this._icon_placeholder;
+		},
+		_generatePlaceholder: function(width, height, options) {
+			return '/img/surprise.png';
 		},
 		uploadLocalFile: function(file) {
 			this._localFile = file;
@@ -76,13 +85,12 @@
 				.done(function(response, msg, jqXHR) {
 					THIS.loadFromJson(response);
 				})
-				.fail(function(response, msg, jsXHR) {
+				.fail(function(jsXHR, status, msg) {
 					if (jsXHR.status == 404) {
 						this.status = "Not found";
 						this.locked = true;
 					}
 					else {
-						PB.status("network error");
 						PB.NetworkErrorRetry.retryLater();
 						window.setTimeout(function() { THIS.load()}, PB.NetworkErrorRetry.nextRetryInterval);
 					}
@@ -136,7 +144,17 @@
 			xhr.fail( function(jqXHR, textStatus, message) {
 				THIS.saveError = textStatus;
 				console.log("xhr.fail ServerPhoto")
-				PB.Uploader.savePhoto(THIS); // retry
+				switch (jsXHR.status) {
+					case 413:
+					// TODO, remove too large from picture list, with nice error.
+					// show the photos inside an alert
+						THIS.status = "Object ";
+						THIS.locked = true;
+						break;
+					default:
+						PB.Uploader.savePhoto(THIS); // retry
+						break;
+				}
 			}).done( function(response, msg, jqXHR) {
 				THIS.loadFromJson(response);
 			});

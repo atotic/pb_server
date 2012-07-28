@@ -21,7 +21,7 @@
 	window.GUI.DragStore // stores dragged items
 
 
-GUI holds references to model objects in $(dom element).data('modelp')
+GUI holds references to model objects in $(dom element).data('model')
 The incomplete list of elements and their models:
 .rough-page -> PB.RoughPage
 #photo-list > img -> PB.Photo
@@ -40,7 +40,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		},
 		bindToBook: function(book) {
 			$('body')
-				.data('modelp', book.getReference())
+				.data('model', book)
 				.on( PB.MODEL_CHANGED, function(ev, model, prop, options) {
 					if (prop === 'locked' && book.locked) {
 						$('#locked').slideDown();

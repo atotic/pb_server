@@ -20,24 +20,17 @@ class Book < Sequel::Model(:books)
 <<-eos
 {
 	"title": #{self.title.to_json},
-	"photoList": ["A","B","C","D", "E"],
-	"photos": {
-		"A": { "url": { "l": "/assets/test/1.jpg"} },
-		"B": { "url": { "l": "/assets/test/2.jpg"} },
-		"C": { "url": { "l": "/assets/test/3.jpg"} },
-		"D": { "url": { "l": "/assets/test/4.jpg"} },
-		"E": { "url": { "l": "/assets/test/5.jpg"} }
-		},
-	"roughPageList": ["cover", "cover-flap", "back-flap", "back","1","2","3","4"],
+	"photoList": [],
+	"roughPageList": ["cover", "cover-flap", "back-flap", "back","P1","P2","P3","P4"],
 	"roughPages": {
 		"cover": { "photoList": [] },
 		"cover-flap": { "photoList": [] },
 		"back-flap": { "photoList": [] },
 		"back": {"photoList": [] },
-		"1": {"photoList": ["A", "B"] },
-		"2": {"photoList": ["B", "C"] },
-		"3": {"photoList": ["D"] },
-		"4": {"photoList": [] }
+		"P1": {"photoList": [] },
+		"P2": {"photoList": [] },
+		"P3": {"photoList": [] },
+		"P4": {"photoList": [] }
 	}
 }
 eos

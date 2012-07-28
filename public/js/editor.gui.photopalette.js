@@ -7,7 +7,7 @@
 		bindToBook: function(book) {
 			this._photoFilter = 'unused';
 			$('#photo-list')
-				.data('modelp', book.getReference())
+				.data('model', book)
 				.on(PB.MODEL_CHANGED,
 					function(ev, model, prop, options) {
 						if (prop == 'photoList')
@@ -38,7 +38,18 @@
 		},
 		createImageTile: function(photo) {
 			var img = $("<img src='" + photo.getUrl(128) + "'>");
-			img.data('modelp', photo.getReference());
+			img
+				.data('model', photo)
+				.on(PB.MODEL_CHANGED,
+					function(ev, model, prop, options) {
+						switch(prop) {
+							case 'icon_url':
+								img.prop('src', photo.getUrl(128));
+							break;
+							default:
+							break;
+						}
+				});
 			var THIS = this;
 			window.setTimeout(function() {
 				// iPad bug workaround. Without timer, touch handlers are not registered
@@ -49,12 +60,12 @@
 		synchronizePhotoList: function(options) {
 			options = $.extend({animate:false}, options);
 			var containerDom = $('#photo-list');
-			var bookModel = containerDom.data('modelp').get();
+			var bookModel = containerDom.data('model');
 			var sel = 'img';
 
-			var oldChildren = containerDom.children( sel );
+			var oldChildren = containerDom.children( sel ).get();
 			var oldPhotos = oldChildren.map(
-				function(i, el) { return $(el).data('modelp').id}).get();
+				function(el, i) { return $(el).data('model').id});
 			var newPhotos = this._photoFilter == 'all' ? bookModel.photoList : bookModel.unusedPhotoList;
 
 			var diff = JsonDiff.diff(oldPhotos, newPhotos);

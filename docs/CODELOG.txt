@@ -56,19 +56,21 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-Image Book binding architecture
+- fix image sizes
+- image upload via DND
+- metadata, parse on client and server, use image orientation
+- load photo data when book is loaded
+- handle "upload too large errors" (show bad photos with name, remove from book)
+- BUG: saved with temp- files
+- Pass the 200 file upload test
 
-ServerPhoto
-Image upload
-- upload via FilePicker, or DND
-- images are displayed locally in the book
-- metadata, parse on client and server
+July 26
+Photo upload works
+Preparation for separation of book and photos.
+Mixing objects and server data gets messy. Maybe I should do clean separation
+DONE!
+GUI stores pointers to Proxy objects, which are persistent through lifetime of the book.
 
-Book points to images by /book/:book_id/image/:image_id
-
-How are images and book connected:
-- images are independent resources
-- book can link to these resources
 
 July 23
 Got iPad 3. Had to work around two bugs:
