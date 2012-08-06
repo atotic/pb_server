@@ -124,6 +124,15 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			this.moveNode(b, sibling, 'before');
 //			b.parentNode.insertBefore(a, b);
 //			parent.insertBefore(b, sibling);
+		},
+		imgToDataUrl: function(img) {
+			var canvas = $("<canvas />")
+				.attr('width', img.width)
+				.attr('height', img.height)
+				.get(0);
+			canvas.getContext('2d')
+				.drawImage(img, 0,0, img.width, img.height);
+			return canvas.toDataURL('image/jpeg');
 		}
 	}
 

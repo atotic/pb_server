@@ -18,7 +18,7 @@ class Photo < Sequel::Model(:photos)
 	many_to_many :books
 
 	DISPLAY_SIZE = 1024
-	ICON_SIZE = 256
+	ICON_SIZE = 128
 
 	def to_json(*a)
 		{

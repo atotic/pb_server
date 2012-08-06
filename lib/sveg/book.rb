@@ -23,14 +23,14 @@ class Book < Sequel::Model(:books)
 	"photoList": [],
 	"roughPageList": ["cover", "cover-flap", "back-flap", "back","P1","P2","P3","P4"],
 	"roughPages": {
-		"cover": { "photoList": [] },
-		"cover-flap": { "photoList": [] },
-		"back-flap": { "photoList": [] },
-		"back": {"photoList": [] },
-		"P1": {"photoList": [] },
-		"P2": {"photoList": [] },
-		"P3": {"photoList": [] },
-		"P4": {"photoList": [] }
+		"cover": { "id": "cover", "photoList": [] },
+		"cover-flap": { "id": "cover-flap", "photoList": [] },
+		"back-flap": { "id": "back-flap", "photoList": [] },
+		"back": {"id": "back", "photoList": [] },
+		"P1": {"id": "P1", "photoList": [] },
+		"P2": {"id": "P2", "photoList": [] },
+		"P3": {"id": "P3", "photoList": [] },
+		"P4": {"id": "P4", "photoList": [] }
 	}
 }
 eos

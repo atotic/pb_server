@@ -5,7 +5,7 @@
 (function(scope){
 	var PhotoPalette = {
 		bindToBook: function(book) {
-			this._photoFilter = 'unused';
+			this._photoFilter = 'all';//'unused';
 			$('#photo-list')
 				.data('model', book)
 				.on(PB.MODEL_CHANGED,
@@ -128,7 +128,7 @@
 					ev.dataTransfer.setData('text/uri-list', this.src);
 					var r = this.getBoundingClientRect();
 					var img = new Image();
-					img.src = this.src;
+					img.src = GUI.Util.imgToDataUrl(this);
 					ev.dataTransfer.setDragImage(img,ev.clientX - r.left, ev.clientY - r.top);
 					PhotoPalette.startDragEffect(this);
 					GUI.DragStore.reset(GUI.DragStore.IMAGE, {dom: this});

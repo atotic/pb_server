@@ -114,6 +114,8 @@ Free DNS redirects for everyone: http://xip.io/
 Building iOS hybrid apps: http://www.cocoacontrols.com/posts/a-primer-on-hybrid-apps-for-ios
 
 OTHER
+Print junkie: where print geeks hang out, ask them for advice on printing photobooks.
+http://www.printjunkie.net/profiles/blog/list
 Super resolution from a single image: would be useful filter to run on low-res photos
 http://www.wisdom.weizmann.ac.il/~vision/SingleImageSR.html
 Redirect file from nginx http://wiki.nginx.org/XSendfile

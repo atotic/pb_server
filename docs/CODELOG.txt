@@ -56,13 +56,19 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-- fix image sizes
 - image upload via DND
-- metadata, parse on client and server, use image orientation
 - load photo data when book is loaded
 - handle "upload too large errors" (show bad photos with name, remove from book)
-- BUG: saved with temp- files
+- BUG: book saved with temp- files, prevent at all costs
 - Pass the 200 file upload test
+- account page should load book list dynamically  $(window).unload(function(){});
+- exif, parse on client and server, use image orientation
+
+Aug 6
+Apple bug: refiled
+fix image sizes: photopalette maxwidth to 128. Drag images are generated on canvas
+Bugfix: roughPages have ids, patching was not workin
+
 
 July 26
 Photo upload works
@@ -70,7 +76,8 @@ Preparation for separation of book and photos.
 Mixing objects and server data gets messy. Maybe I should do clean separation
 DONE!
 GUI stores pointers to Proxy objects, which are persistent through lifetime of the book.
-
+iOS bug report: node removal erases touch event handlers
+July 25
 
 July 23
 Got iPad 3. Had to work around two bugs:

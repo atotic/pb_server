@@ -11,15 +11,17 @@
 			var hasTouch = PB.hasTouch();
 			var isSmallScreen = PB.isSmallScreen();
 			var wantSmallHost = hasTouch && isSmallScreen;
-			var hasTouchHost = window.location.hostname.match(/^touch/) != null;
-			if (wantSmallHost != hasTouchHost) {
+			var hasSmallHost = window.location.hostname.match(/^touch/) != null;
+//			alert("wantSmallHost " + wantSmallHost + " hasSmallHost " + hasSmallHost);
+			if (wantSmallHost != hasSmallHost) {
 				var isDev = window.location.hostname.match(/dev/);
-				var desiredHost = hasTouch ? ( isDev ? 'touchdev.pb4us.com' : 'touch.pb4us.com')
+				var desiredHost = wantSmallHost ? ( isDev ? 'touchdev.pb4us.com' : 'touch.pb4us.com')
 															: (isDev ? 'dev.pb4us.com' : 'www.pb4us.com');
+				alert("currentPath " + window.location.pathname);
 				var url = window.location.protocol + '//' + desiredHost
 								+ (window.location.port != "" ? ':' + window.location.port : '')
 								+ window.location.pathname;
-				//alert('want ' + url);
+				alert('want ' + url);
 				window.location.replace(url);
 			}
 		},

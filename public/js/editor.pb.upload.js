@@ -73,10 +73,17 @@
 			var dirty = PB.Book.getDirty();
 			for (var i=0; i < dirty.length; i++)
 				Uploader.saveBook(dirty[i]);
+			Uploader.processQueue();
 		},
 		getNextRequest: function() {
-			if (this.activeRequest || !NetworkErrorRetry.retryOk())
+			if (this.activeRequest)
 					return null;
+			if (!NetworkErrorRetry.retryOk()) {
+				window.setTimeout(function()
+					{Uploader.processQueue() },
+					NetworkErrorRetry.whenToRetry);
+				return null;
+			}
 			var request = null;
 			if (this.photoQueue.length > 0) {
 				var photo = this.photoQueue.pop();
