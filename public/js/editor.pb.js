@@ -260,11 +260,12 @@ window.PB.Photo // Photo objects
 				break;
 			}
 		},
-		addLocalPhoto: function(localFile) {
+		addLocalPhoto: function(localFile, options) {
 			var serverPhoto = PB.ServerPhotoCache.createFromLocalFile(localFile);
 			this.localData.document.photoList.push(serverPhoto.id);
+			this._dirty = true;
 			PB.bindChangeListener(serverPhoto.id, this);
-			PB.broadcastChange(this, 'photoList');
+			PB.broadcastChange(this, 'photoList', options);
 		},
 		removePhoto: function(photo, options) {
 			// Remove photo from all the pages

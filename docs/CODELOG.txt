@@ -57,6 +57,7 @@ Google Drive integration? https://developers.google.com/drive/
 
 Next:
 - image upload via DND
+- fix page can be dropped over covers bug
 - load photo data when book is loaded
 - handle "upload too large errors" (show bad photos with name, remove from book)
 - BUG: book saved with temp- files, prevent at all costs
@@ -65,10 +66,11 @@ Next:
 - exif, parse on client and server, use image orientation
 
 Aug 6
+Image upload via DND: making progress
+Bugfix day
 Apple bug: refiled
 fix image sizes: photopalette maxwidth to 128. Drag images are generated on canvas
 Bugfix: roughPages have ids, patching was not workin
-
 
 July 26
 Photo upload works

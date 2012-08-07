@@ -144,7 +144,7 @@
 			xhr.fail( function(jqXHR, textStatus, message) {
 				THIS.saveError = textStatus;
 				console.log("xhr.fail ServerPhoto")
-				switch (jsXHR.status) {
+				switch (jqXHR.status) {
 					case 413:
 					// TODO, remove too large from picture list, with nice error.
 					// show the photos inside an alert

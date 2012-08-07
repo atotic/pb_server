@@ -93,8 +93,14 @@
 					else
 						$(c.get(targetIndex)).before(newDom);
 					if (options.animate) {
+						var x = newDom.get(0);
+						console.log("newDom", x.width, x.height, x.offsetWidth, x.offsetHeight);
+						GUI.Util.revealByScrolling(newDom, $('#photo-list-container'));
 						var w = newDom.width();
-						newDom.css('width', 0).animate({width: w});
+						newDom.css('width', 0)
+									.animate({width: w}, {complete: function() {
+										newDom.css('width', 'auto');	// because our default width might be wrong
+						}});
 					}
 				break;
 				case 'delete':

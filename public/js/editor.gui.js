@@ -33,6 +33,11 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 
 (function(window) {
 "use strict";
+		function stopEvent(ev) {
+			ev.stopPropagation();
+			ev.preventDefault();
+		}
+
 		var GUI = {
 		init: function() {
 			this.Buttons.init();
@@ -41,12 +46,47 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		bindToBook: function(book) {
 			$('body')
 				.data('model', book)
-				.on( PB.MODEL_CHANGED, function(ev, model, prop, options) {
+				.attr('dropzone', true)
+				.on(PB.MODEL_CHANGED, function(ev, model, prop, options) {
 					if (prop === 'locked' && book.locked) {
 						$('#locked').slideDown();
 						$('#lockedMessage').text(book.locked);
 					}
 				});
+			var bodyDropHandler = {
+				dragenter: function(ev) {
+					console.log('dragenter');
+					ev = ev.originalEvent;
+					var isFile = ev.dataTransfer.types.indexOf("Files") != -1;
+					if (isFile) {
+						$('#photo-list').addClass('drop-target');
+					}
+				},
+				dragover: function(ev) {
+					// stopping event here prevents default action
+					console.log('dragover');
+					stopEvent(ev);
+				},
+				dragleave: function(ev) {
+					$('#photo-list').removeClass('drop-target');
+					console.log('dragleave');
+					stopEvent(ev);
+				},
+				drop: function(ev) {
+					ev = ev.originalEvent;
+					$('#photo-list').removeClass('drop-target');
+					var files = ev.dataTransfer.files;
+					if (files)
+						for (var i=0; i<files.length; i++) {
+							var f = files.item(i);
+							if (f.type.match("image/(png|jpeg|gif)"))
+								PB.Book.default.addLocalPhoto(f, {animate: true});
+						}
+					console.log('drop');
+					stopEvent(ev);
+				}
+			}
+			$('body').on(bodyDropHandler);
 			GUI.PhotoPalette.bindToBook(book);
 			GUI.RoughWorkArea.bindToBook(book);
 			window.document.title = book.title + " PhotoBook";
@@ -108,14 +148,27 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			el = $(el).get(0);
 			container = container || el.parentNode;
 			container = $(container).get(0);
+			if (el.nodeName == 'IMG' && el.offsetHeight == 0) {
+				// edge case: img not yet loaded, scroll when image loads
+				var scrollWhenLoaded = function() {
+					el.removeEventListener('load',scrollWhenLoaded);
+					Util.revealByScrolling(el, container);
+				}
+				el.addEventListener('load', scrollWhenLoaded);
+				return;
+			}
 			var elTop = el.offsetTop;
 			var elBottom = elTop + el.offsetHeight;
 			var containerTop = container.scrollTop;
 			var containerBottom = containerTop + container.offsetHeight;
 			if (elTop < containerTop)
 				$(container).animate({ 'scrollTop' : elTop - 4});
-			else if (elBottom > containerBottom)
+			else if (elBottom > containerBottom) {
+//				console.log("setting scrollTop to " + (elBottom - container.offsetHeight));
 				$(container).animate({'scrollTop' : elBottom - container.offsetHeight});
+			}
+			else
+				;//console.log("not scrolling", elTop, elBottom, containerTop, containerBottom);
 		},
 		swapDom: function(a, b, animate) {
 			var parent = a.parentNode;

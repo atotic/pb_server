@@ -74,7 +74,12 @@
 		},
 
 		dragenter: function(ev) {
-			ev.stopPropagation();
+			if (! GUI.DragStore.hasType(
+						GUI.DragStore.ROUGH_PAGE,
+						GUI.DragStore.IMAGE,
+						GUI.DragStore.ADD_PAGE_BUTTON,
+						GUI.DragStore.ROUGH_IMAGE))
+				return;
 			ev.preventDefault();
 		},
 		dragover: function(ev) {
