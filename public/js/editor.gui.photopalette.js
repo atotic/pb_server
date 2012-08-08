@@ -5,7 +5,9 @@
 (function(scope){
 	var PhotoPalette = {
 		bindToBook: function(book) {
-			this._photoFilter = 'all';//'unused';
+			this._photoFilter = 'unused'; // 'all'
+			this.makeDroppable();
+			// Keep models in sync
 			$('#photo-list')
 				.data('model', book)
 				.on(PB.MODEL_CHANGED,
@@ -31,6 +33,52 @@
 		stopDragEffect: function(img) {
 			if (!$(img).data('pb.markedForDelete'))
 				$(img).css('opacity', '1.0');
+		},
+		hasDragSources: function() {
+			return GUI.DragStore.hasFlavor(
+				GUI.DragStore.OS_FILE,
+				GUI.DragStore.ROUGH_IMAGE);
+		},
+		makeDroppable: function() {
+			$('#photo-list').attr('dropzone', true).on({
+				dragenter: function(ev) {
+					GUI.DragStore.setDataTransferFlavor(ev.originalEvent.dataTransfer);
+					if (!PhotoPalette.hasDragSources())
+						return;
+					console.log('dragenter palette');
+					ev.preventDefault();
+				},
+				dragover: function(ev) {
+					if (!PhotoPalette.hasDragSources())
+						return;
+					console.log('dragover palette');
+					$(this).addClass('drop-target');
+				},
+				dragleave: function(ev) {
+					if (!PhotoPalette.hasDragSources())
+						return;
+					console.log('dragleave palette');
+					$(this).removeClass('drop-target');
+				},
+				drop: function(ev) {
+					$(this).removeClass('drop-target');
+					if (!PhotoPalette.hasDragSources())
+						return;
+					ev = ev.originalEvent;
+					switch(GUI.DragStore.flavor) {
+						case 'os_file': // PB.DragStore.OS_FILE:
+						return; // Document will handle the drop
+						case 'roughImage':
+							var ri = $(GUI.DragStore.dom);
+							var photo = ri.data('model');
+							var roughPage = ri.parent().data('model');
+							roughPage.removePhoto(photo, {animate: true});
+							ev.stopPropagation();
+							ev.preventDefault();
+						break;
+					}
+				}
+			});
 		},
 		addPhoto: function(photo) {
 			var img = this.createImageTile(photo);
@@ -93,8 +141,6 @@
 					else
 						$(c.get(targetIndex)).before(newDom);
 					if (options.animate) {
-						var x = newDom.get(0);
-						console.log("newDom", x.width, x.height, x.offsetWidth, x.offsetHeight);
 						GUI.Util.revealByScrolling(newDom, $('#photo-list-container'));
 						var w = newDom.width();
 						newDom.css('width', 0)
@@ -131,11 +177,11 @@
 			$(img).attr('draggable', true).on( {
 				'dragstart': function(ev) {
 					ev = ev.originalEvent;
+					ev.dataTransfer.clearData();
 					ev.dataTransfer.setData('text/uri-list', this.src);
 					var r = this.getBoundingClientRect();
-					var img = new Image();
-					img.src = GUI.Util.imgToDataUrl(this);
-					ev.dataTransfer.setDragImage(img,ev.clientX - r.left, ev.clientY - r.top);
+					var canvas = GUI.Util.imgToCanvas(this);
+					ev.dataTransfer.setDragImage(canvas,ev.clientX - r.left, ev.clientY - r.top);
 					PhotoPalette.startDragEffect(this);
 					GUI.DragStore.reset(GUI.DragStore.IMAGE, {dom: this});
 					ev.effectAllowed = 'move';

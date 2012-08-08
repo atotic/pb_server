@@ -19,7 +19,10 @@
 		replaceTempId: function(photo, newId) {
 			delete cache[photo.id];
 			photo._id = newId;
-			cache[newId] = photo;
+			if (! newId in cache)
+				cache[newId] = photo;
+			else
+				console.log('duplicate photo detection');
 		},
 		createFromLocalFile: function(file) {
 			var id = tempPrefix + PB.randomString(5);
@@ -105,7 +108,7 @@
 				PB.broadcastChange(this, 'id', {newId: json.id});
 				ServerPhotoCache.replaceTempId(this, json.id);
 			}
-			var props = ['id', 'original_url', 'display_url', 'icon_url', 'exif', 'display_name'];
+			var props = ['original_url', 'display_url', 'icon_url', 'exif', 'display_name'];
 			for (var i=0; i<props.length; i++)
 				if ( (!(props[i] in this))
 						 || ( (props[i] in this) && this[props[i]] != json[props[i]])) {
@@ -158,6 +161,7 @@
 			}).done( function(response, msg, jqXHR) {
 				THIS.loadFromJson(response);
 			});
+			return xhr;
 		}
 	}
 	scope.ServerPhotoCache = ServerPhotoCache;

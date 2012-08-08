@@ -15,18 +15,29 @@
 			switch(targets.length) {
 				case 0: return null;
 				case 1: return targets[0];
-				default: console.log('multiple drop targets'); return targets[0];
+				default:
+					if (targets[0].nodeName == 'BODY')
+						return targets[1];
+					else
+						return targets[0];
 			}
 		},
 		sendEvent: function(target, eventType, clientX, clientY) {
 			if (!target)
 				return;
+			// ev emulates dom event structure our code expects
 			var ev = {
 				preventDefault: function() {},
 				stopPropagation: function() {},
 				clientX: clientX,
 				clientY: clientY,
-				currentTarget: target
+				currentTarget: target,
+				dataTransfer: {
+					files: null,
+					types: {
+						contains: function() { return false;}
+					}
+				}
 			}
 			var jqEvent = $.Event(eventType);
 			jqEvent.originalEvent = ev;

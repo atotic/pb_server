@@ -431,6 +431,7 @@ class SvegApp < Sinatra::Base
 			json_response(photo)
 		else
 			begin
+				headers['Cache-Control'] = 'max-age=84600'
 				send_file photo.file_path(params[:size])
 			rescue
 				halt [404, ["Photo in this size is not available #{params[:size]}"]]

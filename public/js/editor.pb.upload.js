@@ -88,20 +88,26 @@
 			if (this.photoQueue.length > 0) {
 				var photo = this.photoQueue.pop();
 				request = photo.getSaveDeferred();
+				if (request)
+					console.log("saving photo", photo.id);
 			}
 			if (request == null && this.bookQueue.length > 0) {
 				var book = this.bookQueue.pop();
 				request = book.getSaveDeferred();
 				if (!request) // can happen if no diffs
 					request = this.getNextRequest();
+				if (request)
+					console.log("saving book");
 			}
 			return request;
 		},
 		processQueue: function() {
-			this.activeRequest = this.getNextRequest();
-			if (!this.activeRequest)
+			var request = this.getNextRequest();
+			if (!request)
 				return;
+			this.activeRequest = request;
 			var THIS = this;
+//			console.log("request started");
 			this.activeRequest
 				.done( function(response, msg, jqXHR) {
 //					console.log("ajax done");
@@ -116,6 +122,7 @@
 				.always( function() {
 //					console.log('ajax always');
 					THIS.activeRequest = null;
+//					console.log("request complete");
 					THIS.processQueue();
 				});
 		}

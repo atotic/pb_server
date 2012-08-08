@@ -55,26 +55,23 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				});
 			var bodyDropHandler = {
 				dragenter: function(ev) {
-					console.log('dragenter');
-					ev = ev.originalEvent;
-					var isFile = ev.dataTransfer.types.indexOf("Files") != -1;
-					if (isFile) {
-						$('#photo-list').addClass('drop-target');
-					}
+//					console.log('dragenter');
+//					ev = ev.originalEvent;
+//					var isFile = ev.dataTransfer.types.contains("Files");
 				},
 				dragover: function(ev) {
-					// stopping event here prevents default action
-					console.log('dragover');
+					// stopping event here prevents default action, which is loading new url
+//					console.log('dragover');
 					stopEvent(ev);
 				},
 				dragleave: function(ev) {
-					$('#photo-list').removeClass('drop-target');
-					console.log('dragleave');
+//					$('#photo-list').removeClass('drop-target');
+//					console.log('dragleave');
 					stopEvent(ev);
 				},
 				drop: function(ev) {
 					ev = ev.originalEvent;
-					$('#photo-list').removeClass('drop-target');
+//					$('#photo-list').removeClass('drop-target');
 					var files = ev.dataTransfer.files;
 					if (files)
 						for (var i=0; i<files.length; i++) {
@@ -82,7 +79,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 							if (f.type.match("image/(png|jpeg|gif)"))
 								PB.Book.default.addLocalPhoto(f, {animate: true});
 						}
-					console.log('drop');
+//					console.log('drop');
 					stopEvent(ev);
 				}
 			}
@@ -161,10 +158,12 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			var elBottom = elTop + el.offsetHeight;
 			var containerTop = container.scrollTop;
 			var containerBottom = containerTop + container.offsetHeight;
-			if (elTop < containerTop)
+			if (elTop < containerTop) {
+//				console.log("setting scrollTop to " ,elTop - 4);
 				$(container).animate({ 'scrollTop' : elTop - 4});
+			}
 			else if (elBottom > containerBottom) {
-//				console.log("setting scrollTop to " + (elBottom - container.offsetHeight));
+//				console.log("setting scrollTop to ", elBottom - container.offsetHeight);
 				$(container).animate({'scrollTop' : elBottom - container.offsetHeight});
 			}
 			else
@@ -178,14 +177,14 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 //			b.parentNode.insertBefore(a, b);
 //			parent.insertBefore(b, sibling);
 		},
-		imgToDataUrl: function(img) {
+		imgToCanvas: function(img) {
 			var canvas = $("<canvas />")
 				.attr('width', img.width)
 				.attr('height', img.height)
 				.get(0);
 			canvas.getContext('2d')
 				.drawImage(img, 0,0, img.width, img.height);
-			return canvas.toDataURL('image/jpeg');
+			return canvas;
 		}
 	}
 
@@ -194,6 +193,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 
 // DragStore is a global used to store dragged local data
 // Why? Html drag can only drag strings, we need js objects
+// Limitation: holds only one flavor
 (function(window) {
 	var DragStore = {
 		get hadDrop() { return this._hadDrop; },
@@ -203,23 +203,29 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			this._source = null;
 			this._hadDrop = false;
 			if (type)
-				this.setSource(type, element, props);
+				this.setFlavor(type, element, props);
 		},
 
-		// Drag types:
+		// Drag flavors:
 		ROUGH_PAGE: 'roughPage',
 		IMAGE: 'image',
 		ADD_PAGE_BUTTON: 'addRoughPage',
 		ROUGH_IMAGE: 'roughImage',
+		OS_FILE: 'os_file',
 
 		// Common props:
 		// dom: dom element being dragged
-		setSource: function(type, props) {
-			this._source = { type: type }
+		setFlavor: function(flavor, props) {
+			console.log("DragStore.setFlavor", flavor);
+			this._source = { flavor: flavor }
 			$.extend(this._source, props);
 		},
-		get type() {
-			return this._source ? this._source.type : null;
+		setDataTransferFlavor: function(dataTransfer) {
+			if (dataTransfer.types.contains("Files"))
+				this.setFlavor(DragStore.OS_FILE, true);
+		},
+		get flavor() {
+			return this._source ? this._source.flavor : null;
 		},
 		prop: function(propName) {
 			return (this._source && (propName in this._source)) ? this._source[propName] : null;
@@ -227,10 +233,10 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		get dom() {
 			return this.prop('dom');
 		},
-		hasType: function() {
+		hasFlavor: function() {
 			if (this._source)
 				for (var i=0; i<arguments.length; i++)
-					if (arguments[i] == this._source.type)
+					if (arguments[i] == this._source.flavor)
 						return true;
 			return false;
 		}

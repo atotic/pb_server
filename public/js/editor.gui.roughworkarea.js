@@ -74,7 +74,7 @@
 		},
 
 		dragenter: function(ev) {
-			if (! GUI.DragStore.hasType(
+			if (! GUI.DragStore.hasFlavor(
 						GUI.DragStore.ROUGH_PAGE,
 						GUI.DragStore.IMAGE,
 						GUI.DragStore.ADD_PAGE_BUTTON,
@@ -84,7 +84,7 @@
 		},
 		dragover: function(ev) {
 			// Ignore unless drag has the right flavor
-			if (! GUI.DragStore.hasType(
+			if (! GUI.DragStore.hasFlavor(
 						GUI.DragStore.ROUGH_PAGE,
 						GUI.DragStore.IMAGE,
 						GUI.DragStore.ADD_PAGE_BUTTON,
@@ -105,7 +105,7 @@
 				}
 			});
 			// Display visual feedback
-			switch(GUI.DragStore.type) {
+			switch(GUI.DragStore.flavor) {
 			case 'roughPage':
 			case 'addRoughPage':
 				if (newTarget) {
@@ -128,7 +128,7 @@
 					this.setTarget();
 				break;
 			default:
-				console.error("Unknown drag type", GUI.DragStore.type);
+				console.error("Unknown drag type", GUI.DragStore.flavor);
 			}
 		},
 		dragleave: function(ev) {
@@ -143,7 +143,7 @@
 			var t = {target: roughPageTarget.target, direction: roughPageTarget.direction};
 			this.setTarget();	// reset the drag visuals
 
-			switch(GUI.DragStore.type) {
+			switch(GUI.DragStore.flavor) {
 			case 'roughPage':
 				this.dropRoughPage(ev, t);
 				break;
@@ -157,7 +157,7 @@
 				this.dropRoughImage(ev, t);
 				break;
 			default:
-				throw "unknown drop type" + GUI.DragStore.type;
+				throw "unknown drop flavor" + GUI.DragStore.flavor;
 			}
 			GUI.DragStore.hadDrop = true;
 		},
@@ -408,7 +408,7 @@
 						ev.preventDefault();
 						return;
 					}
-
+					ev.dataTransfer.clearData();
 					ev.dataTransfer.setData('text/plain', "page drag");
 					ev.dataTransfer.setDragImage(target.dom, target.offsetX, target.offsetY);
 					ev.dataTransfer.effectAllowed = "move";
@@ -419,10 +419,9 @@
 					// if we hide the element before we return, snapshot will be blank
 					// solution: hide it with a timer
 					window.setTimeout(function() {
-						console.log("do");
 						RoughWorkArea.startDragEffect(GUI.DragStore.dom);
 					}, 0);
-					console.log('drag started');
+//					console.log('drag started');
 				}
 				catch(e) {
 					console.log("dragstart exception", e.message)

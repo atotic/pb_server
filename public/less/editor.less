@@ -103,8 +103,9 @@ body {
 .pb-palette-container {
 	overflow: auto;
 	margin-left:0px;
-	top: @navbar-height;
+/*	top: @navbar-height; */
 	max-height: @photo-list-height;
+	position: relative;
 }
 #photo-list-container {
 	.pb-palette-container;
@@ -116,12 +117,16 @@ body {
 		padding-right: @palette-resize-btn-radius / 2;
 		width: 100%;
 	}
+
+	#photo-list.drop-target {
+		background-color: maroon;
+	}
 		#photo-list img {
 			margin: 2px;
 			max-height: @image-height;
 		}
 	#photo-list-tools {
-			position:absolute;
+			position:fixed;
 			padding: 8px;
 			width: @side-tool-width;
 			max-height: @photo-list-height;

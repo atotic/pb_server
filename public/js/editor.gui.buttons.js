@@ -20,7 +20,7 @@
 			$("#add-photo-input").on( {
 				change: function(e) {
 					for (var i=0; i<this.files.length; i++)
-						PB.Book.default.addLocalPhoto(this.files[i]);
+						PB.Book.default.addLocalPhoto(this.files[i], {animate:true});
 				}});
 		}
 	}
@@ -37,6 +37,7 @@
 				addBtn.attr('draggable', true).on( {
 					dragstart: function(ev) {
 						ev = ev.originalEvent;
+						ev.dataTransfer.clearData();
 						ev.dataTransfer.setData('text/plain', "my text");
 						GUI.DragStore.reset(GUI.DragStore.ADD_PAGE_BUTTON);
 						ev.dataTransfer.effectAllowed = "move";
@@ -50,7 +51,7 @@
 				dragover: function(ev) {
 					ev = ev.originalEvent;
 					ev.preventDefault();
-					if (!(GUI.DragStore.hasType(GUI.DragStore.ROUGH_PAGE,
+					if (!(GUI.DragStore.hasFlavor(GUI.DragStore.ROUGH_PAGE,
 							GUI.DragStore.IMAGE, GUI.DragStore.ROUGH_IMAGE)))
 						return;
 					$(this).addClass('drop-target');
@@ -63,7 +64,7 @@
 					ev.preventDefault();
 					ev.stopPropagation();
 					$(this).removeClass('drop-target');
-					switch(GUI.DragStore.type) {
+					switch(GUI.DragStore.flavor) {
 					case 'roughPage':
 						$(GUI.DragStore.dom).data('model').remove({animate:true});
 						break;

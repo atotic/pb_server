@@ -56,8 +56,9 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-- image upload via DND
+- image drop on rough page
 - fix page can be dropped over covers bug
+- photo status messages
 - load photo data when book is loaded
 - handle "upload too large errors" (show bad photos with name, remove from book)
 - BUG: book saved with temp- files, prevent at all costs
@@ -65,12 +66,21 @@ Next:
 - account page should load book list dynamically  $(window).unload(function(){});
 - exif, parse on client and server, use image orientation
 
+Aug 7
+Optimization: photos have Cache-control: max-age: 86400, it makes a difference
+Bugfix: photoList still has temporary ids when saved, happens on multiple uploads
+Bugfix: dragging images
+Bugfix: scroll image into view, needed relative positioned parent
+Photopalette: rough image drop, file drop
+
 Aug 6
 Image upload via DND: making progress
 Bugfix day
 Apple bug: refiled
 fix image sizes: photopalette maxwidth to 128. Drag images are generated on canvas
 Bugfix: roughPages have ids, patching was not workin
+Bugfix: touch was not dragging images
+- image upload via DND
 
 July 26
 Photo upload works
