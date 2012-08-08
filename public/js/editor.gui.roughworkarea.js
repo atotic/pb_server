@@ -72,23 +72,23 @@
 			if (target)
 				$(target).addClass(dropFeedback);
 		},
-
-		dragenter: function(ev) {
-			if (! GUI.DragStore.hasFlavor(
+		hasDragFlavors: function() {
+			return GUI.DragStore.hasFlavor(
 						GUI.DragStore.ROUGH_PAGE,
 						GUI.DragStore.IMAGE,
 						GUI.DragStore.ADD_PAGE_BUTTON,
-						GUI.DragStore.ROUGH_IMAGE))
+						GUI.DragStore.ROUGH_IMAGE,
+						GUI.DragStore.OS_FILE);
+		},
+		dragenter: function(ev) {
+			GUI.DragStore.setDataTransferFlavor(ev.dataTransfer);
+			if (!this.hasDragFlavors())
 				return;
 			ev.preventDefault();
 		},
 		dragover: function(ev) {
 			// Ignore unless drag has the right flavor
-			if (! GUI.DragStore.hasFlavor(
-						GUI.DragStore.ROUGH_PAGE,
-						GUI.DragStore.IMAGE,
-						GUI.DragStore.ADD_PAGE_BUTTON,
-						GUI.DragStore.ROUGH_IMAGE))
+			if (!this.hasDragFlavors())
 				return;
 
 			ev.preventDefault();
@@ -96,6 +96,9 @@
 			var newTarget = null;
 			var newDirection = null;
 			$(ev.currentTarget).children('.rough-page').each(function() {
+				var model = $(this).data('model');
+				if (('isDroppable' in model) && !model.isDroppable(GUI.DragStore.flavor))
+					return;
 				var direction = GUI.Util.pointInClientRect(ev.clientX, ev.clientY,
 					this.getBoundingClientRect());
 				if (direction) {
@@ -116,6 +119,7 @@
 					this.setTarget();
 				break;
 			case 'image':
+			case 'os_file':
 				if (newTarget)
 					this.setTarget(newTarget, null, 'drop-target');
 				else
@@ -156,6 +160,9 @@
 			case 'roughImage':
 				this.dropRoughImage(ev, t);
 				break;
+			case 'os_file':
+				this.dropOsFile(ev, t);
+				break;
 			default:
 				throw "unknown drop flavor" + GUI.DragStore.flavor;
 			}
@@ -173,6 +180,20 @@
 			var roughModel = $(t.target).data('model');
 			var photoModel = $(scope.DragStore.dom).data('model');
 			roughModel.addPhoto(photoModel, {animate: true});
+		},
+		dropOsFile: function(ev, t) {
+			var files = ev.dataTransfer.files;
+			if (!files)
+				return;
+			var roughModel = $(t.target).data('model');
+
+			for (var i=0; i<files.length; i++) {
+				var f = files.item(i);
+				if (f.type.match("image/(png|jpeg|gif)")) {
+					var photo = PB.Book.default.addLocalPhoto(f);
+					roughModel.addPhoto(photo, {animate:true});
+				}
+			}
 		},
 		dropRoughImage: function(ev, t) {
 			// move image from one rough to another

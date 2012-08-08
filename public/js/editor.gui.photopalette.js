@@ -34,7 +34,7 @@
 			if (!$(img).data('pb.markedForDelete'))
 				$(img).css('opacity', '1.0');
 		},
-		hasDragSources: function() {
+		hasDragFlavors: function() {
 			return GUI.DragStore.hasFlavor(
 				GUI.DragStore.OS_FILE,
 				GUI.DragStore.ROUGH_IMAGE);
@@ -43,26 +43,26 @@
 			$('#photo-list').attr('dropzone', true).on({
 				dragenter: function(ev) {
 					GUI.DragStore.setDataTransferFlavor(ev.originalEvent.dataTransfer);
-					if (!PhotoPalette.hasDragSources())
+					if (!PhotoPalette.hasDragFlavors())
 						return;
-					console.log('dragenter palette');
+//					console.log('dragenter palette');
 					ev.preventDefault();
 				},
 				dragover: function(ev) {
-					if (!PhotoPalette.hasDragSources())
+					if (!PhotoPalette.hasDragFlavors())
 						return;
-					console.log('dragover palette');
+//					console.log('dragover palette');
 					$(this).addClass('drop-target');
 				},
 				dragleave: function(ev) {
-					if (!PhotoPalette.hasDragSources())
+					if (!PhotoPalette.hasDragFlavors())
 						return;
-					console.log('dragleave palette');
+//					console.log('dragleave palette');
 					$(this).removeClass('drop-target');
 				},
 				drop: function(ev) {
 					$(this).removeClass('drop-target');
-					if (!PhotoPalette.hasDragSources())
+					if (!PhotoPalette.hasDragFlavors())
 						return;
 					ev = ev.originalEvent;
 					switch(GUI.DragStore.flavor) {

@@ -479,6 +479,15 @@ window.PB.Photo // Photo objects
 		isDraggable: function() {
 			return this.id.match(coverRegex) == null;
 		},
+		isDroppable: function(flavor) {
+			switch(flavor) {
+			case 'roughPage':
+			case 'addRoughPage':
+				return this.type() != 'cover';
+			default:
+				return true;
+			}
+		},
 		type: function() {
 			if ( this.id.match(coverRegex))
 				return 'cover';

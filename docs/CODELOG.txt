@@ -56,12 +56,9 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-- image drop on rough page
-- fix page can be dropped over covers bug
 - photo status messages
 - load photo data when book is loaded
 - handle "upload too large errors" (show bad photos with name, remove from book)
-- BUG: book saved with temp- files, prevent at all costs
 - Pass the 200 file upload test
 - account page should load book list dynamically  $(window).unload(function(){});
 - exif, parse on client and server, use image orientation
@@ -72,6 +69,9 @@ Bugfix: photoList still has temporary ids when saved, happens on multiple upload
 Bugfix: dragging images
 Bugfix: scroll image into view, needed relative positioned parent
 Photopalette: rough image drop, file drop
+Bugfix: book saved with temp- files, prevent at all costs
+Rough page: image drop
+Bugfix: page can be dropped over covers bug
 
 Aug 6
 Image upload via DND: making progress
