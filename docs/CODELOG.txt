@@ -56,12 +56,16 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-- photo status messages
+- icons from local files
 - load photo data when book is loaded
 - handle "upload too large errors" (show bad photos with name, remove from book)
 - Pass the 200 file upload test
 - account page should load book list dynamically  $(window).unload(function(){});
 - exif, parse on client and server, use image orientation
+
+Aug 8
+Migrated PhotoPalette photos into divs.
+Photo status messages: done
 
 Aug 7
 Optimization: photos have Cache-control: max-age: 86400, it makes a difference

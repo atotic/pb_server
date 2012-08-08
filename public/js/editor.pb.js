@@ -453,6 +453,12 @@ window.PB.Photo // Photo objects
 		},
 		isDraggable: function() {
 			return true;
+		},
+		get status() {
+			return this.p.status;
+		},
+		get progress() {
+			return this.p.progress;
 		}
 	}
 

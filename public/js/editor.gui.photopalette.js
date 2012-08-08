@@ -27,12 +27,12 @@
 		get photoFilter() {
 			return this._photoFilter;
 		},
-		startDragEffect: function(img) {
-			$(img).css('opacity', '0');
+		startDragEffect: function(tile) {
+			$(tile).css('opacity', '0');
 		},
-		stopDragEffect: function(img) {
-			if (!$(img).data('pb.markedForDelete'))
-				$(img).css('opacity', '1.0');
+		stopDragEffect: function(tile) {
+			if (!$(tile).data('pb.markedForDelete'))
+				$(tile).css('opacity', '1.0');
 		},
 		hasDragFlavors: function() {
 			return GUI.DragStore.hasFlavor(
@@ -84,32 +84,74 @@
 			var img = this.createImageTile(photo);
 			$('#photo-list').append(img);
 		},
+		setTileStatus: function(tile, model) {
+			var statusDiv = tile.children('.status');
+			var msg = model.status;
+			if (msg) {
+				if (statusDiv.length == 0) {
+					statusDiv = $("<div class='status'>");
+					tile.append(statusDiv);
+				}
+				statusDiv.text(msg);
+			}
+			else
+				statusDiv.detach();
+		},
+		setTileProgress: function(tile, model) {
+			var progressDiv = tile.children('.progress');
+			var percent = model.progress;
+			if (percent) {
+				if (progressDiv.length == 0) {
+					progressDiv = $("<div class='progress'><div class='bar' style='width:0%;'></div></div>");
+					tile.append(progressDiv);
+				}
+				if (percent == -1)
+					progressDiv.addClass('progress-striped')
+						.addClass('active')
+						.children('.bar').css('width', '100%');
+				else
+					progressDiv.removeClass('progress-striped')
+						.removeClass('active')
+						.children('.bar').css('width', percent + '%');
+			}
+			else
+				progressDiv.detach();
+		},
 		createImageTile: function(photo) {
-			var img = $("<img src='" + photo.getUrl(128) + "'>");
-			img
-				.data('model', photo)
+			var tile = $("<div class='photo-div'><img src='" + photo.getUrl(128) + "'></div>");
+
+			tile.data('model', photo)
 				.on(PB.MODEL_CHANGED,
 					function(ev, model, prop, options) {
+						var img = $(tile).children('img');
 						switch(prop) {
 							case 'icon_url':
 								img.prop('src', photo.getUrl(128));
+							break;
+							case 'status':
+								PhotoPalette.setTileStatus(tile, model);
+								break;
+							case 'progress':
+								PhotoPalette.setTileProgress(tile, model);
 							break;
 							default:
 							break;
 						}
 				});
 			var THIS = this;
+			this.setTileStatus(tile, photo);
+			this.setTileProgress(tile, photo);
 			window.setTimeout(function() {
 				// iPad bug workaround. Without timer, touch handlers are not registered
-				THIS.makeDraggable(img);
+				THIS.makeDraggable(tile);
 			}, 0);
-			return img;
+			return tile;
 		},
 		synchronizePhotoList: function(options) {
 			options = $.extend({animate:false}, options);
 			var containerDom = $('#photo-list');
 			var bookModel = containerDom.data('model');
-			var sel = 'img';
+			var sel = '.photo-div';
 
 			var oldChildren = containerDom.children( sel ).get();
 			var oldPhotos = oldChildren.map(
@@ -180,7 +222,7 @@
 					ev.dataTransfer.clearData();
 					ev.dataTransfer.setData('text/uri-list', this.src);
 					var r = this.getBoundingClientRect();
-					var canvas = GUI.Util.imgToCanvas(this);
+					var canvas = GUI.Util.imgToCanvas($(this).children('img').get(0));
 					ev.dataTransfer.setDragImage(canvas,ev.clientX - r.left, ev.clientY - r.top);
 					PhotoPalette.startDragEffect(this);
 					GUI.DragStore.reset(GUI.DragStore.IMAGE, {dom: this});
@@ -194,8 +236,8 @@
 		}
 	}
 	var PhotoPaletteTouch = {
-		makeDraggable: function(img) {
-			scope.TouchDragHandler.makeDraggable(img, 'image',
+		makeDraggable: function(tile) {
+			scope.TouchDragHandler.makeDraggable(tile, 'image',
 				function() { PhotoPalette.startDragEffect(GUI.DragStore.dom);},
 				function() { PhotoPalette.stopDragEffect(GUI.DragStore.dom)}
 				);

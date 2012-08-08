@@ -36,6 +36,8 @@
 		if (!id)
 			throw "ServerPhoto must have an id";
 		this._id = id;
+		this._status = "";
+		this._progress = 0;
 	}
 
 /*
@@ -51,8 +53,17 @@
 		},
 		set status(msg) {
 			this._status = msg;
-			PB.broadcastChange(this, 'originalUrl');
-			PB.broadcastChange(this, 'displayUrl');
+			PB.broadcastChange(this, 'status');
+		},
+		get status() {
+			return this._status;
+		},
+		get progress() {
+			return this._progress;
+		},
+		set progress(percent) {
+			this._progress = percent;
+			PB.broadcastChange(this, 'progress');
 		},
 		set locked(val) {
 			this._locked = true;
@@ -84,16 +95,19 @@
 		},
 		load: function() {
 			var THIS = this;
+			this.status = 'Loading';
 			$.ajax('/photo/'+ this.id + "?size=json")
 				.done(function(response, msg, jqXHR) {
+					THIS.status = "";
 					THIS.loadFromJson(response);
 				})
 				.fail(function(jsXHR, status, msg) {
 					if (jsXHR.status == 404) {
-						this.status = "Not found";
-						this.locked = true;
+						THIS.status = "Failed. Not found";
+						THIS.locked = true;
 					}
 					else {
+						THIS.status = "Retrying";
 						PB.NetworkErrorRetry.retryLater();
 						window.setTimeout(function() { THIS.load()}, PB.NetworkErrorRetry.nextRetryInterval);
 					}
@@ -129,6 +143,7 @@
 			var fd = new FormData();
 			fd.append('display_name', this._localFile.name);
 			fd.append('photo_file', this._localFile);
+			this.status = 'uploading';
 			var THIS = this;
 			var xhr = $.ajax({
 				url: "/photos?book=" + PB.Book.default.id,
@@ -139,7 +154,7 @@
 				xhr: function() {	// create a listener for upload events
 					var x = new window.XMLHttpRequest();
 					x.upload.addEventListener("progress", function(evt) {
-						THIS.saveProgress = evt.lengthComputable ? evt.loaded * 100 / evt.total : -1;
+						THIS.progress = evt.lengthComputable ? evt.loaded * 100 / evt.total : -1;
 						}, false);
 					return x;
 				}
@@ -151,14 +166,17 @@
 					case 413:
 					// TODO, remove too large from picture list, with nice error.
 					// show the photos inside an alert
-						THIS.status = "Object ";
+						THIS.status = "Upload failed. File is too big.";
 						THIS.locked = true;
 						break;
 					default:
+						THIS.status = "Upload failed. Retrying.";
 						PB.Uploader.savePhoto(THIS); // retry
 						break;
 				}
 			}).done( function(response, msg, jqXHR) {
+				THIS.status = "";
+				THIS.progress = 0;
 				THIS.loadFromJson(response);
 			});
 			return xhr;

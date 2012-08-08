@@ -221,7 +221,12 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			$.extend(this._source, props);
 		},
 		setDataTransferFlavor: function(dataTransfer) {
-			if (dataTransfer.types.contains("Files"))
+			var isFile;
+			if ('contains' in dataTransfer.types)	// Firefox
+				isFile = dataTransfer.types.contains("Files");
+			else // Chrome
+				isFile = dataTransfer.types.indexOf("Files") != -1;
+			if (isFile)
 				this.setFlavor(DragStore.OS_FILE, true);
 		},
 		get flavor() {
