@@ -72,18 +72,78 @@
 			if ('original_url' in this)
 				return this.original_url;
 			else
-				debugger; // TODO
+				return this._getDataUrl();
 		},
 		get displayUrl() {
-			// debugger
+			if ('display_url' in this)
+				return this.display_url;
+			else
+				return this._getDataUrl();
 		},
 		get iconUrl() {
 			if ('icon_url' in this)
 				return this.icon_url;
-			else if ('_icon_placeholder' in this)
-				return this._icon_placeholder;
-			this._icon_placeholder = this._generatePlaceholder(128, 128);
-			return this._icon_placeholder;
+			else
+				return this._getDataUrl();
+		},
+		_getDataUrl: function() {
+			if (this._dataUrl)
+				return this._dataUrl;
+			else {
+				this._createDataUrl();
+				return '/img/surprise.png';
+			}
+		},
+		_setDataUrl: function(url) {
+			if ('display_url' in this)
+				return;	// do not need data if we have real urls
+			this._dataUrl = url;
+			PB.broadcastChange(this, 'icon_url');
+			PB.broadcastChange(this, 'display_url');
+			PB.broadcastChange(this, 'original_url');
+		},
+		_createDataUrl: function() {
+			if (!('_localFile' in this))
+				return;
+			var fileUrl;
+			if ('URL' in window)
+				fileUrl = window.URL.createObjectURL(this._localFile);
+			else if ('webkitURL' in window)
+				fileUrl = window.webkitURL.createObjectURL(this._localFile);
+			if (!fileUrl) {
+				console.log("could not create fileUrl");
+				return;
+			}
+			var img = new Image();
+			var THIS = this;
+			$(img).on({
+				load: function() {
+					// TODO: convert to scale
+					var desiredHeight = 512;
+					var scale = desiredHeight / img.naturalHeight;
+					if (scale > 1)
+						scale = 1;
+					var canvasWidth = Math.round(img.naturalWidth * scale);
+					var canvasHeight = Math.round(img.naturalHeight*scale);
+					var canvas = $("<canvas />")
+						.attr('width', canvasWidth)
+						.attr('height', canvasHeight)
+						.get(0);
+					canvas.getContext('2d').drawImage(img, 0,0, canvasWidth, canvasHeight);
+					THIS._setDataUrl( canvas.toDataURL('image/jpeg'));
+					// cleanup
+					$(img).unbind();
+					img.src = null;
+					if ('URL' in window)
+						window.URL.revokeObjectURL(fileUrl);
+					else if ('webkitURL' in window)
+						window.webkitURL.revokeObjectURL(fileUrl);
+				},
+				error: function() {
+					console.log("Unexpected error loading local image");
+				}
+			});
+			img.src = fileUrl;
 		},
 		_generatePlaceholder: function(width, height, options) {
 			return '/img/surprise.png';
@@ -129,6 +189,8 @@
 					this[props[i]] = json[props[i]];
 					PB.broadcastChange(this, props[i]);
 				}
+			if ('display_url' in this)	// clean up generated image
+				delete this._dataUrl;
 		},
 		set saveProgress(val) {
 			console.log("saveProgress " + val);
@@ -167,9 +229,11 @@
 					// TODO, remove too large from picture list, with nice error.
 					// show the photos inside an alert
 						THIS.status = "Upload failed. File is too big.";
+						THIS.progress = 0;
 						THIS.locked = true;
 						break;
 					default:
+						THIS.progress = 0;
 						THIS.status = "Upload failed. Retrying.";
 						PB.Uploader.savePhoto(THIS); // retry
 						break;
@@ -178,6 +242,7 @@
 				THIS.status = "";
 				THIS.progress = 0;
 				THIS.loadFromJson(response);
+				delete THIS._localFile;
 			});
 			return xhr;
 		}
