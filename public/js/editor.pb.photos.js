@@ -48,6 +48,8 @@
  * - modelref
  */
 	ServerPhoto.prototype = {
+		SIZE_LIMIT: 10000000,	// Upload size limit
+
 		get id() {
 			return this._id;
 		},
@@ -68,6 +70,14 @@
 		set locked(val) {
 			this._locked = true;
 		},
+		get localFileUrl() {
+			var fileUrl = null;
+			if ('URL' in window)
+				fileUrl = window.URL.createObjectURL(this._localFile);
+			else if ('webkitURL' in window)
+				fileUrl = window.webkitURL.createObjectURL(this._localFile);
+			return fileUrl;
+		},
 		get originalUrl() {
 			if ('original_url' in this)
 				return this.original_url;
@@ -85,6 +95,14 @@
 				return this.icon_url;
 			else
 				return this._getDataUrl();
+		},
+		displayName: function() {
+			if ('display_name' in this)
+				return this.display_name;
+			else if ('_localFile' in this)
+				return this._localFile.name;
+			else
+				return "name unknown";
 		},
 		_getDataUrl: function() {
 			if (this._dataUrl)
@@ -105,11 +123,7 @@
 		_createDataUrl: function() {
 			if (!('_localFile' in this))
 				return;
-			var fileUrl;
-			if ('URL' in window)
-				fileUrl = window.URL.createObjectURL(this._localFile);
-			else if ('webkitURL' in window)
-				fileUrl = window.webkitURL.createObjectURL(this._localFile);
+			var fileUrl = this.localFileUrl;
 			if (!fileUrl) {
 				console.log("could not create fileUrl");
 				return;
@@ -150,7 +164,10 @@
 		},
 		uploadLocalFile: function(file) {
 			this._localFile = file;
-			console.log("uploadLocalFile");
+			if (this._localFile.size > this.SIZE_LIMIT) {
+				GUI.Error.photoTooBig(this);
+				throw "File too big";
+			}
 			PB.Uploader.savePhoto(this);
 		},
 		load: function() {
@@ -228,6 +245,7 @@
 					case 413:
 					// TODO, remove too large from picture list, with nice error.
 					// show the photos inside an alert
+						GUI.Error.photoTooBig(THIS);
 						THIS.status = "Upload failed. File is too big.";
 						THIS.progress = 0;
 						THIS.locked = true;

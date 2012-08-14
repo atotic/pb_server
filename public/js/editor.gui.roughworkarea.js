@@ -140,10 +140,10 @@
 			this.dragover(ev);
 		},
 		drop: function(ev) {
-			ev.preventDefault();
 			if (!roughPageTarget.target)
 				return;
-
+			ev.preventDefault();
+			ev.stopPropagation();
 			var t = {target: roughPageTarget.target, direction: roughPageTarget.direction};
 			this.setTarget();	// reset the drag visuals
 
@@ -190,7 +190,7 @@
 			for (var i=0; i<files.length; i++) {
 				var f = files.item(i);
 				if (f.type.match("image/(png|jpeg|gif)")) {
-					var photo = PB.Book.default.addLocalPhoto(f);
+					var photo = PB.Book.default.addLocalPhoto(f, {animate:false});
 					roughModel.addPhoto(photo, {animate:true});
 				}
 			}

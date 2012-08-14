@@ -49,7 +49,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				.attr('dropzone', true)
 				.on(PB.MODEL_CHANGED, function(ev, model, prop, options) {
 					if (prop === 'locked' && book.locked) {
-						$('#locked').slideDown();
+						$('#error-locked').slideDown();
 						$('#lockedMessage').text(book.locked);
 					}
 				});
@@ -222,6 +222,8 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		},
 		setDataTransferFlavor: function(dataTransfer) {
 			var isFile;
+			if (!dataTransfer.types)
+				debugger;	// Chrome dies here sometimes
 			if ('contains' in dataTransfer.types)	// Firefox
 				isFile = dataTransfer.types.contains("Files");
 			else // Chrome
@@ -249,7 +251,26 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 	window.DragStore = DragStore;
 })(window.GUI);
 
+(function(scope) {
+	var Error = {
+		photoTooBig: function(photo) {
+			var bigAlert = $('#big-alert');
+			if (bigAlert.length == 0) {
+				var text = "<p>These photos are too big. Our current upload limit is 10MB.</p>";
+				text += "<p>Try making your photos smaller by resizing them in the photo editor.</p>";
+				text += "<p>The photos have been removed from the book.</p>";
+				bigAlert = $(PB.error(text, 'alert-error'));
+				bigAlert.prop('id', 'big-alert');
+			}
+			PB.Book.default.removePhoto(photo, {animate:true});
+			var photoMsg = $("<p><img src='" + photo.localFileUrl + "' style='height:128px'>" + photo.displayName() +  "</p>");
+			bigAlert.append(photoMsg);
+		}
+	};
 
+	scope.Error = Error;
+
+})(window.GUI);
 // CommandManager and Command
 (function(scope) {
 	var Command = function(name, key, meta, callback) {

@@ -39,14 +39,17 @@
 		info: function(text) {
 			var newDiv = this._makeAlertDiv(text, 'alert-info');
 			this._getAlertContainer().append(newDiv);
+			return newDiv;
 		},
 		warn: function(text) {
 			var newDiv = this._makeAlertDiv(text, 'alert-warning');
 			this._getAlertContainer().append(newDiv);
+			return newDiv;
 		},
 		error: function(text) {
 			var newDiv = this._makeAlertDiv(text, 'alert-error');
 			this._getAlertContainer().append(newDiv);
+			return newDiv;
 		},
 		// shows flash messages from xhr headers
 		showXhrFlash: function(event, jqXHR, ajaxOptions) {

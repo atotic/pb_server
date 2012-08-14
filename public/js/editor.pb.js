@@ -264,12 +264,18 @@ window.PB.Photo // Photo objects
 			}
 		},
 		addLocalPhoto: function(localFile, options) {
-			var serverPhoto = PB.ServerPhotoCache.createFromLocalFile(localFile);
-			this.localData.document.photoList.push(serverPhoto.id);
-			this._dirty = true;
-			PB.bindChangeListener(serverPhoto.id, this);
-			PB.broadcastChange(this, 'photoList', options);
-			return serverPhoto;
+			try { // Local file creation can fail
+				var serverPhoto = PB.ServerPhotoCache.createFromLocalFile(localFile);
+				this.localData.document.photoList.push(serverPhoto.id);
+				this._dirty = true;
+				PB.bindChangeListener(serverPhoto.id, this);
+				PB.broadcastChange(this, 'photoList', options);
+				return serverPhoto;
+			}
+			catch(e) {
+				console.log("addLocalPhoto fail",e);
+				return null;
+			}
 		},
 		removePhoto: function(photo, options) {
 			// Remove photo from all the pages
@@ -282,8 +288,10 @@ window.PB.Photo // Photo objects
 			// Remove it from the book
 			var index = this.localData.document.photoList.indexOf(photo.id);
 			delete this._proxies[photo.id];
-			if (index == -1)
-				throw "no such photo";
+			if (index == -1) {
+				console.warn("removing nonexistent photo from the book", photo.id);
+				return;
+			}
 			this.localData.document.photoList.splice(index, 1);
 			this._dirty = true;
 			PB.broadcastChange(this, 'photoList', options);
@@ -528,7 +536,8 @@ window.PB.Photo // Photo objects
 			return list;
 		},
 		addPhoto: function(photo, options) {
-			// options = { animate: false}
+			if (photo == null)
+				return;
 			var p = this.p;
 			p.photoList.push(photo.id);
 			this.book._pagePhotosChanged(this, options);

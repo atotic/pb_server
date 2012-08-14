@@ -7,10 +7,12 @@ error pages on nginx
 
 FEATURES
 cookies for *.pb4us.com
-switching page layouts
+
+- Photo upload
+resize photos automatically if they are too big: resize photo, encode it as binary, upload: https://github.com/danguer/blog-examples/blob/master/js/base64-binary.js
 upload photos via email mailgun.net, should be a couple of days worth of work
 
 FUTURE
 NOT: DropBox image import/storage, Google docs instead
 Importing from photo sites: Facebook, Smugmug, Picasaweb, Flickr
-Better json diff
+
