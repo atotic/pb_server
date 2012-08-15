@@ -212,7 +212,7 @@ class SvegApp < Sinatra::Base
 						"editor.gui.photopalette.js"
 						)
 				elsif arg.end_with?("js")
-					arg = "jquery-1.7.js" if arg.eql? "jquery.js"
+					arg = "jquery-1.8.0.js" if arg.eql? "jquery.js"
 					retVal += "<script src='/js/#{arg}'></script>\n"
 				elsif arg.end_with?("css")
 					retVal += "<link href='/css/#{arg}' rel='stylesheet' type='text/css' />\n"

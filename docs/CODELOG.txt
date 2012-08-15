@@ -56,17 +56,19 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-- correct photo orientation by parsing exif data
+- correct photo orientation, date, location by parsing exif data: http://code.flickr.com/blog/2012/06/01/parsing-exif-client-side-using-javascript-2/
 - load photo data when book is loaded,
 - account page should load book list dynamically  $(window).unload(function(){});
 - exif, parse on client and server, use image orientation
 - test on iPad, Nexus
 
+Aug 15
+Upgrade: jQuery 1.8 upgrade, patched data selector
+
 Aug 14
 Optimization: rate limit icons from local files
 Bugfix: handle "upload too large errors" (show bad photos with name, remove from book)
 Checkpoint Pass the 200 file upload test
-
 
 Aug 8
 Migrated PhotoPalette photos into divs.

@@ -32,66 +32,105 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	var checkUndefined = function(a) {
 		return typeof a === 'undefined';
 	}
-	$.expr[':'].data = function(elem, counter, params){
-		if(checkUndefined(elem) || checkUndefined(params)) return false;
-		//:data(__) accepts 'dataKey', 'dataKey=Value', 'dataKey.InnerdataKey', 'dataKey.InnerdataKey=Value'
-		//Also instead of = we accept: != (does not equal Value), ^= (starts with Value),
-		//		$= (ends with Value), *=Value (contains Value);
-		//$(elem).data(dataKey) or $(elem).data(dataKey)[innerDataKey] (optional more innerDataKeys)
-		//When no value is speciefied we return all elements that have the dataKey specified, similar to [attribute]
-		var query = params[3]; //The part in the parenthesis, thus: selector:data( query )
-		if(!query) return false; //query can not be anything that evaluates to false, it has to be string
-		var querySplitted = query.split('='); //for dataKey=Value/dataKey.innerDataKey=Value
-		//We check if the condition was an =, an !=, an $= or an *=
+
+	function parseQuery(query) {
+		var parsed = {
+			badSelector: false,
+			selectType: '',
+			dataNameSplitted: [],
+			compareValue: false
+		};
+		if (checkUndefined(query)) {
+			parsed.badSelector = "undefined data query";
+			return parsed;
+		}
+		var querySplitted = query.split('=');
 		var selectType = querySplitted[0].charAt( querySplitted[0].length-1 );
-		if(selectType == '^' || selectType == '$' || selectType == '!' || selectType == '*'){
+
+		if(selectType == '^' || selectType == '$' || selectType == '!' || selectType == '*') {
 			querySplitted[0] = querySplitted[0].substring(0, querySplitted[0].length-1);
 			//the ^=, *= and $= are only available when the $.stringQuery plugin is loaded, if it is not and any of these are used we return false
-			if(!$.stringQuery && selectType != '!'){
-				return false;
-			}
+			if(!$.stringQuery && selectType != '!')
+				parsed.badSelector = "^=, *= and $= are only available when the $.stringQuery plugin is loaded";
 		}
-		else selectType = '=';
+		else
+			selectType = '=';
+
 		var dataName = querySplitted[0]; //dataKey or dataKey.innerDataKey
 		//Now we go check if we need dataKey or dataKey.innerDataKey
 		var dataNameSplitted = dataName.split('.');
-		var data = $(elem).data(dataNameSplitted[0]);
-		if(checkUndefined(data)) return false;
-		if(dataNameSplitted[1]){//We have innerDataKeys
-			for(i=1, x=dataNameSplitted.length; i<x; i++){ //we start counting at 1 since we ignore the first value because that is the dataKey
-				data = data[dataNameSplitted[i]];
-				if(checkUndefined(data)) return false;
+
+		parsed.dataNameSplitted = dataNameSplitted;
+		parsed.selectType = selectType;
+		parsed.compareValue = querySplitted[1];
+		if (parsed.badSelector)
+			console.warn(parsed.badSelector);
+		return parsed;
+	}
+
+	function processQuery(elem, query) {
+		if (checkUndefined(elem) || checkUndefined(query) || query.badSelector)
+			return false;
+		var data = $(elem).data(query.dataNameSplitted[0]);
+		if(checkUndefined(data))
+			return false;
+		if(query.dataNameSplitted[1]){//We have innerDataKeys
+			for(i=1, x=query.dataNameSplitted.length; i<x; i++){ //we start counting at 1 since we ignore the first value because that is the dataKey
+				data = data[query.dataNameSplitted[i]];
+				if(checkUndefined(data))
+					return false;
 			}
 		}
-		if(querySplitted[1]){ //should the data be of a specified value?
+		if(query.compareValue){ //should the data be of a specified value?
 			var checkAgainst = (data+'');
 				//We cast to string as the query will always be a string, otherwise boolean comparison may fail
 				//beacuse in javaScript true!='true' but (true+'')=='true'
 			//We use this switch to check if we chould check for =, $=, ^=, !=, *=
-			switch(selectType){
+			switch(query.selectType){
 				case '=': //equals
-					return checkAgainst == querySplitted[1];
+					return checkAgainst == query.compareValue;
 				break;
 				case '!': //does not equeal
-					return checkAgainst != querySplitted[1];
+					return checkAgainst != query.compareValue;
 				break;
 				case '^': //starts with
-					return $.stringQuery.startsWith(checkAgainst, querySplitted[1]);
+					return $.stringQuery.startsWith(checkAgainst, query.compareValue);
 				break;
 				case '$': //ends with
-					return $.stringQuery.endsWith(checkAgainst, querySplitted[1]);
+					return $.stringQuery.endsWith(checkAgainst, query.compareValue);
 				break;
 				case '*': //contains
-					return $.stringQuery.contains(checkAgainst, querySplitted[1]);
+					return $.stringQuery.contains(checkAgainst, query.compareValue);
 				break;
 				default: //default should never happen
+					console.log("blah");
 					return false;
 				break;
 			}
 		}
+
 		else{ //the data does not have to be a speciefied value
 				//, just return true (we are here so the data is specified, otherwise false would have been returned by now)
 			return true;
 		}
+	}
+
+	var version = $().jquery.match(/(\d+)\.(\d+)/);	// major: version[1], minor version[2]
+
+	if (version[1] == "1" && parseInt(version[2]) < 8) {
+		$.expr[':'].data = function(elem, count, params) {
+			var query = parseQuery(params[3]);
+			return processQuery(elem, query);
+		};
+	}
+	else {	// jquery 1.8 & above
+		var filter = function(selector, context, xml) {
+			var query = parseQuery(selector);
+			return function(elem) {
+				return processQuery(elem, query);
+			};
+		};
+		filter.sizzleFilter = true;
+		$.expr[':'].data = filter;
 	}
 })(jQuery);

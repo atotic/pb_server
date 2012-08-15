@@ -75,6 +75,7 @@
 							roughPage.removePhoto(photo, {animate: true});
 							ev.stopPropagation();
 							ev.preventDefault();
+							GUI.DragStore.hadDrop = true;
 						break;
 					}
 				}
