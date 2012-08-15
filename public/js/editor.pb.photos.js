@@ -40,6 +40,39 @@
 		this._progress = 0;
 	}
 
+var ImgLoadThrottler = {
+	waiting: [],
+	loading: null,
+	setSrc: function(img, src) {
+		this.waiting.push({img: img, src: src});
+		this._process();
+	},
+	_doneLoading: function(img) {
+		$(this.loading.img).unbind();
+		this.loading = null;
+		window.setTimeout(function() {ImgLoadThrottler._process()}, 10);
+	},
+	_process: function() {
+		if (this.loading != null)
+			return;
+		this.loading = this.waiting.shift();
+		if (this.loading == null)
+			return;
+		$(this.loading.img).on({
+			load: function() {
+				ImgLoadThrottler._doneLoading();
+			},
+			error: function() {
+				ImgLoadThrottler._doneLoading();
+			},
+			abort: function() {
+				ImgLoadThrottler._doneLoading();
+			}
+		});
+		this.loading.img.src = this.loading.src;
+	}
+}
+
 /*
  * ServerPhoto represents photo stored on server (PB::Photo class)
  * Functionality:
@@ -70,7 +103,7 @@
 		set locked(val) {
 			this._locked = true;
 		},
-		get localFileUrl() {
+		_localFileUrl: function() {
 			var fileUrl = null;
 			if ('URL' in window)
 				fileUrl = window.URL.createObjectURL(this._localFile);
@@ -123,7 +156,7 @@
 		_createDataUrl: function() {
 			if (!('_localFile' in this))
 				return;
-			var fileUrl = this.localFileUrl;
+			var fileUrl = this._localFileUrl();
 			if (!fileUrl) {
 				console.log("could not create fileUrl");
 				return;
@@ -157,7 +190,7 @@
 					console.log("Unexpected error loading local image");
 				}
 			});
-			img.src = fileUrl;
+			ImgLoadThrottler.setSrc(img, fileUrl);
 		},
 		_generatePlaceholder: function(width, height, options) {
 			return '/img/surprise.png';

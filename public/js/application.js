@@ -56,7 +56,7 @@
 			var msg = jqXHR.getResponseHeader('X-FlashError');
 			if (msg) PB.error(msg);
 			var msg = jqXHR.getResponseHeader('X-FlashNotice');
-			if (msg) PB.notice(msg);
+			if (msg) PB.info(msg);
 		}
 	}
 	PB.redirectToProperHost();

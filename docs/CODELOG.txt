@@ -57,15 +57,16 @@ Google Drive integration? https://developers.google.com/drive/
 
 Next:
 - correct photo orientation by parsing exif data
-- rate limit icons from local files
-- Pass the 200 file upload test
 - load photo data when book is loaded,
 - account page should load book list dynamically  $(window).unload(function(){});
 - exif, parse on client and server, use image orientation
 - test on iPad, Nexus
 
 Aug 14
-- handle "upload too large errors" (show bad photos with name, remove from book)
+Optimization: rate limit icons from local files
+Bugfix: handle "upload too large errors" (show bad photos with name, remove from book)
+Checkpoint Pass the 200 file upload test
+
 
 Aug 8
 Migrated PhotoPalette photos into divs.

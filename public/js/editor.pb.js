@@ -321,8 +321,8 @@ window.PB.Photo // Photo objects
 				return null;
 			}
 			else {
-				console.log("book diff");
-				JsonDiff.prettyPrint(diff);
+//				console.log("book diff");
+//				JsonDiff.prettyPrint(diff);
 			}
 			diff[0].localId = this._localId;
 

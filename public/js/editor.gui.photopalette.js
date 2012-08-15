@@ -119,13 +119,14 @@
 		},
 		createImageTile: function(photo) {
 			var tile = $("<div class='photo-div'><img src='" + photo.getUrl(128) + "'></div>");
-
+			var img = $(tile).children('img');
 			tile.data('model', photo)
 				.on(PB.MODEL_CHANGED,
 					function(ev, model, prop, options) {
 						var img = $(tile).children('img');
 						switch(prop) {
 							case 'icon_url':
+								tile.stop(true, true);
 								img.prop('src', photo.getUrl(128));
 							break;
 							case 'status':
@@ -187,7 +188,8 @@
 						var w = newDom.width();
 						newDom.css('width', 0)
 									.animate({width: w}, {complete: function() {
-										newDom.css('width', 'auto');	// because our default width might be wrong
+										$(this).css('width', 'auto');	// because our default width might be wrong
+
 						}});
 					}
 				break;

@@ -216,14 +216,14 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		// Common props:
 		// dom: dom element being dragged
 		setFlavor: function(flavor, props) {
-			console.log("DragStore.setFlavor", flavor);
+//			console.log("DragStore.setFlavor", flavor);
 			this._source = { flavor: flavor }
 			$.extend(this._source, props);
 		},
 		setDataTransferFlavor: function(dataTransfer) {
 			var isFile;
-			if (!dataTransfer.types)
-				debugger;	// Chrome dies here sometimes
+			(!dataTransfer.types)
+				return;
 			if ('contains' in dataTransfer.types)	// Firefox
 				isFile = dataTransfer.types.contains("Files");
 			else // Chrome
@@ -263,7 +263,13 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				bigAlert.prop('id', 'big-alert');
 			}
 			PB.Book.default.removePhoto(photo, {animate:true});
-			var photoMsg = $("<p><img src='" + photo.localFileUrl + "' style='height:128px'>" + photo.displayName() +  "</p>");
+			var photoMsg = $("<p><img src='" + photo.iconUrl + "' style='height:128px'>" + photo.displayName() +  "</p>");
+			photoMsg.children('img')
+				.data('model', photo)
+				.on(PB.MODEL_CHANGED, function(ev, model, prop, options) {
+					if (prop == 'icon_url')
+						this.src = photo.iconUrl;
+				});
 			bigAlert.append(photoMsg);
 		}
 	};

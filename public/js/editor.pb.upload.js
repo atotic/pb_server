@@ -86,13 +86,13 @@
 			}
 			var request = null;
 			if (this.photoQueue.length > 0) {
-				var photo = this.photoQueue.pop();
+				var photo = this.photoQueue.shift();
 				request = photo.getSaveDeferred();
 				if (request)
 					console.log("saving photo", photo.id);
 			}
 			if (request == null && this.bookQueue.length > 0) {
-				var book = this.bookQueue.pop();
+				var book = this.bookQueue.shift();
 				request = book.getSaveDeferred();
 				if (!request) // can happen if no diffs
 					request = this.getNextRequest();
