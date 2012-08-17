@@ -1,0 +1,234 @@
+<html>
+<head>
+<title>exifParse</title>
+<link href='/css/bootstrap.css' rel='stylesheet' type='text/css' />
+<link href='/css/application.css' rel='stylesheet' type='text/css' />
+<script src='/js/jquery-1.8.0.js'></script>
+<script src='/js/bootstrap.js'></script>
+<script src='/js/exif.js'></script>
+<script src='/js/jdataview.js'></script>
+</head>
+<body>
+	<h1>Drop your images here</h1>
+<script>
+// http://www.media.mit.edu/pia/Research/deepview/exif.html
+(function(scope) {
+	var JpegFile = function(localFile) {
+		this.exif = {
+			orientation: null,
+			dateTime: null,
+			caption: null
+		};
+		var filePart = null;
+		if ('slice' in localFile)
+			filePart = localFile.slice(0, 131072);
+		else if ('webkitSlice' in localFile)
+			filePart = localFile.webkitSlice(0, 131072);
+		else if ('mozSlice' in localFile)
+			filePart = localFile.mozSlice(0, 131072);
+		else
+			filePart = localFile;
+
+		this._deferred = $.Deferred();
+		this.reader = new FileReader();
+		var THIS = this;
+		this.reader.onload = function(progressEvent) {
+			THIS._deferred.resolve(THIS, progressEvent);
+		};
+		this.reader.onerror = function(a) {
+			THIS._deferred.reject(THIS, a);
+		};
+		this.reader.readAsArrayBuffer(filePart);
+	};
+
+	JpegFile.prototype = {
+		get deferred() {
+			return this._deferred;
+		},
+		readTagValue: function(exifStart, offset, littleEndian) {
+			var type = this.view.getUint16(offset+2, littleEndian);
+			var numValues = this.view.getUint32(offset+4, littleEndian);
+			var dataValue = this.view.getUint32(offset+8, littleEndian);
+			console.log(type, numValues, dataValue);
+			switch(type) {
+				case 2: // string
+					var stringOffset = numValues > 4 ? dataValue + exifStart : offset + 8;
+					return this.view.getString(numValues-1, stringOffset);
+				case 3: // Uint16
+					return this.view.getUint16(offset+8, littleEndian);
+				case 4:
+					return this.view.getUint32(offset+8, littleEndian);
+				default:
+					debugger;
+					return "READTAGVAlUE cannot read";
+			}
+			return type;
+		},
+		readExifTags: function(exifOffset, offset, littleEndian) {
+			var tagCount  = this.view.getUint16(offset, littleEndian);
+			offset += 2;
+			var tags = {};
+			for (var i=0; i<tagCount; i++) {
+				var tagOffset = offset + i*12;
+				var tagId = this.view.getUint16(tagOffset, littleEndian);
+				switch (tagId) {
+					case 0x8769: // ExifIFDPointer
+						console.log("ExifIDPointer");
+						var exifPtr  = this.readTagValue(exifOffset, tagOffset, littleEndian);
+						newExifOffset = exifOffset + exifPtr;
+						this.readExifTags(exifOffset, newExifOffset, littleEndian);
+						break;
+					case 0x0112: // Orientation
+						console.log("Orientation");
+						this.exif.orientation = this.readTagValue(exifOffset, tagOffset, littleEndian);
+						break;
+					case 0x0132: // DateTime
+						console.log("DateTimeOriginal");
+						this.exif.dateTime = this.readTagValue(exifOffset, tagOffset, littleEndian);
+						break;
+					case 0x9286: // UserComment
+						console.log("UserComment");
+						this.exif.title = this.readTagValue(exifOffset, tagOffset, littleEndian);
+						break;
+					default:
+						console.log("Unknown tag", tagId.toString(16));
+				};
+			}
+		},
+		readExifData: function(offset) {
+			var littleEndian;
+			if (this.view.getString(4, offset) != 'Exif')
+				return console.log("Invalid EXIF data");
+			offset += 4;
+			offset += 2;	// 00
+			var exifStart = offset;
+			var endianess = this.view.getUint16(offset);
+			offset += 2;
+			if (endianess == 0x4949)
+				littleEndian = true;
+			else if (endianess == 0x4D4D)
+				littleEndian = false;
+			else
+				return console.log("Invalid EXIF: unexpected endian codes", endianess);
+			if (this.view.getUint16(offset, littleEndian) != 0x002A)
+				return console.log("Invalid EXIF: no 002A");
+			offset += 2;
+	//		if (this.view.getUint32(offset, littleEndian) != 0x00000008)
+	//			return console.log("Invalid EXIF: no 0x008");
+			offset += 4;
+			this.readExifTags(exifStart, offset, littleEndian);
+		},
+		readRdfValue: function(dom, tag) {
+			var retVal = null;
+			var tagList = dom.getElementsByTagName(tag);
+			if (tagList.length == 0)
+				return null;
+			var li = tagList.item(0).getElementsByTagName('li');
+			if (li.length == 0)
+				return null;
+			return li.item(0).textContent;
+		},
+		readXmpData: function(offset, length) {
+			try {
+				var data = this.view.getString(length, offset);
+				var rdf = data.match(/<x:xmpmeta[^>]*>([\s\S]*)<\/x:xmpmeta>/)[1];
+				var parser = new DOMParser();
+				var dom = parser.parseFromString(rdf, "application/xml");
+				if (!dom)
+					throw "Could not parse dom";
+				var caption = this.readRdfValue(dom, 'title');
+				if (caption)
+					this.exif.caption = caption;
+				caption = this.readRdfValue(dom, 'description');
+				if (caption)
+					this.exif.caption = caption;
+			}
+			catch(ex) {
+				console.log("Error parsing XMP data", ex.message);
+			}
+		},
+		EXIF_HEADER: 'Exif',
+		XMP_HEADER: 'http://ns.adobe.com/xap/1.0/',
+		readMetadata: function() {
+			this.view = new jDataView(this.reader.result);
+			var offset = 0;
+			if (this.view.getUint8(offset++) != 0xFF || this.view.getUint8(offset++) != 0xD8) {
+				console.log("not a jpeg");
+				return;
+			}
+			while (offset < this.view.byteLength) {
+				console.log("offset", (offset).toString(16));
+				var markerStart = this.view.getUint8(offset++);
+				if ( markerStart != 0xFF) {	// Valid marker test
+					console.log("Not a valid marker at offset ", offset, markerStart.toString(16));
+					return false; // not a valid marker, something is wrong
+				}
+				var marker = this.view.getUint8(offset++);
+				var length = this.view.getUint16(offset);
+				console.log("marker ", marker.toString(16), "length", length);
+				if (marker == 0xE1) {// Exif data marker
+					var dataStart = offset + 2;
+					if (this.view.getString(4, dataStart) == this.EXIF_HEADER)
+						this.readExifData(dataStart);
+					else if (this.view.getString(this.XMP_HEADER.length, dataStart) == this.XMP_HEADER)
+						this.readXmpData(dataStart, length - 2);
+					else
+						debugger;
+					offset += length;
+				}
+				else
+					offset += length;
+			}
+		},
+
+	}
+	scope.JpegFile = JpegFile;
+
+})(window);
+
+function createImageFromFile(f) {
+	var fileUrl = null;
+	if ('URL' in window)
+		fileUrl = window.URL.createObjectURL(f);
+	else if ('webkitURL' in window)
+		fileUrl = window.webkitURL.createObjectURL(f);
+	var img = $("<img src='" + fileUrl + "' style='height:200px'>");
+	$(document.body).append(img);
+	var jFile = new JpegFile(f);
+	jFile.deferred.then(function() {
+		jFile.readMetadata();
+		console.log("metadata read");
+		console.log("orientation", jFile.exif.orientation);
+		console.log("date", jFile.exif.dateTime);
+		console.log("caption", jFile.exif.caption);
+	});
+}
+
+var bodyDropHandler = {
+	dragenter: function(ev) {
+	},
+	dragover: function(ev) {
+		ev.stopPropagation();
+		ev.preventDefault();
+	},
+	dragleave: function(ev) {
+		ev.stopPropagation();
+		ev.preventDefault();
+	},
+	drop: function(ev) {
+		ev = ev.originalEvent;
+		ev.stopPropagation();
+		ev.preventDefault();
+		var files = ev.dataTransfer.files;
+		if (files)
+			for (var i=0; i<files.length; i++) {
+				var f = files.item(i);
+				if (f.type.match("image/(png|jpeg|gif)"))
+					createImageFromFile(f);
+			}
+	}
+}
+
+$('body').on(bodyDropHandler);
+</script>
+</body>
