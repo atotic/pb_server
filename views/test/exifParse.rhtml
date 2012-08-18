@@ -13,11 +13,14 @@
 <script>
 // http://www.media.mit.edu/pia/Research/deepview/exif.html
 (function(scope) {
+	"use strict";
 	var JpegFile = function(localFile) {
 		this.exif = {
-			orientation: null,
+			orientation: 1,
 			dateTime: null,
-			caption: null
+			description: null,
+			title: null,
+			userComment: null
 		};
 		var filePart = null;
 		if ('slice' in localFile)
@@ -45,6 +48,9 @@
 		get deferred() {
 			return this._deferred;
 		},
+		get caption() {
+			return this.exif.description || this.exif.title || this.exif.userComment;
+		},
 		readTagValue: function(exifStart, offset, littleEndian) {
 			var type = this.view.getUint16(offset+2, littleEndian);
 			var numValues = this.view.getUint32(offset+4, littleEndian);
@@ -59,41 +65,69 @@
 				case 4:
 					return this.view.getUint32(offset+8, littleEndian);
 				default:
-					debugger;
+					console.warn("Trying to read unknown tag type", type);
 					return "READTAGVAlUE cannot read";
 			}
-			return type;
 		},
-		readExifTags: function(exifOffset, offset, littleEndian) {
-			var tagCount  = this.view.getUint16(offset, littleEndian);
-			offset += 2;
+		readIFD: function(tiffOffset, ifdOffset, littleEndian, isThumbnail) {
+			var tagCount  = this.view.getUint16(ifdOffset, littleEndian);
 			var tags = {};
+			var thumbnail = {
+				compression: null,
+				jpegIfOffset: null,
+				jpegIfByteCount: null
+			};
 			for (var i=0; i<tagCount; i++) {
-				var tagOffset = offset + i*12;
+				var tagOffset = ifdOffset + i*12 + 2;
 				var tagId = this.view.getUint16(tagOffset, littleEndian);
 				switch (tagId) {
 					case 0x8769: // ExifIFDPointer
 						console.log("ExifIDPointer");
-						var exifPtr  = this.readTagValue(exifOffset, tagOffset, littleEndian);
-						newExifOffset = exifOffset + exifPtr;
-						this.readExifTags(exifOffset, newExifOffset, littleEndian);
+						var exifPtr  = this.readTagValue(tiffOffset, tagOffset, littleEndian);
+						var newExifOffset = tiffOffset + exifPtr;
+						this.readIFD(tiffOffset, newExifOffset, littleEndian);
 						break;
 					case 0x0112: // Orientation
 						console.log("Orientation");
-						this.exif.orientation = this.readTagValue(exifOffset, tagOffset, littleEndian);
+						this.exif.orientation = this.readTagValue(tiffOffset, tagOffset, littleEndian);
 						break;
 					case 0x0132: // DateTime
 						console.log("DateTimeOriginal");
-						this.exif.dateTime = this.readTagValue(exifOffset, tagOffset, littleEndian);
+						this.exif.dateTime = this.readTagValue(tiffOffset, tagOffset, littleEndian);
 						break;
 					case 0x9286: // UserComment
 						console.log("UserComment");
-						this.exif.title = this.readTagValue(exifOffset, tagOffset, littleEndian);
+						this.exif.userComment = this.readTagValue(tiffOffset, tagOffset, littleEndian);
+						break;
+					case 0x0103: // Compression
+						thumbnail.compression = this.readTagValue(tiffOffset, tagOffset, littleEndian);
+						break;
+					case 0x0201: // JpegIFOffset
+						thumbnail.jpegIfOffset = this.readTagValue(tiffOffset, tagOffset, littleEndian);
+						break;
+					case 0x0202: // JpegIFByteCount
+						thumbnail.jpegIfByteCount = this.readTagValue(tiffOffset, tagOffset, littleEndian);
 						break;
 					default:
-						console.log("Unknown tag", tagId.toString(16));
+						;//console.warn("Unknown tag", tagId.toString(16));
 				};
 			}
+			if (isThumbnail) {
+				if (thumbnail.compression == 6 && thumbnail.jpegIfOffset && thumbnail.jpegIfByteCount) {
+					// Thumbnail extraction http://code.flickr.com/blog/2012/06/01/parsing-exif-client-side-using-javascript-2/
+					var data = new Uint8Array(this.view.buffer, thumbnail.jpegIfOffset+tiffOffset,thumbnail.jpegIfByteCount);
+					var hexData = [];
+					for(var i=0; i<data.length; i++) {
+						var val = data[i];
+						if (val < 16)
+							hexData[i] = "0"+val.toString(16);
+						else
+							hexData[i] = val.toString(16);
+					}
+					this.exif.thumbnail_url = "data:image/jpeg,%"+hexData.join('%');
+				}
+			}
+			return this.view.getUint32(ifdOffset + tagCount*12 + 2, littleEndian);
 		},
 		readExifData: function(offset) {
 			var littleEndian;
@@ -101,7 +135,7 @@
 				return console.log("Invalid EXIF data");
 			offset += 4;
 			offset += 2;	// 00
-			var exifStart = offset;
+			var tiffStart = offset;
 			var endianess = this.view.getUint16(offset);
 			offset += 2;
 			if (endianess == 0x4949)
@@ -113,10 +147,14 @@
 			if (this.view.getUint16(offset, littleEndian) != 0x002A)
 				return console.log("Invalid EXIF: no 002A");
 			offset += 2;
+			var ifdOffset = this.view.getUint32(offset, littleEndian);
+			var ifdStart = tiffStart + ifdOffset;
 	//		if (this.view.getUint32(offset, littleEndian) != 0x00000008)
 	//			return console.log("Invalid EXIF: no 0x008");
 			offset += 4;
-			this.readExifTags(exifStart, offset, littleEndian);
+			var thumbnailIfdOffset = this.readIFD(tiffStart, ifdStart, littleEndian);
+			if (thumbnailIfdOffset)
+				this.readIFD(tiffStart, tiffStart + thumbnailIfdOffset, littleEndian, true);
 		},
 		readRdfValue: function(dom, tag) {
 			var retVal = null;
@@ -136,12 +174,12 @@
 				var dom = parser.parseFromString(rdf, "application/xml");
 				if (!dom)
 					throw "Could not parse dom";
-				var caption = this.readRdfValue(dom, 'title');
-				if (caption)
-					this.exif.caption = caption;
-				caption = this.readRdfValue(dom, 'description');
-				if (caption)
-					this.exif.caption = caption;
+				var title = this.readRdfValue(dom, 'title');
+				if (title)
+					this.exif.title = title;
+				var description = this.readRdfValue(dom, 'description');
+				if (description)
+					this.exif.description = description;
 			}
 			catch(ex) {
 				console.log("Error parsing XMP data", ex.message);
@@ -179,12 +217,48 @@
 				else
 					offset += length;
 			}
-		},
+		}
 
 	}
 	scope.JpegFile = JpegFile;
 
 })(window);
+function imageToCanvas(img, orientation) {
+// Orientations I know how to handle:
+// 1) transform="";;
+// 3) transform="-rotate 180";;
+// 6) transform="-rotate 90";;
+// 8) transform="-rotate 270";;
+	var swapAxes = orientation == 6 || orientation == 8
+	var canvasWidth = swapAxes ? img.naturalHeight : img.naturalWidth;
+	var canvasHeight = swapAxes ? img.naturalWidth : img.naturalHeight;
+	var canvas = $("<canvas />")
+						.attr('width', canvasWidth)
+						.attr('height', canvasHeight)
+						.get(0);
+	var ctx = canvas.getContext('2d');
+	ctx.save();
+	ctx.translate(canvasWidth / 2, canvasHeight / 2);
+	switch(orientation) {
+		case 3:
+			ctx.rotate(Math.PI);
+			break;
+		case 6:
+			ctx.rotate(Math.PI/2);
+			break;
+		case 8:
+			ctx.rotate(Math.PI * 3 / 2);
+			break;
+		case 1:
+			break;
+		default:
+			console.warn("Do not know how to rotate", orientation);
+			break;
+	}
+	ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2, img.naturalWidth, img.naturalHeight);
+	ctx.restore();
+	return canvas;
+}
 
 function createImageFromFile(f) {
 	var fileUrl = null;
@@ -200,7 +274,16 @@ function createImageFromFile(f) {
 		console.log("metadata read");
 		console.log("orientation", jFile.exif.orientation);
 		console.log("date", jFile.exif.dateTime);
-		console.log("caption", jFile.exif.caption);
+		console.log("caption", jFile.caption);
+		if (jFile.exif.thumbnail_url) {
+			var img = new Image();
+			img.onload = function() {
+				var c = imageToCanvas(img, jFile.exif.orientation);
+				$(document.body).append(c);
+			}
+			img.src = jFile.exif.thumbnail_url;
+		}
+
 	});
 }
 
