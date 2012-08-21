@@ -5,11 +5,11 @@
  */
 
 
-var EXIF = {};
 
-(function() {
+(function(scope) {
 
 var bDebug = false;
+var EXIF = {};
 
 EXIF.Tags = {
 
@@ -59,7 +59,7 @@ EXIF.Tags = {
 	0x9214 : "SubjectArea",			// Location and area of main subject
 	0x920A : "FocalLength",			// Focal length of the lens in mm
 	0xA20B : "FlashEnergy",			// Strobe energy in BCPS
-	0xA20C : "SpatialFrequencyResponse",	// 
+	0xA20C : "SpatialFrequencyResponse",	//
 	0xA20E : "FocalPlaneXResolution", 	// Number of pixels in width direction per FocalPlaneResolutionUnit
 	0xA20F : "FocalPlaneYResolution", 	// Number of pixels in height direction per FocalPlaneResolutionUnit
 	0xA210 : "FocalPlaneResolutionUnit", 	// Unit for measuring FocalPlaneXResolution and FocalPlaneYResolution
@@ -79,7 +79,7 @@ EXIF.Tags = {
 	0xA408 : "Contrast",			// Direction of contrast processing applied by camera
 	0xA409 : "Saturation", 			// Direction of saturation processing applied by camera
 	0xA40A : "Sharpness",			// Direction of sharpness processing applied by camera
-	0xA40B : "DeviceSettingDescription",	// 
+	0xA40B : "DeviceSettingDescription",	//
 	0xA40C : "SubjectDistanceRange",	// Distance to subject
 
 	// other tags
@@ -295,22 +295,22 @@ EXIF.StringValues = {
 	}
 }
 
-function addEvent(oElement, strEvent, fncHandler) 
+function addEvent(oElement, strEvent, fncHandler)
 {
-	if (oElement.addEventListener) { 
-		oElement.addEventListener(strEvent, fncHandler, false); 
-	} else if (oElement.attachEvent) { 
-		oElement.attachEvent("on" + strEvent, fncHandler); 
+	if (oElement.addEventListener) {
+		oElement.addEventListener(strEvent, fncHandler, false);
+	} else if (oElement.attachEvent) {
+		oElement.attachEvent("on" + strEvent, fncHandler);
 	}
 }
 
 
-function imageHasData(oImg) 
+function imageHasData(oImg)
 {
 	return !!(oImg.exifdata);
 }
 
-function getImageData(oImg, fncCallback) 
+function getImageData(oImg, fncCallback)
 {
 	BinaryAjax(
 		oImg.src,
@@ -339,7 +339,7 @@ function findEXIFinJPEG(oFile) {
 
 		var iMarker = oFile.getByteAt(iOffset+1);
 
-		// we could implement handling for other markers here, 
+		// we could implement handling for other markers here,
 		// but we're only looking for 0xFFE1 for EXIF data
 
 		if (iMarker == 22400) {
@@ -361,7 +361,7 @@ function findEXIFinJPEG(oFile) {
 }
 
 
-function readTags(oFile, iTIFFStart, iDirStart, oStrings, bBigEnd) 
+function readTags(oFile, iTIFFStart, iDirStart, oStrings, bBigEnd)
 {
 	var iEntries = oFile.getShortAt(iDirStart, bBigEnd);
 	var oTags = {};
@@ -462,7 +462,7 @@ function readTagValue(oFile, iEntryOffset, iTIFFStart, iDirStart, bBigEnd)
 }
 
 
-function readEXIFData(oFile, iStart, iLength) 
+function readEXIFData(oFile, iStart, iLength)
 {
 	if (oFile.getStringAt(iStart, 4) != "Exif") {
 		if (bDebug) console.log("Not valid EXIF data! " + oFile.getStringAt(iStart, 4));
@@ -507,23 +507,23 @@ function readEXIFData(oFile, iStart, iLength)
 				case "SceneCaptureType" :
 				case "SceneType" :
 				case "CustomRendered" :
-				case "WhiteBalance" : 
-				case "GainControl" : 
+				case "WhiteBalance" :
+				case "GainControl" :
 				case "Contrast" :
 				case "Saturation" :
-				case "Sharpness" : 
+				case "Sharpness" :
 				case "SubjectDistanceRange" :
 				case "FileSource" :
 					oEXIFTags[strTag] = EXIF.StringValues[strTag][oEXIFTags[strTag]];
 					break;
-	
+
 				case "ExifVersion" :
 				case "FlashpixVersion" :
 					oEXIFTags[strTag] = String.fromCharCode(oEXIFTags[strTag][0], oEXIFTags[strTag][1], oEXIFTags[strTag][2], oEXIFTags[strTag][3]);
 					break;
-	
-				case "ComponentsConfiguration" : 
-					oEXIFTags[strTag] = 
+
+				case "ComponentsConfiguration" :
+					oEXIFTags[strTag] =
 						EXIF.StringValues.Components[oEXIFTags[strTag][0]]
 						+ EXIF.StringValues.Components[oEXIFTags[strTag][1]]
 						+ EXIF.StringValues.Components[oEXIFTags[strTag][2]]
@@ -538,10 +538,10 @@ function readEXIFData(oFile, iStart, iLength)
 		var oGPSTags = readTags(oFile, iTIFFOffset, iTIFFOffset + oTags.GPSInfoIFDPointer, EXIF.GPSTags, bBigEnd);
 		for (var strTag in oGPSTags) {
 			switch (strTag) {
-				case "GPSVersionID" : 
-					oGPSTags[strTag] = oGPSTags[strTag][0] 
-						+ "." + oGPSTags[strTag][1] 
-						+ "." + oGPSTags[strTag][2] 
+				case "GPSVersionID" :
+					oGPSTags[strTag] = oGPSTags[strTag][0]
+						+ "." + oGPSTags[strTag][1]
+						+ "." + oGPSTags[strTag][2]
 						+ "." + oGPSTags[strTag][3];
 					break;
 			}
@@ -553,7 +553,7 @@ function readEXIFData(oFile, iStart, iLength)
 }
 
 
-EXIF.getData = function(oImg, fncCallback) 
+EXIF.getData = function(oImg, fncCallback)
 {
 	if (!oImg.complete) return false;
 	if (!imageHasData(oImg)) {
@@ -564,13 +564,13 @@ EXIF.getData = function(oImg, fncCallback)
 	return true;
 }
 
-EXIF.getTag = function(oImg, strTag) 
+EXIF.getTag = function(oImg, strTag)
 {
 	if (!imageHasData(oImg)) return;
 	return oImg.exifdata[strTag];
 }
 
-EXIF.getAllTags = function(oImg) 
+EXIF.getAllTags = function(oImg)
 {
 	if (!imageHasData(oImg)) return {};
 	var oData = oImg.exifdata;
@@ -584,7 +584,7 @@ EXIF.getAllTags = function(oImg)
 }
 
 
-EXIF.pretty = function(oImg) 
+EXIF.pretty = function(oImg)
 {
 	if (!imageHasData(oImg)) return "";
 	var oData = oImg.exifdata;
@@ -605,17 +605,17 @@ EXIF.readFromBinaryFile = function(oFile) {
 	return findEXIFinJPEG(oFile);
 }
 
-function loadAllImages() 
+function loadAllImages()
 {
 	var aImages = document.getElementsByTagName("img");
 	for (var i=0;i<aImages.length;i++) {
 		if (aImages[i].getAttribute("exif") == "true") {
 			if (!aImages[i].complete) {
-				addEvent(aImages[i], "load", 
+				addEvent(aImages[i], "load",
 					function() {
 						EXIF.getData(this);
 					}
-				); 
+				);
 			} else {
 				EXIF.getData(aImages[i]);
 			}
@@ -623,7 +623,6 @@ function loadAllImages()
 	}
 }
 
-addEvent(window, "load", loadAllImages); 
-
-})();
+scope.EXIF = EXIF;
+})(window);
 

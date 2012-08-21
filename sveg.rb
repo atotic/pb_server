@@ -201,9 +201,14 @@ class SvegApp < Sinatra::Base
 				if arg.eql? "editor.js"
 					retVal += asset_link(
 						"jquery.stream-1.2.js",
+						"jquery.dataSelector.js",
+						"diff.js",
+						"jdataview.js",
+						"application.js",
 						"editor.pb.js",
 						"editor.pb.upload.js",
 						"editor.pb.photos.js",
+						"editor.pb.jpegFile.js",
 						"editor.gui.js",
 						"editor.gui.touch.js",
 						"editor.gui.buttons.js",

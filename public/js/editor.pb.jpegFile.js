@@ -1,17 +1,10 @@
-<html>
-<head>
-<title>exifParse</title>
-<link href='/css/bootstrap.css' rel='stylesheet' type='text/css' />
-<link href='/css/application.css' rel='stylesheet' type='text/css' />
-<script src='/js/jquery-1.8.0.js'></script>
-<script src='/js/bootstrap.js'></script>
-<script src='/js/exif.js'></script>
-<script src='/js/jdataview.js'></script>
-</head>
-<body style='background-color:gray'>
-	<h1>Drop your images here</h1>
-<script>
-// http://www.media.mit.edu/pia/Research/deepview/exif.html
+/*
+ Jpeg file reader
+ inspired by Javascript EXIF Reader http://www.nihilogic.dk/labs/exif/
+ Exif file format: http://www.media.mit.edu/pia/Research/deepview/exif.html
+http://gvsoft.homedns.org/exif/exif-explanation.html
+Thumbnail extraction: http://code.flickr.com/blog/2012/06/01/parsing-exif-client-side-using-javascript-2/
+*/
 (function(scope) {
 	"use strict";
 	var JpegFile = function(localFile) {
@@ -20,7 +13,8 @@
 			dateTime: null,
 			description: null,
 			title: null,
-			userComment: null
+			userComment: null,
+			thumbnail_url: null
 		};
 		var filePart = null;
 		if ('slice' in localFile)
@@ -50,6 +44,12 @@
 		},
 		get caption() {
 			return this.exif.description || this.exif.title || this.exif.userComment;
+		},
+		get orientation() {
+			return this.exif.orientation;
+		},
+		get thumbnail() {
+			return this.exif.thumbnail_url;
 		},
 		get jsDate() {
 			if ('_jsDate' in this)
@@ -237,106 +237,4 @@
 	}
 	scope.JpegFile = JpegFile;
 
-})(window);
-function imageToCanvas(img, orientation) {
-// Orientations I know how to handle:
-// 1) transform="";;
-// 3) transform="-rotate 180";;
-// 6) transform="-rotate 90";;
-// 8) transform="-rotate 270";;
-	var scale = 1;
-
-	var swapAxes = orientation == 6 || orientation == 8
-	var canvasWidth = swapAxes ? img.naturalHeight : img.naturalWidth;
-	var canvasHeight = swapAxes ? img.naturalWidth : img.naturalHeight;
-	canvasWidth = Math.round(canvasWidth * scale);
-	canvasHeight = Math.round(canvasHeight * scale);
-	var canvas = $("<canvas>")
-						.attr('width', canvasWidth)
-						.attr('height', canvasHeight)
-						.get(0);
-	var ctx = canvas.getContext('2d');
-	ctx.save();
-	ctx.translate(swapAxes ? canvasHeight / 2 : canvasWidth / 2,
-		swapAxes ? canvasWidth / 2 : canvasHeight / 2);
-	switch(orientation) {
-		case 3:
-			ctx.rotate(Math.PI);
-			break;
-		case 6:
-			ctx.rotate(Math.PI/2);
-			break;
-		case 8:
-			ctx.rotate(Math.PI * 3 / 2);
-			break;
-		case 1:
-			break;
-		default:
-			console.warn("Do not know how to rotate", orientation);
-			break;
-	}
-	ctx.drawImage(img,
-		-canvasWidth / 2,
-		-canvasHeight / 2,
-		swapAxes ? canvasHeight : canvasWidth,
-		swapAxes ? canvasWidth : canvasHeight
-	 );
-	ctx.restore();
-	return canvas;
-}
-
-function createImageFromFile(f) {
-	var fileUrl = null;
-	if ('URL' in window)
-		fileUrl = window.URL.createObjectURL(f);
-	else if ('webkitURL' in window)
-		fileUrl = window.webkitURL.createObjectURL(f);
-	var img = $("<img src='" + fileUrl + "' style='height:200px'>");
-	$(document.body).append(img);
-	var jFile = new JpegFile(f);
-	jFile.deferred.then(function() {
-		jFile.readMetadata();
-		console.log("metadata read");
-		console.log("orientation", jFile.exif.orientation);
-		console.log("date", jFile.exif.dateTime, jFile.jsDate);
-		console.log("caption", jFile.caption);
-		if (jFile.exif.thumbnail_url) {
-			var img = new Image();
-			img.onload = function() {
-				var c = imageToCanvas(img, jFile.exif.orientation);
-				$(document.body).append(c);
-			}
-			img.src = jFile.exif.thumbnail_url;
-		}
-
-	});
-}
-
-var bodyDropHandler = {
-	dragenter: function(ev) {
-	},
-	dragover: function(ev) {
-		ev.stopPropagation();
-		ev.preventDefault();
-	},
-	dragleave: function(ev) {
-		ev.stopPropagation();
-		ev.preventDefault();
-	},
-	drop: function(ev) {
-		ev = ev.originalEvent;
-		ev.stopPropagation();
-		ev.preventDefault();
-		var files = ev.dataTransfer.files;
-		if (files)
-			for (var i=0; i<files.length; i++) {
-				var f = files.item(i);
-				if (f.type.match("image/(png|jpeg|gif)"))
-					createImageFromFile(f);
-			}
-	}
-}
-
-$('body').on(bodyDropHandler);
-</script>
-</body>
+})(window.PB);

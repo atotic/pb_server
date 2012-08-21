@@ -52,7 +52,12 @@ window.PB.Photo // Photo objects
 			if (this._changeBatch)
 				this._changeBatch.push({model:model, propName:propName, options:options});
 			else {
+				try {
 				$('*:data("model.id=' + model.id + '")').trigger(PB.MODEL_CHANGED, [model, propName, options]);
+				} catch(ex) {
+					debugger;
+				}
+
 				if (model.id in changeListeners)
 					for (var i=0; i<changeListeners[model.id].length; i++)
 						changeListeners[model.id][i].handleChangeEvent(model, propName, options);
@@ -278,6 +283,8 @@ window.PB.Photo // Photo objects
 			}
 		},
 		removePhoto: function(photo, options) {
+			//
+			photo.doNotSave = true;
 			// Remove photo from all the pages
 			var pageList = this.roughPageList;
 			for (var i=0; i<pageList.length; i++) {

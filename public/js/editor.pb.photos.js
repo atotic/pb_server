@@ -100,16 +100,28 @@ var ImgLoadThrottler = {
 			this._progress = percent;
 			PB.broadcastChange(this, 'progress');
 		},
-		set locked(val) {
-			this._locked = true;
+		get doNotSave() {
+			return this._doNotSave;
+		},
+		set doNotSave(val) {
+			this._doNotSave = val;
 		},
 		_localFileUrl: function() {
-			var fileUrl = null;
+			if ('_fileUrl' in this)
+				return this._fileUrl;
 			if ('URL' in window)
-				fileUrl = window.URL.createObjectURL(this._localFile);
+				this._fileUrl = window.URL.createObjectURL(this._localFile);
 			else if ('webkitURL' in window)
-				fileUrl = window.webkitURL.createObjectURL(this._localFile);
-			return fileUrl;
+				this._fileUrl = window.webkitURL.createObjectURL(this._localFile);
+			if (!this._fileUrl)
+				console.warn("Could not create localFileUrl");
+			return this._fileUrl;
+		},
+		revokeFileUrl: function(url) {
+			if ('URL' in window)
+				window.URL.revokeObjectURL(url);
+			else if ('webkitURL' in window)
+				window.webkitURL.revokeObjectURL(url);
 		},
 		get originalUrl() {
 			if ('original_url' in this)
@@ -146,6 +158,8 @@ var ImgLoadThrottler = {
 			}
 		},
 		_setDataUrl: function(url) {
+	//		console.log("Data url set", this.id);
+			this._dataUrlCreateInProgress = false;
 			if ('display_url' in this)
 				return;	// do not need data if we have real urls
 			this._dataUrl = url;
@@ -153,44 +167,98 @@ var ImgLoadThrottler = {
 			PB.broadcastChange(this, 'display_url');
 			PB.broadcastChange(this, 'original_url');
 		},
+		_setDataUrlFromImage: function(img) {
+			this._dataUrlCreateInProgress = false;
+			if ('display_url' in this)
+				return;
+			var desiredHeight = 512;
+			var orientation = this._jpegFile.orientation;
+			var swapAxes = orientation == 6 || orientation == 8
+			var imageWidth = img.naturalWidth;
+			var imageHeight = img.naturalHeight;
+			var scale = Math.min(1, desiredHeight / imageHeight);
+			var rot = 0;
+			var trans = {x:0, y:0};
+			var drawLoc = {x:0, y:0};
+			var canvasWidth = imageWidth * scale;
+			var canvasHeight = imageHeight * scale;
+			switch (orientation) {
+			case 6:
+			    rot = Math.PI/2; //Math.PI /2.2;
+			    tmp = canvasWidth;
+			    canvasWidth = canvasHeight;
+			    canvasHeight = tmp;
+			    trans = {x:canvasWidth / 2,y:canvasHeight/2};
+			    drawLoc = {x:-imageWidth * scale /2, y:-imageHeight * scale /2};
+			    break;
+			case 3:
+			    rot = Math.PI;
+			    trans = {x:canvasWidth /2, y:canvasHeight /2};
+			    drawLoc = {x:-imageWidth * scale /2, y:-imageHeight * scale /2};
+			    break;
+			case 8:
+			    rot = Math.PI * 3 / 2;
+			    tmp = canvasWidth;
+			    canvasWidth = canvasHeight;
+			    canvasHeight = tmp;
+			    trans = {x:canvasWidth /2, y:canvasHeight /2};
+			    drawLoc = {x:-imageWidth * scale /2, y:-imageHeight * scale /2};
+			    break;
+			}
+			var c = $('<canvas>')
+			    .attr('width', canvasWidth)
+			    .attr('height',canvasHeight)
+			    .get(0);
+			ctx = c.getContext('2d');
+			ctx.translate(trans.x,trans.y)
+			ctx.rotate(rot);
+			ctx.drawImage(img,drawLoc.x,drawLoc.y, imageWidth * scale, imageHeight * scale);
+			this._setDataUrl( c.toDataURL('image/jpeg'));
+		},
+		_createDataUrlFromLocalFile: function() {
+			var img = new Image();
+			var fileUrl = this._localFileUrl();
+			if (!fileUrl)
+				return;
+
+			var THIS = this;
+			img.onload = function() {
+				THIS._setDataUrlFromImage(img);
+				THIS.revokeFileUrl(fileUrl);
+
+			};
+			img.onerror = function() {
+				THIS.revokeFileUrl(fileUrl);
+				console.warn("Error loading image from local file");
+			};
+			ImgLoadThrottler.setSrc(img, fileUrl);
+		},
 		_createDataUrl: function() {
 			if (!('_localFile' in this))
 				return;
-			var fileUrl = this._localFileUrl();
-			if (!fileUrl) {
-				console.log("could not create fileUrl");
+			if(this._dataUrlCreateInProgress)
 				return;
-			}
-			var img = new Image();
+			this._dataUrlCreateInProgress = true;
 			var THIS = this;
-			$(img).on({
-				load: function() {
-					// TODO: convert to scale
-					var desiredHeight = 512;
-					var scale = desiredHeight / img.naturalHeight;
-					if (scale > 1)
-						scale = 1;
-					var canvasWidth = Math.round(img.naturalWidth * scale);
-					var canvasHeight = Math.round(img.naturalHeight*scale);
-					var canvas = $("<canvas />")
-						.attr('width', canvasWidth)
-						.attr('height', canvasHeight)
-						.get(0);
-					canvas.getContext('2d').drawImage(img, 0,0, canvasWidth, canvasHeight);
-					THIS._setDataUrl( canvas.toDataURL('image/jpeg'));
-					// cleanup
-					$(img).unbind();
-					img.src = null;
-					if ('URL' in window)
-						window.URL.revokeObjectURL(fileUrl);
-					else if ('webkitURL' in window)
-						window.webkitURL.revokeObjectURL(fileUrl);
-				},
-				error: function() {
-					console.log("Unexpected error loading local image");
+
+			this._jpegFile.deferred.then(function() {
+//				console.log("Exif loaded", THIS.id);
+				THIS._jpegFile.readMetadata();
+
+				var thumbDataUrl = THIS._jpegFile.thumbnail;
+				if (!thumbDataUrl)
+					THIS._createDataUrlFromLocalFile();
+				else {
+					var img = new Image();
+					img.onload = function() {
+						THIS._setDataUrlFromImage(img);
+					};
+					img.onerror = function() {
+						THIS._createDataUrlFromLocalFile();
+					};
+					img.src = thumbDataUrl;
 				}
 			});
-			ImgLoadThrottler.setSrc(img, fileUrl);
 		},
 		_generatePlaceholder: function(width, height, options) {
 			return '/img/surprise.png';
@@ -201,6 +269,7 @@ var ImgLoadThrottler = {
 				GUI.Error.photoTooBig(this);
 				throw "File too big";
 			}
+			this._jpegFile = new PB.JpegFile(file);
 			PB.Uploader.savePhoto(this);
 		},
 		load: function() {
@@ -214,7 +283,6 @@ var ImgLoadThrottler = {
 				.fail(function(jsXHR, status, msg) {
 					if (jsXHR.status == 404) {
 						THIS.status = "Failed. Not found";
-						THIS.locked = true;
 					}
 					else {
 						THIS.status = "Retrying";
@@ -243,7 +311,7 @@ var ImgLoadThrottler = {
 				delete this._dataUrl;
 		},
 		set saveProgress(val) {
-			console.log("saveProgress " + val);
+//			console.log("saveProgress " + val);
 			this._saveProgress = val;
 		},
 		set saveError(val) {
@@ -281,12 +349,13 @@ var ImgLoadThrottler = {
 						GUI.Error.photoTooBig(THIS);
 						THIS.status = "Upload failed. File is too big.";
 						THIS.progress = 0;
-						THIS.locked = true;
+						THIS._doNotSave = true;
 						break;
 					default:
 						THIS.progress = 0;
 						THIS.status = "Upload failed. Retrying.";
-						PB.Uploader.savePhoto(THIS); // retry
+						if(!THIS._doNotSave)
+							PB.Uploader.savePhoto(THIS); // retry
 						break;
 				}
 			}).done( function(response, msg, jqXHR) {

@@ -28,6 +28,7 @@ Excellent CSS effects: bounce, rotate, etc. If I ever need visual candy http://b
 CSS arrow please: http://cssarrowplease.com/
 
 JS
+Speeding up DOM: do it for diffs?
 Face detection in JS https://github.com/liuliu/ccv/tree/unstable/js
 HTMLK Media Capture: upload photos from your phone! http://www.w3.org/TR/html-media-capture/
 window.matchMedia media queries through js

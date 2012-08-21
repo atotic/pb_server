@@ -56,14 +56,37 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-- correct photo orientation, date, location by parsing exif data: http://code.flickr.com/blog/2012/06/01/parsing-exif-client-side-using-javascript-2/
-- load photo data when book is loaded,
+- extract exif data on the server, store in db
+- store width/height too, for speedier render
+- sort by none|date|name
+- load photos in book's json
 - account page should load book list dynamically  $(window).unload(function(){});
-- exif, parse on client and server, use image orientation
-- test on iPad, Nexus
+- test on iPad (speed it up?), Nexus (borkage)
+- Aug 24th? TEMPLATES! FINALLY!
+
+Aug 19
+Bugfix: do not save photos removed from the book
+Feature: exif data extracted from local file, used to display thumbnail, rotate photos
+Feature: bootstrap 2.1 update, larger fonts, white navbar, caused
+minor tweaks
+
+Aug 17
+Feature: extracted thumbnail from a jpeg. Will be a win for multiple photo uploads
+Feature: imageToCanvas, taking orientation into account. We only do rotations, no transpose.
+
+Aug 16
+Registered Pook.io
+Feature: Javascript Exif parser works. Parser Exif & XMP, written from scratch
+http://www.media.mit.edu/pia/Research/deepview/exif.html
+http://code.flickr.com/blog/2012/06/01/parsing-exif-client-side-using-javascript-2/
+http://gvsoft.homedns.org/exif/exif-explanation.html
+
+Got carried away, worked too much. Will take friday morning off.
+jDataView made it much easier to write this
 
 Aug 15
 Upgrade: jQuery 1.8 upgrade, patched data selector
+Starting work on JPEG metadata reading
 
 Aug 14
 Optimization: rate limit icons from local files
