@@ -56,15 +56,18 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-- extract exif data on the server, store in db
-- store width/height too, for speedier render
-- sort by none|date|name
+- return width/height exif data from server
+- client: sort by none|date|name
 - load photos in book's json
 - account page should load book list dynamically  $(window).unload(function(){});
 - test on iPad (speed it up?), Nexus (borkage)
 - Aug 24th? TEMPLATES! FINALLY!
 
-Aug 19
+Aug 22:
+Feature: extract exif data on the server, store in db
+Feature: store width/height too, for speedier render
+
+Aug 21
 Bugfix: do not save photos removed from the book
 Feature: exif data extracted from local file, used to display thumbnail, rotate photos
 Feature: bootstrap 2.1 update, larger fonts, white navbar, caused

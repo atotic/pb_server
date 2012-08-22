@@ -465,7 +465,7 @@ class SvegApp < Sinatra::Base
 			photo.user_id = photo_owner
 			DB.transaction do
 				# save photo_file
-				PhotoStorage.storeFile(photo, photo_file[:tempfile].path ) if photo_file
+				PhotoStorage.store_file(photo, photo_file[:tempfile].path ) if photo_file
 				photo.save
 				# if there are duplicate photos, destroy this one, and use duplicate instead
 				dup = Photo.filter(:user_id => photo.user_id).filter(:md5 => photo.md5).exclude(:id => photo.id).first

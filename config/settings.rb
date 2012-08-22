@@ -1,5 +1,5 @@
 # Common settings, used by all sveg servers and scripts
-raise "RACK_ENV must be set (user:#{ENV['USER']})" unless ENV.has_key?('RACK_ENV') 
+raise "RACK_ENV must be set (user:#{ENV['USER']})" unless ENV.has_key?('RACK_ENV')
 
 ENV['RAILS_ENV'] = ENV['RACK_ENV'] # some gems (delayed_job) need this
 
@@ -11,7 +11,7 @@ require_relative './secrets'
 
 class SvegSettings
 	# platform
-	@platform = case 
+	@platform = case
 		when RUBY_PLATFORM.include?('darwin') then :mac
 		when RUBY_PLATFORM.include?('linux') then :linux
 		else "Unknown platform"
@@ -25,7 +25,7 @@ class SvegSettings
 	raise "RACK_ENV must be production|development|test" unless @environment == :development || @environment == :production || @environment == :test
 	@book_templates_dir = File.expand_path("./templates", @pb_templates_dir).freeze
 	@test_dir = File.join(@root_dir, "test").freeze
-	
+
 	@data_dir = File.join(File.expand_path('../pb_data', @root_dir), @environment.to_s).freeze
 	@tmp_dir = File.join(@data_dir, 'tmp').freeze
 	@log_dir = File.join(@data_dir, 'log').freeze
@@ -33,7 +33,7 @@ class SvegSettings
 
 	@photo_dir = File.join(@data_dir, 'photo-storage').freeze # photo storage directory
 	@book2pdf_dir = File.join(@data_dir, 'pdf-books').freeze # generated books
-	
+
 	# binaries
 	if @platform == :mac
 		@chrome_binary = File.join(@pb_chrome_dir, 'bin/mac/Chromium.app/Contents/MacOS/Chromium').freeze
@@ -42,13 +42,15 @@ class SvegSettings
 		@pdf_toolkit_binary = "/usr/local/bin/pdftk".freeze
 		@convert_binary = "/usr/local/bin/convert".freeze
 		@graphicsmagick_binary = "/usr/local/bin/gm".freeze
+		@exiv2_binary = "/usr/local/bin/exiv2".freeze
 	elsif @platform == :linux
 		@chrome_binary = File.join(@pb_chrome_dir, "bin/linux_64/chrome").freeze
 		@chrome_dir = File.join(@pb_chrome_dir, "bin/linux_64").freeze
-		@chrome_profile_dir = File.join(@pb_chrome_dir, 'chromium_profile')		
+		@chrome_profile_dir = File.join(@pb_chrome_dir, 'chromium_profile')
 		@pdf_toolkit_binary = "/usr/bin/pdftk".freeze
 		@convert_binary = "/usr/bin/convert".freeze
 		@graphicsmagick_binary = "/usr/bin/gm".freeze
+		@exiv2_binary = "/usr/bin/exiv2".freeze
 	end
 	#
 	@comet_port = 28000
@@ -59,10 +61,10 @@ class SvegSettings
 		attr_accessor :environment, :platform
 		attr_accessor :book_templates_dir, :photo_dir, :book2pdf_dir
 		attr_accessor :chrome_binary, :chrome_dir, :chrome_log_dir, :chrome_profile_dir, :pdf_toolkit_binary
-		attr_accessor :convert_binary, :graphicsmagick_binary
+		attr_accessor :convert_binary, :graphicsmagick_binary, :exiv2_binary
 		attr_accessor :comet_port, :comet_host
 	end
-	
+
 	def self.init()
 		Dir.mkdir(@data_dir) unless File.exists?(@data_dir)
 		Dir.mkdir(@tmp_dir) unless File.exist?(@tmp_dir)

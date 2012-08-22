@@ -24,7 +24,6 @@ class Photo < Sequel::Model(:photos)
 		{
 			:id => self.id,
 			:display_name => self.display_name,
-			:exif => self.exif,
 			:original_url => self.original_file ? self.url(:original) : false,
 			:display_url => self.display_file ? self.url(:display) : false,
 			:icon_url => self.icon_file ? self.url(:icon) : false
@@ -142,15 +141,53 @@ class PhotoStorage
 		return resized_files
 	end
 
+	def self.get_size(file_path)
+		file_path = File.expand_path(file_path)
+		out = `#{SvegSettings.graphicsmagick_binary} identify -format "%wX%h" #{file_path}`
+		PB.logger.warn "Could not get size #{file_path}" unless $?.to_i == 0
+		size_data = out.chomp.split('X')
+		return [ size_data[0].to_i,size_data[1].to_i ]
+	end
+
 	def self.resize(photo)
 		src = File.expand_path(photo.file_path)
 		file_names = self.multi_resize(src, { Photo::ICON_SIZE => :icon, Photo::DISPLAY_SIZE => :display })
 		photo.icon_file = file_names[Photo::ICON_SIZE] if file_names[Photo::ICON_SIZE]
+		photo.icon_file_width, photo.icon_file_height = self.get_size(photo.file_path(:icon)) if photo.icon_file
 		photo.display_file = file_names[Photo::DISPLAY_SIZE] if file_names[Photo::DISPLAY_SIZE]
+		photo.display_file_width, photo.display_file_height = self.get_size(photo.file_path(:display)) if photo.display_file
 		photo.save
 	end
 
-	def self.storeFile(photo, file_path)
+	def self.read_exif_data(file_path)
+		file_path = File.expand_path(file_path)
+		exif_tokens = {
+			:date_time_original => 'Exif.Photo.DateTimeOriginal',
+			:date_time => 'Exif.Image.DateTime',
+#			:user_comment => 'Exif.Photo.UserComment',
+			:description => 'Xmp.dc.description',
+			:title => 'Xmp.dc.title'
+		}
+		retVal = {}
+		cmd_line = "#{SvegSettings.exiv2_binary} -Pkv " + exif_tokens.values.map { |x| "-g #{x} "}.join
+		out = `#{cmd_line} #{file_path}`
+		PB.logger.warn "Could not read exif data #{file_path}" unless $?.to_i == 0
+		out.split(/\n/).each do |line|
+			match = line.match(/(\S+)(\s+)(.*)/)
+			PB.logger.warn "Could not parse exif line #{line}" if match.length != 4
+			key = exif_tokens.key( match[1] )
+			if key
+				retVal[key] = match[3]
+				langMatch = retVal[key].match(/lang="([^"]+)"(.*)/)
+				retVal[key] = langMatch[2] if langMatch
+				retVal[key] = retVal[key].lstrip
+			end
+			PB.logger.warn "Unexpected, unknown key #{match[1]}" unless key
+		end
+		retVal
+	end
+
+	def self.store_file(photo, file_path)
 		photo.save
 		dir = self.get_user_dir(photo)
 		ext = File.extname( photo.display_name ).downcase
@@ -162,6 +199,10 @@ class PhotoStorage
 		photo.original_file = destName
 		# file post-processing: orient, and generate sizes
 		self.auto_orient(dest)
+		exif = self.read_exif_data(photo.file_path)
+		photo.date_taken = (exif[:date_time_original] || exif[:date_time] || "")[0, 64]
+		photo.caption = (exif[:description] || exif[:title] || "")[0,255]
+		photo.original_file_width, photo.original_file_height = self.get_size(photo.file_path)
 		self.resize(photo)
 		photo.save
 	end

@@ -6,7 +6,7 @@ check out http://michaelvanrooijen.com/articles/2011/06/08-managing-and-monitori
 Eventualy, move all server start/stop stuff to upstart
 
 PRODUCTION setup
-nginx server: 
+nginx server:
 	installed in /opt/nginx
 	configured via /opt/nginx/conf/nginx.conf
 	runs as nginx/nginx
@@ -26,6 +26,7 @@ pdftk -- pdf toolkit, for merging pdf pages
 xvfd -- for running headless chrome
 imagemagick - for auto-orient
 graphicsmagick - for image resizing
+exiv2 - jpeg exif data reading
 growl, growlnotify -- development only, growl errors in logs
 
 SERVERS
@@ -48,10 +49,10 @@ chromium:
 delayed_job:
 	does pdf generation, image resizing
 	logs to delayed_job.log (hardcoded in gem)
-	
+
 pdf_saver_server:
-	ChromePDFTask server for chromium. Allocates ChromePDFTasks created by delayed_job, 
-	reports job results from Chromium. 
+	ChromePDFTask server for chromium. Allocates ChromePDFTasks created by delayed_job,
+	reports job results from Chromium.
 	Monitors chromium, restarts it if hangup detected
 	Logs to pdf_saver_server.info.
 
@@ -68,7 +69,7 @@ LOGGING
 	delayed_job: log file is delayed_job.output. Progress is stored there, dying tasks store their stack trace in database
 
 NGINX
-nginx -c /Users/atotic/code/pb/pb_server/config/nginx.conf -s start	
+nginx -c /Users/atotic/code/pb/pb_server/config/nginx.conf -s start
 # reloads the conf file
 nginx -c /Users/atotic/code/pb/pb_server/config/nginx.conf -s reload
 

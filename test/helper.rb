@@ -6,11 +6,11 @@ require_relative '../config/db'
 require_relative '../lib/sveg_lib'
 
 module TestHelpers
-	
+
 	# logs in with given username. User created if does not exists
 	def create_user(username)
 		user = PB::User[:display_name => username]
-		user = PB::AuthLogin.create_with_user(username).user unless user
+		user = PB::User.create( { :display_name => username, :email => "#{username}@dev.null"}) unless user
 		user
 	end
 
@@ -46,7 +46,7 @@ module TestHelpers
 				newName = "#{filename}.jpg"
 				`cp #{filename} #{newName}`
 				photo = PB::Photo.create( {:display_name => File.basename(filename), :user_id => opts[:user].pk} );
-				PB::PhotoStorage.storeFile(photo, newName )
+				PB::PhotoStorage.store_file(photo, newName )
 			end
 			book.add_photo photo
 			opts[:img_cnt] -= 1

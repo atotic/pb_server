@@ -1,6 +1,7 @@
 /*
  Jpeg file reader
  inspired by Javascript EXIF Reader http://www.nihilogic.dk/labs/exif/
+ http://www.nihilogic.dk/labs/exif/exif.js
  Exif file format: http://www.media.mit.edu/pia/Research/deepview/exif.html
 http://gvsoft.homedns.org/exif/exif-explanation.html
 Thumbnail extraction: http://code.flickr.com/blog/2012/06/01/parsing-exif-client-side-using-javascript-2/
@@ -11,6 +12,7 @@ Thumbnail extraction: http://code.flickr.com/blog/2012/06/01/parsing-exif-client
 		this.exif = {
 			orientation: 1,
 			dateTime: null,
+			dateTimeOriginal: null,
 			description: null,
 			title: null,
 			userComment: null,
@@ -51,20 +53,23 @@ Thumbnail extraction: http://code.flickr.com/blog/2012/06/01/parsing-exif-client
 		get thumbnail() {
 			return this.exif.thumbnail_url;
 		},
+		get dateTime() {
+			return this.exif.dateTimeOriginal || this.exif.dateTime;
+		},
 		get jsDate() {
 			if ('_jsDate' in this)
 				return this._jsDate;
-			if (!this.exif.dateTime)
+			if (!this.dateTime)
 				return null;
 			try {
-				var m = this.exif.dateTime.match(/(\d+):(\d+):(\d+) (\d+):(\d+):(\d+)/);
+				var m = this.dateTime.match(/(\d+):(\d+):(\d+) (\d+):(\d+):(\d+)/);
 				if (m)
 					this._jsDate = new Date(m[1], m[2], m[3], m[4], m[5], m[6]);
 				else
 					this._jsDate = null;
 			}
 			catch(ex) {
-				console.warn("could not parse exif date", this.exif.dateTime);
+				console.warn("could not parse exif date", this.dateTime);
 			}
 			return this._jsDate;
 		},
@@ -94,6 +99,7 @@ Thumbnail extraction: http://code.flickr.com/blog/2012/06/01/parsing-exif-client
 				jpegIfOffset: null,
 				jpegIfByteCount: null
 			};
+			// exif2 -Pkv -g <tagName> fileName
 			for (var i=0; i<tagCount; i++) {
 				var tagOffset = ifdOffset + i*12 + 2;
 				var tagId = this.view.getUint16(tagOffset, littleEndian);
@@ -104,13 +110,18 @@ Thumbnail extraction: http://code.flickr.com/blog/2012/06/01/parsing-exif-client
 						var newExifOffset = tiffOffset + exifPtr;
 						this.readIFD(tiffOffset, newExifOffset, littleEndian);
 						break;
-					case 0x0112: // Orientation
+					case 0x0112: // Exif.Image.Orientation
 //						console.log("Orientation");
 						this.exif.orientation = this.readTagValue(tiffOffset, tagOffset, littleEndian);
 						break;
-					case 0x0132: // DateTime
-//						console.log("DateTimeOriginal");
+					case 0x9003: // Exif.Photo.DateTimeOriginal
+						this.exif.dateTimeOriginal = this.readTagValue(tiffOffset, tagOffset, littleEndian);
+						break;
+					case 0x0132: // Exif.Image.DateTime
 						this.exif.dateTime = this.readTagValue(tiffOffset, tagOffset, littleEndian);
+						break;
+					case 0x9003: // Exif.Photo.DateTimeOriginal
+						this.exif.dateTimeOriginal = this.readTagValue(tiffOffset, tagOffset, littleEndian);
 						break;
 					case 0x9286: // UserComment
 //						console.log("UserComment");
