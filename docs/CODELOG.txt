@@ -59,11 +59,12 @@ Next:
 
 Aug 22:
 Feature: return width/height/exif data from server, read on client
+Bugfixes: too big images not displaying, 404 images cached
 
 Aug 21:
 Feature: extract exif data on the server, store in db
-Feature: store width/height too, for speedier render
-
+Feature: store width/height too, for speedier render. Use it for images
+Bugfix: resizing photo viewing area
 Aug 20
 Bugfix: do not save photos removed from the book
 Feature: exif data extracted from local file, used to display thumbnail, rotate photos

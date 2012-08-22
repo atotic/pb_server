@@ -117,7 +117,6 @@ body {
 		padding-left: @side-tool-width;
 		padding-right: @palette-resize-btn-radius / 2;
 		width: 100%;
-		min-height: @image-height;
 	}
 
 	#photo-list.drop-target {
@@ -126,12 +125,8 @@ body {
 		#photo-list .photo-div {
 			display: inline-block;
 			margin: 2px;
-			max-height: @image-height;
 			position:relative;
 		}
-			#photo-list .photo-div img {
-				max-height: @image-height;
-			}
 			#photo-list .photo-div .status {
 				position: absolute;
 				top: 4px;

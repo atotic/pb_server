@@ -3,7 +3,13 @@
 // PhotoPalette
 // images can be dragged out
 (function(scope){
+
+	var baseImageHeight = 128;
+	var horizontalScale = 1.34;
+
 	var PhotoPalette = {
+		_maxImageHeight: baseImageHeight,
+		_maxImageWidth : baseImageHeight * horizontalScale,
 		bindToBook: function(book) {
 			this._photoFilter = 'unused'; // 'all'
 			this.makeDroppable();
@@ -26,6 +32,14 @@
 		},
 		get photoFilter() {
 			return this._photoFilter;
+		},
+		get maxImageHeight() {
+			return this._maxImageHeight;
+		},
+		set maxImageHeight(val) {
+			this._maxImageHeight = val;
+			this._maxImageWidth = val * horizontalScale;
+			this.resizeAllImages();
 		},
 		startDragEffect: function(tile) {
 			$(tile).css('opacity', '0');
@@ -118,9 +132,27 @@
 			else
 				progressDiv.detach();
 		},
+		resizeAllImages: function() {
+			$('.photo-div > img').each(function() {
+				var el = $(this);
+				el.stop();
+				var newSize = PhotoPalette.scaleTileDimensions({ width: this.naturalWidth, height: this.naturalHeight });
+				el.width(newSize.width).height(newSize.height);
+			});
+		},
+
+		scaleTileDimensions: function(dims) {
+			var scaleH = this._maxImageWidth / dims.width;
+			var scaleV = this._maxImageHeight / dims.height;
+			scale = Math.min(scaleH, scaleV);
+			return {width: dims.width * scale, height: dims.height * scale};
+		},
 		createImageTile: function(photo) {
-			var tile = $("<div class='photo-div'><img src='" + photo.getUrl(128).url + "'></div>");
+			var imgData = photo.getUrl(128);
+			var tile = $("<div class='photo-div'><img src='" + imgData.url + "'></div>");
 			var img = $(tile).children('img');
+			var scaled = this.scaleTileDimensions(imgData);
+			img.width(scaled.width).height(scaled.height);
 			tile.data('model', photo)
 				.on(PB.MODEL_CHANGED,
 					function(ev, model, prop, options) {
@@ -128,8 +160,9 @@
 						switch(prop) {
 							case 'icon_url':
 								tile.stop(true, true);
-								var img_spec = photo.getUrl(128);
-								img.prop('src', img_spec.url);
+								var imgData = photo.getUrl(128);
+								var scaled = THIS.scaleTileDimensions(imgData);
+								img.prop('src', imgData.url).width(scaled.width).height(scaled.height);
 							break;
 							case 'status':
 								PhotoPalette.setTileStatus(tile, model);
