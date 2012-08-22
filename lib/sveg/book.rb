@@ -61,11 +61,14 @@ eos
 
 	def to_json(*a)
 		# TODO insert photos into document
+	photoList = JSON.parse(self.document)['photoList']
+	photoJson = "[" + PB::Photo.where(:id=>photoList).map{|x| x.to_json}.join(',') + "]"
 <<-eos
 {
 	"id": #{self.pk},
 	"last_diff" : #{self[:last_diff]},
-	"document": #{self.document}
+	"document": #{self.document},
+	"photos": #{photoJson}
 }
 eos
 	end

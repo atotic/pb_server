@@ -29,6 +29,11 @@
 			cache[id] = new ServerPhoto(id);
 			cache[id].uploadLocalFile(file);
 			return cache[id];
+		},
+		createFromJson: function(json) {
+			cache[json.id] = new ServerPhoto(json.id);
+			cache[json.id].loadFromJson(json, true);
+			return cache[json.id];
 		}
 	}
 
@@ -299,7 +304,7 @@ var ImgLoadThrottler = {
 		},
 		// When temporary id changes, change is broadcast to all the listeners
 		// with options {newId: new_value}. Listeners should reregister their interest
-		loadFromJson: function(json) {
+		loadFromJson: function(json, noBroadcast) {
 			if ('id' in json && this.id != json.id) {
 				if (!/^temp/.exec(this.id))
 					throw "Photo id is immutable once assigned (unless temp id)";
@@ -315,7 +320,8 @@ var ImgLoadThrottler = {
 				if ( (!(props[i] in this))
 						 || ( (props[i] in this) && this[props[i]] != json[props[i]])) {
 					this[props[i]] = json[props[i]];
-					PB.broadcastChange(this, props[i]);
+					if (!noBroadcast)
+						PB.broadcastChange(this, props[i]);
 				}
 			if ('display_url' in this)	// clean up generated image
 				delete this._dataUrl;

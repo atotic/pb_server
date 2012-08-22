@@ -50,9 +50,8 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-- use it on client
-- load photos in book's json
 - client: sort by added|date|name
+- optimize broadcasts
 - account page should load book list dynamically  $(window).unload(function(){});
 - test on iPad (speed it up?), Nexus (borkage)
 - Aug 24th? TEMPLATES! FINALLY!
@@ -60,10 +59,11 @@ Next:
 Aug 22:
 Feature: return width/height/exif data from server, read on client
 Bugfixes: too big images not displaying, 404 images cached
+Feature: store width/height too, for speedier render. Use it for images
+Feature: speed: load photos in book's json
 
 Aug 21:
 Feature: extract exif data on the server, store in db
-Feature: store width/height too, for speedier render. Use it for images
 Bugfix: resizing photo viewing area
 Aug 20
 Bugfix: do not save photos removed from the book

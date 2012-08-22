@@ -100,6 +100,11 @@ window.PB.Photo // Photo objects
 		this._dirty = false;
 		this._locked = false;
 		this._proxies = {};
+		if ('photos' in serverJson) {
+			for (var i=0; i<serverJson.photos.length; i++)
+				PB.ServerPhotoCache.createFromJson( serverJson.photos[i]);
+			delete serverJson.photos;
+		}
 		this.serverData = serverJson;	// keep original data for diffs
 		this.localData = PB.clone(serverJson); // all data from server are here
 		this._localId = PB.randomString(6);	// local id broadcast with patches
