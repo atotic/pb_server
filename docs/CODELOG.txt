@@ -42,32 +42,29 @@ library
 - events
 - gui widgets
 
-testing
-- qunit server. straight api testing
-
 Plan:
 Implement the rest of the functionality. Total rewrite, old code will get reimported.
-	- editing:
-		add images (auto rotate right away, resizing as delayed job)
-		delete images
 
 Stage 2: get templates/printing
 5 weeks
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-- return width/height exif data from server
-- client: sort by none|date|name
+- use it on client
 - load photos in book's json
+- client: sort by added|date|name
 - account page should load book list dynamically  $(window).unload(function(){});
 - test on iPad (speed it up?), Nexus (borkage)
 - Aug 24th? TEMPLATES! FINALLY!
 
 Aug 22:
+Feature: return width/height/exif data from server, read on client
+
+Aug 21:
 Feature: extract exif data on the server, store in db
 Feature: store width/height too, for speedier render
 
-Aug 21
+Aug 20
 Bugfix: do not save photos removed from the book
 Feature: exif data extracted from local file, used to display thumbnail, rotate photos
 Feature: bootstrap 2.1 update, larger fonts, white navbar, caused

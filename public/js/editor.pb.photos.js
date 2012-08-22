@@ -125,19 +125,19 @@ var ImgLoadThrottler = {
 		},
 		get originalUrl() {
 			if ('original_url' in this)
-				return this.original_url;
+				return { url: this.original_url, width: this.original_w, height: this.original_h};
 			else
 				return this._getDataUrl();
 		},
 		get displayUrl() {
 			if ('display_url' in this)
-				return this.display_url;
+				return { url: this.display_url, width: this.display_w, height: this.display_h};
 			else
 				return this._getDataUrl();
 		},
 		get iconUrl() {
 			if ('icon_url' in this)
-				return this.icon_url;
+				return { url: this.icon_url, width: this.icon_w, height: this.icon_h};
 			else
 				return this._getDataUrl();
 		},
@@ -151,18 +151,20 @@ var ImgLoadThrottler = {
 		},
 		_getDataUrl: function() {
 			if (this._dataUrl)
-				return this._dataUrl;
+				return { url: this._dataUrl, width: this._data_w, height: this._data_h};
 			else {
 				this._createDataUrl();
-				return '/img/surprise.png';
+				return { url: '/img/surprise.png', width: 128, height: 128};
 			}
 		},
-		_setDataUrl: function(url) {
+		_setDataUrl: function(url, width, height) {
 	//		console.log("Data url set", this.id);
 			this._dataUrlCreateInProgress = false;
 			if ('display_url' in this)
 				return;	// do not need data if we have real urls
 			this._dataUrl = url;
+			this._data_w = width;
+			this._data_h = height;
 			PB.broadcastChange(this, 'icon_url');
 			PB.broadcastChange(this, 'display_url');
 			PB.broadcastChange(this, 'original_url');
@@ -213,7 +215,7 @@ var ImgLoadThrottler = {
 			ctx.translate(trans.x,trans.y)
 			ctx.rotate(rot);
 			ctx.drawImage(img,drawLoc.x,drawLoc.y, imageWidth * scale, imageHeight * scale);
-			this._setDataUrl( c.toDataURL('image/jpeg'));
+			this._setDataUrl( c.toDataURL('image/jpeg'), canvasWidth, canvasHeight);
 		},
 		_createDataUrlFromLocalFile: function() {
 			var img = new Image();
@@ -241,6 +243,10 @@ var ImgLoadThrottler = {
 			this._dataUrlCreateInProgress = true;
 			var THIS = this;
 
+			if (!'_jpegFile' in this) {
+				console.warn("Photo._createDataUrl called without _jpegFile");
+				this._createdataUrlFromLocalFile();
+			}
 			this._jpegFile.deferred.then(function() {
 //				console.log("Exif loaded", THIS.id);
 				THIS._jpegFile.readMetadata();
@@ -265,11 +271,11 @@ var ImgLoadThrottler = {
 		},
 		uploadLocalFile: function(file) {
 			this._localFile = file;
+			this._jpegFile = new PB.JpegFile(file);
 			if (this._localFile.size > this.SIZE_LIMIT) {
 				GUI.Error.photoTooBig(this);
 				throw "File too big";
 			}
-			this._jpegFile = new PB.JpegFile(file);
 			PB.Uploader.savePhoto(this);
 		},
 		load: function() {
@@ -300,6 +306,10 @@ var ImgLoadThrottler = {
 				PB.broadcastChange(this, 'id', {newId: json.id});
 				ServerPhotoCache.replaceTempId(this, json.id);
 			}
+			var nonBroadcastProps = ['original_w','original_h','display_w','display_h','icon_w','icon_h'];
+			for (var i=0; i<nonBroadcastProps.length; i++)
+				this[nonBroadcastProps[i]] = json[nonBroadcastProps[i]];
+
 			var props = ['original_url', 'display_url', 'icon_url', 'exif', 'display_name'];
 			for (var i=0; i<props.length; i++)
 				if ( (!(props[i] in this))

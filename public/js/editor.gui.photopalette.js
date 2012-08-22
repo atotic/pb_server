@@ -119,7 +119,7 @@
 				progressDiv.detach();
 		},
 		createImageTile: function(photo) {
-			var tile = $("<div class='photo-div'><img src='" + photo.getUrl(128) + "'></div>");
+			var tile = $("<div class='photo-div'><img src='" + photo.getUrl(128).url + "'></div>");
 			var img = $(tile).children('img');
 			tile.data('model', photo)
 				.on(PB.MODEL_CHANGED,
@@ -128,7 +128,8 @@
 						switch(prop) {
 							case 'icon_url':
 								tile.stop(true, true);
-								img.prop('src', photo.getUrl(128));
+								var img_spec = photo.getUrl(128);
+								img.prop('src', img_spec.url);
 							break;
 							case 'status':
 								PhotoPalette.setTileStatus(tile, model);

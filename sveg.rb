@@ -438,8 +438,9 @@ class SvegApp < Sinatra::Base
 			begin
 				headers['Cache-Control'] = 'max-age=84600'
 				send_file photo.file_path(params[:size])
-			rescue
-				halt [404, ["Photo in this size is not available #{params[:size]}"]]
+			rescue => ex
+				headers['Cache-Control'] = ''
+				halt [404, ["Photo in this size is not available #{params[:size]} #{photo.pk}"]]
 			end
 		end
 	end
@@ -459,14 +460,11 @@ class SvegApp < Sinatra::Base
 		end
 		begin
 			destroy_me = nil	# destroy must be outside the transaction
-			photo_file = params.delete('photo_file')
-
-			photo = Photo.new(params);
-			photo.user_id = photo_owner
+			photo_file = params['photo_file']
+			photo = Photo.create(:display_name => params['display_name'], :user_id => photo_owner);
 			DB.transaction do
 				# save photo_file
 				PhotoStorage.store_file(photo, photo_file[:tempfile].path ) if photo_file
-				photo.save
 				# if there are duplicate photos, destroy this one, and use duplicate instead
 				dup = Photo.filter(:user_id => photo.user_id).filter(:md5 => photo.md5).exclude(:id => photo.id).first
 				if dup

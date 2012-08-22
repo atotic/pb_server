@@ -261,7 +261,7 @@
 			});
 		},
 		createRoughImageTile: function(photo) {
-			var src = photo.getUrl(PB.PhotoProxy.SMALL);
+			var src = photo.getUrl(PB.PhotoProxy.SMALL).url;
 			var domPhoto = $(document.createElement('div'));
 			domPhoto.addClass('rough-tile');
 			domPhoto
@@ -269,7 +269,7 @@
 				.on(PB.MODEL_CHANGED, function(ev, model, prop, options) {
 						switch(prop) {
 							case 'icon_url':
-								domPhoto.css('background-image',  'url("' + photo.getUrl(128) + '")');
+								domPhoto.css('background-image',  'url("' + photo.getUrl(128).url + '")');
 							break;
 							default:;
 							break;

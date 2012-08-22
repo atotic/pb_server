@@ -24,9 +24,17 @@ class Photo < Sequel::Model(:photos)
 		{
 			:id => self.id,
 			:display_name => self.display_name,
+			:date_taken => self.date_taken,
+			:caption => self.caption,
 			:original_url => self.original_file ? self.url(:original) : false,
+			:original_w => self.original_file_width,
+			:original_h => self.original_file_height,
 			:display_url => self.display_file ? self.url(:display) : false,
-			:icon_url => self.icon_file ? self.url(:icon) : false
+			:display_w => self.display_file_width,
+			:display_h => self.display_file_height,
+			:icon_url => self.icon_file ? self.url(:icon) : false,
+			:icon_w => self.icon_file_width,
+			:icon_h => self.icon_file_height
 		}.to_json(*a)
 	end
 
@@ -34,9 +42,9 @@ class Photo < Sequel::Model(:photos)
 		url = "/photo/#{self.pk}"
 		size = size.to_sym if size
 		case size
-		when :icon then url += "?size=icon"
-		when :display then url += "?size=display"
-		else
+			when :icon then url += "?size=icon"
+			when :display then url += "?size=display"
+			else
 		end
 		url
 	end
@@ -124,13 +132,13 @@ class PhotoStorage
 			dest_name = "#{dirname}/#{filename}"
 			resized_files[keys[i]] = filename
 			next if File.exists? dest_name
-			cmd_line += "  -geometry \"#{(keys[i] * 1.33).to_i}X#{keys[i]}>\" -write #{dest_name}"
+			cmd_line += "  -geometry \"#{(keys[i] * 1.34).to_i}X#{keys[i]}>\" -write #{dest_name}"
 		end
 		filename = "#{basename}_#{sizes[keys.last].to_s}#{ext}"
 		dest_name = "#{dirname}/#{filename}"
 		resized_files[keys.last] = filename
 		unless File.exists? dest_name
-			cmd_line += " -geometry \"#{(keys.last * 1.33).to_i}X#{keys.last}>\" #{dest_name}"
+			cmd_line += " -geometry \"#{(keys.last * 1.34).to_i}X#{keys.last}>\" #{dest_name}"
 		end
 
 		if cmd_line.match(/geometry/) # there is something to convert
@@ -156,7 +164,6 @@ class PhotoStorage
 		photo.icon_file_width, photo.icon_file_height = self.get_size(photo.file_path(:icon)) if photo.icon_file
 		photo.display_file = file_names[Photo::DISPLAY_SIZE] if file_names[Photo::DISPLAY_SIZE]
 		photo.display_file_width, photo.display_file_height = self.get_size(photo.file_path(:display)) if photo.display_file
-		photo.save
 	end
 
 	def self.read_exif_data(file_path)
@@ -171,7 +178,7 @@ class PhotoStorage
 		retVal = {}
 		cmd_line = "#{SvegSettings.exiv2_binary} -Pkv " + exif_tokens.values.map { |x| "-g #{x} "}.join
 		out = `#{cmd_line} #{file_path}`
-		PB.logger.warn "Could not read exif data #{file_path}" unless $?.to_i == 0
+#		PB.logger.warn "Could not read exif data #{file_path}" unless $?.to_i == 0
 		out.split(/\n/).each do |line|
 			match = line.match(/(\S+)(\s+)(.*)/)
 			PB.logger.warn "Could not parse exif line #{line}" if match.length != 4
@@ -188,7 +195,7 @@ class PhotoStorage
 	end
 
 	def self.store_file(photo, file_path)
-		photo.save
+		raise "Photo must have a primary key" unless photo.pk
 		dir = self.get_user_dir(photo)
 		ext = File.extname( photo.display_name ).downcase
 		ext = ".img" unless [".jpg", ".gif", ".png"].index(ext)

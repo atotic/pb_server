@@ -225,7 +225,7 @@ window.PB.Photo // Photo objects
 			}
 		},
 		_patchPhotoIdChange: function(photo, propName, options) {
-			console.log("patching photo ids", photo.id, options.newId);
+//			console.log("patching photo ids", photo.id, options.newId);
 			PB.unbindChangeListener(photo.id, this);
 			// Patch the proxy
 			if (photo.id in this._proxies) {
@@ -317,7 +317,7 @@ window.PB.Photo // Photo objects
 			for (var i=0; i<this.localData.document.photoList.length; i++) {
 				var id = this.localData.document.photoList[i];
 				if (typeof id == 'string' && id.match(/temp/)) {
-					console.log("trying to save with temp ids", id);
+					// console.log("trying to save with temp ids", id);
 					return null;
 				}
 			}
