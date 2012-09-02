@@ -3,7 +3,7 @@
 // GUI.Controller
 (function(scope) {
 
-	var navbarHeight = 44; // @navbar-height in less
+	var navbarHeight = 40; // @navbar-height in less
 	// Image palette variables
 	var baseImageHeight = 128; 	// @image-height
 	var imagePadding = 8;			// @image-padding

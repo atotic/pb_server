@@ -88,8 +88,9 @@
 	}
 
 	var lastMouse = 0;
-	var yOffset = 0;
+	var yOffset = 0;	// Number to add to clientY to find center of the button
 	var touchId = 0;
+	var paletteRect = {};
 	var ResizePaletteButton = {
 		init: function() {
 			if (PB.hasTouch()) {
@@ -135,19 +136,23 @@
 		},
 		startDrag: function(clientY) {
 			lastMouse = clientY;
-			var r = document.getElementById('palette-resize-btn').getBoundingClientRect();
-			yOffset = r.top + r.height / 2 - clientY;
+			paletteRect = document.getElementById('palette-resize-btn').getBoundingClientRect();
+			yOffset = paletteRect.top + paletteRect.height / 2 - clientY;
+//			console.log('yOffset', yOffset);
 		},
 		continueDrag: function(clientY) {
-			var heightMinMax = GUI.Controller.getMinMaxPaletteHeight();
-			var palRect = document.getElementById('palette-tabs-container').getBoundingClientRect();
-			// where the midpoint
-			var clientMinMax = { min: palRect.top + heightMinMax.min,
-				max: palRect.top + heightMinMax.max };
-			var loc = GUI.Util.clamp(clientY, clientMinMax.min - yOffset, clientMinMax.max - yOffset);
-			var diff = loc - lastMouse;
-			lastMouse = loc;
-			GUI.Controller.setContainerHeight($('#palette-tabs-container').height() + diff, false);
+			var heights = GUI.Palette.getPossibleHeights();
+			var min = heights[0];
+			var max = heights[heights.length -1];
+			var mainRect = document.getElementById('main-content').getBoundingClientRect();
+			var loc = GUI.Util.clamp(clientY,
+				mainRect.top + min - yOffset,
+				mainRect.top + max - yOffset);
+//			console.log('clientY', clientY, 'mainRect.top', mainRect.top, 'loc', loc, 'yOffset', yOffset);
+			var buttonTop = loc + yOffset - mainRect.top - paletteRect.height / 2;
+//			console.log('buttonTop', buttonTop);
+			$('#palette-resize-btn').css({top: buttonTop});
+			GUI.Palette.setHeight(loc + yOffset - mainRect.top, false);
 		},
 		endDrag: function(clientY) {
 		}

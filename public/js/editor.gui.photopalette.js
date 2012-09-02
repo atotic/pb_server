@@ -41,6 +41,39 @@
 			this._maxImageWidth = val * horizontalScale;
 			this.resizeAllImages();
 		},
+		getDomBoxInfo: function() {
+			var photoList = $('#photo-list');
+			var domBoxInfo = {
+				photoList: {
+					top: parseInt(photoList.css('margin-top')),
+					bottom: parseInt(photoList.css('margin-bottom'))
+				},
+				photoDiv: {	top: 2, bottom: 2} // guess
+			}
+			var photoDiv = $('#photo-list > .photo-div');
+			if (photoDiv.length != 0)
+				domBoxInfo.photoDiv = {
+					top: parseInt(photoDiv.css('margin-top')),
+					bottom: parseInt(photoDiv.css('margin-bottom')),
+					height: this.maxImageHeight
+				}
+			return domBoxInfo;
+		},
+		// Have to return margins too
+		getPossibleHeights: function(max) {
+			$('#photo-list-container').stop();
+			var boxInfo = this.getDomBoxInfo();
+			var retVal = {
+				top: boxInfo.photoList.top,
+				bottom: boxInfo.photoList.bottom,
+				heights: [boxInfo.photoDiv.height + boxInfo.photoDiv.top + boxInfo.photoDiv.top * 3]
+			};
+			var i = 0;
+			var photoHeight = boxInfo.photoDiv.height + boxInfo.photoDiv.top;
+			while ((retVal.heights[i] + photoHeight) < max)
+				retVal.heights.push(retVal.heights[i++] + photoHeight);
+			return retVal;
+		},
 		startDragEffect: function(tile) {
 			$(tile).css('opacity', '0');
 		},
@@ -301,4 +334,25 @@
 		$.extend(PhotoPalette, PhotoPaletteDnd);
 
 	scope.PhotoPalette = PhotoPalette;
+})(window.GUI);
+
+(function(scope) {
+	var Palette = {
+		getPossibleHeights: function() {
+			var max = Math.min($('body').height() - 200);
+			var heights = GUI.PhotoPalette.getPossibleHeights(max);
+			var palette = $('#palette');
+			var topExtra = heights.top + parseInt(palette.css('padding-top'));
+			var bottomExtra = heights.bottom + parseInt(palette.css('padding-bottom'));
+			return heights.heights.map(function(x) { return x + topExtra + bottomExtra;});
+		},
+		setHeight: function(height, animate) {
+			var palette = $('#palette');
+			var padding = parseInt(palette.css('padding-top')) + parseInt(palette.css('padding-bottom'));
+			var containerHeight = height - padding;
+			$('#photo-list-container').css({minHeight: containerHeight, maxHeight: containerHeight});
+			GUI.fixSizes();
+		}
+	};
+	scope.Palette = Palette;
 })(window.GUI);

@@ -18,9 +18,10 @@
 @navbar-height: 40px;
 @navbar-color: #1b1b1b;
 @sidebar-width: 160px;
-@image-height: 128px;
-@image-padding: 12px;
-@photo-list-height: @image-height + @image-padding;
+@photo-list-photo-height: 128px;
+@photo-list-photo-margin: 2px;
+@photo-list-margin-top: 8px;
+@photo-list-height: @photo-list-photo-height + @photo-list-margin-top + @photo-list-photo-margin * 4;
 
 /* bootstrap editor tweaks */
 html, body {
@@ -92,7 +93,7 @@ body {
 }
 
 	#photo-list {
-		margin-top: 8px;
+		margin-top: @photo-list-margin-top;
 		padding-right: @palette-resize-btn-radius / 2;
 		width: 100%;
 	}
@@ -102,7 +103,7 @@ body {
 	}
 		#photo-list .photo-div {
 			display: inline-block;
-			margin: 2px;
+			margin: @photo-list-photo-margin;
 			position:relative;
 		}
 			#photo-list .photo-div .status {

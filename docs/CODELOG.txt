@@ -52,6 +52,7 @@ Google Drive integration? https://developers.google.com/drive/
 Next:
 - finish up the UI cleanup: drag button, trash color,
 - client: sort by added|date|name
+- clean up rough page display: group facing pages
 - optimize broadcasts
 - account page should load book list dynamically  $(window).unload(function(){});
 - test on iPad (speed it up?), Nexus (borkage)
@@ -60,9 +61,11 @@ Next:
 - Enroll in Udacity enterpreneurship course http://www.udacity.com/overview/Course/ep245/CourseRev/1
 Still thinking about IE
 
+Sept 1:
+Fixed the resize button in new UI.
+
 Aug 31:
 Refactored our UI again. Most actions moved into tools.
-Fixed littl
 
 Aug 28:
 To be nice, tried testing on IE. Argh! Drag and drop API has not been
