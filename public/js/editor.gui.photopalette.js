@@ -252,15 +252,28 @@
 	}
 
 	var PhotoPaletteDnd = {
-		makeDraggable: function(img) {
-			$(img).attr('draggable', true).on( {
+		makeDraggable: function(imgdiv) {
+			$(imgdiv).attr('draggable', true).on( {
 				'dragstart': function(ev) {
 					ev = ev.originalEvent;
 					ev.dataTransfer.clearData();
-					ev.dataTransfer.setData('text/uri-list', this.src);
+					var img = $(this).children('img').get(0);
+					console.log("img", img.src);
+					try {
+						ev.dataTransfer.setData('text/uri-list', img.src);
+					}
+					catch(ex) { // IE
+						console.warn("IE setData");
+						ev.dataTransfer.setData("URL", img.src);
+					}
+					var canvas = GUI.Util.imgToCanvas(img);
 					var r = this.getBoundingClientRect();
-					var canvas = GUI.Util.imgToCanvas($(this).children('img').get(0));
-					ev.dataTransfer.setDragImage(canvas,ev.clientX - r.left, ev.clientY - r.top);
+					try {
+						ev.dataTransfer.setDragImage(canvas,ev.clientX - r.left, ev.clientY - r.top);
+					}
+					catch(ex) {
+						console.warn("IE setDragImage");
+					}
 					PhotoPalette.startDragEffect(this);
 					GUI.DragStore.reset(GUI.DragStore.IMAGE, {dom: this});
 					ev.effectAllowed = 'move';

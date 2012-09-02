@@ -71,7 +71,7 @@
 <% end%>
 </table>
 <% end %>
-<h2>Photos</h2>
+<h2><%= current_user.photos.length %> Photos</h2>
 <hr>
 <table>
 	<thead>
@@ -80,7 +80,7 @@
 	</thead>
 <% current_user.photos.each do |photo| %>
 	<tr>
-		<td><img src="<%= photo.url(:icon) %>" height="128px"></td>
+		<td><img2 src="<%= photo.url(:icon) %>" height="128px"></td>
 		<td><%= h photo.display_name %></td>
 	</tr>
 <% end %>

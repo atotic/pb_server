@@ -151,7 +151,11 @@
 			this._source = this._findTargetCb(element, clientX, clientY);
 		},
 
-		get identifier() { return this._start.identifier; },
+		get identifier() {
+			if (!(('_start' in this) || ('identifier' in this._start)))
+				debugger;
+			return this._start.identifier;
+		},
 		get delayed() { return this._delayed; },
 
 		get last() { return this._last },
@@ -222,7 +226,7 @@
 			}
 			scope.TouchDrop.touchend();
 //			console.log('touchend');
-			if (touchTrack.delayed && $._data(ev.target, 'events').click) {
+			if (touchTrack.delayed && $._data(ev.currentTarget, 'events').click) {
 				$(ev.target).click();
 			}
 			ev.preventDefault();

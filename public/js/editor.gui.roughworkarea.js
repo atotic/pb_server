@@ -343,7 +343,7 @@
 						newlyCreatedPages[i].css('display', 'none').fadeIn();
 				}
 				if (options.animate)
-					GUI.Util.revealByScrolling(newlyCreatedPages[0], $('#pb-work-area'));
+					GUI.Util.revealByScrolling(newlyCreatedPages[0], $('#work-area-container'));
 			}
 		},
 		// eventCallback when rough page changes

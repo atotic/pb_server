@@ -50,11 +50,24 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
+- finish up the UI cleanup: drag button, trash color,
 - client: sort by added|date|name
 - optimize broadcasts
 - account page should load book list dynamically  $(window).unload(function(){});
 - test on iPad (speed it up?), Nexus (borkage)
 - Aug 24th? TEMPLATES! FINALLY!
+- HackerDojo weekly visits
+- Enroll in Udacity enterpreneurship course http://www.udacity.com/overview/Course/ep245/CourseRev/1
+Still thinking about IE
+
+Aug 31:
+Refactored our UI again. Most actions moved into tools.
+Fixed littl
+
+Aug 28:
+To be nice, tried testing on IE. Argh! Drag and drop API has not been
+implemented, and what is implemented is non-standard (dataTransfer.setData,
+no setDragImage). No IE support from here on.
 
 Aug 22:
 Feature: return width/height/exif data from server, read on client
@@ -65,6 +78,7 @@ Feature: speed: load photos in book's json
 Aug 21:
 Feature: extract exif data on the server, store in db
 Bugfix: resizing photo viewing area
+
 Aug 20
 Bugfix: do not save photos removed from the book
 Feature: exif data extracted from local file, used to display thumbnail, rotate photos

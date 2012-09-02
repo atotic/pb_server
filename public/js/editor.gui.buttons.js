@@ -13,8 +13,10 @@
 	var AddPhotoButton = {
 		init: function() {
 			$('#add-photo-btn').on( {
-				click: function() {
+				click: function(ev) {
 					$('#add-photo-input').click();
+					ev.preventDefault();
+					ev.stopPropagation();
 				}
 			});
 			$("#add-photo-input").on( {
@@ -26,15 +28,15 @@
 	}
 	var AddRemoveButtons = {
 		init: function() {
-			var addBtn = $('#add-page-btn');
-			addBtn.click(
+			var addPageBtn = $('#add-page-btn');
+			addPageBtn.click(
 				function() { GUI.RoughWorkArea.book.insertRoughPage(-1, {animate: true} ); }
 				);
 
 			if (PB.hasTouch())
-				scope.TouchDragHandler.makeDraggable(addBtn, 'addRoughPage');
+				scope.TouchDragHandler.makeDraggable(addPageBtn, 'addRoughPage');
 			else
-				addBtn.attr('draggable', true).on( {
+				addPageBtn.attr('draggable', true).on( {
 					dragstart: function(ev) {
 						ev = ev.originalEvent;
 						ev.dataTransfer.clearData();
@@ -47,7 +49,7 @@
 					}
 				});
 
-			$('#remove-page-btn').attr('dropzone', true).on( {
+			$('#trash-btn').attr('dropzone', true).on( {
 				dragover: function(ev) {
 					ev = ev.originalEvent;
 					ev.preventDefault();

@@ -1,44 +1,112 @@
-<!DOCTYPE html>
 <html>
 <head>
-	<title>Pook.io editor</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-	<%= asset_link("bootstrap.css", "application.css", "editor.css") %>
+<title>Bootstrap experiments</title>
+<link href='/css/bootstrap.css' rel='stylesheet' type='text/css' />
+<link href='/css/application.css' rel='stylesheet' type='text/css' />
+<link href='/css/editor.css' rel='stylesheet' type='text/css' />
+<script src='/js/jquery-1.8.0.js'></script>
+<script src='/js/bootstrap.js'></script>
+<script src='/js/editor.gui.js'></script>
+<style type="text/css">
+
+#rough-more-tools {
+	background-color: white;
+	position:absolute;
+	z-index: 1;
+	width:100%;
+	padding-left:24px;
+	display:none;
+	top:40px;
+}
+#rough-more-tools > .btn-group {
+	display:inline-block;
+}
+.btn-group-label {
+	padding-top:5px;
+	padding-bottom:5px;
+	vertical-align:top;
+}
+#sidebar {
+	position: absolute;
+	top:40px;
+	left:0px;
+	bottom:0px;
+	width:160px;
+	background-color:#1B1B1B;
+}
+#main-content {
+	position:absolute;
+	top:40px;
+	left:160px;
+	bottom:0px;
+	width:100%;
+}
+
+#sidebar > .nav-tabs.nav-stacked > li:first-child > a {
+	-webkit-border-top-right-radius: 0px;
+	border-top-right-radius: 0px;
+	-webkit-border-top-left-radius: 0px;
+	border-top-left-radius: 0px;
+	-moz-border-radius-topright: 0px;
+	-moz-border-radius-topleft: 0px;
+}
+#sidebar > .nav-tabs.nav-stacked > li:last-child > a {
+-webkit-border-bottom-right-radius: 0px;
+border-bottom-right-radius: 0px;
+-webkit-border-bottom-left-radius: 0px;
+border-bottom-left-radius: 0px;
+-moz-border-radius-bottomright: 0px;
+-moz-border-radius-bottomleft: 0px;
+}
+.navbar-inner {
+	-webkit-border-radius: 0px;
+	-moz-border-radius: 0px;
+	border-radius: 0px;
+}
+#work-area-rough {
+		margin: 0;
+}
+</style>
+<script>
+
+GUI.toggleTools = function() {
+	$('#rough-more-tools').stop(true).slideToggle(100);
+}
+var toggleToolsCmd = new GUI.Command("HideTools", GUI.CommandManager.keys.esc, false, GUI.toggleTools);
+GUI.CommandManager.init();
+GUI.CommandManager.add(toggleToolsCmd);
+
+function fixWrapperWidth() {
+	$('#main-content').width($('body').width() - $('#sidebar').width());
+}
+window.setTimeout(fixWrapperWidth,0);
+$(window).resize(fixWrapperWidth);
+</script>
 </head>
 <body>
-<div id='top-menu' class="navbar navbar-inverse">
+<div class="navbar navbar-inverse">
 	<div class="navbar-inner">
 		<ul class="nav">
 			<li class="dropdown">
-				<a href="#"
-				class="brand dropdown-toggle"
-				data-toggle="dropdown">
-pook.io <b class="caret"></b>
+				<a href="#" class="brand dropdown-toggle" data-toggle="dropdown">
+					pook.io <b class="caret"></b>
 				</a>
 				<ul class='dropdown-menu'>
-					<li class="disabled" ><a href="#">
-about</a></li>
-					<li><a href="/">
-home</a></li>
+					<li class="disabled" ><a href="#">about</a>
+					<li><a href="/">home</a>
 				</ul>
-			</li>
-			<li style='padding-left:70px'
-					rel='tooltip'
-					title='Esc to toggle'>
-		<a href="javascript:GUI.toggleTools()"><i class='icon-wrench icon-white'></i>
-Tools <i class='icon-wrench icon-white'></i> </a>
+			<li style='padding-left:70px'><a href="javascript:toggleTools()"><i class='icon-wrench icon-white'></i> Tools <i class='icon-wrench icon-white'></i> </a>
 		</ul>
 		<ul class="nav pull-right">
-<% if current_user %>
 			<li class="dropdown">
-				<a href="#"
-				class="dropdown-toggle"
-				data-toggle="dropdown">
-<%= current_user.display_name %><b class="caret"></b>
+				<% if current_user %>
+				<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+					<%= current_user.display_name %>
+      		<b class="caret"></b>
     		</a>
     		<ul class='dropdown-menu'>
-					<li><a href="/account">account</a></li>
-					<li><a href="/logout">log out</a></li>
+					<li><a href="/account">account</a>
+					<li><a href="/logout">log out</a>
 					<% if current_user.is_administrator %><li><a href="/admin" class="admin">admin</a><% end %>
 				</ul>
 				<% else %>
@@ -47,21 +115,13 @@ Tools <i class='icon-wrench icon-white'></i> </a>
 		</ul>
 	</div>
 </div>
-<div id="rough-more-tools" style='display:none'>
+<div id="rough-more-tools">
 	<dl>
 	<dt>
 		Display
 	</dt>
 	<dd>
 		<form class="form-horizontal">
-			<div class="control-group">
-				<label class="control-label">Show photos</label>
-				<div class="controls btn-group">
-					<button class="btn">All</button>
-					<button class="btn">Unused</button>
-				</div>
-			</div>
-
 			<div class="control-group">
 				<label class="control-label">Sort photos by</label>
 				<div class="controls btn-group">
@@ -117,7 +177,7 @@ Tools <i class='icon-wrench icon-white'></i> </a>
 	</ul>
 	<ul class="nav nav-pills nav-stacked">
 		<li >
-			<a id='add-photo-btn' href="#">Add photo</a>
+			<a href="javascript:$("#add-photo-input").click()">Add photo</a>
 			<input id="add-photo-input"
 			type="file"
 			multiple="true"
@@ -125,32 +185,31 @@ Tools <i class='icon-wrench icon-white'></i> </a>
 			style="display:none">
 		<li id='add-page-btn'
 			rel="tooltip"
-			title="You can DRAG the button to insert pages in the middle"
-		>
+			title="You can DRAG the button to insert pages in the middle">
 			<a href="#" >Add page</a>
 	</ul>
-	<div id='trash-btn'
+	<div id='remove-page-btn'
 		class='well'
 		style='position:absolute;bottom:0px;right:0px;left:0px;margin-bottom:0px'
 		rel='tooltip'
 		title='Anything dropped here will be removed (images, pages)'>
-		<i class='icon-trash icon-white'></i> Trash
+		<i class='icon-trash'></i> Trash
 	</div>
 </div>
 <div id="main-content">
-	<div id='palette'>
+	<div id='palette-container'>
 		<div id='photo-list-container'>
 			<div id='photo-list'>
-			</div>
-		</div>
-	</div>
-	<div id='work-area'>
-		<div id='work-area-container'>
-			<div id='work-area-rough'>
+				Photo list
 			</div>
 		</div>
 	</div>
 	<div id='palette-resize-btn'>
+	</div>
+	<div id='work-area-container'>
+		<div id='work-area-rough'>
+			work-area-rough
+		</div>
 	</div>
 </div>
 <!-- Messages -->
@@ -162,25 +221,4 @@ Tools <i class='icon-wrench icon-white'></i> </a>
 	<p>Developers, look at the console for details.</p>
 </div>
 
-<%= asset_link("jquery.js") %>
-<%= asset_link("bootstrap.js") %>
-<%= asset_link("editor.js") %>
-<scripts src="http://dev.pb4us.com:9000/target/target-script-min.js"></script>
-<script>
-
-// Initialization
-window.onerror = function(errorMsg, url, lineNumber) {
-	console.error("Onerror:", errorMsg, url, lineNumber);
-}
-PB.init();
-GUI.init();
-$.ajax('/books/'+ <%= @book.id %> + "?bust_cache=" + Math.random())
-	.done(function(response, msg, jqXHR) {
-		GUI.bindToBook( new PB.Book(response));
-	})
-	.fail(function(response, msg, jsXHR) {
-		PB.error("Unable to load book");
-	});
-
-</script>
 </body>

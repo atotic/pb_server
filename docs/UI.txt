@@ -1,3 +1,102 @@
+POOK.IO
+Part One of the Total Rewrite is finished,
+and it looks very good.
+Speed, simplicity, Bootstrap, jsdiffs, bindings
+all very good.
+
+Code is clean,
+new features fit snuggly,
+as they should,
+it is a total rewrite
+
+One step left before part one
+is done
+That one step reveals cracks
+in my simple UI
+Three words won't fit in 200 pixels
+
+Some were lit on fire
+shortly after we were born
+the fire continues
+even when standing still
+
+Braindumps help
+
+So here is my braindump
+
+Remaining tasks:
+- templates
+- user experience
+
+Templates:
+Design master templates. Master templates cover all book sizes.
+Functionality:
+- transform page metadata into HTML
+- provide UI to modify the HTML & metadata
+
+User experience:
+Continue to keep it simple.
+Printing same book at multiple resolutions will be uncommon, support multiple resolutions supported through book cloning.
+
+Big themes:
+Several target audiences:
+- template designers
+  community
+- print shops
+  why do they want our site?
+  we offer functionality they cannot get anywhere else:
+  - runs in browser, true sharing
+  not competitive, we only do photobooks sw
+  fight in-store photobook competition
+  opportunity to expand the market with custom templates (partner for conferences,
+  resorts, tourism experiences)
+- users
+  simplest, fastest way to create photo books, only ones with true sharing
+  only true browser-only solution
+  widest selection of templates
+  ability to really customize their books
+  community for inspiration
+  print same book at multiple sizes (one for grandma, travel, etc).
+
+Detailed book creating workflow:
+I need this to design the full UI. Once I have templates, we have complete workflow
+
+
+
+Rough tools:
+DND used for image placement, photo adds, etc
+visible
+- add photo
+- add page
+- trash
+- resize image/work area
+toolbox
+sort by date added, date taken, name
+image sizes S M L
+rough page sizes S M L
+
+Functionlettes:
+Assign style/
+Order book
+My books page
+- book rename
+- book clone
+Account page
+
+TODOs
+split user pages into account/books/inspiration
+
+
+
+
+
+
+
+
+
+
+
+
 DND interactions
 
 ImageList -> RoughPage

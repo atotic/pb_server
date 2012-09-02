@@ -124,13 +124,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 		};
 	}
 	else {	// jquery 1.8 & above
-		var filter = function(selector, context, xml) {
+		$.expr[':'].data = $.expr.createPseudo(function(selector, context, xml) {
 			var query = parseQuery(selector);
 			return function(elem) {
 				return processQuery(elem, query);
 			};
-		};
-		filter.sizzleFilter = true;
-		$.expr[':'].data = filter;
+		});
 	}
 })(jQuery);

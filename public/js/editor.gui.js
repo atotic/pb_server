@@ -42,6 +42,37 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		init: function() {
 			this.Buttons.init();
 			this.CommandManager.init();
+			this.initShortcuts();
+			window.setTimeout(GUI.fixSizes,0);
+			$(window).resize(GUI.fixSizes);
+		},
+		fixSizes: function() {
+			$('#main-content').width($('body').width() - $('#sidebar').width());
+			var h = $('body').outerHeight() - $('#top-menu').outerHeight() - $('#palette').outerHeight();
+			$('#work-area').css('height', h);
+			$('#work-area-container').css('height', $('#work-area').height());
+		},
+		initShortcuts: function() {
+			this.CommandManager.add(new this.Command('viewMoreImages', '+', false,
+				function() {GUI.Controller.viewMoreImages()}));
+			this.CommandManager.add(new this.Command('viewMoreImages', '=', false,
+				function() {GUI.Controller.viewMoreImages()}));
+			this.CommandManager.add(new this.Command('viewFewerImages', '-', false,
+				function() {GUI.Controller.viewFewerImages()}));
+			this.CommandManager.add(new this.Command('viewBiggerImages', '+', true,
+				function() {GUI.Controller.viewBiggerImages()}));
+			this.CommandManager.add(new this.Command('viewBiggerImages', '=', true,
+				function() {GUI.Controller.viewBiggerImages()}));
+			this.CommandManager.add(new GUI.Command('viewSmallerImages', '-', true,
+				function() {GUI.Controller.viewSmallerImages()}));
+			this.CommandManager.add(new GUI.Command('addRoughPage', 'p', false,
+				function() {GUI.Controller.addRoughPage()}))
+			this.CommandManager.add(new GUI.Command('viewAllPhotos', null, false,
+				function() {GUI.Controller.viewAllPhotos()}));
+			GUI.CommandManager.add(new GUI.Command('viewUnusedPhotos', null, false,
+				function() {GUI.Controller.viewUnusedPhotos()}));
+			GUI.CommandManager.add(new GUI.Command("HideTools", GUI.CommandManager.keys.esc, false,
+				GUI.toggleTools));
 		},
 		bindToBook: function(book) {
 			$('body')
@@ -87,6 +118,9 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			GUI.PhotoPalette.bindToBook(book);
 			GUI.RoughWorkArea.bindToBook(book);
 			window.document.title = book.title + " PhotoBook";
+		},
+		toggleTools: function() {
+			$('#rough-more-tools').stop(true).slideToggle(100);
 		}
 	};
 	window.GUI = GUI;
@@ -160,11 +194,11 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			var containerBottom = containerTop + container.offsetHeight;
 			if (elTop < containerTop) {
 //				console.log("setting scrollTop to " ,elTop - 4);
-				$(container).animate({ 'scrollTop' : elTop - 4});
+				$(container).animate({ scrollTop: elTop - 4});
 			}
 			else if (elBottom > containerBottom) {
 //				console.log("setting scrollTop to ", elBottom - container.offsetHeight);
-				$(container).animate({'scrollTop' : elBottom - container.offsetHeight});
+				$(container).animate({scrollTop: elBottom - container.offsetHeight});
 			}
 			else
 				;//console.log("not scrolling", elTop, elBottom, containerTop, containerBottom);
@@ -286,64 +320,85 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		this.callback = callback;
 	};
 
-	var shortcuts = null;	// hash of shortcuts
+	var shortcuts = {};	// hash of shortcuts
 	var commands = {};
 
 	var CommandManager = {
 		init: function() {
-			this.add(new Command('viewMoreImages', '+', false,
-				function() {scope.Controller.viewMoreImages()}));
-			this.add(new Command('viewMoreImages', '=', false,
-				function() {scope.Controller.viewMoreImages()}));
-			this.add(new Command('viewFewerImages', '-', false,
-				function() {scope.Controller.viewFewerImages()}));
-			this.add(new Command('viewBiggerImages', '+', true,
-				function() {scope.Controller.viewBiggerImages()}));
-			this.add(new Command('viewBiggerImages', '=', true,
-				function() {scope.Controller.viewBiggerImages()}));
-			this.add(new Command('viewSmallerImages', '-', true,
-				function() {scope.Controller.viewSmallerImages()}));
-			this.add(new Command('addRoughPage', 'p', false,
-				function() {scope.Controller.addRoughPage()}))
-			this.add(new Command('viewAllPhotos', null, false,
-				function() {scope.Controller.viewAllPhotos()}));
-			this.add(new Command('viewUnusedPhotos', null, false,
-				function() {scope.Controller.viewUnusedPhotos()}));
+			$(document).keydown( function(ev) {
+				ev = ev.originalEvent;
+				if (ev.repeat)
+					return;
+				var s = CommandManager.eventToString(ev);
+				if (shortcuts[s])
+					shortcuts[s].callback();
+			});
+		},
+		keys: {	// all the keys we recognize are listed here
+			esc: "esc",
+			plus: "+",
+			minus: "-",
+			meta: "meta-"
 		},
 		// see http://unixpapa.com/js/key.html for the madness that is js key handling
-		hashString: function(rawKey, meta) {
-			if (!rawKey)
-				return 0;
-			var key = rawKey;
-			if (typeof key != 'string') {
-				switch(key) {
-					case 8800: key = '='; break;	// Mac option key randomness
-					case 8211: key = '-'; break;
-					default: key = String.fromCharCode(rawKey);
+		// 2012: most browsers not supporting html5 keyboard event specs
+		eventToString: function(ev) {
+			if (ev.repeat)
+				return null;
+			var key = null;	// key as string
+			if ('keyIdentifier' in ev) {
+				switch(ev.keyIdentifier) {
+					case "U+001B":
+						key = this.keys.esc; break;
+					default:
+						var keyCode = parseInt(ev.keyIdentifier.replace(/U\+/, ""), 16);
+						if (keyCode)
+							key = String.fromCharCode(keyCode);
+						break;
 				}
 			}
-			var s = meta ? 'meta-' : '';
+			else if ('keyCode' in ev) {
+				switch (ev.keyCode) {
+					case 27:
+						key = this.keys.esc; break;
+					case 109:
+						key = this.keys.minus; break;
+					case 107:
+						key = this.keys.plus; break;
+					default:
+						;
+				}
+			}
+			else {
+				console.warn("keyboard event without keyIdentifer or keyCode");
+			}
+			if (!key || key == "" || (key.length > 0 && key.charCodeAt(0) < 32))
+				return null;
+			var s = ev.altKey ? this.keys.meta : '';
+			s += key.toLowerCase();
+//			console.log("meta", ev.metaKey, "ctrl", ev.ctrlKey, "altKey", ev.altKey);
+//			console.log("shortcut", s);
+			return s;
+		},
+		asciiToString: function(key, meta) {
+			var s = meta ? this.keys.meta : '';
 			s += key.toLowerCase();
 			return s;
 		},
 		add: function(cmd) {
-			if (shortcuts == null) {
-				$('body').keypress( function(ev) {
-					ev = ev.originalEvent;
-					if (ev.repeat)
-						return;
-					var key = ev.char || ev.charCode || ev.which;
-					var s = CommandManager.hashString(key, ev.altKey);	// TODO revise for windows
-	//				console.log('shortcut: ', s);
-					if (shortcuts[s])
-						shortcuts[s].callback();
-				});
-				shortcuts = {};
-			}
 			if (cmd.key)
-				shortcuts[CommandManager.hashString(cmd.key, cmd.meta)] = cmd;
+				shortcuts[CommandManager.asciiToString(cmd.key, cmd.meta)] = cmd;
 			if (cmd.name)
 				commands[cmd.name] = cmd;
+		},
+		remove: function(cmd) {
+			if (cmd.key) {
+				var k = CommandManager.asciiToString(cmd.key, cmd.meta);
+				if (k in shortcuts)
+					delete shortcuts[k];
+			}
+			if (cmd.name && cmd.name in commands)
+				delete commands[cmd.name];
 		},
 		doCommand: function(cmd ) {
 			if (commands[cmd])
