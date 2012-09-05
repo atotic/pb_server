@@ -42,15 +42,18 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		init: function() {
 			this.Buttons.init();
 			this.CommandManager.init();
+			this.Tools.init();
 			this.initShortcuts();
 			window.setTimeout(GUI.fixSizes,0);
 			$(window).resize(GUI.fixSizes);
 		},
 		fixSizes: function() {
+			$('#sidebar').css('top', $('#top-menu').height());
+			$('#main-content').css('top', $('#top-menu').height());
 			$('#main-content').width($('body').width() - $('#sidebar').width());
-			var h = $('body').outerHeight() - $('#top-menu').outerHeight() - $('#palette').outerHeight();
+			var h = $('body').height() - $('#top-menu').height() - $('#palette').outerHeight();
 			$('#work-area').css('height', h);
-			$('#work-area-container').css('height', $('#work-area').height());
+			$('#work-area-container').css('height', h-parseInt($('#work-area').css('padding-top')));
 		},
 		initShortcuts: function() {
 			this.CommandManager.add(new this.Command('viewMoreImages', '+', false,
@@ -120,12 +123,103 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			window.document.title = book.title + " PhotoBook";
 		},
 		toggleTools: function() {
-			$('#rough-more-tools').stop(true).slideToggle(100);
+			$('#rough-more-tools').stop(true).slideToggle(50, function() {
+				if ($('#rough-more-tools:visible').length > 0)
+					GUI.Tools.loadFromOptions();
+			});
 		}
 	};
 	window.GUI = GUI;
 
 })(window);
+
+// GUI Options
+(function(scope) {
+"use strict";
+	var Options = {
+		_photoFilter: 'unused', // 'all' | 'unused'
+		_photoSort: 'added', // 'added' | 'taken' | 'name'
+		_photoSize: 'medium', // 'small' | 'medium' | 'large'
+		_pageSize: 'medium', // 'small' | 'medium' | 'large'
+		get photoFilter() { return this._photoFilter; },
+		get photoSort() { return this._photoSort; },
+		get photoSize() { return this._photoSize; },
+		get photoSizeHeight() {
+			switch(this._photoSize) {
+				case 'small':
+					return 96;
+				case 'medium':
+					return 128;
+				case 'large':
+					return 196;
+			}
+		},
+		get photoSizeWidth() {
+			return this.photoSizeHeight * 1.34;	// 4/3 ratio
+		},
+		get pageSize() { return this._pageSize; },
+
+		get pageSizePixels() {
+			switch(this._pageSize) {
+				case 'small':
+					return 96;
+				case 'medium':
+					return 128;
+				case 'large':
+					return 196;
+			}
+		},
+		set photoFilter(val) {
+			if (val == this._photoFilter)
+				return;
+			this._photoFilter = val;
+			this.broadcast('photoFilter', val);
+		},
+		set photoSort(val) {
+			if (val == this._photoSort)
+				return;
+			this._photoSort = val;
+			this.broadcast('photoSort', val);
+		},
+		set photoSize(val) {
+			if (val == this._photoSize)
+				return;
+			this._photoSize = val;
+			this.broadcast('photoSize', val);
+		},
+		set pageSize(val) {
+			if (val == this._pageSize)
+				return;
+			this._pageSize = val;
+			this.broadcast('pageSize', val);
+		},
+
+		_listeners: [],
+		// listener: function(propertyName, newValue)
+		addListener: function(listener) {
+			var idx = this._listeners.indexOf(listener);
+			if (idx == -1)
+				this._listeners.push(listener);
+		},
+		removeListener: function(listener) {
+			var idx = this._listeners.indexOf(listener);
+			if (idx != -1)
+				this._listeners.splice(idx, 1);
+			else
+				console.warn('GUI.Options removing non-existent listener',listener);
+		},
+		broadcast: function(propName, propVal) {
+			try {
+				for (var i=0; i<this._listeners.length; i++)
+					this._listeners[i](propName, propVal);
+			}
+			catch(ex) {
+				console.error("Unexpected error broadcasting options", ex);
+			}
+		}
+	};
+	scope.Options = Options;
+})(GUI);
 
 // Graphics utilities
 (function(scope) {

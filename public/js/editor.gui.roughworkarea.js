@@ -12,10 +12,20 @@
 			$('#work-area-rough')
 				.data('model', book)
 				.on( PB.MODEL_CHANGED, this.bookChanged);
+			GUI.Options.addListener(this.optionsChanged);
 			this.synchronizeRoughPageList();
 		},
 		get book() {
 			return $('#work-area-rough').data('model');
+		},
+		optionsChanged: function(name, val) {
+			switch(name) {
+				case 'pageSize':
+					GUI.RoughWorkArea.resizeAllPages();
+					break;
+				default:
+				;
+			}
 		},
 		getDragTarget: function(roughPage, clientX, clientY) {
 			roughPage = $(roughPage).get(0);
@@ -242,7 +252,7 @@
 			// Hook it up to the model
 			domPage.data('model', pageModel);
 			domPage.on( PB.MODEL_CHANGED, RoughWorkArea.pageChanged);
-			window.setTimeout(function() {
+			window.setTimeout(function() {	// iPad event binding workaround
 				RoughWorkArea.makeDraggable(domPage);
 			}, 0);
 //			this.makeDraggable(domPage);
@@ -258,6 +268,13 @@
 					$(this).removeClass('left-rough').addClass('right-rough');
 				else
 					$(this).removeClass('right-rough').addClass('left-rough');
+			});
+		},
+		resizeAllPages: function() {
+			var newSize = GUI.Options.pageSizePixels;
+			$('#work-area-rough .rough-page').each(function() {
+				$(this).width(newSize).height(newSize);
+				GUI.RoughWorkArea.layoutRoughInsideTiles(this, false);
 			});
 		},
 		createRoughImageTile: function(photo) {

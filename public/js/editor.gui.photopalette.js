@@ -3,15 +3,9 @@
 // PhotoPalette
 // images can be dragged out
 (function(scope){
-
-	var baseImageHeight = 128;
-	var horizontalScale = 1.34;
-
+"use strict";
 	var PhotoPalette = {
-		_maxImageHeight: baseImageHeight,
-		_maxImageWidth : baseImageHeight * horizontalScale,
 		bindToBook: function(book) {
-			this._photoFilter = 'unused'; // 'all'
 			this.makeDroppable();
 			// Keep models in sync
 			$('#photo-list')
@@ -21,25 +15,27 @@
 						if (prop == 'photoList')
 							PhotoPalette.synchronizePhotoList(options);
 					});
+			GUI.Options.addListener(this.optionsChanged);
 			this.synchronizePhotoList();
 		},
-		// valid vals: all|unused
-		set photoFilter(val) {
-			if (this._photoFilter != val) {
-				this._photoFilter = val;
-				this.synchronizePhotoList();
+		optionsChanged: function(name, val) {
+			switch(name) {
+				case 'photoFilter':
+					GUI.PhotoPalette.synchronizePhotoList();
+					break;
+				case 'photoSize':
+					GUI.PhotoPalette.resizeAllImages();
+					break;
+				case 'photoSort':
+					GUI.PhotoPalette.synchronizePhotoList();
+					$('#photo-list .photo-div').each(function() {
+						var el = $(this);
+						GUI.PhotoPalette.setTileInfo(el, el.data('model'));
+					});
+					break;
+				default:
+					break;
 			}
-		},
-		get photoFilter() {
-			return this._photoFilter;
-		},
-		get maxImageHeight() {
-			return this._maxImageHeight;
-		},
-		set maxImageHeight(val) {
-			this._maxImageHeight = val;
-			this._maxImageWidth = val * horizontalScale;
-			this.resizeAllImages();
 		},
 		getDomBoxInfo: function() {
 			var photoList = $('#photo-list');
@@ -55,7 +51,7 @@
 				domBoxInfo.photoDiv = {
 					top: parseInt(photoDiv.css('margin-top')),
 					bottom: parseInt(photoDiv.css('margin-bottom')),
-					height: this.maxImageHeight
+					height: GUI.Options.photoSizeHeight
 				}
 			return domBoxInfo;
 		},
@@ -145,6 +141,31 @@
 			else
 				statusDiv.detach();
 		},
+		setTileInfo: function(tile, model) {
+			var infoDiv = tile.children('.info');
+			var infoTxt;
+			switch(GUI.Options.photoSort) {
+				case 'taken':
+					var d = model.jsDate;
+					if (d)
+						infoTxt = d.getFullYear() + "/" + (d.getMonth() + 1) + "/" + d.getDate();
+					break;
+				case 'added':
+					break;
+				case 'name':
+					infoTxt = model.display_name;
+					break;
+			}
+			if (infoTxt) {
+				if (infoDiv.length == 0) {
+					infoDiv = $("<div class='info'>");
+					tile.append(infoDiv);
+				}
+				infoDiv.text(infoTxt);
+			}
+			else
+				infoDiv.detach();
+		},
 		setTileProgress: function(tile, model) {
 			var progressDiv = tile.children('.progress');
 			var percent = model.progress;
@@ -175,9 +196,9 @@
 		},
 
 		scaleTileDimensions: function(dims) {
-			var scaleH = this._maxImageWidth / dims.width;
-			var scaleV = this._maxImageHeight / dims.height;
-			scale = Math.min(scaleH, scaleV);
+			var scaleH = GUI.Options.photoSizeWidth / dims.width;
+			var scaleV = GUI.Options.photoSizeHeight / dims.height;
+			var scale = Math.min(scaleH, scaleV);
 			return {width: dims.width * scale, height: dims.height * scale};
 		},
 		createImageTile: function(photo) {
@@ -210,11 +231,70 @@
 			var THIS = this;
 			this.setTileStatus(tile, photo);
 			this.setTileProgress(tile, photo);
+			this.setTileInfo(tile, photo);
 			window.setTimeout(function() {
 				// iPad bug workaround. Without timer, touch handlers are not registered
 				THIS.makeDraggable(tile);
 			}, 0);
 			return tile;
+		},
+		sortPhotos: function(book, photos) {
+			function dateComparator(a,b) {
+				var a_date = a.photo.jsDate;
+				var b_date = b.photo.jsDate;
+				if (a_date && b_date)
+					return a_date - b_date;
+				else {
+					if (a_date == null) {
+						if (b_date == null)
+							return b.loc - a.loc;
+						else
+							return -1;
+					}
+					else
+						return 1;
+				}
+			};
+			function addedComparator(a,b) {
+				return a.loc - b.loc;
+			};
+			function nameComparator(a,b) {
+				var a_name = a.photo.display_name;
+				var b_name = b.photo.display_name;
+				// natural sort, if possible
+				var a_match = a_name.match(/(\d+)/);
+				var b_match = b_name.match(/(\d+)/);
+				var a_num = a_match ? parseInt(a_match[1], 10) : NaN;
+				var b_num = b_match ? parseInt(b_match[1], 10) : NaN;
+				if (a_num != a_num || b_num != b_num) { // weird way of testing isNan(a_num) || isNan(b_num)
+					if (a_name < b_name)
+						return -1;
+					else if (b_name < a_name)
+						return 1;
+					else
+						return a.loc - b.loc;
+				}
+				else {
+					if (a_num == b_num)
+						return a.loc - b.loc;
+					else
+						return a_num - b_num;
+				}
+			};
+			if (photos.length == 0)
+				return photos;
+			var modelArray = [];
+			for (var i=0; i<photos.length; i++)
+				modelArray.push({photo: PB.ServerPhotoCache.get( photos[i]), loc: i});
+			var compareFn;
+			switch (GUI.Options.photoSort) {
+				case 'added': compareFn = addedComparator; break;
+				case 'taken': compareFn = dateComparator; break;
+				case 'name': compareFn = nameComparator; break;
+				default: console.error("unknown compare fn for sortPhotos");
+			}
+			modelArray.sort(compareFn);
+			return modelArray.map(function(a) { return a.photo.id});
 		},
 		synchronizePhotoList: function(options) {
 			options = $.extend({animate:false}, options);
@@ -225,10 +305,11 @@
 			var oldChildren = containerDom.children( sel ).get();
 			var oldPhotos = oldChildren.map(
 				function(el, i) { return $(el).data('model').id});
-			var newPhotos = this._photoFilter == 'all' ? bookModel.photoList : bookModel.unusedPhotoList;
 
+			var newPhotos = GUI.Options.photoFilter == 'all' ? bookModel.photoList : bookModel.unusedPhotoList;
+			newPhotos = this.sortPhotos(bookModel, newPhotos);
 			var diff = JsonDiff.diff(oldPhotos, newPhotos);
-
+			console.log("synchronizePhotoList", diff.length);
 			for (var i=0; i<diff.length; i++) {
 				var targetPath = JsonPath.query(oldPhotos, diff[i].path, {just_one: true, ghost_props: true});
 				var targetIndex = targetPath.prop();
@@ -276,11 +357,12 @@
 				case 'swap':
 					var src = containerDom.children(sel).get(targetIndex);
 					var destIndex = JsonPath.lastProp(diff[i].args);
-					var dest = contanerDom.children(sel).get(destIndex);
+					var dest = containerDom.children(sel).get(destIndex);
 					GUI.Util.swapDom(src, dest, options.animate);
 				break;
 				}
 			}
+			console.log("synchronizePhotoList done");
 		}
 	}
 

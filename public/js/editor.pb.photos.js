@@ -154,6 +154,26 @@ var ImgLoadThrottler = {
 			else
 				return "name unknown";
 		},
+		get jsDate() {
+			if ('_jsDate' in this)
+				return this._jsDate;
+			if ('date_taken' in this) {
+				var match = this.date_taken.match(/(\d+):(\d+):(\d+) (\d+):(\d+):(\d+)/);
+				if (match)
+					try {
+					this._jsDate = new Date(
+						parseInt(match[1], 10),
+						parseInt(match[2], 10),
+						parseInt(match[3], 10),
+						parseInt(match[4], 10),
+						parseInt(match[5], 10),
+						parseInt(match[6], 10));
+				}catch(ex) {
+					console.warn("error parsing date", this.date_taken);
+				}
+			}
+			return this._jsDate;
+		},
 		_getDataUrl: function() {
 			if (this._dataUrl)
 				return { url: this._dataUrl, width: this._data_w, height: this._data_h};
@@ -315,7 +335,7 @@ var ImgLoadThrottler = {
 			for (var i=0; i<nonBroadcastProps.length; i++)
 				this[nonBroadcastProps[i]] = json[nonBroadcastProps[i]];
 
-			var props = ['original_url', 'display_url', 'icon_url', 'exif', 'display_name'];
+			var props = ['original_url', 'display_url', 'icon_url', 'display_name', 'date_taken', 'caption'];
 			for (var i=0; i<props.length; i++)
 				if ( (!(props[i] in this))
 						 || ( (props[i] in this) && this[props[i]] != json[props[i]])) {
@@ -323,6 +343,7 @@ var ImgLoadThrottler = {
 					if (!noBroadcast)
 						PB.broadcastChange(this, props[i]);
 				}
+			'exif'
 			if ('display_url' in this)	// clean up generated image
 				delete this._dataUrl;
 		},

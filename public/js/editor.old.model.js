@@ -13,7 +13,7 @@ PB.Book = function(json) {
 		this._pages = [];
 		this._template_id = json.template_id;
 		this._last_server_cmd_id = json.last_server_cmd_id; // last command in server socket stream
-		
+
 		PB.BookTemplate.get(this._template_id);	// Preload template
 		for (var i = 0; i < json.pages.length; i++)
 			this._pages.push(new PB.BookPage(json.pages[i]));
@@ -81,12 +81,12 @@ PB.Book.prototype = {
 	},
 	set last_server_cmd_id(id) {
 		if (typeof id == "string")
-			id = parseInt(id);
+			id = parseInt(id, 10);
 		if (id < this._last_server_cmd_id) {
 			console.error("last_server_cmd_id too low");
 			debugger;
 		}
-		else 
+		else
 			this._last_server_cmd_id = id;
 	},
 	sortByPageOrder: function() {
@@ -108,7 +108,7 @@ PB.Book.prototype = {
 				return this._pages[i];
 		console.warn("no such page id " + page_id);
 	},
-	
+
 	getPhotoById: function(photo_id) {
 		for (var i=0; i< this._photos.length; i++)
 			if (this._photos[i].id == photo_id)
@@ -171,7 +171,7 @@ PB.Book.prototype = {
 		this.send('pageDeleted', page, index);
 		return page;
 	},
-	// If book has odd number of pages, it is inconsistent 
+	// If book has odd number of pages, it is inconsistent
 	hasOddPages: function() {
 		var n = 0;
 		this._pages.forEach(function(page) {
@@ -186,7 +186,7 @@ PB.BookTemplate = function(json) {
 	var THIS = this;
 	["id", "width", "height", "initial_pages"].forEach(function(x) { THIS["_" + x] = json.x });
 	this.pages = [];
-	json.pages.forEach(function(x) { THIS.pages.push(new PB.PageTemplate(x)) }); 
+	json.pages.forEach(function(x) { THIS.pages.push(new PB.PageTemplate(x)) });
 }
 
 // GET BookTemplate xhr
@@ -197,7 +197,7 @@ PB.BookTemplate = function(json) {
 //   .error( function(template_id) { console.log("failed on " template_id) });
 PB.BookTemplate.get = function(template_id) {
 //	console.log("requesting " + template_id + " " + Date.now());
-	if (PB.BookTemplate._cached == undefined) 
+	if (PB.BookTemplate._cached == undefined)
 		PB.BookTemplate._cached = {};
 	if (template_id in PB.BookTemplate._cached) {
 //		console.log("returning cached " + Date.now());
@@ -214,7 +214,7 @@ PB.BookTemplate.get = function(template_id) {
 		console.error("BookTemplate " + template_id + " failed to load");
 		retVal.reject(template_id);
 	});
-	return retVal;	
+	return retVal;
 };
 
 // Convenience method for fetching templates we know are loaded
@@ -252,7 +252,7 @@ PB.PhotoBroker.prototype = {
 	_file: null, // on-disk file
 	_id: null,
 	_fileUrl: null,
-	
+
 	error: null,
 
 	initFromJson: function(json) {
@@ -260,7 +260,7 @@ PB.PhotoBroker.prototype = {
 		this._md5 = json.md5;
 		this._display_name = json.display_name;
 	},
-	
+
 	get id() {
 		return this._id;
 	},
@@ -270,7 +270,7 @@ PB.PhotoBroker.prototype = {
 			if ('URL' in window)
 				window.URL.revokeObjectURL(this._fileUrl)
 			else if ('webkitURL' in window)
-					this._fileUrl = window.webkitURL.revokeObjectURL(this._fileUrl);		
+					this._fileUrl = window.webkitURL.revokeObjectURL(this._fileUrl);
 		}
 		this._fileUrl = null;
 	},
@@ -283,15 +283,15 @@ PB.PhotoBroker.prototype = {
 		else
 			return "no title";
 	},
-		
+
 	getFile: function() {
 		return _file;
 	},
-	
+
 	getTempId: function() {
 		return "temp-" + PB.PhotoBroker.prototype.tempId++;
 	},
-	
+
 	// size is 'icon', 'display', 'full'
 	getImageUrl: function(size) {
 		if (this._file) {
@@ -304,7 +304,7 @@ PB.PhotoBroker.prototype = {
 			}
 			return this._fileUrl;
 		}
-		else 
+		else
 			return this.getServerUrl(size);
 	},
 
@@ -313,7 +313,7 @@ PB.PhotoBroker.prototype = {
 			return this._fileUrl;
 		return null;
 	},
-	
+
 	getServerUrl: function(size) {
 		if ((typeof this._id == "string") && this._id.match(/temp/)) {
 			throw new Error("Server url still not available"); // TODO
@@ -332,14 +332,14 @@ PB.PhotoBroker.prototype = {
 			size = "display";
 		var url = "/photo/"	+ this._id;
 		url += "?size=" + size;
-		return url;	
+		return url;
 	},
-	
+
 	saveOnServer: function(book_id) {
 		this._book_id = book_id;
 		PB.uploadQueue.upload(this);
 	},
-	
+
 	createUploadDeferred: function() {
 		var fd = new FormData();
 		fd.append('display_name', this._file.name);
@@ -366,12 +366,12 @@ PB.PhotoBroker.prototype = {
 				THIS._display_name = json.display_name;
 				PB.progress();
 			})
-			.always(function() { 
+			.always(function() {
 				PB.progress();
 			});
 		return xhr;
 	},
-	
+
 	// md5 returns deferred as computing md5 from disk might take a while
 	getMd5: function() {
 		var deferred = new $.Deferred();
@@ -396,7 +396,7 @@ PB.PhotoBroker.prototype = {
 			deferred.reject("No hash, and no file to get it from");
 		return deferred;
 	},
-	
+
 	toCanvasFinalize: function(deferred, options, img) {
 		if (this.error != null) {
 			console.log(this.name() + " failed to load");
@@ -421,7 +421,7 @@ PB.PhotoBroker.prototype = {
 		img.src = null;
 		deferred.resolveWith(document, [canvas, this]);
 	},
-	
+
 	// Copies image to canvas
 	// Returns a deferred. done and fail will get (canvas, img) callbacks
 	// deferred will have memorySize property set to memory footprint of loaded image
@@ -429,11 +429,11 @@ PB.PhotoBroker.prototype = {
 		$.extend({
 			desiredHeight: 128
 		}, options);
-		
+
 		var THIS = this;
 		var img = new Image();
 		var deferred = PB.createDeferredJob("toCanvas " + this._id, function() {
-			img.src = THIS.getImageUrl(options.desiredHeight);						
+			img.src = THIS.getImageUrl(options.desiredHeight);
 		});
 		$(img).bind({
 			load : function() {

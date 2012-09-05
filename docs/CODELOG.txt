@@ -50,9 +50,8 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-- finish up the UI cleanup: drag button, trash color,
-- client: sort by added|date|name
-- clean up rough page display: group facing pages
+- bug: roughpage resize, take flaps into account
+- clean up rough page display: group facing pages together
 - optimize broadcasts
 - account page should load book list dynamically  $(window).unload(function(){});
 - test on iPad (speed it up?), Nexus (borkage)
@@ -61,11 +60,17 @@ Next:
 - Enroll in Udacity enterpreneurship course http://www.udacity.com/overview/Course/ep245/CourseRev/1
 Still thinking about IE
 
+Sept 4:
+Feature: hook up the Tools dialog
+Feature: sort by added|date|name
+Feature: Hooked up the tools dialog: multiple photo/page sizes
+Bugfix: lots of new UI related fixes
+
 Sept 1:
-Fixed the resize button in new UI.
+Bugfix: Fixed the resize button in new UI.
 
 Aug 31:
-Refactored our UI again. Most actions moved into tools.
+Refactor: UI again. Most actions moved into tools.
 
 Aug 28:
 To be nice, tried testing on IE. Argh! Drag and drop API has not been

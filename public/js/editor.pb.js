@@ -121,7 +121,7 @@ window.PB.Photo // Photo objects
 			return this._dirty;
 		},
 		get photoList() {
-			return this.localData.document.photoList;
+			return this.localData.document.photoList.slice(0, this.localData.document.photoList.length);
 		},
 		get last_diff() {
 			return this.serverData.last_diff;
@@ -143,7 +143,7 @@ window.PB.Photo // Photo objects
 		},
 		get unusedPhotoList() {
 			var usedHash = this._collectUsedImages();
-			var unusedList = [].concat(this.photoList);
+			var unusedList = this.photoList;
 			for (var i=0; i< unusedList.length; i++) {
 				if (usedHash[unusedList[i]]) {
 					unusedList.splice(i,1);
@@ -311,8 +311,8 @@ window.PB.Photo // Photo objects
 		// generates id unique to this book
 		generateId: function() {
 			var id = PB.randomString(6);
-			if (this.photoList.indexOf(id) != -1
-				|| this.roughPageList.indexOf(id) != -1)
+			if (this.localData.document.photoList.indexOf(id) != -1
+				|| this.localData.document.roughPageList.indexOf(id) != -1)
 				return this.generateId();
 			return id;
 		},
@@ -479,6 +479,12 @@ window.PB.Photo // Photo objects
 		},
 		get progress() {
 			return this.p.progress;
+		},
+		get jsDate() {
+			return this.p.jsDate;
+		},
+		get display_name() {
+			return this.p.display_name;
 		}
 	}
 
