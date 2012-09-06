@@ -59,11 +59,14 @@ Next:
 Still thinking about IE
 - Bookshelf in account
 
+Sept 6:
+Bug: fixed serious bug in synchronizing photopalette
+
 Sept 5:
 Bug: roughpage resize, narrow flaps into account
 Feature: save options in hashbang
-Bug:
 Feature: auto-place photos
+
 Sept 4:
 Feature: hook up the Tools dialog
 Feature: sort by added|date|name

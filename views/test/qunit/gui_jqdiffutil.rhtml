@@ -1,0 +1,84 @@
+<script>
+$(document).ready(function(){
+
+module("GUI.JQDiffUtil");
+function getTestDivs(howMany) {
+	howMany = howMany || 10;
+	var daddy = $('<div id="daddy"></div>');
+	for (var i=0;i<howMany;i++) {
+		var newDiv = $('<div id="x' + i + '"></div>');
+		daddy.append(newDiv);
+	}
+	return daddy;
+}
+test("JQDiffUtil.set", function() {
+	var testDiv = getTestDivs();
+	var children = testDiv.children();
+	var testResult = GUI.JQDiffUtil.set(children, 0, $('<div id="yo"></div>'));
+	ok(testResult.get(0).id == 'yo', "set returns modified child");
+	ok(testDiv.children().get(0).id == 'yo', 'set modifies original parent');
+});
+
+test("JQDiffUtil.insert front", function() {
+	var testDiv = getTestDivs();
+	var children = testDiv.children();
+	var testResult = GUI.JQDiffUtil.insert(children, testDiv, 0, $('<div id="yo"></div>'));
+	// Insert in front
+	ok(testResult.get(0).id == 'yo', "insert returns modified child");
+	ok(testDiv.children().get(0).id == 'yo', 'insert modifes dom');
+});
+
+test("JQDiffUtil.insert out of range", function() {
+	var testDiv = getTestDivs();
+	var children = testDiv.children();
+	var hasThrow = false;
+	try {
+		var testResult = GUI.JQDiffUtil.insert(children, testDiv, 20, $('<div id="yo20"></div>'));
+	}
+	catch(ex) {
+		hasThrow = true;
+	}
+	ok(hasThrow, "insert out of range throws");
+//	ok(testResult.get(10).id == 'yo', "insert returns modified child");
+//	ok(testDiv.children().get(10).id == 'yo', 'insert modifes dom');
+});
+
+test("JQDiffUtil.insert into empty div", function() {
+	var testDiv = $('<div/>');
+	var children = testDiv.children();
+	var testResult = GUI.JQDiffUtil.insert(children, testDiv, 0, $('<div id="yo"></div>'));
+	// Insert in front
+	ok(testResult.get(0).id == 'yo', "insert returns modified child");
+	ok(testDiv.children().get(0).id == 'yo', 'insert modifes dom');
+});
+
+test("JQDiffUtil.delete", function() {
+	var testDiv = getTestDivs();
+	var testResult = GUI.JQDiffUtil.delete(testDiv.children(), 0);
+	ok(testResult.get(0).id == 'x1', 'deleted first');
+	ok(testDiv.children().get(0).id == 'x1', 'deleted first');
+	testResult = GUI.JQDiffUtil.delete(testDiv.children(), 0, true);
+	ok(testResult.get(0).id == 'x2', 'deleted, no detach');
+	ok(testDiv.children().get(0).id == 'x1', 'deleted, no detach');
+	var hasThrow = false;
+	try {
+		GUI.JQDiffUtil.delete(testDiv.children(), 20);
+	}
+	catch(ex) {
+		hasThrow = true;
+	}
+	ok(hasThrow, "throw on non-existent delete");
+});
+
+test("JQDiffUtil.swap", function() {
+	var testDiv = getTestDivs();
+	var children = testDiv.children();
+	var testResult = GUI.JQDiffUtil.swap(children, children.get(0), children.get(1));
+	ok(testResult.get(0).id == 'x1', 'swapped');
+	ok(testResult.get(1).id == 'x0', 'swapped');
+	ok(testDiv.children().get(0).id == 'x1', 'swapped');
+	ok(testDiv.children().get(1).id == 'x0', 'swapped');
+});
+
+});
+</script>

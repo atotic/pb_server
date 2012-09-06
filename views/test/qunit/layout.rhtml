@@ -1,11 +1,11 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
                     "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
 	<title>QUnit <%= @filename %></title>
-	<%= asset_link("jquery.js", "jquery-ui.js", "application.js") %>
+	<%= asset_link("jquery.js", "application.js") %>
 	<%= asset_link("qunit") %>
-	<%= asset_link("editor.js", "editor.model.js") %>
+	<%= asset_link("editor.js") %>
 
 	<script type="text/javascript">
 
@@ -43,7 +43,7 @@
 				}
 				return book_js;
 			},
-			
+
 			// generate json-object for PB.Page
 			newPageJs: function(attrs) {
 				var default_js = {
@@ -54,7 +54,7 @@
 				};
 				return $.extend(default_js, attrs);
 			},
-			
+
 			// generate json-object for PB.ImageBroker
 			newImageJs: function(attrs) {
 				var default_js = {
@@ -66,7 +66,7 @@
 			}
 		};
 
-	// Give objects unique ids for tracing	
+	// Give objects unique ids for tracing
 	(function() {
 		id_counter = 1;
 		Object.defineProperty(Object.prototype, "__uniqueId", {

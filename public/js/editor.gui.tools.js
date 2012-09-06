@@ -32,7 +32,7 @@
 				ev.preventDefault();
 				ev.stopPropagation();
 				$('#rough-more-tools').hide();
-				GUI.Tools.autoPlacePhotos(PB.Book.default);
+				window.setTimeout(function() {GUI.Tools.autoPlacePhotos(PB.Book.default)}, 0);
 			})
 		},
 		// click event callback
@@ -68,6 +68,7 @@
 			var emptyPages = book.roughPageList.filter(function(pageId) {
 				return book.page(pageId).photoList.length == 0;
 			});
+			PB.startChangeBatch();
 			while (photos.length > 0) {
 				var nextPage;
 				if (emptyPages.length > 0)
@@ -85,9 +86,13 @@
 					}
 				}
 				while (want > 0 && photos.length > 0) {
-					nextPage.addPhoto(book.photo(photos.shift()), {animate:true});
+					nextPage.addPhoto(book.photo(photos.shift()), {animate:false});
 					want--;
 				}
+			}
+			PB.broadcastChangeBatch();
+			if (nextPage) {
+				GUI.Util.revealByScrolling(nextPage, $('#work-area-container'));
 			}
 		}
 	}

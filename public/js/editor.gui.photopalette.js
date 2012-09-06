@@ -249,14 +249,12 @@
 			var oldChildren = containerDom.children( sel )
 				.filter(function() {
 					if ($(this).data('pb.markedForDelete')) {
-						console.log('child marked for deletion');
 						return false;
 					}
 					return true;
-				})
-				.get();
+				});
 
-			var oldPhotos = oldChildren.map(
+			var oldPhotos = oldChildren.get().map(
 				function(el, i) { return $(el).data('model').id});
 
 			var newPhotos = GUI.Options.photoFilter == 'all' ? bookModel.photoList : bookModel.unusedPhotoList;
@@ -268,22 +266,15 @@
 				var targetId = targetPath.val();
 				switch(diff[i].op) {
 				case 'set':
-					var replaceDom = $(oldChildren.get(targetIndex));
 					var newPhoto = bookModel.photo(diff[i].args);
-					replaceDom.replaceWith(this.createImageTile(newPhoto));
+					oldChildren = GUI.JQDiffUtil.set(oldChildren,
+						targetIndex,
+						this.createImageTile(newPhoto));
 				break;
 				case 'insert':
 					var newModel = bookModel.photo(diff[i].args);
 					var newDom = this.createImageTile(newModel);
-					var c = containerDom.children( sel );
-					if (c.length <= targetIndex) {
-						if (c.length == 0)
-							containerDom.prepend(newDom);
-						else
-							c.last().after(newDom);
-					}
-					else
-						$(c.get(targetIndex)).before(newDom);
+					oldChildren = GUI.JQDiffUtil.insert(oldChildren, containerDom, targetIndex, newDom);
 					if (options.animate) {
 						GUI.Util.revealByScrolling(newDom, $('#photo-list-container'));
 						var w = newDom.width();
@@ -295,15 +286,14 @@
 					}
 				break;
 				case 'delete':
-					var el = $(containerDom.children(sel).get(targetIndex));
+					var el = $(oldChildren.get(targetIndex));
+					oldChildren = GUI.JQDiffUtil.delete(oldChildren, targetIndex, options.animate);
 					if (options.animate) {
 						el.css('visible', 'hidden')
 							.data('pb.markedForDelete', true)
 							.animate({width: 0}, function() {
-								console.log('detach complete');
 							 	el.detach();
 							});
-						console.log('deleting', el.data('model').id);
 					}
 					else
 						el.detach();
@@ -312,7 +302,7 @@
 					var src = containerDom.children(sel).get(targetIndex);
 					var destIndex = JsonPath.lastProp(diff[i].args);
 					var dest = containerDom.children(sel).get(destIndex);
-					GUI.Util.swapDom(src, dest, options.animate);
+					oldChildren = GUI.JQDiffUtil.swap(oldChildren, src, dest);
 				break;
 				}
 			}

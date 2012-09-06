@@ -1,13 +1,13 @@
 /*
 	GUI Manipulation
 	Classes:
-	window.GUI: Container for event handling
+	window.GUI:
 
 	window.GUI.Buttons // button event handlers
 
 	window.GUI.Command // command definitions
 	window.GUI.CommandManager // command execution (keyboard shortcuts)
-	window.GUI.Util // misc
+	window.GUI.Util // graphic utilities
 
 	window.GUI.Controller // implements command actions (resizes, dom manipulation, broadcast to model)
 
@@ -328,7 +328,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			else
 				;//console.log("not scrolling", elTop, elBottom, containerTop, containerBottom);
 		},
-		swapDom: function(a, b, animate) {
+		swapDom: function(a, b) {
 			var parent = a.parentNode;
 			var sibling= a.nextSibling === b ? a : a.nextSibling;
 			this.moveNode(a, b, 'before');
@@ -536,6 +536,71 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 	scope.CommandManager = CommandManager;
 })(window.GUI);
 
+// JQDiffUtil
+// Helper functions for DOM manipulations of diffs
+// Every function manipulates the dom, then modifies jq argument to match new dom
+// Test: http://dev.pb4us.com/test/qunit/gui_jqdiffutil
+(function(scope) {
+	var JQDiffUtil = {
+		// sets element at index to dom
+		set: function(jq, index, newDom) {
+			newDom = $(newDom);
+			var oldDom = jq.get(index);
+			if (!oldDom)
+				throw console.error("JQDiffUtil set cannot find dom", arguments);
+			$(oldDom).replaceWith(newDom);
+			var elArry = jq.get();
+			elArry.splice(index, 1, newDom.get(0));
+			return $(elArry);
+		},
+		insert: function(jq, container, index, newDom) {
+			var newJq;
+			if (jq.length < index) {
+				console.error("JSDiffUtil.insert out of range", arguments);
+				throw "JSDiffUtil.insert out of range";
+			}
+			if (jq.length == index) {
+				if (jq.length == 0) {
+					container.prepend(newDom);
+					newJq = $(newDom);
+				}
+				else {
+					jq.last().after(newDom);
+					newJq = jq.add(newDom);
+				}
+			}
+			else {
+				$(jq.get(index)).before(newDom);
+				var elArry = jq.get();
+				elArry.splice(index, 0, newDom.get(0));
+				newJq = $(elArry);
+			}
+			return newJq;
+		},
+		delete: function(jq, index, noDetach) {
+			var el = jq.get(index);
+			if (!el) {
+				console.error('JSDiffUtil.delete non-existent element', arguments);
+				throw 'JSDiffUtil.delete non-existent element';
+			}
+			if (!noDetach)
+				$(el).detach();
+			var elArry = jq.get();
+			elArry.splice(index, 1);
+			return $(elArry);
+		},
+		swap: function(jq, src, dest) {
+			src = $(src);
+			dest = $(dest);
+			GUI.Util.swapDom(src.get(0), dest.get(0));
+			var elArry = jq.get();
+			var srcIdx = elArry.indexOf(src.get(0));
+			var destIdx = elArry.indexOf(dest.get(0));
+			elArry[srcIdx] = dest.get(0);
+			elArry[destIdx] = src.get(0);
+			return $(elArry);
+		}
+	};
 
-
-
+	scope.JQDiffUtil = JQDiffUtil;
+})(GUI);

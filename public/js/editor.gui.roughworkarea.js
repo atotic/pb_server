@@ -348,7 +348,7 @@
 					var src = containerDom.children(sel).get(targetIndex);
 					var destIndex = JsonPath.lastProp(diff[i].args);
 					var dest = containerDom.children(sel).get(destIndex);
-					GUI.Util.swapDom(src, dest, options.animate);
+					GUI.Util.swapDom(src, dest);
 				break;
 				}
 			}
@@ -414,7 +414,7 @@
 					var src = containerDom.children(sel).get(targetIndex);
 					var destIndex = JsonPath.lastProp(diff[i].args);
 					var dest = containerDom.children(sel).get(destIndex);
-					GUI.Util.swapDom(src, dest, options.animate);
+					GUI.Util.swapDom(src, dest);
 				break;
 				}
 			}
