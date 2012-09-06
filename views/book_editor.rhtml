@@ -103,7 +103,7 @@ Tools <i class='icon-wrench icon-white'></i> </a>
 			<div class="control-group">
 				<label class="control-label">Photo placement</label>
 				<div class="controls">
-					<button class="btn">Place all photos on pages automatically right now</button>
+					<button id='tool-autoPlace' class="btn">Place all photos on pages automatically right now</button>
 				</div>
 		</form>
 	</dd>
@@ -181,6 +181,6 @@ $.ajax('/books/'+ <%= @book.id %> + "?bust_cache=" + Math.random())
 	.fail(function(response, msg, jsXHR) {
 		PB.error("Unable to load book");
 	});
-
+console.log("Loaded at", new Date());
 </script>
 </body>

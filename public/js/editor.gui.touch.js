@@ -8,7 +8,7 @@
 
 	var TouchDrop = {
 		findTarget: function(clientX, clientY) {
-			var targets = $('[dropzone]').get().filter(function(el) {
+			var targets = $('[dropzone]:visible').get().filter(function(el) {
 				var r = el.getBoundingClientRect();
 				return clientY >= r.top && clientY <= r.bottom && clientX >= r.left && clientX <= r.right;
 			});

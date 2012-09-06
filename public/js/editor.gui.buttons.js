@@ -124,7 +124,11 @@
 				$('#palette-resize-btn').on({
 					mousedown: function(ev) {
 						ResizePaletteButton.startDrag(ev.originalEvent.clientY);
-						$('body').mousemove(function(ev) { ResizePaletteButton.continueDrag(ev.originalEvent.clientY)});
+						$('body').mousemove(function(ev) {
+							ev.stopPropagation();
+							ev.preventDefault();
+							ResizePaletteButton.continueDrag(ev.originalEvent.clientY)
+						});
 						$('body').mouseup(function(ev) {
 							$('body').off('mousemove');
 							$('body').off('mouseup');

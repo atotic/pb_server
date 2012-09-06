@@ -169,8 +169,10 @@ window.PB.Photo // Photo objects
 			if (id in this._proxies)
 				return this._proxies[id];
 			else
-				if (this.localData.document.photoList.indexOf(id) == -1)
+				if (this.localData.document.photoList.indexOf(id) == -1) {
+					debugger;
 					throw "No such photo";
+				}
 				else
 					this._proxies[id] = new PB.PhotoProxy(id, this);
 			// Non-existent proxies
@@ -367,6 +369,7 @@ window.PB.Photo // Photo objects
 				this.localData.document.roughPageList.splice(index, 0, page.id);
 			this._dirty = true;
 			PB.broadcastChange(this, 'roughPageList', options);
+			return this.page(page.id);
 		},
 		deleteRoughPage: function(page, options) {
 			var index = this.roughPageList.indexOf(page.id);

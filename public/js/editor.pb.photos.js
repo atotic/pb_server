@@ -34,7 +34,65 @@
 			cache[json.id] = new ServerPhoto(json.id);
 			cache[json.id].loadFromJson(json, true);
 			return cache[json.id];
-		}
+		},
+		sortPhotos: function(photos) {
+			function dateComparator(a,b) {
+				var a_date = a.photo.jsDate;
+				var b_date = b.photo.jsDate;
+				if (a_date && b_date)
+					return a_date - b_date;
+				else {
+					if (a_date == null) {
+						if (b_date == null)
+							return b.loc - a.loc;
+						else
+							return -1;
+					}
+					else
+						return 1;
+				}
+			};
+			function addedComparator(a,b) {
+				return a.loc - b.loc;
+			};
+			function nameComparator(a,b) {
+				var a_name = a.photo.display_name;
+				var b_name = b.photo.display_name;
+				// natural sort, if possible
+				var a_match = a_name.match(/(\d+)/);
+				var b_match = b_name.match(/(\d+)/);
+				var a_num = a_match ? parseInt(a_match[1], 10) : NaN;
+				var b_num = b_match ? parseInt(b_match[1], 10) : NaN;
+				if (a_num != a_num || b_num != b_num) { // weird way of testing isNan(a_num) || isNan(b_num)
+					if (a_name < b_name)
+						return -1;
+					else if (b_name < a_name)
+						return 1;
+					else
+						return a.loc - b.loc;
+				}
+				else {
+					if (a_num == b_num)
+						return a.loc - b.loc;
+					else
+						return a_num - b_num;
+				}
+			};
+			if (photos.length == 0)
+				return photos;
+			var modelArray = [];
+			for (var i=0; i<photos.length; i++)
+				modelArray.push({photo: PB.ServerPhotoCache.get( photos[i]), loc: i});
+			var compareFn;
+			switch (GUI.Options.photoSort) {
+				case 'added': compareFn = addedComparator; break;
+				case 'taken': compareFn = dateComparator; break;
+				case 'name': compareFn = nameComparator; break;
+				default: console.error("unknown compare fn for sortPhotos");
+			}
+			modelArray.sort(compareFn);
+			return modelArray.map(function(a) { return a.photo.id});
+		},
 	}
 
 	var ServerPhoto = function(id) {

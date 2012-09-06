@@ -273,7 +273,9 @@
 		resizeAllPages: function() {
 			var newSize = GUI.Options.pageSizePixels;
 			$('#work-area-rough .rough-page').each(function() {
-				$(this).width(newSize).height(newSize);
+				var narrow = ($(this).hasClass('rough-page-cover-flap') || $(this).hasClass('rough-page-back-flap'));
+				var width = narrow ? newSize / 3 : newSize;
+				$(this).width(width).height(newSize);
 				GUI.RoughWorkArea.layoutRoughInsideTiles(this, false);
 			});
 		},

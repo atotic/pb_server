@@ -50,16 +50,20 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-- bug: roughpage resize, take flaps into account
 - clean up rough page display: group facing pages together
-- optimize broadcasts
 - account page should load book list dynamically  $(window).unload(function(){});
 - test on iPad (speed it up?), Nexus (borkage)
 - Aug 24th? TEMPLATES! FINALLY!
 - HackerDojo weekly visits
 - Enroll in Udacity enterpreneurship course http://www.udacity.com/overview/Course/ep245/CourseRev/1
 Still thinking about IE
+- Bookshelf in account
 
+Sept 5:
+Bug: roughpage resize, narrow flaps into account
+Feature: save options in hashbang
+Bug:
+Feature: auto-place photos
 Sept 4:
 Feature: hook up the Tools dialog
 Feature: sort by added|date|name

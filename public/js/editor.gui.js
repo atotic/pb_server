@@ -40,6 +40,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 
 		var GUI = {
 		init: function() {
+			this.Options.init();
 			this.Buttons.init();
 			this.CommandManager.init();
 			this.Tools.init();
@@ -137,6 +138,9 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 (function(scope) {
 "use strict";
 	var Options = {
+		init: function() {
+			this.fromHashbang();
+		},
 		_photoFilter: 'unused', // 'all' | 'unused'
 		_photoSort: 'added', // 'added' | 'taken' | 'name'
 		_photoSize: 'medium', // 'small' | 'medium' | 'large'
@@ -155,7 +159,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			}
 		},
 		get photoSizeWidth() {
-			return this.photoSizeHeight * 1.34;	// 4/3 ratio
+			return this.photoSizeHeight * 1.5;
 		},
 		get pageSize() { return this._pageSize; },
 
@@ -193,7 +197,34 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			this._pageSize = val;
 			this.broadcast('pageSize', val);
 		},
-
+		toHashbang: function() {
+			var hashStr = "";
+			if (this.photoFilter != 'unused')
+				hashStr += "photoFilter=" + this.photoFilter;
+			if (this.photoSort != 'added')
+				hashStr += '&photoSort=' + this.photoSort;
+			if (this.photoSize != 'medium')
+				hashStr += '&photoSize=' + this.photoSize;
+			if (this.pageSize != 'medium')
+				hashStr += '&pageSize=' + this.pageSize;
+			hashStr = hashStr.replace(/^\&/, '');
+			hashStr = '#' + hashStr;
+			var newUrl = window.location.href.split('#',2)[0] + hashStr;
+			window.location.href = newUrl;
+		},
+		fromHashbang: function() {
+			var hashSplit = window.location.href.split('#',2);
+			if (hashSplit.length < 2)
+				return;
+			var ampSplit = hashSplit[1].split('&');
+			var optNames = ['photoFilter', 'photoSize', 'photoSort', 'pageSize'];
+			for (var i=0; i<ampSplit.length; i++) {
+				var eqlSplit = ampSplit[i].split('=', 2);
+				var idx = optNames.indexOf(eqlSplit[0])
+				if (idx != -1)
+					this[optNames[idx]] = eqlSplit[1];
+			}
+		},
 		_listeners: [],
 		// listener: function(propertyName, newValue)
 		addListener: function(listener) {

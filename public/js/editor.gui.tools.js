@@ -23,19 +23,28 @@
 				btn.click(this.buttonMapClick);
 			}
 			$('#tool-addLocalFile').click( function(ev) {
+				ev.preventDefault();
+				ev.stopPropagation();
 				$('#add-photo-input').click();
 				$('#rough-more-tools').hide();
-				ev.preventDefault();
 			});
+			$('#tool-autoPlace').click( function(ev) {
+				ev.preventDefault();
+				ev.stopPropagation();
+				$('#rough-more-tools').hide();
+				GUI.Tools.autoPlacePhotos(PB.Book.default);
+			})
 		},
 		// click event callback
 		buttonMapClick: function(ev) {
 			ev.preventDefault();
+			ev.stopPropagation();
 			var match = this.id.match(/([^-]*)-(.*)/);
 			if (!match)
 				return console.warn("buttonMapClick could not match id");
 			$('#rough-more-tools').hide();
 			GUI.Options[ match[1] ] = match[2];
+			GUI.Options.toHashbang();
 		},
 		buttonFromNameVal: function(nameVal) {
 			var id = nameVal.name + "-" + nameVal.value;
@@ -51,6 +60,34 @@
 					btn.addClass('active');
 				else
 					btn.removeClass('active');
+			}
+		},
+		autoPlacePhotos: function(book) {
+			var photos = book.unusedPhotoList;
+			photos = PB.ServerPhotoCache.sortPhotos(photos);
+			var emptyPages = book.roughPageList.filter(function(pageId) {
+				return book.page(pageId).photoList.length == 0;
+			});
+			while (photos.length > 0) {
+				var nextPage;
+				if (emptyPages.length > 0)
+					nextPage = book.page(emptyPages.shift());
+				else
+					nextPage = book.insertRoughPage(-1, {animate:false});
+				var want = Math.floor(Math.random() * 4 + 1);
+				if (nextPage.pageClass() != 'page') {
+					switch(nextPage.id) {
+						case 'cover':
+							want = 1;
+							break;
+						default:
+							want = 0;
+					}
+				}
+				while (want > 0 && photos.length > 0) {
+					nextPage.addPhoto(book.photo(photos.shift()), {animate:true});
+					want--;
+				}
 			}
 		}
 	}
