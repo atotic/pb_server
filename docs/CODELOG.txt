@@ -50,7 +50,7 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-- clean up rough page display: group facing pages together
+- optimize broadcasts, ui should not freeze
 - account page should load book list dynamically  $(window).unload(function(){});
 - test on iPad (speed it up?), Nexus (borkage)
 - Aug 24th? TEMPLATES! FINALLY!
@@ -61,6 +61,7 @@ Still thinking about IE
 
 Sept 6:
 Bug: fixed serious bug in synchronizing photopalette
+Bug: roughworkarea apply same fix as photopalette
 
 Sept 5:
 Bug: roughpage resize, narrow flaps into account

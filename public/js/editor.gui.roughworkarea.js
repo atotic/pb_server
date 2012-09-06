@@ -320,35 +320,25 @@
 				var targetId = targetPath.val();
 				switch(diff[i].op) {
 				case 'set':
-					var replaceDom = $(oldChildren.get(targetIndex));
 					var newPage = bookModel.page(diff[i].args);
 					var newDom = RoughWorkArea.createRoughPage(newPage);
-					newlyCreatedPages.push( newDom);
-					replaceDom.replaceWith(newDom);
+					newlyCreatedPages.push(newDom);
+					oldChildren = GUI.JQDiffUtil.set(oldChildren, targetIndex, newDom);
 				break;
 				case 'insert':
 					var newModel = bookModel.page( diff[i].args );
 					var newDom = RoughWorkArea.createRoughPage(newModel);
 					newlyCreatedPages.push(newDom);
-					var c = containerDom.children(sel);
-					if (c.length <= targetIndex) {
-						if (c.length == 0)
-							containerDom.prepend(newDom);
-						else
-							c.last().after(newDom);
-					}
-					else {
-						$(c.get(targetIndex)).before(newDom);
-					}
+					oldChildren = GUI.JQDiffUtil.insert(oldChildren, containerDom, targetIndex, newDom);
 				break;
 				case 'delete':
-					$(containerDom.children(sel).get(targetIndex)).detach();
+					oldChildren = GUI.JQDiffUtil.delete(oldChildren, targetIndex);
 				break;
 				case 'swap': // prop: index of old
 					var src = containerDom.children(sel).get(targetIndex);
 					var destIndex = JsonPath.lastProp(diff[i].args);
 					var dest = containerDom.children(sel).get(destIndex);
-					GUI.Util.swapDom(src, dest);
+					oldChildren = GUI.JQDiffUtil.swap(oldChildren, src, dest);
 				break;
 				}
 			}
@@ -388,33 +378,24 @@
 				switch(diff[i].op) {
 					// op.args() is new photo id
 				case 'set':
-					var replaceDom = $(oldChildren.get(targetIndex));
 					var newPhoto = pageModel.book.photo(diff[i].args);
-					replaceDom.replaceWith(
-							RoughWorkArea.createRoughImageTile(newPhoto));
+					oldChildren = GUI.JQDiffUtil.set(oldChildren,
+						targetIndex,
+						RoughWorkArea.createRoughImageTile(newPhoto));
 				break;
 				case 'insert':
 					var newModel = pageModel.book.photo( diff[i].args );
 					var newDom = RoughWorkArea.createRoughImageTile(newModel);
-					var c = containerDom.children( sel );
-					if (c.length <= targetIndex) {
-						if (c.length == 0)
-							containerDom.prepend(newDom);
-						else
-							c.last().after(newDom);
-					}
-					else {
-						$(c.get(targetIndex)).before(newDom);
-					}
+					oldChildren = GUI.JQDiffUtil.insert(oldChildren, containerDom, targetIndex, newDom);
 				break;
 				case 'delete':
-					$(containerDom.children(sel).get(targetIndex)).detach();
+					oldChildren = GUI.JQDiffUtil.delete(oldChildren, targetIndex);
 				break;
 				case 'swap': // prop: index of old
 					var src = containerDom.children(sel).get(targetIndex);
 					var destIndex = JsonPath.lastProp(diff[i].args);
 					var dest = containerDom.children(sel).get(destIndex);
-					GUI.Util.swapDom(src, dest);
+					oldChildren = GUI.JQDiffUtil.swap(oldChildren, src, dest);
 				break;
 				}
 			}
