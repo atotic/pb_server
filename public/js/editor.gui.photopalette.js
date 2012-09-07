@@ -30,7 +30,7 @@
 					GUI.PhotoPalette.synchronizePhotoList();
 					$('#photo-list .photo-div').each(function() {
 						var el = $(this);
-						GUI.PhotoPalette.setTileInfo(el, el.data('model'));
+						GUI.PhotoPalette.setTileInfo(el, $.data(this,'model'));
 					});
 					break;
 				default:
@@ -248,14 +248,14 @@
 
 			var oldChildren = containerDom.children( sel )
 				.filter(function() {
-					if ($(this).data('pb.markedForDelete')) {
+					if ($.data(this, 'pb.markedForDelete')) {
 						return false;
 					}
 					return true;
 				});
 
 			var oldPhotos = oldChildren.get().map(
-				function(el, i) { return $(el).data('model').id});
+				function(el, i) { return $.data(el,'model').id});
 
 			var newPhotos = GUI.Options.photoFilter == 'all' ? bookModel.photoList : bookModel.unusedPhotoList;
 			newPhotos = PB.ServerPhotoCache.sortPhotos(newPhotos);

@@ -303,7 +303,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		revealByScrolling: function(el, container) {
 			el = $(el).get(0);
 			container = container || el.parentNode;
-			container = $(container).get(0);
+			container = $(container).stop(true, false).get(0);
 			if (el.nodeName == 'IMG' && el.offsetHeight == 0) {
 				// edge case: img not yet loaded, scroll when image loads
 				var scrollWhenLoaded = function() {

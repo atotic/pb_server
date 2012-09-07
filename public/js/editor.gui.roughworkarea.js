@@ -106,7 +106,7 @@
 			var newTarget = null;
 			var newDirection = null;
 			$(ev.currentTarget).children('.rough-page').each(function() {
-				var model = $(this).data('model');
+				var model = $.data(this,'model');
 				if (('isDroppable' in model) && !model.isDroppable(GUI.DragStore.flavor))
 					return;
 				var direction = GUI.Util.pointInClientRect(ev.clientX, ev.clientY,
@@ -209,7 +209,7 @@
 			// move image from one rough to another
 			var oldParent = $(GUI.DragStore.dom).parent();
 			var photo = $(GUI.DragStore.dom).data('model');
-			var oldModel = oldParent.data('model');
+			var oldModel = $(oldParent).data('model');
 			var newModel = $(t.target).data('model');
 			PB.startChangeBatch();
 			oldModel.removePhoto(photo, {animate:true});
@@ -302,11 +302,11 @@
 		synchronizeRoughPageList: function(options) {
 			options = $.extend({animate:false}, options);
 			var containerDom = $('#work-area-rough');
-			var bookModel = containerDom.data('model');
+			var bookModel = $.data(containerDom.get(0),'model');
 			var sel = '.rough-page';
 
 			var oldChildren = containerDom.children( sel );
-			var oldPages = oldChildren.map(function(i,el) { return $(el).data('model').id}).get();
+			var oldPages = oldChildren.map(function(i,el) { return $.data(el, 'model').id}).get();
 			var newPages = bookModel.roughPageList;
 
 			var toId = function(el) { return el.id};
@@ -360,11 +360,11 @@
 		synchronizeRoughPhotoList: function(roughDom, options) {
 			options = $.extend( { animate: false }, options);
 			var containerDom = $(roughDom);
-			var pageModel = containerDom.data('model');
+			var pageModel = $.data(containerDom.get(0), 'model');
 			var sel = '.rough-tile';
 
 			var oldChildren = containerDom.children( sel );
-			var oldPhotos = oldChildren.map(function(i, el) { return $(el).data('model')}).get();
+			var oldPhotos = oldChildren.map(function(i, el) { return $.data(el, 'model')}).get();
 			var newPhotos = pageModel.photos();
 			var toId = function(el) { return el.id};
 			var diff = JsonDiff.diff(

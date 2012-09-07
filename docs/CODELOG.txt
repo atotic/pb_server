@@ -62,6 +62,48 @@ Still thinking about IE
 Sept 6:
 Bug: fixed serious bug in synchronizing photopalette
 Bug: roughworkarea apply same fix as photopalette
+Optimization: Optimized broadcasts, placing all photos fell from 4 s to short
+Trying to optimize big patches
+started with 5.1s
+clear: 3858 ms
+fill: 2882 ms
+Remove animation:
+clear: 3252ms 15%
+fill: 1822ms 35%
+Event bubbling might be a problem, set nobubble flag
+clear: 2860ms 12%
+fill: 1652 ms 10%
+Chrome is faster:
+clear: 1073 ms
+fill: 643 ms
+Firefox with Web console, no Firebug:
+clear: 1734
+fill: 1033
+Painful, but not over the top
+Datamapper:
+clear: 1030ms 40%
+fill: 557ms 46&
+Chrome:
+clear: 684ms
+fill: 296ms
+Datamapper, optimize batch dispatching
+clear: 1001ms
+fill: 437ms
+Use $.data instead of $().data()
+Firefox with Firebug
+clear: 1343ms
+fill: 594ms;
+More $.data in palette
+clear: 659
+fill: 537
+Firefox without Firebug
+clear: 527
+fill: 421
+Chrome:
+clear: 618
+fill: 229
+
+process in batches (100 diffs at a time?)
 
 Sept 5:
 Bug: roughpage resize, narrow flaps into account

@@ -71,7 +71,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 	function processQuery(elem, query) {
 		if (checkUndefined(elem) || checkUndefined(query) || query.badSelector)
 			return false;
-		var data = $(elem).data(query.dataNameSplitted[0]);
+		var data = $.data(elem, query.dataNameSplitted[0]);
+//		var data = $(elem).data(query.dataNameSplitted[0]);
 		if(checkUndefined(data))
 			return false;
 		if(query.dataNameSplitted[1]){//We have innerDataKeys

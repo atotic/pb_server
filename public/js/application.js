@@ -59,6 +59,28 @@
 			if (msg) PB.info(msg);
 		}
 	}
+	// Timer utility class
+	var Timer = function(name, ignoreUnder) {
+		this.startMili = Date.now();
+		this.endMili = this.startMili;
+		this.name = name;
+		this.ignoreUnder = ignoreUnder || 100;
+		this.start();
+	}
+
+	Timer.prototype = {
+		start: function() {
+			this.startMili = Date.now();
+			return this;
+		},
+		print: function(msg) {
+			this.endMili = Date.now();
+			var total = this.endMili - this.startMili;
+			console.log(this.name, msg || "", total + " ms");
+		}
+	};
+	PB.Timer = Timer;
+
 	PB.redirectToProperHost();
 
 	if (!('PB' in scope)) scope.PB = {};

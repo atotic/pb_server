@@ -15,6 +15,7 @@ window.PB.Photo // Photo objects
 
 	var PB = {
 		init: function() {
+			$.event.special[this.MODEL_CHANGED] = {noBubble: true};
 		},
 		clone: function(obj) {
 			return JSON.parse(JSON.stringify(obj));
@@ -42,22 +43,39 @@ window.PB.Photo // Photo objects
 		broadcastChangeBatch: function() {
 			var batch = this._changeBatch;
 			delete this._changeBatch;
-			for (var i=0; i < batch.length; i++)
-				this.broadcastChange(batch[i].model, batch[i].propName, batch[i].options);
+			var filter = $('*:data("model")');
+			var dataMapper = {};
+			filter.each(function() {
+				var id = $.data(this,'model').id;
+				if (id in dataMapper)
+					dataMapper[id].push(this);
+				else
+					dataMapper[id] = [this];
+			});
+			for (var i=0; i < batch.length; i++) {
+				this.broadcastChange(batch[i].model, batch[i].propName, batch[i].options, dataMapper);
+			}
 		},
 		cancelChangeBatch: function() {
 			delete this._changeBatch;
 		},
-		broadcastChange: function(model, propName, options) {
+		broadcastChange: function(model, propName, options, dataMapper) {
 			if (this._changeBatch)
 				this._changeBatch.push({model:model, propName:propName, options:options});
 			else {
 				try {
-				$('*:data("model.id=' + model.id + '")').trigger(PB.MODEL_CHANGED, [model, propName, options]);
+					if (dataMapper) {
+						if (model.id in dataMapper)
+							for (var i=0; i<dataMapper[model.id].length; i++)
+								$(dataMapper[model.id][i]).trigger(PB.MODEL_CHANGED, [model, propName, options]);
+					}
+					else {
+						var filter = $('*:data("model")');
+						filter.filter('*:data("model.id=' + model.id + '")').trigger(PB.MODEL_CHANGED, [model, propName, options]);
+				}
 				} catch(ex) {
 					debugger;
 				}
-
 				if (model.id in changeListeners)
 					for (var i=0; i<changeListeners[model.id].length; i++)
 						changeListeners[model.id][i].handleChangeEvent(model, propName, options);
@@ -185,6 +203,24 @@ window.PB.Photo // Photo objects
 			this._locked = reason;
 			PB.broadcastChange(this, 'locked')
 		},
+		reset: function() {	// destroys the book pages
+			this.localData.document.roughPageList = ["cover", "cover-flap", "back-flap", "back","P1","P2","P3","P4"];
+			this.localData.document.roughPages = {
+				"cover": { "id": "cover", "photoList": [] },
+				"cover-flap": { "id": "cover-flap", "photoList": [] },
+				"back-flap": { "id": "back-flap", "photoList": [] },
+				"back": {"id": "back", "photoList": [] },
+				"P1": {"id": "P1", "photoList": [] },
+				"P2": {"id": "P2", "photoList": [] },
+				"P3": {"id": "P3", "photoList": [] },
+				"P4": {"id": "P4", "photoList": [] }
+			};
+			PB.broadcastChange(this, 'roughPageList');
+			PB.broadcastChange(this, 'photoList');
+			for (var i=0; i<this.localData.document.roughPageList.length; i++)
+				PB.broadcastChange(this.page(this.localData.document.roughPageList[i]), 'photoList');
+			this._dirty = true;
+		},
 		// returns hash of images that appear in pages
 		_collectUsedImages: function() {
 			var retVal = {};
@@ -207,10 +243,11 @@ window.PB.Photo // Photo objects
 				else
 					return null;
 			}
+			var t = new PB.Timer("broadcastDiffChanges");
+			PB.startChangeBatch();
+			var options = {animate: changes.length < 40};
 			for (var i=0; i<changes.length; i++) {
 				// all the changes to our structure. Need to deduce what has changed
-				var options = {animate: true};
-
 				var objectPath = changes[i][1].objectPath();
 				var document_var= member(objectPath, 1);
 				if (document_var == this.localData.document.roughPageList)
@@ -228,8 +265,12 @@ window.PB.Photo // Photo objects
 				else if (document_var == this.localData.document.photoList) {
 					PB.broadcastChange(this, 'photoList', options);
 				}
+				else
 					console.log(changes[i][0], changes[i][1].path());
 			}
+			t.print("patch");
+			PB.broadcastChangeBatch();
+			t.print("broadcast");
 		},
 		_patchPhotoIdChange: function(photo, propName, options) {
 //			console.log("patching photo ids", photo.id, options.newId);

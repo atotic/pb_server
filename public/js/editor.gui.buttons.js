@@ -104,9 +104,11 @@
 						ev = ev.originalEvent;
 						var newTouch = GUI.TouchDragHandler.touchItemById(ev.changedTouches, touchId);
 						if (!newTouch)
+
 							return;
 						else {
 							ResizePaletteButton.continueDrag(newTouch.clientY);
+
 							ev.preventDefault();
 						}
 					},
@@ -124,6 +126,8 @@
 				$('#palette-resize-btn').on({
 					mousedown: function(ev) {
 						ResizePaletteButton.startDrag(ev.originalEvent.clientY);
+						ev.stopPropagation();
+						ev.preventDefault();
 						$('body').mousemove(function(ev) {
 							ev.stopPropagation();
 							ev.preventDefault();
@@ -132,8 +136,14 @@
 						$('body').mouseup(function(ev) {
 							$('body').off('mousemove');
 							$('body').off('mouseup');
+							ev.stopPropagation();
+							ev.preventDefault();
 							ResizePaletteButton.endDrag(ev.originalEvent.clientY);
 						});
+					},
+					click: function(ev) {
+						ev.stopPropagation();
+						ev.preventDefault();
 					}
 				});
 			}

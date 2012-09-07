@@ -63,6 +63,7 @@
 			}
 		},
 		autoPlacePhotos: function(book) {
+			var t = new PB.Timer("autoPlacePhotos");
 			var photos = book.unusedPhotoList;
 			photos = PB.ServerPhotoCache.sortPhotos(photos);
 			var emptyPages = book.roughPageList.filter(function(pageId) {
@@ -90,7 +91,9 @@
 					want--;
 				}
 			}
+			t.print("placed");
 			PB.broadcastChangeBatch();
+			t.print("broadcast");
 			if (nextPage) {
 				GUI.Util.revealByScrolling(nextPage, $('#work-area-container'));
 			}
