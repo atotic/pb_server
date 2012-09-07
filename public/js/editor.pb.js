@@ -243,6 +243,16 @@ window.PB.Photo // Photo objects
 				else
 					return null;
 			}
+			var alreadyBroadcast = {};
+			function mutedBroadcastChange(model, prop, options) {
+				var changeId = model.id + "-" + prop;
+				if (changeId in alreadyBroadcast) {
+//					console.log('ignored', changeId);
+					return;
+				}
+				alreadyBroadcast[changeId] = true;
+				PB.broadcastChange(model, prop, options);
+			}
 			var t = new PB.Timer("broadcastDiffChanges");
 			PB.startChangeBatch();
 			var options = {animate: changes.length < 40};
@@ -251,19 +261,21 @@ window.PB.Photo // Photo objects
 				var objectPath = changes[i][1].objectPath();
 				var document_var= member(objectPath, 1);
 				if (document_var == this.localData.document.roughPageList)
-					PB.broadcastChange(this, 'roughPageList', options);
+					mutedBroadcastChange(this, 'roughPageList', options);
 				else if (document_var == this.localData.document.roughPages) {
-					var roughPage = member(objectPath, 2);
-					var rough_page_var = member(objectPath, 3);
-					if (rough_page_var == roughPage.photoList) {
-						this._pagePhotosChanged(roughPage, options);
-						PB.broadcastChange(roughPage, 'photoList', options);
+					if (objectPath.length > 3) {
+						var roughPage = member(objectPath, 2);
+						var rough_page_var = member(objectPath, 3);
+						if (rough_page_var == roughPage.photoList) {
+							this._pagePhotosChanged(roughPage, options);
+							mutedBroadcastChange(roughPage, 'photoList', options);
+						}
+						else
+							console.log(changes[i][0], changes[i][1].path());
 					}
-					else
-						console.log(changes[i][0], changes[i][1].path());
 				}
 				else if (document_var == this.localData.document.photoList) {
-					PB.broadcastChange(this, 'photoList', options);
+					mutedBroadcastChange(this, 'photoList', options);
 				}
 				else
 					console.log(changes[i][0], changes[i][1].path());

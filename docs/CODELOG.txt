@@ -50,14 +50,21 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-- optimize broadcasts, ui should not freeze
+- rough page sizes through styles
+- keep track of file sizes in db
+- test on Nexus, iPhone
 - account page should load book list dynamically  $(window).unload(function(){});
-- test on iPad (speed it up?), Nexus (borkage)
 - Aug 24th? TEMPLATES! FINALLY!
 - HackerDojo weekly visits
 - Enroll in Udacity enterpreneurship course http://www.udacity.com/overview/Course/ep245/CourseRev/1
 Still thinking about IE
 - Bookshelf in account
+
+Sept 7:
+Optimize: broadcast of change batches. New results are blazing
+clear: 420
+fill: 365
+Good enough!
 
 Sept 6:
 Bug: fixed serious bug in synchronizing photopalette
