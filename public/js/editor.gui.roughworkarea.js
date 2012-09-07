@@ -13,6 +13,7 @@
 				.data('model', book)
 				.on( PB.MODEL_CHANGED, this.bookChanged);
 			GUI.Options.addListener(this.optionsChanged);
+			this.resizeAllPages();	// change the ruleset
 			this.synchronizeRoughPageList();
 		},
 		get book() {
@@ -272,12 +273,37 @@
 		},
 		resizeAllPages: function() {
 			var newSize = GUI.Options.pageSizePixels;
-			$('#work-area-rough .rough-page').each(function() {
-				var narrow = ($(this).hasClass('rough-page-cover-flap') || $(this).hasClass('rough-page-back-flap'));
-				var width = narrow ? newSize / 3 : newSize;
-				$(this).width(width).height(newSize);
-				GUI.RoughWorkArea.layoutRoughInsideTiles(this, false);
-			});
+			try {
+				var link = $('link[href="/css/editor.css"]').get(0);
+				var rules  = link.sheet.cssRules;
+				for (var i=0; i<rules.length; i++) {
+					var rule = rules[i];
+					if (rule.type == 1) {
+						switch (rule.selectorText) {
+							case '.rough-page':
+								rule.style.width = newSize + "px";
+								rule.style.height = newSize + "px";
+								break;
+							case '.rough-page-cover-flap':
+							case '.rough-page-back-flap':
+								rule.style.width = Math.floor(newSize / 3) + "px";
+								break;
+							default:
+								break;
+						}
+					}
+				}
+			}
+			catch(ex) {
+				console.log("css rules API failed");
+				debugger;
+				$('#work-area-rough .rough-page').each(function() {
+					var narrow = ($(this).hasClass('rough-page-cover-flap') || $(this).hasClass('rough-page-back-flap'));
+					var width = narrow ? newSize / 3 : newSize;
+					$(this).width(width).height(newSize);
+					GUI.RoughWorkArea.layoutRoughInsideTiles(this, false);
+				});
+			}
 		},
 		createRoughImageTile: function(photo) {
 			var src = photo.getUrl(PB.PhotoProxy.SMALL).url;

@@ -50,7 +50,6 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-- rough page sizes through styles
 - keep track of file sizes in db
 - test on Nexus, iPhone
 - account page should load book list dynamically  $(window).unload(function(){});
@@ -61,6 +60,7 @@ Still thinking about IE
 - Bookshelf in account
 
 Sept 7:
+Feature/bugfix: rough page sizes through styles
 Optimize: broadcast of change batches. New results are blazing
 clear: 420
 fill: 365
