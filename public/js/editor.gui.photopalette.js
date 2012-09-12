@@ -298,10 +298,9 @@
 					else
 						el.detach();
 				break;
-				case 'swap':
-					var src = containerDom.children(sel).get(targetIndex);
-					var destIndex = JsonPath.lastProp(diff[i].args);
-					var dest = containerDom.children(sel).get(destIndex);
+				case 'swapArray':
+					var src = containerDom.children(sel).get(diff[i].args.srcIndex);
+					var dest = containerDom.children(sel).get(diff[i].args.destIndex);
 					oldChildren = GUI.JQDiffUtil.swap(oldChildren, src, dest);
 				break;
 				}

@@ -1,0 +1,294 @@
+<script>
+"http://dev.pb4us.com/test/qunit/bookdiff";
+
+$(document).ready(function() {
+
+function createBlankBook(options) {
+	options = $.extend({pages: 4, photos: 0, pagesWithPhotos: false}, options);
+	var bookJson = {
+		"id": 1,
+		"last_diff": 1,
+		"photos": [],
+		"document": {
+			"title": "testBook",
+			"photoList": [],
+			"roughPageList": ["cover", "cover-flap", "back-flap", "back"],
+			"roughPages": {
+				"cover": { "id": "cover", "photoList": [] },
+				"cover-flap": { "id": "cover-flap", "photoList": [] },
+				"back-flap": { "id": "back-flap", "photoList": [] },
+				"back": {"id": "back", "photoList": [] }
+			}
+		}
+	}
+	for (var i=0; i<options.pages; i++) {
+		var pageId = "P" + (i +1);
+		bookJson.document.roughPageList.push(pageId);
+		bookJson.document.roughPages[pageId] = {
+			id: pageId, photoList:[]
+		}
+	}
+	var book = new PB.Book(bookJson);
+	//	book.insertRoughPage(-1);
+	for (var i=0; i<options.photos; i++)
+		book.addPhotoById(i);
+	if (options.pagesWithPhotos) {
+		var roughPages = book.roughPageList;
+		var photos = book.photoList.map(function(photoId) { return book.photo(photoId)});
+		for (var i=0; i<roughPages.length; i++) {
+			var page = book.page(roughPages[i]);
+			for (var j=0; j<photos.length; j++)
+				page.addPhoto(photos[j]);
+		}
+	}
+	var diff = { id: 2, diff: book.getDiff() };
+	book.applyBroadcastPatch(diff.id, diff.diff);
+	var newdiff = book.getDiff();
+	if (newdiff.length != 0 || book.serverData.last_diff != diff.id)
+		debugger;
+	equal(newdiff.length, 0, ".");
+	return book;
+}
+
+function cmp(a,b) {
+	function fail() {
+		debugger;
+	}
+	if (typeof a != typeof b)
+		fail();
+	switch(typeof a) {
+		case 'object':
+			if ('length' in a)
+				for (var i=0; i<a.length; i++)
+					cmp(a[i], b[i]);
+			else
+				for (var x in a)
+					cmp(a[x], b[x]);
+			break;
+		default:
+			if (a != b)
+				fail();
+	}
+}
+function cloneBook(b) {
+	var b2 = new PB.Book(b.serverData);
+	cmp(b.localData, b2.localData);
+	deepEqual(b.localData, b2.localData, ".");
+	deepEqual(b.serverData, b2.serverData, ".");
+	return b2;
+}
+
+module("PB.Book diffs");
+/* Json merges should handle standard operations without conflicts */
+/* Standard operations are: */
+/* 1) A: book-add-photo, B: book-add-photo */
+/* 1) A: book-add-page, B: book-add-page */
+/* 1) A: book-move-page, B: book-move-page */
+/* 2) A: page-add-photo, B: page-add-photo */
+test("book add photo", function() {
+	var b1 = createBlankBook();
+	var b2 = cloneBook(b1);
+
+	b1.addPhotoById(1);
+	b2.addPhotoById(2);
+
+	// diff(b1) -> b2
+	var b1diff = { id: 10, diff: b1.getDiff() };
+//	JsonDiff.prettyPrint(b1diff.diff);
+	b1.applyBroadcastPatch(b1diff.id, b1diff.diff);
+	b2.applyBroadcastPatch(b1diff.id, b1diff.diff);
+
+	// diff(b2) -> b1
+	var b2diff = { id: 20, diff: b2.getDiff() };
+//	JsonDiff.prettyPrint(b2diff.diff);
+	b2.applyBroadcastPatch(b2diff.id, b2diff.diff);
+	b1.applyBroadcastPatch(b2diff.id, b2diff.diff);
+
+	deepEqual(b1.localData, b2.localData, "books should now be identical");
+});
+
+test("book add several photos", function() {
+	var b1 = createBlankBook();
+	var b2 = cloneBook(b1);
+
+	b1.addPhotoById(1);
+	b1.addPhotoById(2);
+	b1.addPhotoById(3);
+	b2.addPhotoById(4);
+	b2.addPhotoById(5);
+	b2.addPhotoById(6);
+
+	// diff(b1) -> b2
+	var b1diff = { id: 10, diff: b1.getDiff() };
+//	JsonDiff.prettyPrint(b1diff.diff);
+	b1.applyBroadcastPatch(b1diff.id, b1diff.diff);
+	b2.applyBroadcastPatch(b1diff.id, b1diff.diff);
+
+	// diff(b2) -> b1
+	var b2diff = { id: 20, diff: b2.getDiff() };
+//	JsonDiff.prettyPrint(b2diff.diff);
+	b2.applyBroadcastPatch(b2diff.id, b2diff.diff);
+	b1.applyBroadcastPatch(b2diff.id, b2diff.diff);
+	cmp(b1.localData, b2.localData);
+	deepEqual(b1.localData, b2.localData, "books should now be identical");
+});
+
+test("book add page", function() {
+	var b1 = createBlankBook();
+	var b2 = cloneBook(b1);
+	b1.insertRoughPage(-1);
+	b1.insertRoughPage(-1);
+	b1.insertRoughPage(-1);
+
+	b2.insertRoughPage(-1);
+	b2.insertRoughPage(-1);
+	b2.insertRoughPage(-1);
+
+	// diff(b1) -> b2
+	var b1diff = { id: 10, diff: b1.getDiff() };
+//	JsonDiff.prettyPrint(b1diff.diff);
+	b1.applyBroadcastPatch(b1diff.id, b1diff.diff);
+	b2.applyBroadcastPatch(b1diff.id, b1diff.diff);
+
+	// diff(b2) -> b1
+	var b2diff = { id: 20, diff: b2.getDiff() };
+//	JsonDiff.prettyPrint(b2diff.diff);
+	b1.applyBroadcastPatch(b2diff.id, b2diff.diff);
+	b2.applyBroadcastPatch(b2diff.id, b2diff.diff);
+	deepEqual(b1.localData, b2.localData, "books should now be identical");
+});
+
+test("book add page in the middle", function() {
+	var b1 = createBlankBook();
+	var b2 = cloneBook(b1);
+	b1.insertRoughPage(-1);
+	b1.insertRoughPage(-1);
+	b1.insertRoughPage(-1);
+
+	b2.insertRoughPage(-1);
+	b2.insertRoughPage(-1);
+	b2.insertRoughPage(4);
+
+	// diff(b1) -> b2
+	var b1diff = { id: 10, diff: b1.getDiff() };
+//	JsonDiff.prettyPrint(b1diff.diff);
+	b1.applyBroadcastPatch(b1diff.id, b1diff.diff);
+	b2.applyBroadcastPatch(b1diff.id, b1diff.diff);
+
+	// diff(b2) -> b1
+	var b2diff = { id: 20, diff: b2.getDiff() };
+//	JsonDiff.prettyPrint(b2diff.diff);
+	b2.applyBroadcastPatch(b2diff.id, b2diff.diff);
+	b1.applyBroadcastPatch(b2diff.id, b2diff.diff);
+
+	deepEqual(b1.localData, b2.localData, "books should now be identical");
+});
+
+test("page add photo", function() {
+	var b1 = createBlankBook({pages:5, photos: 6});
+	var b2 = cloneBook(b1);
+
+	// add photos to pages
+	var b1page = b1.page(b1.roughPageList[5])
+	b1page.addPhoto(b1.photo(b1.photoList[0]));
+	b1page.addPhoto(b1.photo(b1.photoList[1]));
+
+	var b2page = b2.page(b2.roughPageList[5])
+	b2page.addPhoto(b2.photo(b2.photoList[2]));
+	b2page.addPhoto(b2.photo(b2.photoList[3]));
+
+	var b1diff = { id: 30, diff: b1.getDiff() };
+	b1.applyBroadcastPatch(b1diff.id, b1diff.diff);
+	b2.applyBroadcastPatch(b1diff.id, b1diff.diff);
+
+	// diff(b2) -> b1
+	var b2diff = { id: 40, diff: b2.getDiff() };
+	b2.applyBroadcastPatch(b2diff.id, b2diff.diff);
+	b1.applyBroadcastPatch(b2diff.id, b2diff.diff);
+
+	cmp(b1.localData, b2.localData);
+	deepEqual(b1.localData, b2.localData, "books should now be identical");
+});
+
+test("pages, b1 add, b2 remove, same position", function() {
+	var b1 = createBlankBook({pages:2, photos: 5, pagesWithPhotos: true});
+	var b2 = cloneBook(b1);
+
+	// add page to b1
+//	console.log("before", b1.roughPageList);
+	var insertedPage = b1.insertRoughPage(4).id;
+//	console.log("inserting", insertedPage);
+//	console.log("after b1 page insert", b1.roughPageList);
+	var removedPage = b2.roughPageList[4];
+	b2.page(b2.roughPageList[4]).remove();
+//	console.log("removing", removedPage);
+//	console.log("after b2 page removal", b2.roughPageList);
+	// patch b2
+	var d = {id:10, diff: b1.getDiff()};
+	//JsonDiff.prettyPrint(d.diff);
+	b1.applyBroadcastPatch(d.id, d.diff);
+	b2.applyBroadcastPatch(d.id, d.diff);
+//	console.log("b2 got b1 patch", b2.roughPageList);
+	// patch b1
+	var d = {id:20, diff: b2.getDiff()};
+	// JsonDiff.prettyPrint(d.diff);
+	b1.applyBroadcastPatch(d.id, d.diff);
+	b2.applyBroadcastPatch(d.id, d.diff);
+
+//	console.log("final state", b1.roughPageList);
+
+	cmp(b1.localData, b2.localData);
+	deepEqual(b1.localData, b2.localData, "books should now be identical");
+	ok(b1.roughPageList.indexOf(removedPage) == -1, "removed page is gone");
+	ok(b1.roughPageList.indexOf(insertedPage) != -1, "added page still there");
+});
+
+test("pages b1 move page", function() {
+	var b1 = createBlankBook({pages:6});
+	var b2 = cloneBook(b1);
+
+	b1.moveRoughPage(b1.page(b1.roughPageList[4]), 9)
+	var d = {id: 10, diff: b1.getDiff()};
+//	JsonDiff.prettyPrint(d.diff);
+//	console.log(JSON.stringify(b1.serverData.document));
+//	console.log(JSON.stringify(d.diff));
+	b1.applyBroadcastPatch(d.id, d.diff);
+	b2.applyBroadcastPatch(d.id, d.diff);
+	cmp(b1.localData, b2.localData);
+	deepEqual(b1.localData, b2.localData, "books should now be identical");
+});
+
+test("pages b1 move page, b2 move page", function() {
+	var b1 = createBlankBook({pages:6, photos: 5, pagesWithPhotos: true});
+	var b2 = cloneBook(b1);
+
+	b1.moveRoughPage(b1.page(b1.roughPageList[4]), 9);
+	b2.moveRoughPage(b2.page(b2.roughPageList[5]), 7);
+	var d = {id: 10, diff: b1.getDiff()};
+//	JsonDiff.prettyPrint(d.diff);
+	b1.applyBroadcastPatch(d.id, d.diff);
+	b2.applyBroadcastPatch(d.id, d.diff);
+
+	d = {id: 20, diff: b2.getDiff()};
+//	JsonDiff.prettyPrint(d.diff);
+	b2.applyBroadcastPatch(d.id, d.diff);
+	b1.applyBroadcastPatch(d.id, d.diff);
+	cmp(b1.localData, b2.localData);
+	deepEqual(b1.localData, b2.localData, "books should now be identical");
+});
+
+test("pages b1 move page, bug case", function() {
+	var b1 = createBlankBook({pages:4, photos: 0, pagesWithPhotos: 0});
+	var pageList = b1.roughPageList;
+	b1.moveRoughPage(b1.page(pageList[4]), 7);
+	var d = {id: 10, diff: b1.getDiff()};
+	JsonDiff.prettyPrint(d.diff);
+	b1.applyBroadcastPatch(d.id, d.diff);
+	var tmp = pageList[4];
+	pageList[4] = pageList[7];
+	pageList[7] = tmp;
+	cmp(pageList, b1.roughPageList);
+});
+
+});
+</script>

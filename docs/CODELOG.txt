@@ -50,8 +50,11 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-- keep track of file sizes in db
+- work on merges:
+- optimize: bunch multiple diffs together on patch receive
+- bunch multiple diffs on patch broadcast
 - test on Nexus, iPhone
+- keep track of file sizes in db
 - account page should load book list dynamically  $(window).unload(function(){});
 - Aug 24th? TEMPLATES! FINALLY!
 - HackerDojo weekly visits
@@ -59,12 +62,36 @@ Next:
 Still thinking about IE
 - Bookshelf in account
 
+Sept 11:
+Bugfix: make swap use values, not position
+Bugfix: delete uses value in addition to position
+Upgdate: remove deprecated HttpClient, use EM
+Tests: test cases for swap
+Tests: implemented http://dev.pb4us.com/test/qunit/all
+Tests: renamed files to .erb, removed obsolete tests
+Bugfix: using HTTP 226 to return patch data, avoids errors in log
+Removed bunch of dead code
+
+Sept 10:
+brew installs were failing, redoing entire brew
+brew install exiv2 graphicsmagick mariadb imagemagick mercurial wget nginx
+updated all the gems, reinstalled database
+had to rake deploy:nginx, follow DATABASE.txt instructions to install database, gem
+Making my diffs make sense:
+- make delete use the value instead of position
+
+Sept 9:
+Bugfix nginx forward pookio header just works
+Create number image:
+gm convert -size 1024x1024 xc:white -font /Library/Fonts/Verdana.ttf -pointsize 256 -draw "text 400,512 '1'" 1.jpg
+
 Sept 7:
 Feature/bugfix: rough page sizes through styles
 Optimize: broadcast of change batches. New results are blazing
 clear: 420
 fill: 365
 Good enough!
+Feature/bugfix: change page sizes through styles
 
 Sept 6:
 Bug: fixed serious bug in synchronizing photopalette
@@ -87,7 +114,7 @@ Firefox with Web console, no Firebug:
 clear: 1734
 fill: 1033
 Painful, but not over the top
-Datamapper:
+Datamapper, optimize lookup
 clear: 1030ms 40%
 fill: 557ms 46&
 Chrome:
@@ -109,8 +136,6 @@ fill: 421
 Chrome:
 clear: 618
 fill: 229
-
-process in batches (100 diffs at a time?)
 
 Sept 5:
 Bug: roughpage resize, narrow flaps into account

@@ -6,14 +6,44 @@ patch format:
 [
 	{
 		'path' : '', // jsonpath
-		'op': 'set/delete/insert/swap', //
-		'op_args': {}
+		'op': 'set/delete/insert/arraySwap', //
+		'args': // depends on op
 	}
 ]
-- set: sets the value to new value
-- delete: deletes the value (if array, shrinks)
-- insert: inserts a new value (if array, grows)
-- swap: swaps values
+- set: obj[path] = args
+	path: object to set
+	args: value to set
+
+- delete: 2 use cases:
+	1) Deleting from an array by position, or value
+		path: path to object inside an array
+		args: optional value
+		if args, delete object from array whose value is args
+		else, delete object from array by index
+	2)
+		path: path to obj property
+		args: nil
+		deletes object property
+
+- insert: 2 use cases
+	1) inserts a new value inside an array
+		path: path to object inside an array
+		args: value
+	2) inserts a new property in an object
+		path: path to property
+		args: value
+
+- arraySwap: swaps two values in the array
+	path: array path
+	args:
+		srcIndex:
+		srcValue: can be null
+		destIndex:
+		destValue: can be null
+	2 use cases:
+		if no value, swap using index
+		if value, use value to find index, then swap
+
 http://c2.com/cgi/wiki?DiffAlgorithm
 */
 
@@ -91,11 +121,24 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 			else
 				this.set(val);
 		},
-		delete: function(val) {
+		delete: function(valToDelete) {
 			if (this._prop != undefined )
 			{
 				if (this._obj instanceof Array) {
-					this._obj.splice(this._prop, 1);
+					var pos = this._prop;
+					if (valToDelete == undefined)
+						this._obj.splice(this._prop, 1);
+					else {
+						if (this._obj[pos] === valToDelete) // shortcut, so we do not search the array
+							this._obj.splice(pos, 1);
+						else {
+							pos = this._obj.indexOf(valToDelete);
+							if (pos != -1)
+								this._obj.splice(pos, 1);
+							else
+								console.warn("jsonpatch.delete did not find value", this.path(), valToDelete);
+						}
+					}
 				}
 				else
 					delete this._obj[this._prop];
@@ -292,11 +335,17 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 	}
 
 	function createDelete(path, value) {
-		return { op: 'delete', path: path, args: null }
+		return { op: 'delete', path: path, args: value }
 	}
 
-	function createSwap(src, dest) {
-		return { op: 'swap', path: src, args: dest}
+	function createSwapArray(arrayPath, srcIndex, destIndex, srcVal, destVal) {
+		return { op: 'swapArray', path: arrayPath, args: {
+			srcIndex: srcIndex,
+			destIndex: destIndex,
+			srcVal: srcVal,
+			destVal: destVal
+			}
+		}
 	}
 
 	function applyDiff(obj, diff, change_record) {
@@ -323,26 +372,37 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 				var target = JsonPath.query(obj, diff.path, {'just_one':true });
 				if (target) {
 					if (change_record) change_record.push(['delete', target]);
-					target.delete();
+					target.delete(diff.args);
 				}
 				else
 					throw "Could not DELETE, target not found";
 				break;
-			case 'swap':
-				var src = JsonPath.query(obj, diff.path, {'just_one': true});
-				var dest = JsonPath.query(obj, diff.args, {'just_one': true});
-				if (src && dest) {
-					var tmp = src.val();
-					if (change_record) change_record.push(['set', src]);
-					if (change_record) change_record.push(['set', dest]);
-					src.set(dest.val());
-					dest.set(tmp);
+			case 'swapArray':
+				var array = JsonPath.query(obj, diff.path, {'just_one': true});
+				if (!array)
+					throw "Could not swapArray " + diff.path;
+				var srcPos = diff.args.srcIndex;
+				var destPos = diff.args.destIndex;
+				if ('srcValue' in diff.args && diff.args.srcValue != undefined)
+					srcPos = array.val().indexOf(diff.args.srcValue);
+				if ('destValue' in diff.args && diff.args.destValue != undefined)
+					destPos = array.val().indexOf(diff.args.destValue);
+				if (srcPos != -1 && destPos != -1) {
+					src = JsonPath.query(obj, diff.path + "[" + srcPos + "]", {just_one:true});
+					dest = JsonPath.query(obj, diff.path + "[" + destPos + "]", {just_one:true});
+					if (src && dest) {
+						var tmp = src.val();
+						if (change_record) change_record.push(['set', src]);
+						if (change_record) change_record.push(['set', dest]);
+						src.set(dest.val());
+						dest.set(tmp);
+					}
+					else
+						throw "could not swapArray" + diff.path;
 				}
 				else
-					throw "Could not SWAP"
-						+ (src ? "" : diff.path + " not found ")
-						+ (dest ? "" : diff.args + " not found ");
-					break;
+					console.warn("could not swapArray", diff.path, diff.args);
+				break;
 			default:
 				throw "Unknown operation " + diff.op;
 		}
@@ -401,53 +461,52 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 		}
 
 		// algorithm:
-		// stage 1: treat src/dest as sets, equilize them
-		// - delete any extras in src
-		// - add any extras in dest to src
+		// stage 1: treat src/dest as sets, make them have same elements
+		// 	delete from src any elements not in dest
+		//  add to src any extra dest elements
 		// stage 2: move elements to proper position
 
-		// ex: src = [1,2,3,4], dest = [4,2,5]
+		// ex: oldObj = [1,2,3,4], newObj = [4,2,5]
 
 		if (getArrayType(oldObj) != 'Basic' || getArrayType(newObj) != 'Basic')
 			return jsonComplexArrayDiff(oldObj, newObj, path);
 
 		var patch = [];
-		var newSrc = [].concat(oldObj);
-		var tmpDest = [].concat(newObj);
-		// delete extras in oldObj
-		for (var i=0; i< newSrc.length; i++) {
-			var index = tmpDest.indexOf(newSrc[i]);
+		var src = oldObj.slice(0);
+		var dest = newObj.slice(0);
+
+		// delete items not in dest from src
+		for (var i=0; i< src.length; i++) {
+			var index = dest.indexOf(src[i]);
 			if (index === -1) { // delete element missing from destination
-				patch.push({ op: 'delete', path: jsPath(i)});
-				newSrc.splice(i, 1);
+				patch.push( createDelete( jsPath(i), src[i] ) );
+				src.splice(i, 1);
 				i -= 1;
 			}
 			else
-				tmpDest.splice(index, 1);
+				dest.splice(index, 1);
 		};
-		// ex: newSrc is [2,4]
-		tmpDest = [].concat(newObj);
-		var dupSrc = [].concat(newSrc);
-		// add extras in dest to src
-		for (var i=0; i< newObj.length; i++) {
-			var index = dupSrc.indexOf(newObj[i]);
-			if (index == -1) {
-				var insertLoc = i > newSrc.length ? newSrc.length : i;
-				patch.push({op: 'insert', path: jsPath(insertLoc), args: newObj[i]});
-				newSrc.splice(insertLoc, 0, newObj[i]);
-			}
-			else
-				dupSrc.splice(index, 1);
+		// src is: src - items not in dest
+		// dest is: dest - items not in src
+
+		// add items in dest to src
+		for (var i=0; i< dest.length; i++) {
+			var index = newObj.indexOf(dest[i]);
+			if (index > src.length)
+				index = src.length;
+			src.splice(index, 0, dest[i]);
+			patch.push( createInsert( jsPath(index), dest[i]));
 		}
-		// ex: newSrc is now [2,4,5], same length as dest (possibly shuffled)
-		// move elements to proper position
-		for (var i=0; i< newSrc.length; i++) {
-			if (newSrc[i] != newObj[i]) {
-				var swapFrom = indexOfAfter(newSrc, newObj[i], i);
+
+		// src contains all items in newObj, possibly in wrong order
+		// sort them with swaps
+		for (var i=0; i< src.length; i++) {
+			if (src[i] != newObj[i]) {
+				var swapFrom = indexOfAfter(src, newObj[i], i);
 				if (swapFrom == -1)
 					throw "Unexpected error while planning a swap";
-				patch.push({ op: 'swap', path: jsPath(i), args: jsPath(swapFrom)});
-				swap(newSrc, i, swapFrom);
+				patch.push(createSwapArray(path, swapFrom, i, src[i], newObj[i]));
+				swap(src, swapFrom, i);
 			}
 		}
 		// ex: oldObj and newObj should now be the same

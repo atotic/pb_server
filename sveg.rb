@@ -81,8 +81,8 @@ class SvegApp < Sinatra::Base
 	#		end
 
 		get '/test/qunit/:id' do
-			@filename = params[:id]
-			erb :"test/qunit/#{params[:id]}", {:layout => :'test/qunit/layout'}, {:locals => { :filename => params[:id] }}
+			@script_name = params[:id]
+			erb :"test/qunit/#{@script_name}", {:layout => :'test/qunit/layout'}, {:locals => { :script_name => @script_name }}
 		end
 
 		get '/jobs' do
@@ -400,11 +400,19 @@ class SvegApp < Sinatra::Base
 	patch '/books/:id' do
 		@book = PB::Book[params[:id]]
 		user_must_have_access @book
+		return [412,
+			{'Content-Type' => 'text/plain'},
+			["Patch must include POOKIO_LAST_DIFF header"]] unless env.has_key? 'HTTP_POOKIO_LAST_DIFF'
 		str_diff = request.body.read
 		json_diff = JSON.parse(str_diff)
 		begin
-			d = PB::BookDiffStream.apply_diff(json_diff, @book.pk)
+			d = PB::BookDiffStream.apply_diff(json_diff, env['HTTP_POOKIO_LAST_DIFF'], @book.pk)
 			[200, {'Content-Type' => 'application/json'} ,["{ \"diff_id\" : #{d.pk} }"]]
+		rescue PB::BookOutOfDateError => ex
+			return [226,	# IM Used (RFC 3229)
+				{'Content-Type' => 'application/json', 'IM' => 'PookioJsonDiff'},
+				[ PB::BookDiffStream.generate_diff_stream(@book.pk, ex.request_diff_id, ex.book_diff_id )]
+			]
 		rescue => ex
 			puts ex.message
 			puts ex.backtrace
@@ -481,50 +489,6 @@ class SvegApp < Sinatra::Base
 			LOGGER.error "Unexpected server error" + ex.message
 			[500, "Unexpected server error" + ex.message]
 		end
-	end
-
-	post '/book_page' do
-		book = Book[params.delete('book_id')]
-		user_must_own(book)
-		assert_last_command_up_to_date(request)
-		begin
-			page = nil
-			DB.transaction do
-				page_position = Integer(params.delete('page_position'))
-				page = PB::BookPage.new(params);
-				book.insertPage(page, page_position)
-				headers(BrowserCommand.createAddPageCmd(page, page_position).broadcast(env))
-			end
-			json_response(page)
-		rescue => ex
-			LOGGER.error(ex.message)
-			flash.now[:error]= "Errors prevented page from being saved. Contact the web site owner."
-			halt 500, "Unexpected server error"
-		end
-	end
-
-	delete '/book_page/:id' do
-		user_must_be_logged_in
-		page = PB::BookPage[params.delete("id")]
-		halt [404, "Book page not found"] unless page
-		user_must_own(page.book)
-		assert_last_command_up_to_date(request)
-		headers(BrowserCommand.createDeletePageCmd(page).broadcast(env))
-		page.destroy
-		plain_response("Delete successful")
-	end
-
-	put '/book_page/:id' do
-		user_must_be_logged_in
-		page = PB::BookPage[params['id']]
-		halt [404, "Book page not found"] unless page
-		user_must_own(page.book)
-		assert_last_command_up_to_date(request)
-		DB.transaction do
-			page.update_only(request.params, [:html,	:width, :height, :icon,:position])
-			headers( BrowserCommand.createReplacePageCmd(page).broadcast(env))
-		end
-		plain_response("Update successful")
 	end
 
 	get '/assets/:template_name/:asset_file' do

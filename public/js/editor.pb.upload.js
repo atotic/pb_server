@@ -130,7 +130,7 @@
 
 
 	// Save modified books every second.
-	window.setInterval( Uploader.saveAll, SAVE_INTERVAL*1000);
+	window.setInterval( function() { Uploader.saveAll() }, SAVE_INTERVAL*1000);
 
 	scope.Uploader = Uploader;
 	scope.NetworkErrorRetry = NetworkErrorRetry;
@@ -161,10 +161,10 @@
 		},
 		handleMessage: function(book, message) {
 			switch(message.type) {
-			case "StreamUpToDate":
+				case "StreamUpToDate":
 				break;
-			case "Patch":
-				book.applyBroadcastPatch(message.id, message.payload);
+				case "Patch":
+					book.applyBroadcastPatch(message.id, message.payload);
 				break;
 			}
 		},

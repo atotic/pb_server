@@ -1,0 +1,7 @@
+<% output = "" %>
+<%	Dir.glob("./views/test/qunit/*.erb").each do |filename| %>
+<% 		filename = filename.sub('./views/', '').sub('.erb', '') %>
+<%		next if filename =~ /all|layout|test_util/ %>
+<%		output += erb( filename.to_sym, {:locals => { :script_name => @script_name }}) %>
+<%	end %>
+<%=	output %>

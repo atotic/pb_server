@@ -2,90 +2,18 @@
                     "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-	<title>QUnit <%= @filename %></title>
+	<title>QUnit <%= @script_name %></title>
 	<%= asset_link("jquery.js", "application.js") %>
 	<%= asset_link("qunit") %>
 	<%= asset_link("editor.js") %>
 
 	<script type="text/javascript">
-
-		TestUtil = {
-			// returns complete json-style object for "new PB.Book(json)"
-			newBookJs: function(attrs, page_count, image_count) {
-				var default_js = {
-					id: 1,
-					title: "book 1",
-					page_order: [],
-					photos: [],
-					pages: []
-				};
-				var book_js = $.extend(default_js, attrs);
-				if (page_count > 0) {
-					book_js.page_order = [];
-					book_js.pages = [];
-					for (var i=1; i<= page_count; i++)
-					{
-						book_js.pages.push( TestUtil.newPageJs( {
-							id: i,
-							html: "Page " + i
-						}));
-						book_js.page_order.push(i);
-					}
-				}
-				if (image_count > 0) {
-					book_js.photos = [];
-					for (var i=1; i<= image_count; i++)
-						book_js.photos.push( TestUtil.newImageJs( {
-							id: i,
-							md5: "md5????",
-							display_name: "Photo " + i
-						}));
-				}
-				return book_js;
-			},
-
-			// generate json-object for PB.Page
-			newPageJs: function(attrs) {
-				var default_js = {
-					id: 1,
-					width: "6in",
-					height: "6in",
-					html: "<div>Default html. Override this attr for something else</div>"
-				};
-				return $.extend(default_js, attrs);
-			},
-
-			// generate json-object for PB.ImageBroker
-			newImageJs: function(attrs) {
-				var default_js = {
-					id: 1,
-					display_name: "Photo 1",
-					md5: "MD5????"
-				};
-				return $.extend(default_js, attrs);
-			}
-		};
-
-	// Give objects unique ids for tracing
-	(function() {
-		id_counter = 1;
-		Object.defineProperty(Object.prototype, "__uniqueId", {
-			writable: true
-		});
-		Object.defineProperty(Object.prototype, "uniqueId", {
-			get: function() {
-				if (this.__uniqueId == undefined)
-					this.__uniqueId = id_counter++;
-				return this.__uniqueId;
-			}
-		});
-	}());
-
+	PB.Uploader.saveAll = function() {};	// no network
 	</script>
 	<%= yield %>
 </head>
 <body>
-	<h1 id="qunit-header">QUnit example</h1>
+	<h1 id="qunit-header">QUnit <%= @script_name %></h1>
 	<h2 id="qunit-banner"></h2>
 	<div id="qunit-testrunner-toolbar"></div>
 	<h2 id="qunit-userAgent"></h2>

@@ -293,6 +293,9 @@
 						}
 					}
 				}
+				$('#work-area-rough .rough-page').each(function()  {
+					GUI.RoughWorkArea.layoutRoughInsideTiles(this, false);
+				});
 			}
 			catch(ex) {
 				console.log("css rules API failed");
@@ -360,10 +363,9 @@
 				case 'delete':
 					oldChildren = GUI.JQDiffUtil.delete(oldChildren, targetIndex);
 				break;
-				case 'swap': // prop: index of old
-					var src = containerDom.children(sel).get(targetIndex);
-					var destIndex = JsonPath.lastProp(diff[i].args);
-					var dest = containerDom.children(sel).get(destIndex);
+				case 'swapArray': // prop: index of old
+					var src = containerDom.children(sel).get(diff[i].args.srcIndex);
+					var dest = containerDom.children(sel).get(diff[i].args.destIndex);
 					oldChildren = GUI.JQDiffUtil.swap(oldChildren, src, dest);
 				break;
 				}
@@ -418,9 +420,8 @@
 					oldChildren = GUI.JQDiffUtil.delete(oldChildren, targetIndex);
 				break;
 				case 'swap': // prop: index of old
-					var src = containerDom.children(sel).get(targetIndex);
-					var destIndex = JsonPath.lastProp(diff[i].args);
-					var dest = containerDom.children(sel).get(destIndex);
+					var src = containerDom.children(sel).get(diff[i].args.srcIndex);
+					var dest = containerDom.children(sel).get(diff[i].args.destIndex);
 					oldChildren = GUI.JQDiffUtil.swap(oldChildren, src, dest);
 				break;
 				}

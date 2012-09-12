@@ -46,17 +46,17 @@ mariadb on the Mac:
 brew install mariadb
 How do I create a database?
 # Stop the daemnon
-launchctl unload ~/Library/LaunchAgents/homebrew.mxcl.mariadb.plist 
+launchctl unload ~/Library/LaunchAgents/homebrew.mxcl.mariadb.plist
 # blow away all the databases
 rm -rf /usr/local/var/mysql
-# Start daemon 
+# Start daemon
 launchctl load ~/Library/LaunchAgents/homebrew.mxcl.mariadb.plist
 #install  database
 mysql_install_db
 # secure the installation, run after starting daemon
 mysql_secure_installation
 # create the databases
-mysql -u root -p < config/setup.sql
+mysql -u root -p < db/setup.sql
 # datamapper migrations
 rake db:migrate RACK_ENV=test
 rake db:migrate RACK_ENV=development
@@ -64,5 +64,5 @@ rake db:migrate RACK_ENV=production
 
 gem install sequel
 # installing the gem:
-sudo gem install --no-rdoc --no-ri mysql2 -- --with-mysql-dir=$(brew --prefix mariadb) --with-mysql-config=$(brew --prefix mariadb)/bin/mysql_config 
+sudo gem install --no-rdoc --no-ri mysql2 -- --with-mysql-dir=$(brew --prefix mariadb) --with-mysql-config=$(brew --prefix mariadb)/bin/mysql_config
 

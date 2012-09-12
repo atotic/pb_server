@@ -51,17 +51,25 @@ module PB
 			end
 		end
 
-		def delete
-			if defined? @prop
-				if @obj.kind_of? Array
-					@obj.slice! @prop.to_i
+		def delete(oldVal)
+			raise "Can't delete root object" if !defined? @prop
+			if @obj.kind_of? Array
+				pos = @prop.to_i
+				if !defined? oldVal
+					@obj.slice! pos
 				else
-					@obj.delete @prop
+					if @obj[pos] == oldVal # optimization
+						@obj.slice! pos
+					else
+						pos = @obj.index(oldVal)
+						@obj.slice! pos if (pos)
+					end
 				end
 			else
-				raise "Can't delete root object";
+				@obj.delete @prop
 			end
 		end
+
 	end
 
 	class JsonPath
@@ -199,19 +207,31 @@ module PB
 		when 'delete'
 			target = JsonPath.query(obj, diff['path'], {:just_one => true})
 			if target
-				target.delete();
+				target.delete( diff['args']);
 			else
 				raise "Could not DELETE, target #{diff['path']} not found"
 			end
-		when 'swap'
-			src = JsonPath.query(obj, diff['path'], {:just_one => true});
-			dest = JsonPath.query(obj, diff['args'], {:just_one => true});
-			if (src && dest)
-				tmp = src.val()
-				src.set(dest.val())
-				dest.set(tmp)
-			else
-				raise "Could not MOVE #{src ? '' : diff['path'] + 'not found'} #{dest ? '' : diff['args'] + 'not found'}"
+		when 'swapArray'
+			array = JsonPath.query(obj, diff['path'], {:just_one => true});
+			raise "Could not swap, #{diff['path']} array not found" if !defined? array
+			srcPos = diff['args']['srcIndex']
+			destPos = diff['args']['destIndex']
+			if (diff['args'].has_key? 'srcIndex' && defined? diff['args']['srcIndex'])
+				srcPos = array.val().index(diff['args']['srcIndex'])
+			end
+			if (diff['args'].has_key? 'destIndex' && defined? diff['args']['destIndex'])
+				destPos = array.val().index(diff['args']['destIndex'])
+			end
+			if (!srcPos.nil? && !destPos.nil?)
+				src = JsonPath.query(obj, "#{diff['path']}[#{srcPos}]", {:just_one => true});
+				dest = JsonPath.query(obj, "#{diff['path']}[#{destPos}]", {:just_one => true});
+				if (src && dest)
+					tmp = src.val()
+					src.set(dest.val())
+					dest.set(tmp)
+				else
+					raise "Could not swap #{diff['path']} #{srcPos} #{destPos}"
+				end
 			end
 		else
 			raise "Unknown operation " + diff['op'];

@@ -7,7 +7,7 @@ gem "thin"
 gem 'rack'
 gem 'rack-flash3' # because of https://github.com/nakajima/rack-flash/issues/8
 
-gem "sequel"
+gem "sequel" # database
 gem "mysql2"
 
 gem 'json'
@@ -24,6 +24,7 @@ gem 'daemons'
 gem 'pony' # email
 gem 'omniauth-facebook'
 gem 'omniauth-google-oauth2'
+gem 'em-http-request'
 
 group :development do
 	gem "ruby-debug", :platforms => :ruby_18

@@ -123,12 +123,11 @@ window.PB.Photo // Photo objects
 				PB.ServerPhotoCache.createFromJson( serverJson.photos[i]);
 			delete serverJson.photos;
 		}
-		this.serverData = serverJson;	// keep original data for diffs
+		this.serverData = PB.clone(serverJson);	// keep original data for diffs
 		this.localData = PB.clone(serverJson); // all data from server are here
 		this._localId = PB.randomString(6);	// local id broadcast with patches
 		bookCache.push(this);
-
-		PB.DiffStream.connect(this);
+//		this.connectStream();
 	}
 
 	Book.prototype = {
@@ -202,6 +201,15 @@ window.PB.Photo // Photo objects
 		lockUp: function(reason) { // Called when book is corrupted.
 			this._locked = reason;
 			PB.broadcastChange(this, 'locked')
+		},
+		connectStream: function() {
+			this.disconnectStream();
+			this._stream = PB.DiffStream.connect(this)
+		},
+		disconnectStream: function() {
+			if (!this._stream)
+				return;
+			this._stream.close();
 		},
 		reset: function() {	// destroys the book pages
 			this.localData.document.roughPageList = ["cover", "cover-flap", "back-flap", "back","P1","P2","P3","P4"];
@@ -280,9 +288,9 @@ window.PB.Photo // Photo objects
 				else
 					console.log(changes[i][0], changes[i][1].path());
 			}
-			t.print("patch");
+//			t.print("patch");
 			PB.broadcastChangeBatch();
-			t.print("broadcast");
+//			t.print("broadcast");
 		},
 		_patchPhotoIdChange: function(photo, propName, options) {
 //			console.log("patching photo ids", photo.id, options.newId);
@@ -342,6 +350,11 @@ window.PB.Photo // Photo objects
 				return null;
 			}
 		},
+		addPhotoById: function(photoId, options) {
+			this.localData.document.photoList.push(photoId);
+			PB.bindChangeListener(photoId, this);
+			PB.broadcastChange(this, 'photoList', options);
+		},
 		removePhoto: function(photo, options) {
 			//
 			photo.doNotSave = true;
@@ -371,6 +384,12 @@ window.PB.Photo // Photo objects
 				return this.generateId();
 			return id;
 		},
+		getDiff: function() {
+			var diff = JsonDiff.diff(this.serverData.document,this.localData.document);
+			if (diff.length > 0)
+				diff[0].localId = this._localId;
+			return diff;
+		},
 		getSaveDeferred: function() {
 			// safeguard, do not save book with temporary photo ids
 			// wait until all images have been saved
@@ -381,36 +400,54 @@ window.PB.Photo // Photo objects
 					return null;
 				}
 			}
-			var dataToSave = PB.clone(this.localData.document);
-			var diff = JsonDiff.diff(this.serverData.document, dataToSave);
+			var diff = this.getDiff();
 			if (diff.length == 0) {
 				this._dirty = false;
 				return null;
 			}
-			else {
-//				console.log("book diff");
-//				JsonDiff.prettyPrint(diff);
-			}
-			diff[0].localId = this._localId;
 
 			var ajax = $.ajax('/books/' + this.id, {
 				data: JSON.stringify(diff),
 				type: "PATCH",
-				contentType: 'application/json'
+				contentType: 'application/json',
+				headers: { 'Pookio-last-diff': this.last_diff}
 			});
 			var THIS = this;
 			ajax.done(function(response, msg, jqXHR) {
-				THIS.applyBroadcastPatch(response.diff_id, diff);
+				switch(jqXHR.status) {
+					case 226: // we got a stream of commands we need to implement to catch up
+						var commands = JSON.parse(jqXHR.responseText);
+						for (var i=0; i<commands.length;i++)
+							THIS.applyBroadcastPatch(commands[i].id, commands[i].payload);
+						break;
+					case 200:
+							THIS.applyBroadcastPatch(response.diff_id, diff);
+						break;
+					default:
+						console.warn("unknown success code ", jqXHR.status);
+				}
 			});
 			ajax.fail(function(jqXHR, textStatus, message) {
-				if (jqXHR.status == 404)
-					THIS.lockUp("The book was deleted.");
+				switch(jqXHR.status) {
+					case 404:
+					case 410:
+						THIS.lockUp("The book was deleted.");
+						break;
+					case 412:
+						console.error("We did not send the right header, should never see this");
+						debugger;
+					default:
+						console.error("Unexpected network error submitting patch", jqXHR.status);
+						debugger;
+				}
 			});
 			return ajax;
 		},
 
 		// index: page position for insert. -1 means last
 		insertRoughPage: function(index, options) {
+			if (index == undefined)
+				index = -1;
 			var page = PB.RoughPageProxy.template(this);
 			var roughPageList = this.roughPageList;
 			if (roughPageList.indexOf(page.id) != -1)
@@ -474,8 +511,10 @@ window.PB.Photo // Photo objects
 					var changes = localDocAndChanges[1];
 					this._broadcastDiffChanges(changes);
 				}
+				this.localData.last_diff = this.serverData.last_diff;
 			}
 			catch(e) {
+				debugger;
 				this.lockUp("Remote book edits were incompatible with your local changes.");
 				console.log(e.message, patch_id, patch);
 				PB.cancelChangeBatch();
