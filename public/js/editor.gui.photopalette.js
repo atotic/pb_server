@@ -376,6 +376,20 @@
 			var containerHeight = height - padding;
 			$('#photo-list-container').css({minHeight: containerHeight, maxHeight: containerHeight});
 			GUI.fixSizes();
+		},
+		viewMore: function() {
+			var heights = this.getPossibleHeights();
+			var height = $('#palette').outerHeight();
+			for (var i=0; i<heights.length; i++)
+				if (heights[i] > height)
+					return this.setHeight(heights[i], true);
+		},
+		viewLess: function() {
+			var heights = this.getPossibleHeights();
+			var height = $('#palette').outerHeight();
+			for (var i=heights.length-1; i>=0; i--)
+				if (heights[i] < height)
+					return this.setHeight(heights[i], true);
 		}
 	};
 	scope.Palette = Palette;

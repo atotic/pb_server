@@ -50,7 +50,6 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-- work on merges:
 - optimize: bunch multiple diffs together on patch receive
 - bunch multiple diffs on patch broadcast
 - test on Nexus, iPhone
@@ -61,6 +60,9 @@ Next:
 - Enroll in Udacity enterpreneurship course http://www.udacity.com/overview/Course/ep245/CourseRev/1
 Still thinking about IE
 - Bookshelf in account
+
+Sept 12:
+Cleanup: removed GUI.Controller, obsolete commands
 
 Sept 11:
 Bugfix: make swap use values, not position

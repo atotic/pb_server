@@ -57,24 +57,12 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			$('#work-area-container').css('height', h-parseInt($('#work-area').css('padding-top')));
 		},
 		initShortcuts: function() {
-			this.CommandManager.add(new this.Command('viewMoreImages', '+', false,
-				function() {GUI.Controller.viewMoreImages()}));
-			this.CommandManager.add(new this.Command('viewMoreImages', '=', false,
-				function() {GUI.Controller.viewMoreImages()}));
-			this.CommandManager.add(new this.Command('viewFewerImages', '-', false,
-				function() {GUI.Controller.viewFewerImages()}));
-			this.CommandManager.add(new this.Command('viewBiggerImages', '+', true,
-				function() {GUI.Controller.viewBiggerImages()}));
-			this.CommandManager.add(new this.Command('viewBiggerImages', '=', true,
-				function() {GUI.Controller.viewBiggerImages()}));
-			this.CommandManager.add(new GUI.Command('viewSmallerImages', '-', true,
-				function() {GUI.Controller.viewSmallerImages()}));
-			this.CommandManager.add(new GUI.Command('addRoughPage', 'p', false,
-				function() {GUI.Controller.addRoughPage()}))
-			this.CommandManager.add(new GUI.Command('viewAllPhotos', null, false,
-				function() {GUI.Controller.viewAllPhotos()}));
-			GUI.CommandManager.add(new GUI.Command('viewUnusedPhotos', null, false,
-				function() {GUI.Controller.viewUnusedPhotos()}));
+			GUI.CommandManager.add(new this.Command('viewMoreImages', '+', false,
+				function() {GUI.Palette.viewMore()}));
+			GUI.CommandManager.add(new this.Command('viewMoreImages', '=', false,
+				function() {GUI.Palette.viewMore()}));
+			GUI.CommandManager.add(new this.Command('viewFewerImages', '-', false,
+				function() {GUI.Palette.viewLess()}));
 			GUI.CommandManager.add(new GUI.Command("HideTools", GUI.CommandManager.keys.esc, false,
 				GUI.toggleTools));
 		},
@@ -486,9 +474,11 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				switch (ev.keyCode) {
 					case 27:
 						key = this.keys.esc; break;
-					case 109:
+					case 109: // Chrome
+					case 173: // FF
 						key = this.keys.minus; break;
-					case 107:
+					case 107: // Chrome
+					case 61: // FF
 						key = this.keys.plus; break;
 					default:
 						;
