@@ -93,11 +93,13 @@ class BrowserBroadcaster
 	end
 
 	def self.catch_up_stream(stream, book_id)
-		commands = ::PB::BookDiffStream.filter({:book_id => book_id}).filter('id > ?', stream.last_diff).order(:id)
-		commands.each do |cmd|
-			stream.body << self.encode_msg(cmd)
-			stream.last_diff = cmd.id
-		end
+		commands = ::PB::BookDiffStream.filter({:book_id => book_id}).filter('id > ?', stream.last_diff).order(:id).all
+		stream.body << self.encode_msg( self.encode_multiples(commands)) if commands.length > 0
+		stream.last_diff = commands.last.id if commands.last
+		# commands.each do |cmd|
+		# 	stream.body << self.encode_msg(cmd)
+		# 	stream.last_diff = cmd.id
+		# end
 	end
 
 	# broadcasts all unsent commands to all listeners
@@ -123,6 +125,24 @@ private
 			:book_id => cmd[:book_id],
 			:payload => JSON.parse(cmd[:payload])
 		}.to_json
+	end
+
+	def self.encode_multiples(commands)
+
+		return self.encode_command(commands[0]) if (commands.length == 1)
+		multiples = {
+			:id => 0,
+			:type => "PatchArray",
+			:payload => commands.map do |cmd|
+				{
+					:id => cmd.pk,
+					:type => cmd[:type],
+					:book_id => cmd[:book_id],
+					:payload => JSON.parse(cmd[:payload])
+				}
+			end
+		}
+		multiples.to_json
 	end
 
 	def self.send_stream_up_to_date(book_id, body)
@@ -172,8 +192,7 @@ class Server
 		EM.next_tick do
 		# send out headers right away
 			env['async.callback'].call [200, {
-				'Content-Type' => 'text/plain',
-				'Transfer-Encoding' => 'chunked'
+				'Content-Type' => 'text/plain'
 				}, body]
 			# bind to command broadcaster
 			BrowserBroadcaster.bind(body, book_id, last_diff)

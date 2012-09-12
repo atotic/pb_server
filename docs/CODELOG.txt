@@ -50,7 +50,6 @@ Stage 2: get templates/printing
 Google Drive integration? https://developers.google.com/drive/
 
 Next:
-- bunch multiple diffs on patch broadcast
 - test on Nexus, iPhone
 - keep track of file sizes in db
 - account page should load book list dynamically  $(window).unload(function(){});
@@ -61,6 +60,7 @@ Still thinking about IE
 - Bookshelf in account
 
 Sept 12:
+Optimize: bunch multiple diffs on comet broadcast
 Cleanup: removed GUI.Controller, obsolete commands
 Optimize: bunch multiple diffs together on patch receive
 Bunching diffs together means that in worst-case scenario, we

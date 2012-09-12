@@ -127,7 +127,7 @@ window.PB.Photo // Photo objects
 		this.localData = PB.clone(serverJson); // all data from server are here
 		this._localId = PB.randomString(6);	// local id broadcast with patches
 		bookCache.push(this);
-//		this.connectStream();
+		this.connectStream();
 	}
 
 	Book.prototype = {

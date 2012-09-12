@@ -162,10 +162,13 @@
 		handleMessage: function(book, message) {
 			switch(message.type) {
 				case "StreamUpToDate":
-				break;
+					break;
 				case "Patch":
 					book.applyBroadcastPatch(message.id, message.payload);
-				break;
+					break;
+				case "PatchArray":
+					book.applyBroadcastPatches(message.payload);
+					break;
 			}
 		},
 		reconnect: function(book) {
@@ -200,6 +203,7 @@
 				},
 				close: function(ev) {
 					console.warn("server connection closed");
+				// wish we could trap 502, bad gateway does not indicate bad network
 					scope.NetworkErrorRetry.retryLater();
 					book.stream = null;
 					DiffStream.reconnect(book);
