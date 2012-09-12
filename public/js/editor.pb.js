@@ -244,54 +244,6 @@ window.PB.Photo // Photo objects
 			this._dirty = true;
 			PB.broadcastChange(this, 'photoList', options);
 		},
-		_broadcastDiffChanges: function(changes) {
-			function member(arry, index) {
-				if (index < arry.length)
-					return arry[index];
-				else
-					return null;
-			}
-			var alreadyBroadcast = {};
-			function mutedBroadcastChange(model, prop, options) {
-				var changeId = model.id + "-" + prop;
-				if (changeId in alreadyBroadcast) {
-//					console.log('ignored', changeId);
-					return;
-				}
-				alreadyBroadcast[changeId] = true;
-				PB.broadcastChange(model, prop, options);
-			}
-			var t = new PB.Timer("broadcastDiffChanges");
-			PB.startChangeBatch();
-			var options = {animate: changes.length < 40};
-			for (var i=0; i<changes.length; i++) {
-				// all the changes to our structure. Need to deduce what has changed
-				var objectPath = changes[i][1].objectPath();
-				var document_var= member(objectPath, 1);
-				if (document_var == this.localData.document.roughPageList)
-					mutedBroadcastChange(this, 'roughPageList', options);
-				else if (document_var == this.localData.document.roughPages) {
-					if (objectPath.length > 3) {
-						var roughPage = member(objectPath, 2);
-						var rough_page_var = member(objectPath, 3);
-						if (rough_page_var == roughPage.photoList) {
-							this._pagePhotosChanged(roughPage, options);
-							mutedBroadcastChange(roughPage, 'photoList', options);
-						}
-						else
-							console.log(changes[i][0], changes[i][1].path());
-					}
-				}
-				else if (document_var == this.localData.document.photoList) {
-					mutedBroadcastChange(this, 'photoList', options);
-				}
-				else
-					console.log(changes[i][0], changes[i][1].path());
-			}
-//			t.print("patch");
-			PB.broadcastChangeBatch();
-//			t.print("broadcast");
-		},
 		_patchPhotoIdChange: function(photo, propName, options) {
 //			console.log("patching photo ids", photo.id, options.newId);
 			PB.unbindChangeListener(photo.id, this);
@@ -336,6 +288,172 @@ window.PB.Photo // Photo objects
 				break;
 			}
 		},
+		// generates id unique to this book
+		generateId: function() {
+			var id = PB.randomString(6);
+			if (this.localData.document.photoList.indexOf(id) != -1
+				|| this.localData.document.roughPageList.indexOf(id) != -1)
+				return this.generateId();
+			return id;
+		},
+		_applySinglePatch: function(patch_id, patch) {
+			if (patch_id <= this.last_diff) {
+//				console.warn("Received patch we already have");
+				return [];
+			}
+			var changes = [];
+			var isLocal = patch.length > 0 && 'localId' in patch[0] && this._localId == patch[0]['localId'];
+			// patch of serverData, migrate differences to localData
+			var local_changes = JsonDiff.diff(this.serverData.document, this.localData.document);
+			var newOriginal = JsonDiff.patch(this.serverData.document, patch);
+			this.serverData.document = newOriginal;
+			this.serverData.last_diff = patch_id;
+			if (!isLocal)	// if diff originates locally, localData already has the diff, skip this
+			{
+				var newLocal = JsonDiff.patch(this.serverData.document, local_changes);
+				// need to: this.localData = newLocal
+				// we can't, because assignment would not broadcast changes to gui
+				// instead, mutate localData by creating new diff
+				var newDiff = JsonDiff.diff(this.localData.document, newLocal);
+				var localDocAndChanges = JsonDiff.patch(this.localData.document, newDiff, {record_changes: true});
+				this.localData.document = localDocAndChanges[0];
+				changes = localDocAndChanges[1];
+			}
+			this.localData.last_diff = this.serverData.last_diff;
+			return changes;
+		},
+		// converts model change to change suitable for broadcast
+		// returns [{model: m, prop: p}*];
+		modelToBroadcastChange: function(change) {
+			function member(arry, index) {
+				if (index < arry.length)
+					return arry[index];
+				else
+					return null;
+			}
+			var objectPath = change[1].objectPath();
+			var document_var= member(objectPath, 1);
+			if (document_var == this.localData.document.roughPageList)
+				return [{model:this, prop: 'roughPageList'}];
+			else if (document_var == this.localData.document.roughPages) {
+				if (objectPath.length > 3) {
+					var roughPage = member(objectPath, 2);
+					var rough_page_var = member(objectPath, 3);
+					if (rough_page_var == roughPage.photoList) {
+						return [
+						{model: roughPage, prop: 'photoList'},
+						{model: this, prop:'photoList'}
+						]
+					}
+					else
+						console.log(change[0], change[1].path());
+				}
+			}
+			else if (document_var == this.localData.document.photoList)
+				return [{model:this, prop: 'photoList'}];
+			else
+				console.log(change[0], change[1].path());
+			return [];
+		},
+		applyBroadcastPatches: function(patchArray) {
+			if (this._locked) {
+				throw "Patch ignored, book is locked";
+				console.warn("Ignored patch, book is locked");
+				return;
+			}
+			var t = new PB.Timer("applyBroadcastPatches");
+			var changes = [];
+			var i;
+			try {
+				var broadcastChanges = [];
+				var alreadySeen = {};
+				for (i=0; i<patchArray.length; i++) {
+					var modelChanges = this._applySinglePatch(patchArray[i].id, patchArray[i].payload);
+					for (var j=0; j<modelChanges.length; j++) {
+						var bChange = this.modelToBroadcastChange(modelChanges[j]);
+						for (var k=0; k<bChange.length; k++) {
+							var key =  bChange[k].model.id + "-" + bChange[k].prop;
+							if (! (key in alreadySeen)) {
+								broadcastChanges.push(bChange[k]);
+								alreadySeen[key] = true;
+							}
+						}
+					}
+				}
+//				t.print("patch");
+				PB.startChangeBatch();
+				var options = {animate: broadcastChanges.length < 10};
+				for (i=0; i<broadcastChanges.length; i++)
+					PB.broadcastChange(broadcastChanges[i].model, broadcastChanges[i].prop, options);
+				PB.broadcastChangeBatch();
+//				t.print("broadcast");
+			}
+			catch(e) {
+				this.lockUp("Remote book edits were incompatible with your local changes.");
+				console.log(e.message, patchArray[i]);
+			}
+		},
+		applyBroadcastPatch: function(patch_id, patch) {
+			this.applyBroadcastPatches([{id: patch_id, payload: patch}]);
+		},
+		getDiff: function() {
+			var diff = JsonDiff.diff(this.serverData.document,this.localData.document);
+			if (diff.length > 0)
+				diff[0].localId = this._localId;
+			return diff;
+		},
+		getSaveDeferred: function() {
+			// safeguard, do not save book with temporary photo ids
+			// wait until all images have been saved
+			for (var i=0; i<this.localData.document.photoList.length; i++) {
+				var id = this.localData.document.photoList[i];
+				if (typeof id == 'string' && id.match(/temp/)) {
+					// console.log("trying to save with temp ids", id);
+					return null;
+				}
+			}
+			var diff = this.getDiff();
+			if (diff.length == 0) {
+				this._dirty = false;
+				return null;
+			}
+
+			var ajax = $.ajax('/books/' + this.id, {
+				data: JSON.stringify(diff),
+				type: "PATCH",
+				contentType: 'application/json',
+				headers: { 'Pookio-last-diff': this.last_diff}
+			});
+			var THIS = this;
+			ajax.done(function(response, msg, jqXHR) {
+				switch(jqXHR.status) {
+					case 226: // we got a stream of commands we need to implement to catch up
+						var commands = JSON.parse(jqXHR.responseText);
+						THIS.applyBroadcastPatches(commands);
+						break;
+					case 200:
+							THIS.applyBroadcastPatch(response.diff_id, diff);
+						break;
+					default:
+						console.warn("unknown success code ", jqXHR.status);
+				}
+			});
+			ajax.fail(function(jqXHR, textStatus, message) {
+				switch(jqXHR.status) {
+					case 404:
+					case 410:
+						THIS.lockUp("The book was deleted.");
+						break;
+					case 412:
+						console.error("We did not send the right header, should never see this");
+						debugger;
+					default:
+						console.error("Unexpected network error submitting patch", jqXHR.status);
+						debugger;
+				}
+			});
+			return ajax;
+		},
 		addLocalPhoto: function(localFile, options) {
 			try { // Local file creation can fail
 				var serverPhoto = PB.ServerPhotoCache.createFromLocalFile(localFile);
@@ -376,74 +494,6 @@ window.PB.Photo // Photo objects
 			this._dirty = true;
 			PB.broadcastChange(this, 'photoList', options);
 		},
-		// generates id unique to this book
-		generateId: function() {
-			var id = PB.randomString(6);
-			if (this.localData.document.photoList.indexOf(id) != -1
-				|| this.localData.document.roughPageList.indexOf(id) != -1)
-				return this.generateId();
-			return id;
-		},
-		getDiff: function() {
-			var diff = JsonDiff.diff(this.serverData.document,this.localData.document);
-			if (diff.length > 0)
-				diff[0].localId = this._localId;
-			return diff;
-		},
-		getSaveDeferred: function() {
-			// safeguard, do not save book with temporary photo ids
-			// wait until all images have been saved
-			for (var i=0; i<this.localData.document.photoList.length; i++) {
-				var id = this.localData.document.photoList[i];
-				if (typeof id == 'string' && id.match(/temp/)) {
-					// console.log("trying to save with temp ids", id);
-					return null;
-				}
-			}
-			var diff = this.getDiff();
-			if (diff.length == 0) {
-				this._dirty = false;
-				return null;
-			}
-
-			var ajax = $.ajax('/books/' + this.id, {
-				data: JSON.stringify(diff),
-				type: "PATCH",
-				contentType: 'application/json',
-				headers: { 'Pookio-last-diff': this.last_diff}
-			});
-			var THIS = this;
-			ajax.done(function(response, msg, jqXHR) {
-				switch(jqXHR.status) {
-					case 226: // we got a stream of commands we need to implement to catch up
-						var commands = JSON.parse(jqXHR.responseText);
-						for (var i=0; i<commands.length;i++)
-							THIS.applyBroadcastPatch(commands[i].id, commands[i].payload);
-						break;
-					case 200:
-							THIS.applyBroadcastPatch(response.diff_id, diff);
-						break;
-					default:
-						console.warn("unknown success code ", jqXHR.status);
-				}
-			});
-			ajax.fail(function(jqXHR, textStatus, message) {
-				switch(jqXHR.status) {
-					case 404:
-					case 410:
-						THIS.lockUp("The book was deleted.");
-						break;
-					case 412:
-						console.error("We did not send the right header, should never see this");
-						debugger;
-					default:
-						console.error("Unexpected network error submitting patch", jqXHR.status);
-						debugger;
-				}
-			});
-			return ajax;
-		},
-
 		// index: page position for insert. -1 means last
 		insertRoughPage: function(index, options) {
 			if (index == undefined)
@@ -482,46 +532,6 @@ window.PB.Photo // Photo objects
 				this.localData.document.roughPageList.splice(dest, 0, page.id);
 			this._dirty = true;
 			PB.broadcastChange(this, 'roughPageList', options);
-		},
-		applyBroadcastPatch: function(patch_id, patch) {
-			if (this._locked) {
-				console.warn("Ignored patch, book is locked");
-				return;
-			}
-			if (patch_id <= this.last_diff) {
-//				console.warn("Received patch we already have");
-				return;
-			}
-			try {
-				var isLocal = patch.length > 0 && 'localId' in patch[0] && this._localId == patch[0]['localId'];
-				// patch of serverData, migrate differences to localData
-				var local_changes = JsonDiff.diff(this.serverData.document, this.localData.document);
-				var newOriginal = JsonDiff.patch(this.serverData.document, patch);
-				this.serverData.document = newOriginal;
-				this.serverData.last_diff = patch_id;
-				if (!isLocal)	// if diff originates locally, localData already has the diff, skip this
-				{
-					var newLocal = JsonDiff.patch(this.serverData.document, local_changes);
-					// need to: this.localData = newLocal
-					// we can't, because assignment would not broadcast changes to gui
-					// instead, mutate localData by creating new diff
-					var newDiff = JsonDiff.diff(this.localData.document, newLocal);
-					var localDocAndChanges = JsonDiff.patch(this.localData.document, newDiff, {record_changes: true});
-					this.localData.document = localDocAndChanges[0];
-					var changes = localDocAndChanges[1];
-					this._broadcastDiffChanges(changes);
-				}
-				this.localData.last_diff = this.serverData.last_diff;
-			}
-			catch(e) {
-				debugger;
-				this.lockUp("Remote book edits were incompatible with your local changes.");
-				console.log(e.message, patch_id, patch);
-				PB.cancelChangeBatch();
-			}
-		},
-		jsonPatchChange: function(proxy, type) {
-			console.log("JsonPatchChange", type);
 		}
 	}
 

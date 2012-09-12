@@ -2,6 +2,12 @@
 /*
 Comparing objects in javascript
 
+Engineered to be a forgiving patch algorithm:
+As forgiving as we can be without document corruption
+
+Trying to delete something already gone: we ignore it
+Trying to swap non-existent elements, ignore again
+Etc, etc, as I fine tune it to real-world usage
 patch format:
 [
 	{
@@ -44,7 +50,7 @@ patch format:
 		if no value, swap using index
 		if value, use value to find index, then swap
 
-http://c2.com/cgi/wiki?DiffAlgorithm
+
 */
 
 /************************************************************************************
@@ -375,7 +381,7 @@ http://c2.com/cgi/wiki?DiffAlgorithm
 					target.delete(diff.args);
 				}
 				else
-					throw "Could not DELETE, target not found";
+					console.warn("Tried to delete nonexistent target", diff.path);
 				break;
 			case 'swapArray':
 				var array = JsonPath.query(obj, diff.path, {'just_one': true});
