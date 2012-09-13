@@ -376,6 +376,7 @@
 			var containerHeight = height - padding;
 			$('#photo-list-container').css({minHeight: containerHeight, maxHeight: containerHeight});
 			GUI.fixSizes();
+			GUI.Buttons.ResizePaletteButton.fixPosition();
 		},
 		viewMore: function() {
 			var heights = this.getPossibleHeights();

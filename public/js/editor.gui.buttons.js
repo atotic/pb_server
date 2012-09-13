@@ -93,6 +93,7 @@
 	var paletteRect = {};
 	var ResizePaletteButton = {
 		init: function() {
+			paletteRect = document.getElementById('palette-resize-btn').getBoundingClientRect();
 			if (PB.hasTouch()) {
 				$('#palette-resize-btn').on({
 					touchstart: function(ev) {
@@ -169,9 +170,13 @@
 			GUI.Palette.setHeight(loc + yOffset - mainRect.top, false);
 		},
 		endDrag: function(clientY) {
+		},
+		fixPosition: function() {
+			$('#palette-resize-btn').css('top', $('#palette').outerHeight() - paletteRect.height / 2);
 		}
 	}
 
 	scope.Buttons = Buttons;
+	scope.Buttons.ResizePaletteButton = ResizePaletteButton;
 })(window.GUI);
 
