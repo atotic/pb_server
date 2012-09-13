@@ -254,22 +254,27 @@ module PB
 
 	# Security utility routines
 	class Security
+		@@no_security = false	# development bypass
+
 		def self.xhr?(env)
 			env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest"
 		end
 
 		def self.user_must_be_logged_in(env)
+			return if @@no_security && SvegSettings.development?
 			return if env['sveg.user']
 			raise "User not logged in"
 		end
 
 		def self.user_must_be_admin(env)
+			return if  @@no_security && SvegSettings.development?
 			user_must_be_logged_in(env)
 			return if env['sveg.user'].is_administrator
 			raise "You must be an administrator to access this resource"
 		end
 
 		def self.user_must_own(env, resource)
+			return if  @@no_security && SvegSettings.development?
 			user_must_be_logged_in(env)
 			raise "No such resource" unless resource
 			return if (env['sveg.user'].pk == resource[:user_id]) || (env['sveg.user'].is_administrator)
