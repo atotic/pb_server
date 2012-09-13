@@ -44,7 +44,7 @@
 					top: parseInt(photoList.css('margin-top')),
 					bottom: parseInt(photoList.css('margin-bottom'))
 				},
-				photoDiv: {	top: 2, bottom: 2} // guess
+				photoDiv: {	top: 2, bottom: 2, height: GUI.Options.photoSizeHeight} // guess
 			}
 			var photoDiv = $('#photo-list > .photo-div');
 			if (photoDiv.length != 0)
