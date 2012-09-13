@@ -410,12 +410,12 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				bigAlert.prop('id', 'big-alert');
 			}
 			PB.Book.default.removePhoto(photo, {animate:true});
-			var photoMsg = $("<p><img src='" + photo.iconUrl + "' style='height:128px'>" + photo.displayName() +  "</p>");
+			var photoMsg = $("<p><img src='" + photo.iconUrl.url + "' style='height:128px'>" + photo.displayName() +  "</p>");
 			photoMsg.children('img')
 				.data('model', photo)
 				.on(PB.MODEL_CHANGED, function(ev, model, prop, options) {
 					if (prop == 'icon_url')
-						this.src = photo.iconUrl;
+						this.src = photo.iconUrl.url;
 				});
 			bigAlert.append(photoMsg);
 		}

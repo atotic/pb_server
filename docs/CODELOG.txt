@@ -59,6 +59,13 @@ Next:
 Still thinking about IE
 - Bookshelf in account
 
+Sept 13
+Bugfix: palette button reposition
+Bugfix: image too big error
+Weird bug: iPad won't load images if connected to comet.
+Nginx uses keep_alive/chunked encoding for comet
+ipad problem went away when I turned off keep_alive for comet
+
 Sept 12:
 Optimize: bunch multiple diffs on comet broadcast
 Cleanup: removed GUI.Controller, obsolete commands
