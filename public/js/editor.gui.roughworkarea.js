@@ -1,6 +1,6 @@
 // editor.gui.roughworkarea.js
 
-// Rough work area drag and drop handling
+// #work-area-rough implementation. Visible in 'Organize' mode
 
 (function(scope) {
 	var roughPageTarget = { target: null, direction: 0, dropFeedback: "" };

@@ -1,0 +1,102 @@
+TEMPLATES.txt
+
+# TODO
+How do I start?
+Start with bare minimum:
+minimal book starndards,
+minimal book templates
+Have a simple create a book experience
+
+# User experience
+
+book starts off from "standards collection"
+standards is a curated collection of book templates, starting point for all the books.
+
+user also collects "inspiration collection". Inspirations are pages they like.
+
+# Technical
+
+## Template kinds ##
+
+### Book standard ###
+collection of book templates
+
+### Book template ###
+Book of a certain size
+data:
+	layouts
+	backgrounds
+	gadgets
+	auto-layout prototype
+	page size
+	icon
+	fonts?
+
+inherits from master template
+can be converted to other templates
+
+### Layout template
+data:
+	kind (page, cover, back-cover, flap)
+	span 1 or 2 or 3?
+	background:
+		- background can be layout template specific
+		- there can be a set of backgrounds specific to this layout
+	images
+		- images can be droppable, belong to a layer
+	text
+		- every image needs a possible caption (or hidden caption)
+		- big text
+	master parent: what layout does this one derive from
+	image count
+
+braindump:
+- can have multiple layers, some with other built-in images
+
+# Technical issues #
+
+Inspirational pages are frozen, cannot be edited once someone uses them
+Inspirational pages are public access
+Layouts that span multiple pages
+
+# Implementation #
+
+Standards collection
+Basic
+Travel
+Family
+Wedding
+
+All derive from the master suite. All other styles inherit from standards. This allows us to switch between book templates.
+
+# Data structures #
+
+Templates can belong to users, and system.
+What is my template:
+
+Book:
+ layouts: [layout-id]
+ backgrounds: [background-id]
+ gadgets: [gadget-id]
+ pageSize:
+ icon:
+
+Layout:
+ author:
+ kind:
+ parent:
+ layers: [
+ 	background:
+
+ ]
+
+It would be convenient if layout ids were meaningful, more like urls
+layout id: layout-<username>-15x6-
+
+how do we store these:
+/template/book/<user-id>/
+/template/layout/<user-id>/
+/template/gadget/<user-id>/
+/template/assets/<user-id>/
+
+

@@ -1,4 +1,4 @@
- Feb 14th estimates:
+Feb 14th estimates:
 2 weeks: comet, image resizing delayed, nginx
 1 week: kill datamapper, use sequel http://rhnh.net/2011/11/29/datamapper-retrospective
 2 weeks: unix deployment
@@ -10,54 +10,52 @@ Finished on Apr 23rd. 7 week estimate, 9 week completion
 1 week: security/sharing
 2 weeks: own store
 
-Featuritis:
-switching page/book layouts (template matching), use nokogiri for it
-hash bangs for pages
-- assets css/js that comes with the book
-- assets css/js that comes with the page
-migrating albums: use nokogiri for html manipulation
-Add page|delete|change layout
+September 12th:
+Thought I'd be done in Spetember
+I am 3 months behind the original time estimate,
+with better code, more (and less functionality than planned)
+- merge is there
+- touch is there
+- books are json
+- new data model, lot easier to expand
+- reading exif data
+- better testing of code
+What took so long
+Apr 25: 3 weeks to for diffs
+May 15: 5 weeks: bootstrap UI rewrite with touch
+Jun 19: 8 weeks: total data model rework, -2 week vacation
+Aug 22: 3 weeks, new features, bugs: exif on client, reworked UI again
+
+Starting templates:
+In 10 weeks, should be able to create a book, ready for designers
+
+1st question is: what is a template?
+How are they created, used?
+Lets do a survey 1st, and imagine how it'll work in our UI
+I want this to be a participary site:
+- everyone can contribute templates
+- most templates are junk, need to filter the good ones
+- allow people to profit from their books
+- collaborative editing
+- inspirations. User pin their inspirations, use them to start creating books
+
+book template:
+- collection of assets (photos, layouts, borders, widgets)
+- we start off with standards (iphoto collection)
+- users can build derivative works.
 
 Next:
-The new photobook framework. There will be lots of rewriting.
-I like unit-testing, we'll see if it works for GUI.
-Developing 3 GUI editors simultaneously:
-
-Touch (mobile)
-TouchXL (tablet)
-Mouse (wimp)
-
-Would like my code to be service oriented:
-
-Basic functionality:
-setup
-- bookmarks for testing on phone
-: use ip configuration on Verisign
-library
-- upload queue
-- streaming
-- flash/notify framework
-- image upload
-- patching
-- events
-- gui widgets
-
-Plan:
-Implement the rest of the functionality. Total rewrite, old code will get reimported.
-
-Stage 2: get templates/printing
-5 weeks
-Google Drive integration? https://developers.google.com/drive/
-
-Next:
-- test on Nexus, iPhone
+- TEMPLATES! FINALLY!
+- Keep number of pages always legal in browser
 - keep track of file sizes in db
 - account page should load book list dynamically  $(window).unload(function(){});
-- Aug 24th? TEMPLATES! FINALLY!
-- HackerDojo weekly visits
-- Enroll in Udacity enterpreneurship course http://www.udacity.com/overview/Course/ep245/CourseRev/1
-Still thinking about IE
+- No IE support in v1, Still thinking about IE
 - Bookshelf in account
+
+
+
+Sept 14
+Idea: allow designers to create templates from the PSD format
 
 Sept 13
 Bugfix: palette button reposition
@@ -65,6 +63,8 @@ Bugfix: image too big error
 Weird bug: iPad won't load images if connected to comet.
 Nginx uses keep_alive/chunked encoding for comet
 ipad problem went away when I turned off keep_alive for comet
+Bugfix: Mobile Chrome: input field has to be visible to accept click
+
 
 Sept 12:
 Optimize: bunch multiple diffs on comet broadcast

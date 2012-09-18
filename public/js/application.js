@@ -3,21 +3,20 @@
 		hasTouch: function() {
 			return 'ontouchstart' in window;
 		},
-		isSmallScreen: function() {
+		get isSmallScreen() {
 		  return window.matchMedia("(max-width: 650px)").matches;
 		},
-		// redirects to touch or wimp site
+		get isSmallHost() {
+			return window.location.hostname.match(/^touch/) != null;
+		},
+		// redirects to small or large site
 		redirectToProperHost: function() {
-			var hasTouch = PB.hasTouch();
-			var isSmallScreen = PB.isSmallScreen();
-			var wantSmallHost = hasTouch && isSmallScreen;
+			var wantSmallHost = PB.isSmallScreen();
 			var hasSmallHost = window.location.hostname.match(/^touch/) != null;
-//			alert("wantSmallHost " + wantSmallHost + " hasSmallHost " + hasSmallHost);
 			if (wantSmallHost != hasSmallHost) {
 				var isDev = window.location.hostname.match(/dev/);
 				var desiredHost = wantSmallHost ? ( isDev ? 'touchdev.pb4us.com' : 'touch.pb4us.com')
 															: (isDev ? 'dev.pb4us.com' : 'www.pb4us.com');
-				alert("currentPath " + window.location.pathname);
 				var url = window.location.protocol + '//' + desiredHost
 								+ (window.location.port != "" ? ':' + window.location.port : '')
 								+ window.location.pathname;
@@ -80,8 +79,6 @@
 		}
 	};
 	PB.Timer = Timer;
-
-	PB.redirectToProperHost();
 
 	if (!('PB' in scope)) scope.PB = {};
 	$.extend(scope.PB, PB);

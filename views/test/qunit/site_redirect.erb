@@ -1,15 +1,14 @@
-<head>
-	<title>pbdiff </title>
-	<%= asset_link("jquery.js") %>
-	<%= asset_link("qunit") %>
-	<%= asset_link("application.js") %>
 <script>
 
 module("Redirect");
 test("correct host", function() {
-	var hasTouch = PB.detectTouch();
-	var hasTouchHost = window.location.hostname.match(/^touch/) != null;
-	equal(hasTouch, hasTouchHost, "Touch and host match");	
+	equal(PB.isSmallScreen, PB.isSmallHost, "Size and host match");
+});
+
+
+test("small host and screen", function() {
+	equal(PB.isSmallHost, true, "host is big, not small");
+	equal(PB.isSmallScreen, true, "screen is big, not small");
 });
 </script>
 

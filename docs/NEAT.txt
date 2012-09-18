@@ -119,6 +119,7 @@ Free DNS redirects for everyone: http://xip.io/
 Building iOS hybrid apps: http://www.cocoacontrols.com/posts/a-primer-on-hybrid-apps-for-ios
 
 OTHER
+Page Layers: web site to psd converter http://www.ralfebert.de/apps/page-layers-photoshop-osx-website-screenshots/
 Tim Bray: net matters, and he knows photographers. He might know someone who'd print my books?
 Metro design guidelines: http://msdn.microsoft.com/en-us/library/windows/apps/hh761500.aspx
 Print junkie: where print geeks hang out, ask them for advice on printing photobooks.

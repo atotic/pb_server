@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<head>
+<title>Misc</title>
+<%= asset_link('jquery.js') %>
+<%= asset_link('bootstrap.css') %>
+
+<meta name="viewport" content = "width=device-width,initial-scale=1.0">
+</head>
+<style>
+button,input {
+	font-size: 24px;
+}
+</style>
+<body>
+<p>Here is a standard input
+<input id='standard'
+type="file"
+accept="image/*">
+</p>
+
+<p>Mobile chrome style
+<input id='chrome'
+type="file"
+accept="image/*"
+multiple="true"
+capture="filesystem"
+style="height:0px;width:0px">
+</p>
+
+<p>iOS style, presents picture dialog right away
+<input id="ios"
+	type="file"
+	multiple="true"
+	accept="image/*">
+</p>
+<p><button onclick="javascript:$('#ios').click()">Pick ios file</button>
+<p><button onclick="javascript:$('#chrome').click()">Pick chrome file</button>
+<p><button onclick="javascript:$('#standard').click()">Pick standard file</button>
+</body>

@@ -6,6 +6,7 @@ capacity testing
 error pages on nginx
 
 FEATURES
+Supported browsers warning
 cookies for *.pb4us.com
 
 - Photo upload
