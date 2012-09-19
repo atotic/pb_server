@@ -28,6 +28,12 @@
 				;
 			}
 		},
+		show: function() {
+			$('#work-area-rough, #photo-list-container').show();
+		},
+		hide: function() {
+			$('#work-area-rough, #photo-list-container').hide();
+		},
 		getDragTarget: function(roughPage, clientX, clientY) {
 			roughPage = $(roughPage).get(0);
 			var r = roughPage.getBoundingClientRect();

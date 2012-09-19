@@ -117,9 +117,9 @@ Tools <i class='icon-wrench icon-white'></i> </a>
 </div>
 <div class='navbar-inverse' id="sidebar">
 	<ul class="nav nav-tabs nav-stacked ">
-	  <li class='active'><a href='#'>Organize</a>
-	  <li><a href='#'>Design</a>
-	  <li><a href='#'>Print</a>
+	  <li id='work-area-rough-nav' class='active'><a href='javascript:GUI.WorkArea.show("work-area-rough")'>Organize</a>
+	  <li id='work-area-design-nav'><a href='javascript:GUI.WorkArea.show("work-area-design")'>Design</a>
+	  <li id='work-area-print-nav'><a href='javascript:GUI.WorkArea.show("work-area-print")'>Print</a>
 	</ul>
 	<ul class="nav nav-pills nav-stacked">
 		<li >
@@ -148,6 +148,12 @@ Tools <i class='icon-wrench icon-white'></i> </a>
 	<div id='work-area'>
 		<div id='work-area-container'>
 			<div id='work-area-rough'>
+			</div>
+			<div id='work-area-design'>
+				Design
+			</div>
+			<div id='work-area-print'>
+				Print
 			</div>
 		</div>
 	</div>

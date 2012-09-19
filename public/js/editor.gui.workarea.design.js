@@ -14,7 +14,17 @@ var DesignWorkArea = {
 	},
 	get book() {
 		return $(ID).data('model');
+	},
+	bookChanged: function() {
+	},
+	show: function() {
+		$(ID).show();
+	},
+	hide: function() {
+		$(ID).hide();
 	}
 }
+
+scope.DesignWorkArea = DesignWorkArea;
 
 })(GUI);

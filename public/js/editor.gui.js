@@ -55,6 +55,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			var h = $('body').height() - $('#top-menu').height() - $('#palette').outerHeight();
 			$('#work-area').css('height', h);
 			$('#work-area-container').css('height', h-parseInt($('#work-area').css('padding-top')));
+			GUI.Buttons.ResizePaletteButton.fixPosition();
 		},
 		initShortcuts: function() {
 			GUI.CommandManager.add(new this.Command('viewMoreImages', '+', false,
