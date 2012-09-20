@@ -37,6 +37,13 @@
 					break;
 			}
 		},
+		show: function() {
+			$('#photo-list-container').show();
+			this.processDelayUntilVisible();
+		},
+		hide: function() {
+			$('#photo-list-container').hide();
+		},
 		getDomBoxInfo: function() {
 			var photoList = $('#photo-list');
 			var domBoxInfo = {
@@ -124,10 +131,6 @@
 					}
 				}
 			});
-		},
-		addPhoto: function(photo) {
-			var img = this.createImageTile(photo);
-			$('#photo-list').append(img);
 		},
 		setTileStatus: function(tile, model) {
 			var statusDiv = tile.children('.status');
@@ -241,6 +244,8 @@
 		},
 
 		synchronizePhotoList: function(options) {
+			if (this.delayUntilVisible($('#photo-list'), this.synchronizePhotoList))
+				return;
 			options = $.extend({animate:false}, options);
 			var containerDom = $('#photo-list');
 			var bookModel = containerDom.data('model');
@@ -350,6 +355,8 @@
 				);
 		}
 	}
+
+	$.extend(PhotoPalette, GUI.Mixin.DelayUntilVisible);
 
 	if (PB.hasTouch()) {
 		$.extend(PhotoPalette, PhotoPaletteTouch);

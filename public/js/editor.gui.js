@@ -194,6 +194,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		set designStage(val) {
 			this._designStage = val;
 			this.broadcast('designStage', val);
+			this.toHashbang();
 		},
 		toHashbang: function() {
 			var hashStr = "";
@@ -210,14 +211,14 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			hashStr = hashStr.replace(/^\&/, '');
 			hashStr = '#' + hashStr;
 			var newUrl = window.location.href.split('#',2)[0] + hashStr;
-			window.location.href = newUrl;
+			window.location.replace(hashStr);
 		},
 		fromHashbang: function() {
 			var hashSplit = window.location.href.split('#',2);
 			if (hashSplit.length < 2)
 				return;
 			var ampSplit = hashSplit[1].split('&');
-			var optNames = ['photoFilter', 'photoSize', 'photoSort', 'pageSize'];
+			var optNames = ['photoFilter', 'photoSize', 'photoSort', 'pageSize', 'designStage'];
 			for (var i=0; i<ampSplit.length; i++) {
 				var eqlSplit = ampSplit[i].split('=', 2);
 				var idx = optNames.indexOf(eqlSplit[0])
@@ -642,3 +643,41 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 	}
 	scope.Template = Template;
 })(GUI);
+
+if (!('Mixin' in GUI))
+	GUI.Mixin = {};
+// DelayUntilVisible mixin
+// Use to delay things that should only happen when visible
+// Usage:
+/*
+doVisibleStuff: function(arg1, arg2) {
+	var dom = $('#blah')
+	if (!this.delayUntilVisible(dom, this.doVisibleStuff, [arg1, arg2]))
+		return;
+}
+show: function() {
+	$('#blah').show();
+	this.processDelayUntilVisible();
+}
+*/
+(function(scope) {
+	var DelayUntilVisible = {
+		delayUntilVisible: function(dom, func, args) {
+			if ($(dom).is(':visible'))
+				return false;
+			this._delayUntilVisible = this._delayUntilVisible || [];
+			this._delayUntilVisible.push({func: func, args: args});
+			return true;
+		},
+		processDelayUntilVisible: function() {
+			if (!('_delayUntilVisible' in this))
+				return;
+			var op;
+			while (op = this._delayUntilVisible.shift())
+				op.func.apply(this, op.args);
+		},
+	}
+
+	scope.DelayUntilVisible = DelayUntilVisible;
+
+})(GUI.Mixin);

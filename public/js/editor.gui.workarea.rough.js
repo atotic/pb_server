@@ -13,7 +13,7 @@
 				.data('model', book)
 				.on( PB.MODEL_CHANGED, this.bookChanged);
 			GUI.Options.addListener(this.optionsChanged);
-			this.resizeAllPages();	// change the ruleset
+			this.resizeAllPages();	// syncs css ruleset with options
 			this.synchronizeRoughPageList();
 		},
 		get book() {
@@ -29,7 +29,9 @@
 			}
 		},
 		show: function() {
-			$('#work-area-rough, #photo-list-container').show();
+			$('#work-area-rough').show();
+			GUI.PhotoPalette.show();
+			this.processDelayUntilVisible();
 		},
 		hide: function() {
 			$('#work-area-rough, #photo-list-container').hide();
@@ -232,6 +234,8 @@
 
 	var RoughWorkAreaEvents = {
 		layoutRoughInsideTiles: function (domRough, animate) {
+			if (this.delayUntilVisible(domRough, this.layoutRoughInsideTiles, [domRough]))
+				return;
 			domRough = $(domRough);
 			var tiles = domRough.children('.rough-tile');
 			var totalWidth = domRough.width();
@@ -277,6 +281,7 @@
 					$(this).removeClass('right-rough').addClass('left-rough');
 			});
 		},
+		// syncs css with GUI.Options
 		resizeAllPages: function() {
 			var newSize = GUI.Options.pageSizePixels;
 			try {
@@ -335,6 +340,8 @@
 		// synchronizeRoughPageList and synchronizeRoughPhotoList
 		// algorithms are almost identical
 		synchronizeRoughPageList: function(options) {
+			if (this.delayUntilVisible($('#work-area-rough'),this.synchronizeRoughPageList, options))
+				return;
 			options = $.extend({animate:false}, options);
 			var containerDom = $('#work-area-rough');
 			var bookModel = $.data(containerDom.get(0),'model');
@@ -504,6 +511,7 @@
 	}
 
 	$.extend(RoughWorkArea, RoughWorkAreaEvents);
+	$.extend(RoughWorkArea, GUI.Mixin.DelayUntilVisible);
 
 	if (PB.hasTouch()) {
 		$.extend(RoughWorkArea, RoughWorkAreaTouch);

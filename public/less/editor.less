@@ -141,6 +141,7 @@ body {
 	max-height: @photo-list-height;
 	min-height: @photo-list-height;
 	position: relative;
+	display: none;
 }
 #photo-list-container {
 	.pb-palette-container;
@@ -174,6 +175,7 @@ body {
 				text-align: right;
 				text-shadow: black 0.1em 0.1em 0.2em;
 				overflow:hidden;
+				text-overflow: ellipsis;
 				color: orange;
 
 			}
@@ -214,6 +216,7 @@ body {
 	}
 
 	#work-area-rough {
+		display:none;
 		padding-right: @palette-resize-btn-radius;
 	}
 
