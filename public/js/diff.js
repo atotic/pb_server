@@ -324,14 +324,6 @@ patch format:
 		return 'Basic';
 	}
 
-	function iterateObject(obj, callback) {
-		switch(getType(obj)) {
-			case 'Array':
-				for (var i=0; i<obj.length; i++)
-					callback(obj, i);
-		}
-	}
-
 	function createSet(path, value) {
 		return { op: 'set', path: path, args: value }
 	}

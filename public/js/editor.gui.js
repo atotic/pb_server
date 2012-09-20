@@ -73,6 +73,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				.attr('dropzone', true)
 				.on(PB.MODEL_CHANGED, function(ev, model, prop, options) {
 					if (prop === 'locked' && book.locked) {
+						GUI.Template.append(null, 'error-locked');
 						$('#error-locked').slideDown();
 						$('#lockedMessage').text(book.locked);
 					}
@@ -109,7 +110,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			}
 			$('body').on(bodyDropHandler);
 			GUI.PhotoPalette.bindToBook(book);
-			GUI.RoughWorkArea.bindToBook(book);
+			GUI.WorkArea.bindToBook(book);
 			window.document.title = book.title + " PhotoBook";
 		},
 		toggleTools: function() {
@@ -134,6 +135,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		_photoSort: 'added', // 'added' | 'taken' | 'name'
 		_photoSize: 'medium', // 'small' | 'medium' | 'large'
 		_pageSize: 'medium', // 'small' | 'medium' | 'large'
+		_designStage: 'organize', // 'organize' | 'design' | 'print'
 		get photoFilter() { return this._photoFilter; },
 		get photoSort() { return this._photoSort; },
 		get photoSize() { return this._photoSize; },
@@ -186,6 +188,13 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			this._pageSize = val;
 			this.broadcast('pageSize', val);
 		},
+		get designStage() {
+			return this._designStage;
+		},
+		set designStage(val) {
+			this._designStage = val;
+			this.broadcast('designStage', val);
+		},
 		toHashbang: function() {
 			var hashStr = "";
 			if (this.photoFilter != 'unused')
@@ -196,6 +205,8 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				hashStr += '&photoSize=' + this.photoSize;
 			if (this.pageSize != 'medium')
 				hashStr += '&pageSize=' + this.pageSize;
+			if (this.designStage != 'organize')
+				hashStr += '&designStage=' + this.designStage;
 			hashStr = hashStr.replace(/^\&/, '');
 			hashStr = '#' + hashStr;
 			var newUrl = window.location.href.split('#',2)[0] + hashStr;
@@ -594,4 +605,40 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 	};
 
 	scope.JQDiffUtil = JQDiffUtil;
+})(GUI);
+
+// Template. javascript templates
+// Inspirations: https://github.com/trix/nano/blob/master/jquery.nano.js
+// http://ejohn.org/blog/javascript-micro-templating/
+// Templates are in <script type='text/html' id='<div_id>-template'>
+(function(scope) {
+	var Template = {
+		get: function(templateId, data) {
+			var template = $('#' + templateId + '-template');
+			if (template.length != 1)
+				return console.warn("No such template", templateId);
+			var text = template.html();
+			if (data) {
+				text = text.replace(/\{([\w\.]*)\}/g, function (str, key) {
+					var keys = key.split(".")
+					var value = data[keys.shift()];
+					$.each(keys, function () { value = value[this]; });
+					return (value === null || value === undefined) ? "" : value;
+				});
+			}
+			$(text).attr('id', templateId);
+			return $(text).get(0);
+		},
+		append: function(parent, templateId, data) {
+			var el = $('#' + templateId);
+			if (el.length == 1)
+				return el;
+			el = $(Template.get(templateId, data));
+			if (parent == null)
+				parent = $('body');
+			parent.append(el);
+			return el;
+		}
+	}
+	scope.Template = Template;
 })(GUI);

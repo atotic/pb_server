@@ -26,7 +26,7 @@ May 15: 5 weeks: bootstrap UI rewrite with touch
 Jun 19: 8 weeks: total data model rework, -2 week vacation
 Aug 22: 3 weeks, new features, bugs: exif on client, reworked UI again
 
-Starting templates:
+Starting templates: Sept 14
 In 10 weeks, should be able to create a book, ready for designers
 
 1st question is: what is a template?
@@ -52,7 +52,10 @@ Next:
 - No IE support in v1, Still thinking about IE
 - Bookshelf in account
 
+Sept 19
 
+Sept 18
+Feature: switching work areas
 
 Sept 14
 Idea: allow designers to create templates from the PSD format

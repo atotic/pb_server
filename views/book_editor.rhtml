@@ -31,7 +31,7 @@ home</a></li>
 			<li
 					rel='tooltip'
 					title='Esc to toggle'>
-		<a href="javascript:GUI.toggleTools()"><i class='icon-wrench icon-white'></i>
+		<a href='#' onclick="GUI.toggleTools();return false;"><i class='icon-wrench icon-white'></i>
 Tools <i class='icon-wrench icon-white'></i> </a>
 		</ul>
 		<ul class="nav pull-right">
@@ -117,9 +117,9 @@ Tools <i class='icon-wrench icon-white'></i> </a>
 </div>
 <div class='navbar-inverse' id="sidebar">
 	<ul class="nav nav-tabs nav-stacked ">
-	  <li id='work-area-rough-nav' class='active'><a href='javascript:GUI.WorkArea.show("work-area-rough")'>Organize</a>
-	  <li id='work-area-design-nav'><a href='javascript:GUI.WorkArea.show("work-area-design")'>Design</a>
-	  <li id='work-area-print-nav'><a href='javascript:GUI.WorkArea.show("work-area-print")'>Print</a>
+	  <li id='work-area-rough-nav'><a href='#' onclick='GUI.Options.designStage="organize"; return false;'>Organize</a>
+	  <li id='work-area-design-nav'><a href='#' onclick='GUI.Options.designStage="design"; return false;'>Design</a>
+	  <li id='work-area-print-nav'><a href='#' onclick='GUI.Options.designStage="print"; return false;'>Print</a>
 	</ul>
 	<ul class="nav nav-pills nav-stacked">
 		<li >
@@ -160,15 +160,24 @@ Tools <i class='icon-wrench icon-white'></i> </a>
 	<div id='palette-resize-btn'>
 	</div>
 </div>
-<!-- Messages -->
+<!-- Templates -->
+<script type='text/html' id='error-locked-template'>
 <div id='error-locked' class='alert alert-error'>
-	<p>Uh oh, your book is corrupted. This sometimes happens when your changes conflict with changes made from another browser.</p>
+	<p>Uh oh, your book is corrupted. This can happen when book is edited from two places at the same time.</p>
 	<p>You can still look at your book, but you cannot save any changes.</p>
-	<p>To unlock the book, <a href='javascript:window.location.reload()'>reload</a>.</p>
+	<p>To unlock the book, <a href='#' onclick='window.location.reload(); return false'>reload</a>.</p>
 	<p id='lockedMessage'><p>
 	<p>Developers, look at the console for details.</p>
 </div>
+</script>
+<scripts type='text/html' id='pick-book-style-template'>
+<div>
+	<h1>Hello Designer</h1>
+	<p>Before we get to serious design</p>
 
+	<h6>TODO: this dialog will be a week worth of work one day</h6>
+</div>
+</script>
 <%= asset_link("jquery.js") %>
 <%= asset_link("bootstrap.js") %>
 <%= asset_link("editor.js") %>

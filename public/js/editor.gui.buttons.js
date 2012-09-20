@@ -172,7 +172,13 @@
 		endDrag: function(clientY) {
 		},
 		fixPosition: function() {
-			$('#palette-resize-btn').css('top', $('#palette').outerHeight() - paletteRect.height / 2);
+			var pos = $('#palette').outerHeight() - paletteRect.height / 2;
+			if (pos < paletteRect.height)
+				$('#palette-resize-btn').hide();
+			else
+				$('#palette-resize-btn')
+					.show()
+					.css('top', $('#palette').outerHeight() - paletteRect.height / 2);
 		}
 	}
 
