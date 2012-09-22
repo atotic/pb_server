@@ -19,6 +19,8 @@ var DesignWorkArea = {
 	},
 	show: function() {
 		$(ID).show();
+		if(!this.book.template)
+			GUI.Template.append($(ID), 'pick-book-style');
 	},
 	hide: function() {
 		$(ID).hide();

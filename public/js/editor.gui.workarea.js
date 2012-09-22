@@ -6,6 +6,7 @@ var WorkArea = {
 	bindToBook: function(book) {
 		GUI.Options.addListener(this.optionsChanged);
 		GUI.RoughWorkArea.bindToBook(book);
+		GUI.DesignWorkArea.bindToBook(book);
 		this.optionsChanged('designStage', GUI.Options.designStage);
 	},
 	optionsChanged: function(name, val) {

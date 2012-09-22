@@ -18,8 +18,8 @@ user also collects "inspiration collection". Inspirations are pages they like.
 
 ## Template kinds ##
 
-### Book standard ###
-collection of book templates
+### Theme ###
+Collection of related book templates
 
 ### Book template ###
 Book of a certain size

@@ -169,6 +169,9 @@ window.PB.Photo // Photo objects
 			}
 			return unusedList;
 		},
+		get template() {
+			return this.localData.document.template;
+		},
 		_getPageProxy: function(id) {
 			if (id in this._proxies)
 				return this._proxies[id];

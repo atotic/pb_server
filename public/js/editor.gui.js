@@ -627,8 +627,9 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 					return (value === null || value === undefined) ? "" : value;
 				});
 			}
-			$(text).attr('id', templateId);
-			return $(text).get(0);
+			var dom = $(text);
+			dom.attr('id', templateId);
+			return dom.get(0);
 		},
 		append: function(parent, templateId, data) {
 			var el = $('#' + templateId);
