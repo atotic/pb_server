@@ -26,11 +26,10 @@ gem 'omniauth-facebook'
 gem 'omniauth-google-oauth2'
 gem 'em-http-request'
 
+# http://blog.wyeworks.com/2011/11/1/ruby-1-9-3-and-ruby-debug/
 group :development do
 	gem "ruby-debug", :platforms => :ruby_18
-	gem "ruby-debug-base19", "0.11.26", :platforms => :ruby_19
-	gem "ruby-debug19", "0.11.6", :require => 'ruby-debug', :platforms => :ruby_19
-	gem "linecache19", "0.5.13"
+	gem "debugger", :platforms => :ruby_19
 	gem "growl"
 end
 
