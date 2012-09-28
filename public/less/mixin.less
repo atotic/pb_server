@@ -3,3 +3,40 @@
   -webkit-filter: @f;
   -moz-filter: @f;
 }
+
+.user-select(@select) {
+	-webkit-user-select: @select;
+	-moz-user-select: @select;
+	-ms-user-select: @select;
+	-o-user-select: @select;
+	user-select: @select;
+}
+
+.border-radius(@topright: 0, @bottomright: 0, @bottomleft: 0, @topleft: 0) {
+	border-radius: @arguments;
+	-moz-border-radius: @arguments;
+}
+
+.border-bottom-right-radius(@px) {
+	border-bottom-right-radius: @px;
+	-webkit-border-bottom-right-radius: @px;
+	-moz-border-bottom-right-radius: @px;
+}
+
+.border-bottom-left-radius(@px) {
+	border-bottom-left-radius: @px;
+	-webkit-border-bottom-left-radius: @px;
+	-moz-border-bottom-left-radius: @px;
+}
+
+.border-top-right-radius(@px) {
+	border-top-right-radius: @px;
+	-webkit-border-top-right-radius: @px;
+	-moz-border-top-right-radius: @px;
+}
+
+.border-top-left-radius(@px) {
+	border-top-left-radius: @px;
+	-webkit-border-top-left-radius: @px;
+	-moz-border-top-left-radius: @px;
+}

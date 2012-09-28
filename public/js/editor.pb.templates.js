@@ -56,7 +56,7 @@ var	Template = {
 			})
 			.fail(function(jqXHR, status, msg) {
 				debugger;
-				console.warn("template loading failed", status, msg);
+				console.warn("template loading failed", status, msg, missingIds.join(','));
 				var retry = false;
 				switch(status) {
 					default:
@@ -65,6 +65,17 @@ var	Template = {
 				retVal.reject(result);
 			});
 		return retVal;
+	},
+	// cached() returns only cached ids. It throws if id is not in the cache
+	// useful when you do not want to deal with Deferreds, and know stuff is in
+	// the cache
+	cached: function(id) {
+		if (typeof id != 'string')
+			throw "id must be a string";
+		if (id in cache)
+			return cache[id];
+		else
+			throw "id not found";
 	},
 	put: function(template) {
 		// TODO, initialize inheritance here

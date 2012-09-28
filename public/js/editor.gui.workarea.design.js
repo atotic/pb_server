@@ -6,7 +6,6 @@
 
 var ID= '#work-area-design';
 var THEME_LIST_SELECTOR = '#theme-picker-container > ul';
-var THEME_SIZE_SELECTOR = '#theme-size-container > label';
 
 var ThemePicker = {
 	init: function(dom) {
@@ -17,7 +16,7 @@ var ThemePicker = {
 		var themeList = dom.find(THEME_LIST_SELECTOR);
 		themeList.children().remove();
 		function fail(response) {
-			themeList.append($("<li><div class='alert alert-error'>Themes failed to load</div></li>"));
+			GUI.Template.append(themeList, 'theme-failed-to-load');
 		}
 		PB.Template.get(PB.Template.THEME_LIST)
 			.done(function(themeListResponse) {
@@ -42,14 +41,32 @@ var ThemePicker = {
 			})
 			.fail(fail);
 	},
-	initButtonList: function(dom) {
-		var sizeContainer = dom.find('#theme-size-container');
-		sizeContainer.children('label').remove();
+	initButtonList: function() {
+		var sizeContainer = $('#theme-size-container');
+		sizeContainer.children('label, #sizes-failed-to-load').remove();
 		var theme = this.selectedTheme;
 		if (!theme) {
 			return;
 		}
-
+		function fail() {
+			GUI.Template.append(sizeContainer,'sizes-failed-to-load');
+		}
+		PB.Template.get(theme.books)
+			.done(function(bookResponse) {
+				theme.books.forEach(function(bookId) {
+					var book = bookResponse[bookId];
+					var buttonDom = $( GUI.Template.get('theme-size-radio', {
+						width: book.width,
+						height: book.height
+					}));
+					buttonDom.find('input[type=radio]').data('book', book);
+					sizeContainer.append(buttonDom);
+				});
+				$('#theme-size-container input[type=radio]').change(function() {
+					ThemePicker.updateSelectThemeButton();
+				});
+			})
+			.fail(fail);
 	},
 	selectTheme: function(id) {
 		var themesLi = $(THEME_LIST_SELECTOR).children('li');
@@ -58,7 +75,7 @@ var ThemePicker = {
 		if (selected.get(0) != desired.get(0)) {
 			selected.removeClass('active');
 			desired.addClass('active');
-			this.initButtonList($(THEME_SIZE_SELECTOR).parent());
+			this.initButtonList();
 			this.updateSelectThemeButton();
 		}
 	},
@@ -66,7 +83,8 @@ var ThemePicker = {
 		return $(THEME_LIST_SELECTOR).children('li.active').data('theme');
 	},
 	get selectedSize() {
-		return undefined;
+		var checked = $('#theme-size-container input[type=radio]:checked');
+		return checked.data('book');
 	},
 	updateSelectThemeButton: function() {
 		if (this.selectedTheme && this.selectedSize)
@@ -100,5 +118,6 @@ var DesignWorkArea = {
 }
 
 scope.DesignWorkArea = DesignWorkArea;
+scope.ThemePicker = ThemePicker;
 
 })(GUI);

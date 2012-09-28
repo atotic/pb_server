@@ -195,6 +195,25 @@ Tools <i class='icon-wrench icon-white'></i> </a>
 <script type='text/html' id='theme-picker-onetheme-template'>
 	<li><p>{title}</p><img src='{img}'></li>
 </script>
+<script type='text/html' id='theme-failed-to-load-template'>
+	<li>
+		<div class='alert alert-error'>
+			Themes failed to load.
+			<a href="javascript:GUI.ThemePicker.init()">Try again?</a>
+		</div>
+	</li>
+</script>
+<script type='text/html' id='sizes-failed-to-load-template'>
+	<div style='display:inline-block'>Failed to load book sizes. <a href="javascript:GUI.ThemePicker.initButtonList()">Try again?</a>
+	</div>
+</script>
+<script type='text/html' id='theme-size-radio-template'>
+<label class="radio inline">
+<input type="radio" name="sizeRadio" value="{width}x{height}">
+{width}x{height}
+</label>
+</script>
+<script
 <%= asset_link("jquery.js") %>
 <%= asset_link("bootstrap.js") %>
 <%= asset_link("editor.js") %>
