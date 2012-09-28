@@ -20,13 +20,6 @@ window.PB.Photo // Photo objects
 		clone: function(obj) {
 			return JSON.parse(JSON.stringify(obj));
 		},
-		// $.extend causes cryptic errors when src is a prototype
-		extend: function(target, src) {
-			for (var p in src) {
-				Object.defineProperty(target, p,
-					{ value: src[p] });
-			}
-		},
 		randomString: function (len, charSet) {
 			charSet = charSet || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 			var randomString = '';
@@ -169,8 +162,11 @@ window.PB.Photo // Photo objects
 			}
 			return unusedList;
 		},
-		get template() {
-			return this.localData.document.template;
+		get themeId() {
+			return this.localData.document.themeId;
+		},
+		get bookTemplateId() {
+			return this.localData.document.bookTemplateId;
 		},
 		_getPageProxy: function(id) {
 			if (id in this._proxies)
@@ -501,7 +497,7 @@ window.PB.Photo // Photo objects
 		insertRoughPage: function(index, options) {
 			if (index == undefined)
 				index = -1;
-			var page = PB.RoughPageProxy.template(this);
+			var page = PB.RoughPageProxy.blank(this);
 			var roughPageList = this.roughPageList;
 			if (roughPageList.indexOf(page.id) != -1)
 				throw "page already in book";
@@ -687,7 +683,7 @@ window.PB.Photo // Photo objects
 				p.photoList[idx] = newId;
 		}
 	}
-	RoughPageProxy.template = function(book) {
+	RoughPageProxy.blank = function(book) {
 		return {
 			id: book.generateId(),
 			photoList: []

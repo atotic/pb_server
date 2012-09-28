@@ -3,4 +3,4 @@ docs/*.tiff
 docs/iPhoto templates
 public/css/editor.css
 public/css/application.css
-
+public/css/mixin.css

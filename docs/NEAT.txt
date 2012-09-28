@@ -2,6 +2,8 @@ http://caniuse.com/
 
 CSS
 CSS filters: will use this at some point in the future http://www.html5rocks.com/en/tutorials/filters/understanding-css/
+http://html.adobe.com/webstandards/csscustomfilters/cssfilterlab/
+
 Building books with CSS3: http://www.alistapart.com/articles/building-books-with-css3/
 There is
 Circular buttons http://css-tricks.com/circular-3d-buttons/
@@ -155,6 +157,7 @@ Reviews http://insig.ht/2009/06/print-on-demand-review/
 Print resources for independent art publishers: http://print-resources.tumblr.com/
 
 BUSINESS
+Great post about pricing strategies: http://blog.keen.io/post/32269955563/pricing-is-hard-we-need-your-help
 Photobook market: http://www.ceatec.com/report_analysis/en/ra_0906.html
 Dominic Brezinski, USA manager for SmileBooks http://www.linkedin.com/profile/view?id=22895307&authType=NAME_SEARCH&authToken=7oR-&locale=en_US&srchid=18e9484d-5cb3-4c52-a39a-ddefd83801a9-0&srchindex=2&srchtotal=2&goback=%2Efps_PBCK_Dominic+Brezinski_*1_*1_*1_*1_*1_*1_*2_*1_Y_*1_*1_*1_false_1_R_*1_*51_*1_*51_true_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2&pvs=ps&trk=pp_profile_name_link
 AngelList printing ecommerce solution angel.co/keen-systems. Could they use this?

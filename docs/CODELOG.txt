@@ -45,14 +45,20 @@ book template:
 - users can build derivative works.
 
 Next:
-- TEMPLATES! FINALLY!
+- get theme list from server
 - Keep number of pages always legal in browser
 - keep track of file sizes in db
 - account page should load book list dynamically  $(window).unload(function(){});
 - No IE support in v1, Still thinking about IE
 - Bookshelf in account
 
-Sept 19
+Sept 27
+Making progress on theme picker dialog.
+The template layout on disk is making sense
+
+Sept 26
+I've been staring at templates for almost a week. Designing them is too big
+of a job, time to start coding.
 
 Sept 18
 Feature: switching work areas

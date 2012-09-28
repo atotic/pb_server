@@ -3,28 +3,46 @@ require 'nokogiri'
 require 'css_parser'
 
 module PB
+
+class Template
+	def self.templateIdToFile(id)
+		path = id.split('-')
+		path.each { |name| raise "bad path #{name}" unless name =~ /^(\d|\w|_)+$/ }
+		path.last << ".js"
+		File.join(SvegSettings.book_templates_dir, path)
+	end
+
+	def self.imgIdToImgFile(id, size)
+		f = self.templateIdToFile(id)
+		js = JSON.parse(IO.read(f))
+		img_key = (size && (js.has_key? size)) ? js[size] : js['full']	# default to full size
+		File.join(SvegSettings.book_templates_dir, img_key)
+	end
+
+end
+
 # Holds information about a book template
 class BookTemplate
-	
+
 	attr_reader :width
 	attr_reader :height
 	attr_reader :folder
 	attr_reader :name
-	
+
 	def self.get(attrs)
 		BookTemplate.new(attrs);
 	end
-	
+
 	def self.all()
 		Dir.entries(SvegSettings.book_templates_dir)\
 			.select { |x| (x =~ /\.|common/).nil? && File.directory?(File.join(SvegSettings.book_templates_dir, x)) }\
 			.map { |x| BookTemplate.get(x) }
 	end
-	
+
 	# attrs is either name, or attribute hash
 	def initialize(attrs)
 		attrs = { "name" => attrs} if attrs.is_a? String
-		@name = attrs["name"] 
+		@name = attrs["name"]
 		@folder = File.join(SvegSettings.book_templates_dir, @name)
 		raise "Book template #{@name} does not exist." unless File.exist?(@folder)
 		begin
@@ -46,19 +64,19 @@ class BookTemplate
 			:pages => self.get_all_pages
 		}.to_json(*a)
 	end
-			
+
 	def pages_folder_name
 		File.join(@folder, "pages")
 	end
-	
+
 	def assets_folder_name
 		File.join(@folder, "assets")
 	end
-	
+
 	def yml_file_name
-		File.join(@folder, 'book.yml')	
+		File.join(@folder, 'book.yml')
 	end
-	
+
 	def get_default_pages
 		@initialPages.collect { |name| PageTemplate.get(self, name).make_page() }
 	end
@@ -69,13 +87,13 @@ class BookTemplate
 			.select { |x| x.end_with?(".html") && !x.end_with?("_icon.html") }\
 			.map { |x| PageTemplate.get(self, x.gsub(/\.html$/, "")) }
 	end
-	
+
 	# Regex for filename parsing
-	# m[1] filename, m[2] ext 
-	@@IMAGE_MATCH = /(.*)\.(jpg|png|gif|JPG|PNG|GIF)\Z/ 
+	# m[1] filename, m[2] ext
+	@@IMAGE_MATCH = /(.*)\.(jpg|png|gif|JPG|PNG|GIF)\Z/
 	# m[1] filename,m[2] display|icon, m[3] ext
 	@@DISPLAY_ICON_IMAGE_MATCH = /(.*)_(display|icon)\.(\w+)\Z/ #
-	
+
 	def get_asset_path(asset_name, size = nil)
 		unless size.nil?
 			m = @@IMAGE_MATCH.match(asset_name)
@@ -83,7 +101,7 @@ class BookTemplate
 		end
 		File.join(self.folder, "assets", asset_name);
 	end
-	
+
 	# array of asset file names
 	def get_image_assets
 		return [] unless File.exists? self.assets_folder_name
@@ -92,17 +110,17 @@ class BookTemplate
 			.select { |x| ( x =~ @@DISPLAY_ICON_IMAGE_MATCH ) == nil }
 		images
 	end
-	
+
 	# creates resized versions (_display & _icon) of assets
 	def multisize_image_assets
-		self.get_image_assets.each do |img| 
+		self.get_image_assets.each do |img|
 			m = @@IMAGE_MATCH.match(img)
 			old_file_name = File.join(self.assets_folder_name, img)
 			PhotoStorage.auto_orient(old_file_name)
 			PhotoStorage.multi_resize(old_file_name, { 128 => :icon, 1024 => :display })
 		end
 	end
-	
+
 	def clean_image_assets
 		return unless File.exists? self.assets_folder_name
 		images = Dir.entries( self.assets_folder_name )\
@@ -113,7 +131,7 @@ class BookTemplate
 			File.delete(file_name) if File.exists?(file_name)
 		end
 	end
-	
+
 	def create_book(user, book_params)
 		# sanitize params
 		book_params[:user_id] = user.pk
@@ -139,15 +157,15 @@ end
 
 # Used when generate_icon encounters pre-existing file
 class FileExistsError < Exception; end
-# Used when generate_icon detects malformed HTML 
+# Used when generate_icon detects malformed HTML
 class MalformedHTML < Exception; end
 
 # Book page template, holds HTML & yaml data
 class PageTemplate
-	
+
 	attr_reader :template_id # page id. Derived from page template file <page_id>.html
 	attr_reader :book_template # Book template page belongs to
-	
+
 	attr_reader :width # width in css units
 	attr_reader :height # height in css units
 	attr_reader :icon # icon as html
@@ -158,27 +176,27 @@ class PageTemplate
 	# photo: standard photo page
 	# map: map
 	# text: text-only page
-	attr_reader :position_type 
-	
-		
+	attr_reader :position_type
+
+
 	# get named template
 	def self.get(book_template, page_template)
 		self.new(book_template, page_template)
 	end
-	
+
 	def initialize(book_template, template_id)
 		@book_template = book_template
 		@template_id = template_id
 		data = YAML::load_file(self.yml_file_name)
 		raise "Could not load yaml file #{file_name}" unless data
-		
-		@width = data["width"] 	
+
+		@width = data["width"]
 		@height = data["height"]
-		@position = data["position"] || "middle" 
+		@position = data["position"] || "middle"
 		@image_count = data["image_count"] || nil
 		@text_count = data["text_count"] || 0
 		@position_type = data["position_type"] || "photo"
-		
+
 		@html = IO.read(self.html_file_name)
 		@icon = File.exists?(self.icon_file_name) ? IO.read(self.icon_file_name) :\
 		 "<div class='page-icon' style='width:128px;height:128px'><p>Default icon</p></div>"
@@ -197,19 +215,19 @@ class PageTemplate
 			:icon => @icon
 		}.to_json(*a)
 	end
-	
+
 	def icon_file_name
 		File.join(@book_template.folder(), "pages", @template_id + "_icon.html")
 	end
-	
+
 	def yml_file_name
 		File.join(@book_template.folder(), "pages", @template_id + ".yml")
 	end
-	
+
 	def html_file_name
 		File.join(@book_template.folder(), "pages", @template_id + ".html")
 	end
-	
+
 	# There is a javascript method, PB.PageTemplate.prototype.makePage
 	# that does the same thing. These two methods have to be in sync
 	# If you edit this method, MAKE SURE TO PORT YOUR CHANGES TO JAVASCRIPT
@@ -231,7 +249,7 @@ class PageTemplate
 			:width => @width, :height => @height, :html => html_with_id, :icon => @icon, :position => @position
 		})
 	end
-	
+
 	# generates simple icon
 	# algorithm:
 	# load template page
@@ -241,19 +259,19 @@ class PageTemplate
 	#  <div class="book-image" style="width:?px;height:?px;top:?px;left:?px">
 	#   <img class="actual-image" style="
 	def generate_icon_file()
-		
+
 		# Step 1: parse all the information from the HTML template
 		def get_page_info(doc)
 			page_info = { :width => 0, :height => 0, :images => [], :text => [] }
 			# get page width/height from main div
 			page_div = doc.xpath("//body/div")[0]
 			raise MalformedHTML.new("Page template missing enclosing div") if page_div.nil?
-			
+
 			css_rule = CssParser::RuleSet.new("div", page_div['style'])
 			raise MalformedHTML.new("Enclosing div must have width/height") unless css_rule['width'].to_i && css_rule['height'].to_i
 			page_info[:width] = css_rule['width'].to_i
 			page_info[:height] = css_rule['height'].to_i
-	
+
 			# get all <div class="book-image">
 			page_img_tags = doc.xpath("//div[@class='book-image']")
 			page_img_tags.each do |div|
@@ -270,11 +288,11 @@ class PageTemplate
 				else
 					img_tag = img_tags[0]
 					raise MalformedHTML.new("<img class='actual-image'> must have src attribute") unless img_tag['src']
-					img_info['src'] = img_tag["src"]		
+					img_info['src'] = img_tag["src"]
 				end
 				page_info[:images].push(img_info)
 			end
-			
+
 			page_text_tags = doc.xpath("//div[@class='book-text']")
 			page_text_tags.each do |div|
 				div_css_rule = CssParser::RuleSet.new('div', div['style'])
@@ -283,14 +301,14 @@ class PageTemplate
 				# get css position
 				text_info = {}
 				['top', 'left', 'width'].each { |prop| text_info[prop] = div_css_rule[prop].to_i }
-				page_info[:text].push(text_info)				
+				page_info[:text].push(text_info)
 			end
 			page_info
 		end
-		
+
 		# Step 2: generate the HTML
 		# <div class="page-icon" style="width:??px;height:128px">
-		#   <img data-img-pos="X" src="url?size=icon" 
+		#   <img data-img-pos="X" src="url?size=icon"
 		#	    style="position:relative;top:X%;left:X%,width:X%;height:X%">
 		def make_icon_html(page_info)
 			div_style = {
@@ -336,7 +354,7 @@ class PageTemplate
 				"facilisis mattis enim tempor porta.",
 				"Cras at dui non metus dignissim mattis",
 				"vel sit amet mi. Fusce eget mauris erat",
-				"quis fringilla dui. Pellentesque orci"		
+				"quis fringilla dui. Pellentesque orci"
 			]
 			text_data.each do |t|
 				html << "<div style=\'"
@@ -350,31 +368,31 @@ class PageTemplate
 			html << "\n</div>"
 			html.string
 		end
-		
+
 		raise FileExistsError.new("File exists, will not overwrite") if File.exists?(self.icon_file_name)
 		f = File.open(self.html_file_name)
 		doc = Nokogiri::HTML(f)
 		f.close
-		
+
 		page_info = get_page_info(doc);
-	
+
 		html = make_icon_html(page_info);
 
 		File.open(self.icon_file_name, 'w') { |f| f.write(html) }
-		
+
 		# update image count in YAML
 		data = YAML::load_file(self.yml_file_name)
 		data["image_count"] = page_info[:images].length
 		data["text_count"] = page_info[:text].length
 		# write out YAML file with sorted keys. This avoids diffs if file has not changed
 		File.open(self.yml_file_name, "w") { |f| f.write(YAML::dump(data).split("\n").sort.join("\n")) }
-		
+
 	end
-	
+
 	def delete_icon_file
-		File.delete(self.icon_file_name) if File.exists?(self.icon_file_name)	
+		File.delete(self.icon_file_name) if File.exists?(self.icon_file_name)
 	end
-	
+
 end
 
 end

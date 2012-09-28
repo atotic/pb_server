@@ -176,13 +176,13 @@ class SvegApp < Sinatra::Base
 		end
 
 		def json_response(object, no_cache = true)
-			headers = {'Content-Type' => Rack::Mime::MIME_TYPES['.json']}
+			headers = {'Content-Type' => Rack::Mime.mime_type('.json')}
 			headers['Cache-Control'] = 'no-cache' if no_cache
 			[200, headers, [object.to_json]]
 		end
 
 		def plain_response(msg="")
-			[200, {'Content-Type' => Rack::Mime::MIME_TYPES['.txt']}, [msg]]
+			[200, {'Content-Type' => Rack::Mime.mime_type('.txt')}, [msg]]
 		end
 
 		# TODO really redirect back, should use cookies?
@@ -208,6 +208,7 @@ class SvegApp < Sinatra::Base
 						"editor.pb.js",
 						"editor.pb.upload.js",
 						"editor.pb.photos.js",
+						"editor.pb.templates.js",
 						"editor.pb.jpegFile.js",
 						"editor.gui.js",
 						"editor.gui.touch.js",
@@ -501,9 +502,41 @@ class SvegApp < Sinatra::Base
 		render_erb :template_list, {:layout => :'layout/plain'}
 	end
 
-	get '/templates/:id' do
-		template = BookTemplate.get(params[:id])
-		json_response(template)
+	get '/template/img/:id' do
+		begin
+			f = Template.imgIdToImgFile(params[:id], params[:size])
+			send_file f
+		rescue Errno::ENOENT
+			halt [404, ["no such image"]]
+		end
+	end
+
+	get '/template/:id_list' do
+		idArray = params["id_list"].split(',')
+
+		err = false
+		first = true
+		retVal = "{\n"
+		for id in idArray do
+			f = PB::Template.templateIdToFile( id)
+			retVal << ',' unless first
+			first = false
+			retVal << '"' << id << '"' << ':'
+			begin
+				retVal << IO.read(f) << "\n"
+			rescue Errno::ENOENT
+				err = true
+				retVal << 'undefined'
+			end
+		end
+		retVal << "}"
+		# jsonp
+		retVal = params["callback"] << "(" << retVal << ")" if params["callback"]
+		type = params["callback"] ? Rack::Mime.mime_type('.js') : Rack::Mime.mime_type('.json')
+		headers = {'Content-Type' => type }
+		headers['Cache-Control'] = 'no-cache' if err
+		return [404, headers, [retVal]] if err
+		[200, headers, [retVal]]
 	end
 
 	get '/subscribe/book/:book_id' do # async

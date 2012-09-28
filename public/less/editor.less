@@ -1,5 +1,7 @@
 /* editor.less */
 
+@import "mixin.less";
+
 * { -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box; }
 
 .user-select(@select) {
@@ -143,6 +145,23 @@ body {
 	position: relative;
 	display: none;
 }
+
+#palette-resize-btn {
+	position: absolute;
+	top: @photo-list-height - @palette-resize-btn-radius + 12;
+	width: @palette-resize-btn-radius * 2;
+	height: @palette-resize-btn-radius * 2;
+	border-radius: @palette-resize-btn-radius;
+	background-color: @dark-bg-color;
+	bottom: -@palette-resize-btn-radius;
+	right: 0;
+	border: 1px solid @work-area-color;
+	cursor: row-resize;
+}
+#palette-resize-btn:hover, .resize-hover{
+	background-color: @dark-bg-color-lighten;
+}
+
 #photo-list-container {
 	.pb-palette-container;
 }
@@ -222,7 +241,6 @@ body {
 
 	#work-area-design {
 		display:none;
-		background-color: yellow;
 	}
 	#work-area-print {
 		display:none;
@@ -287,19 +305,49 @@ body {
 		background-color: none;
 	}
 
-#palette-resize-btn {
-	position: absolute;
-	top: @photo-list-height - @palette-resize-btn-radius + 12;
-	width: @palette-resize-btn-radius * 2;
-	height: @palette-resize-btn-radius * 2;
-	border-radius: @palette-resize-btn-radius;
-	background-color: @dark-bg-color;
-	bottom: -@palette-resize-btn-radius;
-	right: 0;
-	border: 1px solid @work-area-color;
-	cursor: row-resize;
-}
-#palette-resize-btn:hover, .resize-hover{
-	background-color: @dark-bg-color-lighten;
+@theme-picker-title-width: 100px;
+
+#theme-picker-container {
+	padding-top: 8px;
+	padding-bottom: 8px;
+	max-height: 300px;
 }
 
+#theme-picker-container > .lead {
+	display:inline-block;
+	vertical-align:top;
+	width: @theme-picker-title-width;
+	line-height:1;
+}
+
+#theme-picker-container > ul {
+	display:inline-block;
+	overflow: auto;
+	margin: 0;
+}
+
+#theme-picker-container > ul > li > p {
+	display:inline;
+	vertical-align:top;
+}
+#theme-picker-container > ul > li > img {
+	height:100px;
+	margin: 0 0 0 20px;
+}
+
+#theme-picker-container > ul > li.active {
+	.filter(~"saturate(4)");
+	background-color: Highlight;
+}
+
+#theme-size-container {
+	margin: 8px 0 8px 0;
+}
+
+#theme-size-container > div.lead {
+	width: @theme-picker-title-width;
+}
+
+#theme-size-container > label.radio {
+	padding-top: 0;
+}

@@ -614,7 +614,8 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 // Templates are in <script type='text/html' id='<div_id>-template'>
 (function(scope) {
 	var Template = {
-		get: function(templateId, data) {
+		get: function(templateId, data, options) {
+			options = $.extend({assignId: false}, options);
 			var template = $('#' + templateId + '-template');
 			if (template.length != 1)
 				return console.warn("No such template", templateId);
@@ -628,14 +629,15 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				});
 			}
 			var dom = $(text);
-			dom.attr('id', templateId);
+			if (options.assignId)
+				dom.attr('id', templateId);
 			return dom.get(0);
 		},
 		append: function(parent, templateId, data) {
 			var el = $('#' + templateId);
 			if (el.length == 1)
 				return el;
-			el = $(Template.get(templateId, data));
+			el = $(Template.get(templateId, data, {assignId: true}));
 			if (parent == null)
 				parent = $('body');
 			parent.append(el);
