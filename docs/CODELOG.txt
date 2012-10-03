@@ -45,12 +45,19 @@ book template:
 - users can build derivative works.
 
 Next:
-- picked a theme, lets create that layout
-- Keep number of pages always legal in browser
+- layouts:
+- Rough pages: enforcing consistency:
+	keep number of pages legal
+	keep spanning pages together when dragging
+- rewrite our local drag code, avoid drag events. Check if IE works then
+
 - keep track of file sizes in db
 - account page should load book list dynamically  $(window).unload(function(){});
-- No IE support in v1, Still thinking about IE
 - Bookshelf in account
+
+Oct 3
+Design/coding of what layouts look like.
+- dom will not be stored, it'll be generated on the fly
 
 Sept 28
 Theme picker done.

@@ -634,7 +634,7 @@ window.PB.Photo // Photo objects
 		indexOf: function() {
 			return this.book.roughPageList.indexOf(this.id);
 		},
-		pageClass: function() {
+		get pageClass() {
 			if ( this.id.match(coverRegex))
 				return this.id;
 			else

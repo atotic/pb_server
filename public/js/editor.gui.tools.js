@@ -77,7 +77,7 @@
 				else
 					nextPage = book.insertRoughPage(-1, {animate:false});
 				var want = Math.floor(Math.random() * 4 + 1);
-				if (nextPage.pageClass() != 'page') {
+				if (nextPage.pageClass != 'page') {
 					switch(nextPage.id) {
 						case 'cover':
 							want = 1;

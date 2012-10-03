@@ -11,6 +11,9 @@ var ThemePicker = {
 	init: function(dom) {
 		this.initThemeList(dom);
 		this.initButtonList(dom);
+		dom.find('#theme-picker-submit').click(function() {
+			if (!$(this).hasClass('disabled'))
+				DesignWorkArea.pickTheme(ThemePicker.selectedTheme, ThemePicker.selectedSize) });
 	},
 	initThemeList: function(dom) {
 		var themeList = dom.find(THEME_LIST_SELECTOR);
@@ -108,13 +111,21 @@ var DesignWorkArea = {
 	show: function() {
 		$(ID).show();
 		if (!this.book.bookTemplateId) {
+			$('#palette').hide();
 			var picker = GUI.Template.append($(ID), 'theme-picker');
 			ThemePicker.init(picker);
 		}
 	},
 	hide: function() {
+		$('#palette').show();
 		$(ID).hide();
 	},
+	pickTheme: function(themeTemplate, bookTemplate) {
+		var book = $(ID).data('model');
+		book.setBookTemplate(themeTemplate.id, bookTemplate.id);
+		book.generateAllPagesHtml(function(msg) {
+		});
+	}
 }
 
 scope.DesignWorkArea = DesignWorkArea;

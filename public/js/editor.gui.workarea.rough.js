@@ -257,8 +257,8 @@
 			var domPage = $("<div class='rough-page'><p>" + pageModel.pageTitle() + "</p></div>");
 			if (pageModel.type() === 'pages')
 				domPage.attr('draggable', true);
-			if (pageModel.pageClass() !== 'page')
-				domPage.addClass('rough-page-' + pageModel.pageClass());
+			if (pageModel.pageClass !== 'page')
+				domPage.addClass('rough-page-' + pageModel.pageClass);
 
 			// Hook it up to the model
 			domPage.data('model', pageModel);

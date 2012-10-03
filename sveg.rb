@@ -526,7 +526,7 @@ class SvegApp < Sinatra::Base
 				retVal << IO.read(f) << "\n"
 			rescue Errno::ENOENT
 				err = true
-				retVal << 'undefined'
+				retVal << 'null'
 			end
 		end
 		retVal << "}"
