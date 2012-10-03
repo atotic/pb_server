@@ -78,8 +78,8 @@ class JsonPathTest < Test::Unit::TestCase
 		"D": { "url": { "l": "/assets/test/4.jpg"} },
 		"E": { "url": { "l": "/assets/test/5.jpg"} }
 		},
-	"roughPageList": ["cover", "cover-flap", "back-flap", "back","1","2","3","4"],
-	"roughPages": {
+	"pageList": ["cover", "cover-flap", "back-flap", "back","1","2","3","4"],
+	"pages": {
 		"cover": { "photoList": [] },
 		"cover-flap": { "photoList": [] },
 		"back-flap": { "photoList": [] },
@@ -92,14 +92,14 @@ class JsonPathTest < Test::Unit::TestCase
 }
 eos
 		obj = JSON.parse(json)
-		diff = [{"op"=>"insert", "path"=>"$.roughPages.back.photoList[0]", "args"=>"A"}, {"op"=>"delete", "path"=>"$.roughPages.1.photoList[0]"}]
+		diff = [{"op"=>"insert", "path"=>"$.pages.back.photoList[0]", "args"=>"A"}, {"op"=>"delete", "path"=>"$.pages.1.photoList[0]"}]
 		o = PB::JsonDiff.patch(obj, diff)
 	end
 
 	def test_swap
 		debugger
-		document = JSON.parse '{"title":"testBook","photoList":[],"roughPageList":["cover","cover-flap","back-flap","back","dWAsZT","k6djRY","34WSlh","17caHV","hXtaSp","973tJZ"],"roughPages":{"cover":{"id":"cover","photoList":[]},"cover-flap":{"id":"cover-flap","photoList":[]},"back-flap":{"id":"back-flap","photoList":[]},"back":{"id":"back","photoList":[]},"dWAsZT":{"id":"dWAsZT","photoList":[]},"k6djRY":{"id":"k6djRY","photoList":[]},"34WSlh":{"id":"34WSlh","photoList":[]},"17caHV":{"id":"17caHV","photoList":[]},"hXtaSp":{"id":"hXtaSp","photoList":[]},"973tJZ":{"id":"973tJZ","photoList":[]}}}'
-		diff = JSON.parse '[{"op":"swapArray","path":"$.roughPageList","args":{"srcIndex":5,"destIndex":4,"srcVal":"dWAsZT","destVal":"k6djRY"},"localId":"63wEK7"},{"op":"swapArray","path":"$.roughPageList","args":{"srcIndex":6,"destIndex":5,"srcVal":"dWAsZT","destVal":"34WSlh"}},{"op":"swapArray","path":"$.roughPageList","args":{"srcIndex":7,"destIndex":6,"srcVal":"dWAsZT","destVal":"17caHV"}},{"op":"swapArray","path":"$.roughPageList","args":{"srcIndex":8,"destIndex":7,"srcVal":"dWAsZT","destVal":"hXtaSp"}},{"op":"swapArray","path":"$.roughPageList","args":{"srcIndex":9,"destIndex":8,"srcVal":"dWAsZT","destVal":"973tJZ"}}]'
+		document = JSON.parse '{"title":"testBook","photoList":[],"pageList":["cover","cover-flap","back-flap","back","dWAsZT","k6djRY","34WSlh","17caHV","hXtaSp","973tJZ"],"pages":{"cover":{"id":"cover","photoList":[]},"cover-flap":{"id":"cover-flap","photoList":[]},"back-flap":{"id":"back-flap","photoList":[]},"back":{"id":"back","photoList":[]},"dWAsZT":{"id":"dWAsZT","photoList":[]},"k6djRY":{"id":"k6djRY","photoList":[]},"34WSlh":{"id":"34WSlh","photoList":[]},"17caHV":{"id":"17caHV","photoList":[]},"hXtaSp":{"id":"hXtaSp","photoList":[]},"973tJZ":{"id":"973tJZ","photoList":[]}}}'
+		diff = JSON.parse '[{"op":"swapArray","path":"$.pageList","args":{"srcIndex":5,"destIndex":4,"srcVal":"dWAsZT","destVal":"k6djRY"},"localId":"63wEK7"},{"op":"swapArray","path":"$.pageList","args":{"srcIndex":6,"destIndex":5,"srcVal":"dWAsZT","destVal":"34WSlh"}},{"op":"swapArray","path":"$.pageList","args":{"srcIndex":7,"destIndex":6,"srcVal":"dWAsZT","destVal":"17caHV"}},{"op":"swapArray","path":"$.pageList","args":{"srcIndex":8,"destIndex":7,"srcVal":"dWAsZT","destVal":"hXtaSp"}},{"op":"swapArray","path":"$.pageList","args":{"srcIndex":9,"destIndex":8,"srcVal":"dWAsZT","destVal":"973tJZ"}}]'
 		PB::JsonDiff.patch(document, diff);
 	end
 

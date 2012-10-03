@@ -172,14 +172,19 @@ scope.Template = Template;
 
 BookThemeAPI = {
 	setBookTemplate: function(themeId, bookTemplateId) {
+		var changed = false;
 		if (bookTemplateId != this.bookTemplateId) {
 			this.localData.document.bookTemplateId = bookTemplateId;
 			PB.broadcastChange(this, 'bookTemplateId');
+			changed = true;
 		}
 		if (this.themeId != themeId) {
 			this.localData.document.themeId = themeId;
 			PB.broadcastChange(this, 'themeId');
+			changed = true;
 		}
+		if (changed == true)
+			PB.broadcastChange(this, 'template');
 	},
 	loadTemplates: function() {
 		// loads all templates the book needs: theme, bookTemplate, and layoutTemplates from the book
@@ -206,15 +211,15 @@ BookThemeAPI = {
 		this.loadTemplates()
 			.done( function() {
 				var bookTemplate = PB.Template.cached(THIS.bookTemplateId);
-				for (var i=0; i< THIS.localData.document.roughPageList.length; i++) {
-					var page = THIS.page( THIS.localData.document.roughPageList[i]);
+				for (var i=0; i< THIS.localData.document.pageList.length; i++) {
+					var page = THIS.page( THIS.localData.document.pageList[i]);
 					var layoutTemplates = bookTemplate.getMatchingLayouts({
 						pageClass: page.pageClass,
 						imageCount: page.photoList.length
 					});
 					// pick a template
 					var layout  = layoutTemplates[0];
-					layout.generateDom(page);
+					page.layoutId = layout.id;
 				}
 			})
 			.fail(function(reason ) { failCb("failed to load book templates " + reason) } );

@@ -142,8 +142,8 @@ window.PB.Photo // Photo objects
 		set stream(val) {
 			this._stream = val;
 		},
-		get roughPageList() {
-			return this.localData.document.roughPageList;
+		get pageList() {
+			return this.localData.document.pageList;
 		},
 		get title() {
 			return this.localData.document.title || "Untitled";
@@ -172,8 +172,8 @@ window.PB.Photo // Photo objects
 			if (id in this._proxies)
 				return this._proxies[id];
 			else
-				if (id in this.localData.document.roughPages)
-					this._proxies[id] = new PB.RoughPageProxy(id, this);
+				if (id in this.localData.document.pages)
+					this._proxies[id] = new PB.PageProxy(id, this);
 				else
 					throw "No such page";
 			return this._proxies[id];
@@ -211,8 +211,8 @@ window.PB.Photo // Photo objects
 			this._stream.close();
 		},
 		reset: function() {	// destroys the book pages
-			this.localData.document.roughPageList = ["cover", "cover-flap", "back-flap", "back","P1","P2","P3","P4"];
-			this.localData.document.roughPages = {
+			this.localData.document.pageList = ["cover", "cover-flap", "back-flap", "back","P1","P2","P3","P4"];
+			this.localData.document.pages = {
 				"cover": { "id": "cover", "photoList": [] },
 				"cover-flap": { "id": "cover-flap", "photoList": [] },
 				"back-flap": { "id": "back-flap", "photoList": [] },
@@ -222,16 +222,16 @@ window.PB.Photo // Photo objects
 				"P3": {"id": "P3", "photoList": [] },
 				"P4": {"id": "P4", "photoList": [] }
 			};
-			PB.broadcastChange(this, 'roughPageList');
+			PB.broadcastChange(this, 'pageList');
 			PB.broadcastChange(this, 'photoList');
-			for (var i=0; i<this.localData.document.roughPageList.length; i++)
-				PB.broadcastChange(this.page(this.localData.document.roughPageList[i]), 'photoList');
+			for (var i=0; i<this.localData.document.pageList.length; i++)
+				PB.broadcastChange(this.page(this.localData.document.pageList[i]), 'photoList');
 			this._dirty = true;
 		},
 		// returns hash of images that appear in pages
 		_collectUsedImages: function() {
 			var retVal = {};
-			var pageList = this.roughPageList;
+			var pageList = this.pageList;
 			for (var i=0; i<pageList.length; i++) {
 				var page = this.page(pageList[i]);
 				for (var j=0; j<page.photoList.length; j++)
@@ -242,6 +242,9 @@ window.PB.Photo // Photo objects
 		_pagePhotosChanged: function(page, options) {
 			this._dirty = true;
 			PB.broadcastChange(this, 'photoList', options);
+		},
+		_pageChanged: function(page, options) {
+			this._dirty = true;
 		},
 		_patchPhotoIdChange: function(photo, propName, options) {
 //			console.log("patching photo ids", photo.id, options.newId);
@@ -267,7 +270,7 @@ window.PB.Photo // Photo objects
 				PB.broadcastChange(this, 'photoList', options);
 			}
 			// Patch all the rough pages
-			var pages = this.roughPageList;
+			var pages = this.pageList;
 			for (var i=0; i< pages.length; i++) {
 				try {
 					this.page(pages[i]).patchPhotoIdChange(photo, options.newId);
@@ -291,7 +294,7 @@ window.PB.Photo // Photo objects
 		generateId: function() {
 			var id = PB.randomString(6);
 			if (this.localData.document.photoList.indexOf(id) != -1
-				|| this.localData.document.roughPageList.indexOf(id) != -1)
+				|| this.localData.document.pageList.indexOf(id) != -1)
 				return this.generateId();
 			return id;
 		},
@@ -332,9 +335,9 @@ window.PB.Photo // Photo objects
 			}
 			var objectPath = change[1].objectPath();
 			var document_var= member(objectPath, 1);
-			if (document_var == this.localData.document.roughPageList)
-				return [{model:this, prop: 'roughPageList'}];
-			else if (document_var == this.localData.document.roughPages) {
+			if (document_var == this.localData.document.pageList)
+				return [{model:this, prop: 'pageList'}];
+			else if (document_var == this.localData.document.pages) {
 				if (objectPath.length > 3) {
 					var roughPage = member(objectPath, 2);
 					var rough_page_var = member(objectPath, 3);
@@ -476,7 +479,7 @@ window.PB.Photo // Photo objects
 			//
 			photo.doNotSave = true;
 			// Remove photo from all the pages
-			var pageList = this.roughPageList;
+			var pageList = this.pageList;
 			for (var i=0; i<pageList.length; i++) {
 				var page = this.page(pageList[i]);
 				if (page.photoList.indexOf(photo.id) != -1)
@@ -497,40 +500,40 @@ window.PB.Photo // Photo objects
 		insertRoughPage: function(index, options) {
 			if (index == undefined)
 				index = -1;
-			var page = PB.RoughPageProxy.blank(this);
-			var roughPageList = this.roughPageList;
-			if (roughPageList.indexOf(page.id) != -1)
+			var page = PB.PageProxy.blank(this);
+			var pageList = this.pageList;
+			if (pageList.indexOf(page.id) != -1)
 				throw "page already in book";
-			this.localData.document.roughPages[page.id] = page;
-			if (index > roughPageList.length || index == -1)
-				this.localData.document.roughPageList.push(page.id);
+			this.localData.document.pages[page.id] = page;
+			if (index > pageList.length || index == -1)
+				this.localData.document.pageList.push(page.id);
 			else
-				this.localData.document.roughPageList.splice(index, 0, page.id);
+				this.localData.document.pageList.splice(index, 0, page.id);
 			this._dirty = true;
-			PB.broadcastChange(this, 'roughPageList', options);
+			PB.broadcastChange(this, 'pageList', options);
 			return this.page(page.id);
 		},
 		deleteRoughPage: function(page, options) {
-			var index = this.roughPageList.indexOf(page.id);
+			var index = this.pageList.indexOf(page.id);
 			if (index == -1)
 				throw "no such page";
-			this.localData.document.roughPageList.splice(index, 1);
+			this.localData.document.pageList.splice(index, 1);
 			delete this._proxies[page.id];
 			this._pagePhotosChanged(page, options);
 			this._dirty = true;
-			PB.broadcastChange(this, 'roughPageList', options);
+			PB.broadcastChange(this, 'pageList', options);
 		},
 		moveRoughPage: function(page, dest, options) {
-			var src = this.roughPageList.indexOf(page.id);
+			var src = this.pageList.indexOf(page.id);
 			if (src == -1)
 				throw "no such page";
-			this.localData.document.roughPageList.splice(src, 1);
-			if (dest == -1 || dest > this.roughPageList.length)
-				this.localData.document.roughPageList.push(page.id);
+			this.localData.document.pageList.splice(src, 1);
+			if (dest == -1 || dest > this.pageList.length)
+				this.localData.document.pageList.push(page.id);
 			else
-				this.localData.document.roughPageList.splice(dest, 0, page.id);
+				this.localData.document.pageList.splice(dest, 0, page.id);
 			this._dirty = true;
-			PB.broadcastChange(this, 'roughPageList', options);
+			PB.broadcastChange(this, 'pageList', options);
 		}
 	}
 
@@ -595,22 +598,32 @@ window.PB.Photo // Photo objects
 	scope.PhotoProxy = PhotoProxy;
 })(window.PB);
 
-// PB.RoughPageProxy
+// PB.PageProxy
 (function(scope) {
 	"use strict";
 
-	var RoughPageProxy = function(id, book) {
+	var PageProxy = function(id, book) {
 		this.id = id;
 		this.book = book;
 	}
 
 	var coverRegex = /^cover|^cover-flap|^back-flap|^back/;
-	RoughPageProxy.prototype = {
+	PageProxy.prototype = {
 		get p() {
-			return this.book.localData.document.roughPages[this.id];
+			return this.book.localData.document.pages[this.id];
 		},
 		get photoList() {
-			return this.book.localData.document.roughPages[this.id].photoList;
+			return this.book.localData.document.pages[this.id].photoList;
+		},
+		get layoutId() {
+			return this.book.localData.document.pages[this.id].layoutId;
+		},
+		set layoutId(val) {
+			if (val != this.book.localData.document.pages[this.id].layoutId) {
+				this.book.localData.document.pages[this.id].layoutId = val;
+				this.book._pageChanged(this);
+				PB.broadcastChange(this, 'layoutId');
+			}
 		},
 		isDraggable: function() {
 			return this.id.match(coverRegex) == null;
@@ -632,7 +645,7 @@ window.PB.Photo // Photo objects
 		},
 		// indexOf this page inside the book
 		indexOf: function() {
-			return this.book.roughPageList.indexOf(this.id);
+			return this.book.pageList.indexOf(this.id);
 		},
 		get pageClass() {
 			if ( this.id.match(coverRegex))
@@ -647,7 +660,7 @@ window.PB.Photo // Photo objects
 				case 'back-flap': return 'flap';
 				case 'back': return 'back';
 				default:
-					return this.book.roughPageList.indexOf(this.id) - 3;
+					return this.book.pageList.indexOf(this.id) - 3;
 			}
 		},
 		photos: function() {
@@ -683,12 +696,12 @@ window.PB.Photo // Photo objects
 				p.photoList[idx] = newId;
 		}
 	}
-	RoughPageProxy.blank = function(book) {
+	PageProxy.blank = function(book) {
 		return {
 			id: book.generateId(),
 			photoList: []
 		};
 	}
 
-	scope.RoughPageProxy = RoughPageProxy;
+	scope.PageProxy = PageProxy;
 })(window.PB);

@@ -21,8 +21,8 @@ class Book < Sequel::Model(:books)
 {
 	"title": #{self.title.to_json},
 	"photoList": [],
-	"roughPageList": ["cover", "cover-flap", "back-flap", "back","P1","P2","P3","P4"],
-	"roughPages": {
+	"pageList": ["cover", "cover-flap", "back-flap", "back","P1","P2","P3","P4"],
+	"pages": {
 		"cover": { "id": "cover", "photoList": [] },
 		"cover-flap": { "id": "cover-flap", "photoList": [] },
 		"back-flap": { "id": "back-flap", "photoList": [] },

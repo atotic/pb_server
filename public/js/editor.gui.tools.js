@@ -66,7 +66,7 @@
 			var t = new PB.Timer("autoPlacePhotos");
 			var photos = book.unusedPhotoList;
 			photos = PB.ServerPhotoCache.sortPhotos(photos);
-			var emptyPages = book.roughPageList.filter(function(pageId) {
+			var emptyPages = book.pageList.filter(function(pageId) {
 				return book.page(pageId).photoList.length == 0;
 			});
 			PB.startChangeBatch();

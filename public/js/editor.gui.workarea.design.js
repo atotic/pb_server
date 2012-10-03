@@ -12,7 +12,7 @@ var ThemePicker = {
 		this.initThemeList(dom);
 		this.initButtonList(dom);
 		dom.find('#theme-picker-submit').click(function() {
-			if (!$(this).hasClass('disabled'))
+			if (!$(this).hasClass('disabled') && ThemePicker.selectedTheme && ThemePicker.selectedSize)
 				DesignWorkArea.pickTheme(ThemePicker.selectedTheme, ThemePicker.selectedSize) });
 	},
 	initThemeList: function(dom) {
@@ -106,18 +106,38 @@ var DesignWorkArea = {
 	get book() {
 		return $(ID).data('model');
 	},
-	bookChanged: function() {
+	bookChanged: function(ev, model, prop, options) {
+		switch(prop) {
+			case 'template':
+				if ($(ID+':visible').length == 1)
+					DesignWorkArea.show();
+				break;
+			default:
+				;
+		}
 	},
 	show: function() {
 		$(ID).show();
-		if (!this.book.bookTemplateId) {
-			$('#palette').hide();
-			var picker = GUI.Template.append($(ID), 'theme-picker');
-			ThemePicker.init(picker);
+		if (!this.book.bookTemplateId)
+			this.showThemePicker();
+		else {
+			this.showDesignArea();
 		}
 	},
-	hide: function() {
+	showThemePicker: function() {
+		$('#palette').hide();
+		var picker = GUI.Template.append($(ID), 'theme-picker');
+		ThemePicker.init(picker);
+		GUI.fixSizes();
+	},
+	showDesignArea: function() {
 		$('#palette').show();
+		GUI.PhotoPalette.show();
+		$('#theme-picker').detach();
+		$(ID).show();
+		GUI.fixSizes();
+	},
+	hide: function() {
 		$(ID).hide();
 	},
 	pickTheme: function(themeTemplate, bookTemplate) {

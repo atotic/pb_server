@@ -172,7 +172,8 @@
 		endDrag: function(clientY) {
 		},
 		fixPosition: function() {
-			var pos = $('#palette').outerHeight() - paletteRect.height / 2;
+			var paletteHeight = $('#palette:visible').length == 1 ? $('#palette').outerHeight() : 0;
+			var pos = paletteHeight - paletteRect.height / 2;
 			if (pos < paletteRect.height)
 				$('#palette-resize-btn').hide();
 			else

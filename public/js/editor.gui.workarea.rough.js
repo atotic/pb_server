@@ -8,7 +8,7 @@
 	var RoughWorkArea = {
 		bindToBook: function(book) {
 			this.makeDroppable();
-			var roughPageList = book.roughPageList;
+			var pageList = book.pageList;
 			$('#work-area-rough')
 				.data('model', book)
 				.on( PB.MODEL_CHANGED, this.bookChanged);
@@ -29,6 +29,7 @@
 			}
 		},
 		show: function() {
+			$('#palette').show();
 			$('#work-area-rough').show();
 			GUI.PhotoPalette.show();
 			this.processDelayUntilVisible();
@@ -192,7 +193,7 @@
 			var src = $(GUI.DragStore.dom).data('model');
 			var dest = $(t.target).data('model');
 			var book = RoughWorkArea.book;
-			book.moveRoughPage(src, book.roughPageList.indexOf(dest.id));
+			book.moveRoughPage(src, book.pageList.indexOf(dest.id));
 		},
 		dropImage: function(ev, t) {
 			var src = $(GUI.DragStore.dom);
@@ -349,7 +350,7 @@
 
 			var oldChildren = containerDom.children( sel );
 			var oldPages = oldChildren.map(function(i,el) { return $.data(el, 'model').id}).get();
-			var newPages = bookModel.roughPageList;
+			var newPages = bookModel.pageList;
 
 			var toId = function(el) { return el.id};
 
@@ -444,7 +445,7 @@
 		},
 		// #work-area-rough is 'this'
 		bookChanged: function(ev, model, prop, options) {
-			if (prop === 'roughPageList') {
+			if (prop === 'pageList') {
 				RoughWorkArea.synchronizeRoughPageList(options);
 			}
 		},

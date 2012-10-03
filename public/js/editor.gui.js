@@ -52,7 +52,8 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			$('#sidebar').css('top', $('#top-menu').height());
 			$('#main-content').css('top', $('#top-menu').height());
 			$('#main-content').width($('body').width() - $('#sidebar').width());
-			var h = $('body').height() - $('#top-menu').height() - $('#palette').outerHeight();
+			var paletteHeight = $('#palette:visible').length == 1 ? $('#palette').outerHeight() : 0;
+			var h = $('body').height() - $('#top-menu').height() - paletteHeight;
 			$('#work-area').css('height', h);
 			$('#work-area-container').css('height', h-parseInt($('#work-area').css('padding-top')));
 			GUI.Buttons.ResizePaletteButton.fixPosition();
