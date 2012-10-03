@@ -130,12 +130,22 @@ var DesignWorkArea = {
 		ThemePicker.init(picker);
 		GUI.fixSizes();
 	},
+	showPage: function(page) {
+		var dom = page.dom(PB.PhotoProxy.MEDIUM);
+		$(ID).children().detach();
+		$(ID).append(dom);
+	},
 	showDesignArea: function() {
 		$('#palette').show();
 		GUI.PhotoPalette.show();
 		$('#theme-picker').detach();
 		$(ID).show();
 		GUI.fixSizes();
+		this.book.loadTemplates()
+			.done(function() {
+				DesignWorkArea.showPage(DesignWorkArea.book.page(DesignWorkArea.book.pageList[0]));
+			})
+			.fail(function() { debugger;});
 	},
 	hide: function() {
 		$(ID).hide();

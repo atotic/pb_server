@@ -206,6 +206,8 @@ class SvegApp < Sinatra::Base
 						"jdataview.js",
 						"application.js",
 						"editor.pb.js",
+						"editor.pb.book.js",
+						"editor.pb.page.js",
 						"editor.pb.upload.js",
 						"editor.pb.photos.js",
 						"editor.pb.templates.js",

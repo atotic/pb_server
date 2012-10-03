@@ -162,8 +162,48 @@ scope.Template = Template;
 		$.extend(this, t);
 	};
 	Layout.prototype = {
-		generateDom: function(page) {
-			debugger;
+		getWidth: function(page) {
+			var inches = this.width || PB.Template.cached(page.book.bookTemplateId).width;
+			return inches * 72;
+		},
+		getHeight: function(page) {
+			var inches = this.height || PB.Template.cached(page.book.bookTemplateId).height;
+			return inches * 72;
+		},
+		generateDom: function(page, resolution) {	// resolution: PhotoProxy.SMALL|MEDIUM|LARGE
+			var width = this.getWidth(page);
+			var height = this.getHeight(page);
+			var retVal = $('<div/>');
+			retVal.addClass('page')
+				.css({
+					width: width,
+					height: height
+				});
+
+			var photos = page.photos();
+			var perRow = Math.floor(Math.sqrt(photos.length) + 0.99);
+
+			var photoWidth = width / perRow;
+			var photoHeight = height / perRow;
+			var imgIdx = 0;
+			for (var v=0; v <= perRow; v++)
+				for (var h=0; h<=perRow; h++) {
+					var imgIdx = v * perRow + h;
+					if (imgIdx >= photos.length)
+						continue;
+					var imgTag = $('<img>');
+					var info = photos[imgIdx].getUrl(resolution);
+					imgTag.css({
+						position: 'absolute',
+						top: v * photoHeight,
+						left: h * photoWidth,
+						width: photoWidth,
+						height: photoHeight
+					});
+					imgTag.prop('src', info.url);
+					retVal.append(imgTag);
+				}
+			return retVal;
 		}
 	}
 	scope.Layout = Layout;
