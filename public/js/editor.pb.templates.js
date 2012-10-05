@@ -174,8 +174,7 @@ scope.Template = Template;
 			var width = this.getWidth(page);
 			var height = this.getHeight(page);
 			var retVal = $('<div/>');
-			retVal.addClass('page')
-				.css({
+			retVal.css({
 					width: width,
 					height: height
 				});
@@ -186,8 +185,8 @@ scope.Template = Template;
 			var photoWidth = width / perRow;
 			var photoHeight = height / perRow;
 			var imgIdx = 0;
-			for (var v=0; v <= perRow; v++)
-				for (var h=0; h<=perRow; h++) {
+			for (var v=0; v < perRow; v++)
+				for (var h=0; h<perRow; h++) {
 					var imgIdx = v * perRow + h;
 					if (imgIdx >= photos.length)
 						continue;

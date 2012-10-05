@@ -1,32 +1,7 @@
 /*
 	GUI Manipulation
-	Classes:
-	window.GUI:
-
-	window.GUI.Buttons // button event handlers
-
-	window.GUI.Command // command definitions
-	window.GUI.CommandManager // command execution (keyboard shortcuts)
-	window.GUI.Util // graphic utilities
-
-	window.GUI.Controller // implements command actions (resizes, dom manipulation, broadcast to model)
-
-// Each main area of the screen has its own area
-	window.GUI.PhotoPalette // dragging of images inside photo palette
-	window.GUI.RoughWorkArea // #rough-work-area Dnd
-
-// Touch event handling
-	window.GUI.TouchDrop // transforms touch events into drop events
-	window.GUI.TouchDragHandler // touch dragging framework
-	window.GUI.DragStore // stores dragged items
-
 
 GUI holds references to model objects in $(dom element).data('model')
-The incomplete list of elements and their models:
-.rough-page -> PB.RoughPage
-#photo-list > img -> PB.Photo
-#work-area-rough -> PB.Book
-.rough-tile -> PB.Photo
 Each dom element holding a model listens for PB.MODEL_CHANGED events
 */
 
@@ -40,13 +15,16 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 
 		var GUI = {
 		init: function() {
-			this.Options.init();
-			this.Buttons.init();
-			this.CommandManager.init();
-			this.Tools.init();
-			this.initShortcuts();
+			this.initGlobalShortcuts();
 			window.setTimeout(GUI.fixSizes,0);
 			$(window).resize(GUI.fixSizes);
+
+			GUI.Options.init();
+			GUI.Buttons.init();
+			GUI.CommandManager.init();
+			GUI.Tools.init();
+			GUI.DesignWorkArea.init();
+
 		},
 		fixSizes: function() {
 			$('#sidebar').css('top', $('#top-menu').height());
@@ -58,15 +36,17 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			$('#work-area-container').css('height', h-parseInt($('#work-area').css('padding-top')));
 			GUI.Buttons.ResizePaletteButton.fixPosition();
 		},
-		initShortcuts: function() {
-			GUI.CommandManager.add(new this.Command('viewMoreImages', '+', false,
+		initGlobalShortcuts: function() {
+			var cs = new GUI.CommandSet("global");
+			cs.add(new GUI.Command('viewMoreImages', '+', false,
 				function() {GUI.Palette.viewMore()}));
-			GUI.CommandManager.add(new this.Command('viewMoreImages', '=', false,
+			cs.add(new GUI.Command('viewMoreImages', '=', false,
 				function() {GUI.Palette.viewMore()}));
-			GUI.CommandManager.add(new this.Command('viewFewerImages', '-', false,
+			cs.add(new GUI.Command('viewFewerImages', '-', false,
 				function() {GUI.Palette.viewLess()}));
-			GUI.CommandManager.add(new GUI.Command("HideTools", GUI.CommandManager.keys.esc, false,
+			cs.add(new GUI.Command("HideTools", GUI.CommandManager.keys.esc, false,
 				GUI.toggleTools));
+			GUI.CommandManager.addCommandSet(cs);
 		},
 		bindToBook: function(book) {
 			$('body')
@@ -437,107 +417,6 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 
 	scope.Error = Error;
 
-})(window.GUI);
-// CommandManager and Command
-(function(scope) {
-	var Command = function(name, key, meta, callback) {
-		this.name = name;
-		this.key = key;
-		this.meta = meta;
-		this.callback = callback;
-	};
-
-	var shortcuts = {};	// hash of shortcuts
-	var commands = {};
-
-	var CommandManager = {
-		init: function() {
-			$(document).keydown( function(ev) {
-				ev = ev.originalEvent;
-				if (ev.repeat)
-					return;
-				var s = CommandManager.eventToString(ev);
-				if (shortcuts[s])
-					shortcuts[s].callback();
-			});
-		},
-		keys: {	// all the keys we recognize are listed here
-			esc: "esc",
-			plus: "+",
-			minus: "-",
-			meta: "meta-"
-		},
-		// see http://unixpapa.com/js/key.html for the madness that is js key handling
-		// 2012: most browsers not supporting html5 keyboard event specs
-		eventToString: function(ev) {
-			if (ev.repeat)
-				return null;
-			var key = null;	// key as string
-			if ('keyIdentifier' in ev) {
-				switch(ev.keyIdentifier) {
-					case "U+001B":
-						key = this.keys.esc; break;
-					default:
-						var keyCode = parseInt(ev.keyIdentifier.replace(/U\+/, ""), 16);
-						if (keyCode)
-							key = String.fromCharCode(keyCode);
-						break;
-				}
-			}
-			else if ('keyCode' in ev) {
-				switch (ev.keyCode) {
-					case 27:
-						key = this.keys.esc; break;
-					case 109: // Chrome
-					case 173: // FF
-						key = this.keys.minus; break;
-					case 107: // Chrome
-					case 61: // FF
-						key = this.keys.plus; break;
-					default:
-						;
-				}
-			}
-			else {
-				console.warn("keyboard event without keyIdentifer or keyCode");
-			}
-			if (!key || key == "" || (key.length > 0 && key.charCodeAt(0) < 32))
-				return null;
-			var s = ev.altKey ? this.keys.meta : '';
-			s += key.toLowerCase();
-//			console.log("meta", ev.metaKey, "ctrl", ev.ctrlKey, "altKey", ev.altKey);
-//			console.log("shortcut", s);
-			return s;
-		},
-		asciiToString: function(key, meta) {
-			var s = meta ? this.keys.meta : '';
-			s += key.toLowerCase();
-			return s;
-		},
-		add: function(cmd) {
-			if (cmd.key)
-				shortcuts[CommandManager.asciiToString(cmd.key, cmd.meta)] = cmd;
-			if (cmd.name)
-				commands[cmd.name] = cmd;
-		},
-		remove: function(cmd) {
-			if (cmd.key) {
-				var k = CommandManager.asciiToString(cmd.key, cmd.meta);
-				if (k in shortcuts)
-					delete shortcuts[k];
-			}
-			if (cmd.name && cmd.name in commands)
-				delete commands[cmd.name];
-		},
-		doCommand: function(cmd ) {
-			if (commands[cmd])
-				commands[cmd].callback();
-			else
-				console.error('unknown command ' + cmd);
-		}
-	}
-	scope.Command = Command;
-	scope.CommandManager = CommandManager;
 })(window.GUI);
 
 // JQDiffUtil

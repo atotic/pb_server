@@ -31,6 +31,7 @@ Excellent CSS effects: bounce, rotate, etc. If I ever need visual candy http://b
 CSS arrow please: http://cssarrowplease.com/
 
 JS
+JavaScript macros http://sweetjs.org/
 MatchMedia for JS: http://wickynilliams.github.com/enquire.js/
 Handling keyboard events in browsers: http://dev.opera.com/articles/view/keyboard-accessible-web-applications-3/
 Offline, FT Style: http://labs.ft.com/2012/08/basic-offline-html5-web-app/

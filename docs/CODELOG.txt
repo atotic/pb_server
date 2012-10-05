@@ -54,10 +54,15 @@ Next:
 - keep track of file sizes in db
 - account page should load book list dynamically  $(window).unload(function(){});
 - Bookshelf in account
+Oct 4
+Working on back/forward buttons
+Demo'd to Eduardo, he likes it a lot
+Lyra is not talking, grumble!
 
 Oct 3
 Design/coding of what layouts look like.
 - dom will not be stored, it'll be generated on the fly
+First page showed up!
 
 Sept 28
 Theme picker done.

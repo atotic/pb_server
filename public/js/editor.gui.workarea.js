@@ -26,7 +26,7 @@ var WorkArea = {
 			}
 	},
 	get visibleWorkAreaId() {
-		var area = $('#work-area-rough:visible, #work-area-design:visible, #work-area-print:visible');
+		var area = $('#work-area-rough:visible, #work-area-design:visible, #work-area-print:visible, #theme-picker');
 		if (area.length == 1)
 			return area.get(0).id;
 		return null;
@@ -36,6 +36,7 @@ var WorkArea = {
 			case 'work-area-rough':
 				return GUI.RoughWorkArea;
 			case 'work-area-design':
+			case 'theme-picker':
 				return GUI.DesignWorkArea;
 			case 'work-area-print':
 				return GUI.PrintWorkArea;

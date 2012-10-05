@@ -98,6 +98,29 @@ var ThemePicker = {
 };
 
 var DesignWorkArea = {
+	init: function() {
+		this.commandSet = new GUI.CommandSet("design");
+		this.commandSet.add(
+			new GUI.Command(
+				'designBack',
+				GUI.CommandManager.keys.leftArrow,
+				false,
+				function() {GUI.DesignWorkArea.goBack()}
+			));
+		this.commandSet.add(
+			new GUI.Command(
+				'designForward',
+				GUI.CommandManager.keys.rightArrow,
+				false,
+				function() {GUI.DesignWorkArea.goForward()}
+			));
+		$('#work-area-design-btn-back').click(function() {
+			GUI.DesignWorkArea.goBack();
+		});
+		$('#work-area-design-btn-forward').click(function() {
+			GUI.DesignWorkArea.goForward();
+		});
+	},
 	bindToBook: function(book) {
 		$(ID)
 			.data('model', book)
@@ -109,7 +132,7 @@ var DesignWorkArea = {
 	bookChanged: function(ev, model, prop, options) {
 		switch(prop) {
 			case 'template':
-				if ($(ID+':visible').length == 1)
+				if ($(ID+':visible, #theme-picker:visible').length == 1)	//
 					DesignWorkArea.show();
 				break;
 			default:
@@ -124,37 +147,46 @@ var DesignWorkArea = {
 			this.showDesignArea();
 		}
 	},
+	hide: function() {
+		$(ID).hide();
+		$('#theme-picker').detach();
+		GUI.CommandManager.removeCommandSet(this.commandSet);
+	},
 	showThemePicker: function() {
-		$('#palette').hide();
-		var picker = GUI.Template.append($(ID), 'theme-picker');
+		$('#palette, ' + ID).hide();
+		var picker = GUI.Template.append($('#work-area-container'), 'theme-picker');
 		ThemePicker.init(picker);
 		GUI.fixSizes();
 	},
 	showPage: function(page) {
-		var dom = page.dom(PB.PhotoProxy.MEDIUM);
-		$(ID).children().detach();
+		var dom = $(page.dom(PB.PhotoProxy.MEDIUM));
+		dom.addClass('designPage');
+		$(ID).children('.designPage').detach();
 		$(ID).append(dom);
 	},
 	showDesignArea: function() {
-		$('#palette').show();
-		GUI.PhotoPalette.show();
 		$('#theme-picker').detach();
-		$(ID).show();
+		$('#palette, ' + ID).show();
+		GUI.PhotoPalette.show();
 		GUI.fixSizes();
+
+		GUI.CommandManager.addCommandSet(this.commandSet);
+
 		this.book.loadTemplates()
 			.done(function() {
 				DesignWorkArea.showPage(DesignWorkArea.book.page(DesignWorkArea.book.pageList[0]));
 			})
 			.fail(function() { debugger;});
 	},
-	hide: function() {
-		$(ID).hide();
-	},
 	pickTheme: function(themeTemplate, bookTemplate) {
 		var book = $(ID).data('model');
 		book.setBookTemplate(themeTemplate.id, bookTemplate.id);
 		book.generateAllPagesHtml(function(msg) {
 		});
+	},
+	goBack: function() {
+	},
+	goForward: function() {
 	}
 }
 
