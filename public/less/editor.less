@@ -217,6 +217,7 @@ body {
 }
 	#work-area-container {
 		overflow: auto;
+		position:relative;
 	}
 
 	#work-area-rough {
@@ -224,13 +225,42 @@ body {
 		padding-right: @palette-resize-btn-radius;
 	}
 
+	@button-radius: 20px;
 	#work-area-design {
 		display:none;
 		position:relative;
+		height:100%;
+		margin-left: @button-radius * 2;
+		margin-right: @button-radius * 2;
+	}
+	#work-area-design-btn-back, #work-area-design-btn-forward {
+		position: absolute;
+		top: 45%;
+		width: @button-radius * 2;
+		height: @button-radius * 2;
+		border: 1px solid @work-area-color;
+		border-radius: @button-radius;
+		padding-top: 9px;
+		padding-left:12px;
+		&:hover {
+			border: 1px solid black;
+		}
+	}
+	#work-area-design-btn-back {
+		left: -@button-radius * 2;
+	}
+	#work-area-design-btn-forward {
+		right: -@button-radius * 2;
+	}
+	.designPage {
+		border: 1px solid black;
+		position: absolute;
+		.transform-origin(left, top);
 	}
 	#work-area-print {
 		display:none;
 		background-color: green;
+		height: 100%;
 	}
 
 	.rough-page {

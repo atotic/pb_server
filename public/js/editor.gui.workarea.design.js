@@ -114,11 +114,13 @@ var DesignWorkArea = {
 				false,
 				function() {GUI.DesignWorkArea.goForward()}
 			));
-		$('#work-area-design-btn-back').click(function() {
+		$('#work-area-design-btn-back').click(function(ev) {
 			GUI.DesignWorkArea.goBack();
+			ev.preventDefault();
 		});
-		$('#work-area-design-btn-forward').click(function() {
+		$('#work-area-design-btn-forward').click(function(ev) {
 			GUI.DesignWorkArea.goForward();
+			ev.preventDefault();
 		});
 	},
 	bindToBook: function(book) {
@@ -128,6 +130,9 @@ var DesignWorkArea = {
 	},
 	get book() {
 		return $(ID).data('model');
+	},
+	get currentPage() {
+		return $(ID).find('.designPage').data('model');
 	},
 	bookChanged: function(ev, model, prop, options) {
 		switch(prop) {
@@ -140,6 +145,8 @@ var DesignWorkArea = {
 		}
 	},
 	show: function() {
+		document.getElementById('work-area').style.setProperty('padding-left', '0px');
+		$('#work-area').css('padding-left', 0);
 		$(ID).show();
 		if (!this.book.bookTemplateId)
 			this.showThemePicker();
@@ -148,6 +155,7 @@ var DesignWorkArea = {
 		}
 	},
 	hide: function() {
+		document.getElementById('work-area').style.removeProperty('padding-left');
 		$(ID).hide();
 		$('#theme-picker').detach();
 		GUI.CommandManager.removeCommandSet(this.commandSet);
@@ -158,11 +166,36 @@ var DesignWorkArea = {
 		ThemePicker.init(picker);
 		GUI.fixSizes();
 	},
-	showPage: function(page) {
-		var dom = $(page.dom(PB.PhotoProxy.MEDIUM));
-		dom.addClass('designPage');
+	showPages: function(pageOrArray) {
 		$(ID).children('.designPage').detach();
-		$(ID).append(dom);
+		if (typeof pageOrArray == 'object' && pageOrArray instanceof Array)
+			;
+		else
+			pageOrArray = [pageOrArray];	// make it an array
+
+		var jDom = $();
+		var total = { width:0, height: 0};
+		for (var i=0; i<pageOrArray.length; i++) {
+			var dom = $(pageOrArray[i].dom(PB.PhotoProxy.MEDIUM));
+			dom.addClass('designPage');
+			dom.data('model', pageOrArray[i]);
+			total.width += dom.outerWidth();
+			total.height = Math.max(total.height, dom.outerHeight());
+			jDom = jDom.add(dom);
+		}
+		var hScale = $(ID).innerWidth() / total.width;
+		var vScale = $(ID).innerHeight() / total.height;
+		var scale = Math.min(Math.min(hScale, vScale), 1);
+		var left = ($(ID).innerWidth() - total.width * scale) / 2;
+		var top = ($(ID).innerHeight() - total.height * scale) / 2;
+		for (var i=0; i<jDom.length; i++) {
+			var scaleTransform = ' scale(' + scale + ')';
+			var posTransform = ' translate(' + left + 'px, ' + top + 'px)';
+			var dom = jDom.eq(i);
+			dom.css('transform', posTransform + scaleTransform);
+			left += dom.outerWidth() * scale;
+		}
+		$(ID).append(jDom);
 	},
 	showDesignArea: function() {
 		$('#theme-picker').detach();
@@ -174,7 +207,12 @@ var DesignWorkArea = {
 
 		this.book.loadTemplates()
 			.done(function() {
-				DesignWorkArea.showPage(DesignWorkArea.book.page(DesignWorkArea.book.pageList[0]));
+				var facingPages = DesignWorkArea.book.facingPages;
+				var display = facingPages.get(0);
+				if (display)
+					DesignWorkArea.showPages(display);
+				else
+					PB.error("no pages in the book!");
 			})
 			.fail(function() { debugger;});
 	},
@@ -185,8 +223,12 @@ var DesignWorkArea = {
 		});
 	},
 	goBack: function() {
+		var nextPages = this.book.facingPages.before(this.currentPage);
+		this.showPages(nextPages);
 	},
 	goForward: function() {
+		var nextPages = this.book.facingPages.after(this.currentPage);
+		this.showPages(nextPages);
 	}
 }
 

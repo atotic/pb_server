@@ -30,7 +30,7 @@
 			return this._dirty;
 		},
 		get photoList() {
-			return this.localData.document.photoList.slice(0, this.localData.document.photoList.length);
+			return this.localData.document.photoList.slice();
 		},
 		get last_diff() {
 			return this.serverData.last_diff;
@@ -42,7 +42,10 @@
 			this._stream = val;
 		},
 		get pageList() {
-			return this.localData.document.pageList;
+			return this.localData.document.pageList.slice();
+		},
+		get facingPages() {
+			return new PB.Book.FacingPages(this);
 		},
 		get title() {
 			return this.localData.document.title || "Untitled";
@@ -68,6 +71,8 @@
 			return this.localData.document.bookTemplateId;
 		},
 		_getPageProxy: function(id) {
+			if (id === undefined)
+				return undefined;
 			if (id in this._proxies)
 				return this._proxies[id];
 			else
@@ -437,6 +442,109 @@
 	}
 
 	Object.defineProperty(Book, "default", {get: function() { return bookCache[0]}});
+
+	Book.FacingPages = function(book) {
+		this.book = book;
+		this._initFacing();
+	};
+
+	Book.FacingPages.prototype  = {
+		_initFacing: function() {
+			this._facing = [];
+			var pageList = this.book.pageList;
+			var facing = [];
+			var pagePair = [];
+			var firstPage = true;
+			function pairDone() {
+				if (pagePair.length != 0)
+					facing.push(pagePair);
+				pagePair = [];
+			}
+			var page;
+			while (page = this.book.page(pageList.shift())) {
+				switch(page.pageClass) {
+					case 'cover': // cover always starts a new pair
+						pairDone();
+						pagePair = [page];
+						break;
+					case 'cover-flap': // cover-flap pairs with cover
+						if (pagePair.length == 1 && pagePair[0].pageClass == 'cover') {
+							pagePair.push(page);
+							pairDone();
+						}
+						else {
+							console.warn('cover-flap did not follow cover');
+							pairDone();
+							pagePair = [page];
+						}
+						break;
+					case 'back-flap': // back-flap pairs with back
+						if (pagePair.length == 0)
+							pagePair = [page];
+						else {
+							console.warn('back-flap did not follow empty');
+							pairDone();
+							pagePair = [page];
+						}
+						break;
+					case 'back': // back pairs with cover || back-flap
+						if (pagePair.length == 1 &&
+							(pagePair[0].pageClass == 'cover' || pagePair[0].pageClass == 'back-flap')) {
+							pagePair.push(page);
+							pairDone();
+						}
+						else {
+							console.warn('back did not pair up');
+							pairDone();
+							pagePair = [page];
+						}
+						break;
+					case 'page':
+						if (firstPage) { // first page is alone
+							pairDone();
+							pagePair = [page];
+							pairDone();
+							firstPage = false;
+						}
+						else {
+							if (pagePair.length == 1) {
+								pagePair.push(page);
+								pairDone();
+							}
+							else {
+								pairDone();
+								pagePair = [page];
+							}
+						}
+						break;
+					default:
+						console.warn("unknown page class", page.pageClass);
+				}
+			}
+			this._facing = facing;
+		},
+		get: function(index) {
+			return this._facing[index];
+		},
+		find: function(page) {
+			for (var i=0; i<this._facing.length; i++)
+				if (this._facing[i].indexOf(page) != -1)
+					return i;
+			return undefined;
+		},
+		before: function(page) {
+			var idx = this.find(page);
+			if (idx === undefined)
+				return this._facing[0];
+			return this._facing[Math.max(idx - 1, 0)];
+		},
+		after: function(page) {
+			var idx = this.find(page);
+			if (idx == undefined)
+				return this._facing[this._facing.length -1];
+			return this._facing[Math.min(idx + 1, this._facing.length + 1)];
+		}
+	}
 
 	Book.getDirty = function() {
 		var retVal = [];

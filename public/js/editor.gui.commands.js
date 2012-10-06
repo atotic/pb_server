@@ -71,6 +71,10 @@
 					case 107: // Chrome
 					case 61: // FF
 						key = this.keys.plus; break;
+					case 37: // FF
+						key = this.keys.leftArrow; break;
+					case 39: // FF
+						key = this.keys.rightArrow; break;
 					default:
 						;
 				}
@@ -83,7 +87,7 @@
 			var s = ev.altKey ? this.keys.meta : '';
 			s += key.toLowerCase();
 //			console.log("meta", ev.metaKey, "ctrl", ev.ctrlKey, "altKey", ev.altKey);
-			console.log("shortcut", s);
+//			console.log("shortcut", s);
 			return s;
 		},
 		asciiToString: function(key, meta) {

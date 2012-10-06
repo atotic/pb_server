@@ -19,7 +19,7 @@ var	Template = {
 		if (typeof idOrIdArray == 'string')
 			idList = [idOrIdArray];
 		else
-			idList = [].concat(idOrIdArray);
+			idList = idOrIdArray.slice();
 
 		var retVal = $.Deferred();
 
@@ -164,6 +164,11 @@ scope.Template = Template;
 	Layout.prototype = {
 		getWidth: function(page) {
 			var inches = this.width || PB.Template.cached(page.book.bookTemplateId).width;
+			switch(page.pageClass) {
+				case 'back-flap':
+				case 'cover-flap':
+					inches /= 3;
+			}
 			return inches * 72;
 		},
 		getHeight: function(page) {
