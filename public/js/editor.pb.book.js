@@ -542,7 +542,7 @@
 			var idx = this.find(page);
 			if (idx == undefined)
 				return this._facing[this._facing.length -1];
-			return this._facing[Math.min(idx + 1, this._facing.length + 1)];
+			return this._facing[Math.min(idx + 1, this._facing.length - 1)];
 		}
 	}
 
