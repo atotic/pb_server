@@ -123,6 +123,8 @@
 		},
 		dom: function(resolution) {
 			if (!this.layoutId)
+				this.book.assignTemplate(this);
+			if (!this.layoutId)
 				throw "no dom yet";
 			return PB.Template.cached(this.layoutId).generateDom(this, resolution);
 		},

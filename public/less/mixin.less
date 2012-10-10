@@ -12,6 +12,13 @@
 	user-select: @select;
 }
 
+.box-sizing(@size) {
+ -moz-box-sizing: @size;
+ -webkit-box-sizing: @size;
+ -ms-box-sizing: @size;
+ box-sizing: @size;
+}
+
 .border-radius(@topright: 0, @bottomright: 0, @bottomleft: 0, @topleft: 0) {
 	border-radius: @arguments;
 	-moz-border-radius: @arguments;

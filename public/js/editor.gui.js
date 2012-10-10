@@ -117,6 +117,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		_photoSize: 'medium', // 'small' | 'medium' | 'large'
 		_pageSize: 'medium', // 'small' | 'medium' | 'large'
 		_designStage: 'organize', // 'organize' | 'design' | 'print'
+		_designPage: null,
 		get photoFilter() { return this._photoFilter; },
 		get photoSort() { return this._photoSort; },
 		get photoSize() { return this._photoSize; },
@@ -177,6 +178,14 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			this.broadcast('designStage', val);
 			this.toHashbang();
 		},
+		get designPage() {
+			return this._designPage;
+		},
+		set designPage(val) {
+			this._designPage = val;
+			this.broadcast('designPage', val);
+			this.toHashbang();
+		},
 		toHashbang: function() {
 			var hashStr = "";
 			if (this.photoFilter != 'unused')
@@ -189,6 +198,8 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				hashStr += '&pageSize=' + this.pageSize;
 			if (this.designStage != 'organize')
 				hashStr += '&designStage=' + this.designStage;
+			if (this.designStage == 'design' && this._designPage)
+				hashStr += '&designPage=' + this.designPage;
 			hashStr = hashStr.replace(/^\&/, '');
 			hashStr = '#' + hashStr;
 			var newUrl = window.location.href.split('#',2)[0] + hashStr;
@@ -199,7 +210,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			if (hashSplit.length < 2)
 				return;
 			var ampSplit = hashSplit[1].split('&');
-			var optNames = ['photoFilter', 'photoSize', 'photoSort', 'pageSize', 'designStage'];
+			var optNames = ['photoFilter', 'photoSize', 'photoSort', 'pageSize', 'designStage', 'designPage'];
 			for (var i=0; i<ampSplit.length; i++) {
 				var eqlSplit = ampSplit[i].split('=', 2);
 				var idx = optNames.indexOf(eqlSplit[0])

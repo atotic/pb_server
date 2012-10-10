@@ -122,17 +122,40 @@ var DesignWorkArea = {
 			GUI.DesignWorkArea.goForward();
 			ev.preventDefault();
 		});
+		$(window).resize(function() {
+			if (!($(ID).is(':visible')))
+				return;
+			try {
+				DesignWorkArea.showPages(DesignWorkArea.currentPages);
+			}
+			catch(ex) {
+				debugger;
+			}
+		});
 	},
 	bindToBook: function(book) {
 		$(ID)
 			.data('model', book)
 			.on(PB.MODEL_CHANGED, this.bookChanged);
+		try {
+			this._lastPage = book.page(GUI.Options.designPage);
+		}
+		catch(ex) {
+			console.log("last page not found");
+		}
 	},
 	get book() {
 		return $(ID).data('model');
 	},
-	get currentPage() {
+	get currentPage() {	// just first page
 		return $(ID).find('.designPage').data('model');
+	},
+	get currentPages() { // all pages
+		var retVal = [];
+		$(ID).find('.designPage').each( function() {
+			retVal.push($(this).data('model'));
+		});
+		return retVal;
 	},
 	bookChanged: function(ev, model, prop, options) {
 		switch(prop) {
@@ -145,17 +168,22 @@ var DesignWorkArea = {
 		}
 	},
 	show: function() {
-		document.getElementById('work-area').style.setProperty('padding-left', '0px');
+		var workArea = document.getElementById('work-area');
+		workArea.style.setProperty('padding-left', '0px');
+		workArea.style.setProperty('padding-top', '0px');
 		$('#work-area').css('padding-left', 0);
 		$(ID).show();
 		if (!this.book.bookTemplateId)
 			this.showThemePicker();
 		else {
-			this.showDesignArea();
+			this.showDesignArea(this._lastPage);
 		}
 	},
 	hide: function() {
-		document.getElementById('work-area').style.removeProperty('padding-left');
+		this._lastPage = this.currentPage;
+		var workArea = document.getElementById('work-area');
+		workArea.style.removeProperty('padding-left');
+		workArea.style.removeProperty('padding-top');
 		$(ID).hide();
 		$('#theme-picker').detach();
 		GUI.CommandManager.removeCommandSet(this.commandSet);
@@ -166,69 +194,125 @@ var DesignWorkArea = {
 		ThemePicker.init(picker);
 		GUI.fixSizes();
 	},
-	showPages: function(pageOrArray) {
-		$(ID).children('.designPage').detach();
-		if (typeof pageOrArray == 'object' && pageOrArray instanceof Array)
-			;
-		else
-			pageOrArray = [pageOrArray];	// make it an array
-
-		var jDom = $();
-		var total = { width:0, height: 0};
-		for (var i=0; i<pageOrArray.length; i++) {
-			var dom = $(pageOrArray[i].dom(PB.PhotoProxy.MEDIUM));
-			dom.addClass('designPage');
-			dom.data('model', pageOrArray[i]);
-			total.width += dom.outerWidth();
-			total.height = Math.max(total.height, dom.outerHeight());
-			jDom = jDom.add(dom);
-		}
-		var hScale = $(ID).innerWidth() / total.width;
-		var vScale = $(ID).innerHeight() / total.height;
+	getPagePositions: function(book) {
+		var vinset = 20;
+		var hinset = 44;
+		var bookTemplate = PB.Template.cached(book.bookTemplateId);
+		var pageWidth = bookTemplate.pixelWidth;
+		var pageHeight = bookTemplate.pixelHeight;
+		var idWidth = $(ID).width() - hinset * 2;	// -1 for rounding errors
+		var idHeight = $(ID).height() - vinset;
+		var totalWidth = pageWidth * 2;
+		var totalHeight = pageHeight;
+		var hScale = idWidth / totalWidth;
+		var vScale = idHeight / totalHeight;
 		var scale = Math.min(Math.min(hScale, vScale), 1);
-		var left = ($(ID).innerWidth() - total.width * scale) / 2;
-		var top = ($(ID).innerHeight() - total.height * scale) / 2;
-		for (var i=0; i<jDom.length; i++) {
-			var scaleTransform = ' scale(' + scale + ')';
-			var posTransform = ' translate(' + left + 'px, ' + top + 'px)';
-			var dom = jDom.eq(i);
-			dom.css('transform', posTransform + scaleTransform);
-			left += dom.outerWidth() * scale;
+		var left = (idWidth - totalWidth * scale) / 2 + hinset;
+		var top = 4 + (idHeight - totalHeight * scale) / 2;
+		return {
+			left: {
+				x: left,
+				y: top,
+				width: pageWidth * scale,
+				height: pageHeight * scale
+			},
+			right: {
+				x: left + pageWidth * scale,
+				y: top,
+				width: pageWidth * scale,
+				height: pageHeight * scale
+			},
+			pageWidth: pageWidth,
+			pageHeight: pageHeight,
+			scale: scale
 		}
-		$(ID).append(jDom);
 	},
-	showDesignArea: function() {
+	showPages: function(pages) {
+		if (!pages) {
+			PB.error("page does not exist");
+			return;
+		}
+		$(ID).find('.design-book-page-left, .design-book-page-right').detach();
+
+		var pos = this.getPagePositions(this.book);
+
+		var pagesDom = [];
+		for (var i=0; i<pages.length; i++) {
+			if (pages[i] == null)
+				continue;
+			var dom = $(pages[i].dom(PB.PhotoProxy.MEDIUM));
+			dom.addClass('designPage');
+			dom.data('model', pages[i]);
+			pagesDom[i] = dom;
+		}
+		var leftDom = $("<div class='design-book-page-left'/>");
+		leftDom.css({
+			top: pos.left.y,
+			left: pos.left.x,
+			width: pos.left.width,
+			height: pos.left.height
+		});
+		var rightDom = $("<div class='design-book-page-right'/>");
+		rightDom.css({
+			top: pos.right.y,
+			left: pos.right.x,
+			width: pos.right.width,
+			height: pos.right.height
+		});
+		if (pagesDom[0]) {
+			var scaleTransform = 'scale(' + pos.scale.toFixed(4) + ')';
+			pagesDom[0].css('transform', scaleTransform);
+			leftDom.append(pagesDom[0]);
+			leftDom.append($('<p class="pageTitle">').text(pages[0].pageTitle()));
+		}
+		if (pagesDom[1]) {
+			var transform = 'scale(' + pos.scale.toFixed(4) + ')';
+			var widthDiff = pos.pageWidth  - pagesDom[1].width();
+			if (widthDiff > 5) {
+				transform += ' translate(' + widthDiff.toFixed(4) + 'px)';
+			}
+			pagesDom[1].css('transform', transform);
+			rightDom.append(pagesDom[1]);
+			rightDom.append($('<p class="pageTitle">').text(pages[1].pageTitle()));
+		}
+		$(ID).append(leftDom).append(rightDom);
+	},
+	showDesignArea: function(page) {
 		$('#theme-picker').detach();
 		$('#palette, ' + ID).show();
 		GUI.PhotoPalette.show();
 		GUI.fixSizes();
 
 		GUI.CommandManager.addCommandSet(this.commandSet);
-
 		this.book.loadTemplates()
 			.done(function() {
-				var facingPages = DesignWorkArea.book.facingPages;
-				var display = facingPages.get(0);
-				if (display)
-					DesignWorkArea.showPages(display);
-				else
-					PB.error("no pages in the book!");
+				DesignWorkArea.goTo(page);
 			})
-			.fail(function() { debugger;});
+			.fail(function() { PB.error("Missing page template");});
 	},
 	pickTheme: function(themeTemplate, bookTemplate) {
 		var book = $(ID).data('model');
 		book.setBookTemplate(themeTemplate.id, bookTemplate.id);
 		book.generateAllPagesHtml(function(msg) {
+			PB.error("msg");
 		});
 	},
+	goTo: function(page) {
+		var facingPages = this.book.facingPages;
+		var show = facingPages.find(page);
+		if (!show)
+			show = 0;
+		else
+			GUI.Options.designPage = page.id;
+		this.showPages(facingPages.get(show));
+	},
 	goBack: function() {
-		var nextPages = this.book.facingPages.before(this.currentPage);
-		this.showPages(nextPages);
+		var show = this.book.facingPages.before(this.currentPage);
+		this.goTo(show[0]);
 	},
 	goForward: function() {
-		var nextPages = this.book.facingPages.after(this.currentPage);
-		this.showPages(nextPages);
+		var show = this.book.facingPages.after(this.currentPage);
+		this.goTo(show[0]);
 	}
 }
 

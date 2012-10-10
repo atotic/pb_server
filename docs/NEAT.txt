@@ -1,11 +1,11 @@
 http://caniuse.com/
 
 CSS
+CSS shapes: http://css-tricks.com/examples/ShapesOfCSS/
 CSS filters: will use this at some point in the future http://www.html5rocks.com/en/tutorials/filters/understanding-css/
 http://html.adobe.com/webstandards/csscustomfilters/cssfilterlab/
 
 Building books with CSS3: http://www.alistapart.com/articles/building-books-with-css3/
-There is
 Circular buttons http://css-tricks.com/circular-3d-buttons/
 How web design pros do it: http://css-tricks.com/notes-from-my-web-designers-workflow-workshop-at-interlink-2012/
 CodeKit for continuous less integration, icons served as fonts
@@ -31,6 +31,7 @@ Excellent CSS effects: bounce, rotate, etc. If I ever need visual candy http://b
 CSS arrow please: http://cssarrowplease.com/
 
 JS
+Vjeux blogs about different image layout algorithms http://blog.vjeux.com/2012/javascript/image-layout-algorithm-lightbox-android.html
 JavaScript macros http://sweetjs.org/
 MatchMedia for JS: http://wickynilliams.github.com/enquire.js/
 Handling keyboard events in browsers: http://dev.opera.com/articles/view/keyboard-accessible-web-applications-3/
@@ -98,6 +99,8 @@ Free ssl cert https://www.startssl.com/?app=40
 Use bcrypt to store passwords http://codahale.com/how-to-safely-store-a-password/
 
 Servers
+Deployment: all the web services csstricks uses:
+http://css-tricks.com/web-developer-economics-monthly-service-costs/
 Rackspace Cloudfiles
 How to store millions of images: http://highscalability.com/blog/2012/6/20/ask-highscalability-how-do-i-organize-millions-of-images.html
 Pure html ajax upload: http://zefer.posterous.com/pure-html-ajax-solutions-to-upload-files-to-s
@@ -122,6 +125,7 @@ Free DNS redirects for everyone: http://xip.io/
 Building iOS hybrid apps: http://www.cocoacontrols.com/posts/a-primer-on-hybrid-apps-for-ios
 
 OTHER
+Wild stuff done for $5: http://fiverr.com/
 Page Layers: web site to psd converter http://www.ralfebert.de/apps/page-layers-photoshop-osx-website-screenshots/
 Tim Bray: net matters, and he knows photographers. He might know someone who'd print my books?
 Metro design guidelines: http://msdn.microsoft.com/en-us/library/windows/apps/hh761500.aspx

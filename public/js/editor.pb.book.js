@@ -454,58 +454,35 @@
 			var pageList = this.book.pageList;
 			var facing = [];
 			var pagePair = [];
-			var firstPage = true;
 			function pairDone() {
 				if (pagePair.length != 0)
 					facing.push(pagePair);
 				pagePair = [];
 			}
 			var page;
+			var back;
+			var backPage;
+			var backFlap;
+			var cover;
+			var coverFlap;
+			var firstPage;
 			while (page = this.book.page(pageList.shift())) {
 				switch(page.pageClass) {
-					case 'cover': // cover always starts a new pair
-						pairDone();
-						pagePair = [page];
+					case 'cover':
+						cover = page;
 						break;
-					case 'cover-flap': // cover-flap pairs with cover
-						if (pagePair.length == 1 && pagePair[0].pageClass == 'cover') {
-							pagePair.push(page);
-							pairDone();
-						}
-						else {
-							console.warn('cover-flap did not follow cover');
-							pairDone();
-							pagePair = [page];
-						}
+					case 'cover-flap':
+						coverFlap = page;
 						break;
-					case 'back-flap': // back-flap pairs with back
-						if (pagePair.length == 0)
-							pagePair = [page];
-						else {
-							console.warn('back-flap did not follow empty');
-							pairDone();
-							pagePair = [page];
-						}
+					case 'back-flap': // back-flap pairs with last page
+						backFlap = page;
 						break;
 					case 'back': // back pairs with cover || back-flap
-						if (pagePair.length == 1 &&
-							(pagePair[0].pageClass == 'cover' || pagePair[0].pageClass == 'back-flap')) {
-							pagePair.push(page);
-							pairDone();
-						}
-						else {
-							console.warn('back did not pair up');
-							pairDone();
-							pagePair = [page];
-						}
+						back = page;
 						break;
 					case 'page':
-						if (firstPage) { // first page is alone
-							pairDone();
-							pagePair = [page];
-							pairDone();
-							firstPage = false;
-						}
+						if (!firstPage)
+							firstPage = page;
 						else {
 							if (pagePair.length == 1) {
 								pagePair.push(page);
@@ -521,6 +498,38 @@
 						console.warn("unknown page class", page.pageClass);
 				}
 			}
+			// after while loop, last page is in pagePair
+			// cover
+			if (!cover)
+				console.warn('book has no cover');
+			else
+				facing.splice(0, 0, [null, cover]);
+
+			// coverFlap with firstPage
+			if (coverFlap)
+				if (firstPage)
+					facing.splice(1, 0, [coverFlap, firstPage]);
+				else
+					facing.splice(1,0, [coverFlap, null]);
+			else
+				if (firstPage)
+					facing.splice(1, 0, [null, firstPage]);
+			// backFlap with lastPage
+			if (backFlap) {
+				if (pagePair.length == 1) {
+					pagePair.push(backFlap);
+					pairDone();
+				}
+				else {
+					console.warn("missing last page");
+					facing.push([null, backFlap]);
+				}
+			}
+			// back
+			if (!back)
+				console.warn('book has no back');
+			else
+				facing.push([back, null]);
 			this._facing = facing;
 		},
 		get: function(index) {

@@ -45,7 +45,12 @@ book template:
 - users can build derivative works.
 
 Next:
-- layouts:
+- move back/fwd to browser position
+- resize pages on resize
+- nicer page turning
+- page titles
+- select different page elements
+
 - Rough pages: enforcing consistency:
 	keep number of pages legal
 	keep spanning pages together when dragging
@@ -54,6 +59,10 @@ Next:
 - keep track of file sizes in db
 - account page should load book list dynamically  $(window).unload(function(){});
 - Bookshelf in account
+
+Oct 5
+back/forward buttons work, and 2 pages are displayed side by side
+
 Oct 4
 Working on back/forward buttons
 Demo'd to Eduardo, he likes it a lot

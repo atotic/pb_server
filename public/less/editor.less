@@ -2,7 +2,7 @@
 
 @import "mixin.less";
 
-* { -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box; }
+* { .box-sizing(border-box) }
 
 
 /* Styles */
@@ -230,30 +230,33 @@ body {
 		display:none;
 		position:relative;
 		height:100%;
-		margin-left: @button-radius * 2;
-		margin-right: @button-radius * 2;
+		padding-top: 4px;
+	}
+	.design-book-page-left, .design-book-page-right {
+		position: absolute;
+		border: 1px solid black;
+		.box-sizing(content-box);
+		.pageTitle {
+				position:absolute;
+				bottom: -35px;
+				width: 100%;
+				text-align: center;
+			}
 	}
 	#work-area-design-btn-back, #work-area-design-btn-forward {
 		position: absolute;
 		top: 45%;
-		width: @button-radius * 2;
-		height: @button-radius * 2;
-		border: 1px solid @work-area-color;
-		border-radius: @button-radius;
-		padding-top: 9px;
-		padding-left:12px;
-		&:hover {
-			border: 1px solid black;
-		}
+	}
+	#work-area-design-btn-animate {
+		display: none;
 	}
 	#work-area-design-btn-back {
-		left: -@button-radius * 2;
+		left:0px;
 	}
 	#work-area-design-btn-forward {
-		right: -@button-radius * 2;
+		right:0px;
 	}
 	.designPage {
-		border: 1px solid black;
 		position: absolute;
 		.transform-origin(left, top);
 	}

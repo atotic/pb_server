@@ -140,6 +140,12 @@ scope.Template = Template;
 		$.extend(this, t);
 	};
 	Book.prototype = {
+		get pixelWidth() {
+			return this.width * 72;
+		},
+		get pixelHeight() {
+			return this.height * 72;
+		},
 		loadLayoutTemplates: function() {
 			return PB.Template.get(this.layouts);
 		},
@@ -254,20 +260,23 @@ BookThemeAPI = {
 		var THIS = this;
 		this.loadTemplates()
 			.done( function() {
-				var bookTemplate = PB.Template.cached(THIS.bookTemplateId);
+//				var bookTemplate = PB.Template.cached(THIS.bookTemplateId);
 				for (var i=0; i< THIS.localData.document.pageList.length; i++) {
 					var page = THIS.page( THIS.localData.document.pageList[i]);
-					var layoutTemplates = bookTemplate.getMatchingLayouts({
-						pageClass: page.pageClass,
-						imageCount: page.photoList.length
-					});
-					// pick a template
-					var layout  = layoutTemplates[0];
-					page.layoutId = layout.id;
+					THIS.assignTemplate(page);
 				}
 			})
 			.fail(function(reason ) { failCb("failed to load book templates " + reason) } );
 	},
+	assignTemplate: function(page) {
+		var bookTemplate = PB.Template.cached(this.bookTemplateId);
+		var layoutTemplates = bookTemplate.getMatchingLayouts({
+						pageClass: page.pageClass,
+						imageCount: page.photoList.length
+					});
+		var layout  = layoutTemplates[0];
+		page.layoutId = layout.id;
+	}
 }
 
 $.extend(PB.Book.prototype, BookThemeAPI);

@@ -1,0 +1,42 @@
+BUSINESS
+
+Why pook.io?
+
+Photobooks are my pain point, and it is an 'interesting' project.
+
+Market has lots of room to expand:  everyone I've talked to loves photo books, but do not do it because it is cumbersome, have not gotten around to it....
+
+Photobooks: physical manifestation of your digital life (tweets, blog posts, etc).
+
+Customers:
+  scrapbookers - come for sharing, storage
+  photo printers -
+
+Market expansion:
+- people who find today's software not quite right
+- verticals:
+  fundraising (collaborative books for groups, group gets the profits).
+  travel: partner with hotel wifi providers, provide custom hotel books as promotion...
+
+How market leaders fail?
+
+photo quality, ease of use, templates available. ability to share with others, owning the master..., ability to edit on tablets, iphone. Much of the software feels like it came out in the 'pre-social' era.
+
+I'd love a community of designers/scrapbookers creating templates I'd like to use, helping each other create great books.
+
+
+What I want:
+
+A stored in the cloud
+B editable on anything between phone and pc
+C can have multiple editors simultaneously, so wife and I can collaborate
+D can import photos from many sources
+E can print flat-binding books on quality paper
+F pleasant ui (fast and clean)
+G wide variety of neat templates
+H ability to create my own templates
+
+Tough part:
+
+how do we stand out in this crowded market?
+whether it makes sense to go solo, or just sell it?
