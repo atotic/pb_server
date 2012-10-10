@@ -264,6 +264,7 @@ var DesignWorkArea = {
 			pagesDom[0].css('transform', scaleTransform);
 			leftDom.append(pagesDom[0]);
 			leftDom.append($('<p class="pageTitle">').text(pages[0].pageTitle()));
+			$(ID).append(leftDom);
 		}
 		if (pagesDom[1]) {
 			var transform = 'scale(' + pos.scale.toFixed(4) + ')';
@@ -274,8 +275,8 @@ var DesignWorkArea = {
 			pagesDom[1].css('transform', transform);
 			rightDom.append(pagesDom[1]);
 			rightDom.append($('<p class="pageTitle">').text(pages[1].pageTitle()));
+			$(ID).append(rightDom);
 		}
-		$(ID).append(leftDom).append(rightDom);
 	},
 	showDesignArea: function(page) {
 		$('#theme-picker').detach();

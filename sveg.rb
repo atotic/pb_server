@@ -202,6 +202,7 @@ class SvegApp < Sinatra::Base
 					retVal += asset_link(
 						"jquery.stream-1.2.js",
 						"jquery.dataSelector.js",
+						"jquery.transit.js",
 						"diff.js",
 						"jdataview.js",
 						"application.js",
