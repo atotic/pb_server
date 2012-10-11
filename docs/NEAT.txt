@@ -1,6 +1,7 @@
 http://caniuse.com/
 
 CSS
+Retina images with preprocessor: http://37signals.com/svn/posts/3271-easy-retina-ready-images-using-scss?utm_source=feedburner&utm_medium=twitter&utm_campaign=Feed%3A+hnycombinator+%28HN+-+hnycombinator%29
 CSS shapes: http://css-tricks.com/examples/ShapesOfCSS/
 CSS filters: will use this at some point in the future http://www.html5rocks.com/en/tutorials/filters/understanding-css/
 http://html.adobe.com/webstandards/csscustomfilters/cssfilterlab/

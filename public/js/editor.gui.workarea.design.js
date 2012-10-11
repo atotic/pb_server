@@ -126,7 +126,7 @@ var DesignWorkArea = {
 			if (!($(ID).is(':visible')))
 				return;
 			try {
-				DesignWorkArea.showPages(DesignWorkArea.currentPages);
+				DesignWorkArea.showPages(DesignWorkArea.currentPages, null, true);
 			}
 			catch(ex) {
 				debugger;
@@ -227,7 +227,7 @@ var DesignWorkArea = {
 			scale: scale
 		}
 	},
-	showPages: function(pages, direction) {
+	showPages: function(pages, direction, force) {
 		if (!pages) {
 			PB.error("page does not exist");
 			this.goTo();
@@ -238,7 +238,7 @@ var DesignWorkArea = {
 			for (var i=0; i<currentPages.length; i++)
 				if (currentPages[i] != pages[i])
 					diff = true;
-			if (!diff)	// pages already shown, nothing to do
+			if (!diff && !force)	// pages already shown, nothing to do
 				return;
 		}
 
@@ -283,6 +283,8 @@ var DesignWorkArea = {
 				transform += ' translate(' + widthDiff.toFixed(4) + 'px)';
 			}
 			pagesDom[1].css('transform', transform);
+			console.log('transform is ', transform);
+			console.log(pagesDom[1].get(0));
 			rightDom.append(pagesDom[1]);
 			rightDom.append($('<p class="pageTitle">').text(pages[1].pageTitle()));
 		}
@@ -294,11 +296,13 @@ var DesignWorkArea = {
 		var oldRight = workAreaDiv.find('.design-book-page-right'); // 2
 		var newLeft = pagesDom[0] ? leftDom : null; 								// 3
 		var newRight = pagesDom[1] ? rightDom : null; 							// 4
+		function cleanUp() {
+			oldLeft.detach();
+			oldRight.detach();
+		};
 		if (direction == 'forward' || direction == 'back') {
-			function cleanUp() {
-				oldLeft.detach();
-				oldRight.detach();
-			};
+			oldLeft.find('.pageTitle').detach();
+			oldRight.find('.pageTitle').detach();
 			var duration = 500;
 			if (direction == 'forward') {
 				oldRight.css({
@@ -343,6 +347,7 @@ var DesignWorkArea = {
 			}
 		}
 		else { // no animation
+			cleanUp();
 			workAreaDiv.append(newRight).append(newLeft);
 		}
 	},

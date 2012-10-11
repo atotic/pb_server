@@ -342,8 +342,8 @@
         if (this._translateX === undefined) { this._translateX = 0; }
         if (this._translateY === undefined) { this._translateY = 0; }
 
-        if (x !== null) { this._translateX = unit(x, 'px'); }
-        if (y !== null) { this._translateY = unit(y, 'px'); }
+        if (x !== null && x !== undefined) { this._translateX = unit(x, 'px'); }
+        if (y !== null && y !== undefined) { this._translateY = unit(y, 'px'); }
 
         this.translate = this._translateX + "," + this._translateY;
       }

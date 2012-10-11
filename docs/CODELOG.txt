@@ -45,27 +45,27 @@ book template:
 - users can build derivative works.
 
 Next:
-- move back/fwd to browser position
-- resize pages on resize
-- nicer page turning
-- page titles
-- select different page elements
-
+- better picture positionsing
+- select different page elements, apply transformations
 - Rough pages: enforcing consistency:
 	keep number of pages legal
 	keep spanning pages together when dragging
-- rewrite our local drag code, avoid drag events. Check if IE works then
 
+- rewrite our local drag code, avoid drag events. Check if IE works then
 - keep track of file sizes in db
 - account page should load book list dynamically  $(window).unload(function(){});
 - Bookshelf in account
+
 Oct 11
 page flip polish:
+Bugfix: flaps -- jquery.transit had did not set transform correctly
 iPad -- too slow button click
 all -- too slow for fast flipping
 hide the old digits when animation starts
 fork jquery.transit on github, submit patch
+pre cache images for page flipping
 upgrade to font awesome for fonts
+show two pages under each other when it makes sense?
 
 Oct 10
 Replaced transform.js with jquery.transit
