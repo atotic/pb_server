@@ -227,15 +227,24 @@ var DesignWorkArea = {
 			scale: scale
 		}
 	},
-	showPages: function(pages) {
+	showPages: function(pages, direction) {
 		if (!pages) {
 			PB.error("page does not exist");
-			return;
+			this.goTo();
 		}
-		$(ID).find('.design-book-page-left, .design-book-page-right').detach();
+		var currentPages = this.currentPages;
+		if (currentPages.length == pages.length) {
+			var diff = false;
+			for (var i=0; i<currentPages.length; i++)
+				if (currentPages[i] != pages[i])
+					diff = true;
+			if (!diff)	// pages already shown, nothing to do
+				return;
+		}
 
 		var pos = this.getPagePositions(this.book);
 
+		// create new pages
 		var pagesDom = [];
 		for (var i=0; i<pages.length; i++) {
 			if (pages[i] == null)
@@ -245,6 +254,7 @@ var DesignWorkArea = {
 			dom.data('model', pages[i]);
 			pagesDom[i] = dom;
 		}
+		// create page containers
 		var leftDom = $("<div class='design-book-page-left'/>");
 		leftDom.css({
 			top: pos.left.y,
@@ -259,12 +269,12 @@ var DesignWorkArea = {
 			width: pos.right.width,
 			height: pos.right.height
 		});
+		// place new pages into containers
 		if (pagesDom[0]) {
 			var scaleTransform = 'scale(' + pos.scale.toFixed(4) + ')';
 			pagesDom[0].css('transform', scaleTransform);
 			leftDom.append(pagesDom[0]);
 			leftDom.append($('<p class="pageTitle">').text(pages[0].pageTitle()));
-			$(ID).append(leftDom);
 		}
 		if (pagesDom[1]) {
 			var transform = 'scale(' + pos.scale.toFixed(4) + ')';
@@ -275,7 +285,65 @@ var DesignWorkArea = {
 			pagesDom[1].css('transform', transform);
 			rightDom.append(pagesDom[1]);
 			rightDom.append($('<p class="pageTitle">').text(pages[1].pageTitle()));
-			$(ID).append(rightDom);
+		}
+		// animate pages into view with 3D transitions
+		// based upon http://jsfiddle.net/atotic/B8Rng/
+
+		var workAreaDiv = $(ID);
+		var oldLeft = workAreaDiv.find('.design-book-page-left'); 	// 1
+		var oldRight = workAreaDiv.find('.design-book-page-right'); // 2
+		var newLeft = pagesDom[0] ? leftDom : null; 								// 3
+		var newRight = pagesDom[1] ? rightDom : null; 							// 4
+		if (direction == 'forward' || direction == 'back') {
+			function cleanUp() {
+				oldLeft.detach();
+				oldRight.detach();
+			};
+			var duration = 500;
+			if (direction == 'forward') {
+				oldRight.css({
+					transformOrigin: 'center left',
+					backfaceVisibility: 'hidden'
+				});
+				newLeft.css({
+					transformOrigin: 'center right',
+					backfaceVisibility: 'hidden'
+				});
+				// add pages in correct order for proper flip visibility
+				// 4 1 3 2
+				$(ID).append(newRight).append(oldLeft).append(newLeft).append(oldRight);
+				if (oldRight.length > 0)
+					oldRight.transition({transform: 'rotateY(-180deg)'}, duration, cleanUp);
+				else
+					cleanUp();
+				if (newLeft) {
+					newLeft.css('transform', 'rotateY(180deg)');
+					newLeft.transition({ transform: 'rotateY(0deg)'}, duration);
+				}
+			}
+			else if (direction == 'back') {
+			// 3 1 2 4
+				oldLeft.css({
+					transformOrigin: 'center right',
+					backfaceVisibility: 'hidden'
+				});
+				newRight.css({
+					transformOrigin: 'center left',
+					backfaceVisibility: 'hidden'
+				});
+				$(ID).append(newLeft).append(oldLeft).append(oldRight).append(newRight);
+				if (oldLeft.length > 0)
+					oldLeft.transition({transform: 'rotateY(180deg)'}, duration, cleanUp);
+				else
+					cleanUp();
+				if (newRight) {
+					newRight.css('transform', 'rotateY(-180deg)');
+					newRight.transition({ transform: 'rotateY(0deg)'}, duration);
+				}
+			}
+		}
+		else { // no animation
+			workAreaDiv.append(newRight).append(newLeft);
 		}
 	},
 	showDesignArea: function(page) {
@@ -298,22 +366,22 @@ var DesignWorkArea = {
 			PB.error("msg");
 		});
 	},
-	goTo: function(page) {
+	goTo: function(page, direction) {
 		var facingPages = this.book.facingPages;
 		var show = facingPages.find(page);
 		if (!show)
 			show = 0;
 		else
 			GUI.Options.designPage = page.id;
-		this.showPages(facingPages.get(show));
+		this.showPages(facingPages.get(show), direction);
 	},
 	goBack: function() {
 		var show = this.book.facingPages.before(this.currentPage);
-		this.goTo(show[0]);
+		this.goTo(show[0], 'back');
 	},
 	goForward: function() {
 		var show = this.book.facingPages.after(this.currentPage);
-		this.goTo(show[0]);
+		this.goTo(show[0], 'forward');
 	}
 }
 

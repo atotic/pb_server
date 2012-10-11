@@ -1,17 +1,3 @@
-.filter (@f) {
-  filter: @f;
-  -webkit-filter: @f;
-  -moz-filter: @f;
-}
-
-.user-select(@select) {
-	-webkit-user-select: @select;
-	-moz-user-select: @select;
-	-ms-user-select: @select;
-	-o-user-select: @select;
-	user-select: @select;
-}
-
 .box-sizing(@size) {
  -moz-box-sizing: @size;
  -webkit-box-sizing: @size;
@@ -48,9 +34,30 @@
 	-moz-border-top-left-radius: @px;
 }
 
+.filter (@f) {
+  filter: @f;
+  -webkit-filter: @f;
+  -moz-filter: @f;
+}
+
+.perspective(@p) {
+	perspective: @p;
+	-webkit-perspective: @p;
+	-moz-perspective: @p;
+	-ms-perspective: @p;
+}
+
 .transform-origin (@x:center, @y:center) {
 	-webkit-transform-origin: @x @y;
 	-moz-transform-origin:    @x @y;
 	-ms-transform-origin:     @x @y;
 	-o-transform-origin:      @x @y;
+}
+
+.user-select(@select) {
+	-webkit-user-select: @select;
+	-moz-user-select: @select;
+	-ms-user-select: @select;
+	-o-user-select: @select;
+	user-select: @select;
 }

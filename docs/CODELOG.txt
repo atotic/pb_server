@@ -59,6 +59,20 @@ Next:
 - keep track of file sizes in db
 - account page should load book list dynamically  $(window).unload(function(){});
 - Bookshelf in account
+Oct 11
+page flip polish:
+iPad -- too slow button click
+all -- too slow for fast flipping
+hide the old digits when animation starts
+fork jquery.transit on github, submit patch
+upgrade to font awesome for fonts
+
+Oct 10
+Replaced transform.js with jquery.transit
+3D animation for page flipping. Looks better, needs polish
+WANT font awesome
+
+jquery.transit: will it replace transform.js?
 
 Oct 5
 back/forward buttons work, and 2 pages are displayed side by side

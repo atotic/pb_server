@@ -231,17 +231,7 @@ body {
 		position:relative;
 		height:100%;
 		padding-top: 4px;
-	}
-	.design-book-page-left, .design-book-page-right {
-		position: absolute;
-		border: 1px solid black;
-		.box-sizing(content-box);
-		.pageTitle {
-				position:absolute;
-				bottom: -35px;
-				width: 100%;
-				text-align: center;
-			}
+		.perspective(1600px);
 	}
 	#work-area-design-btn-back, #work-area-design-btn-forward {
 		position: absolute;
@@ -256,10 +246,24 @@ body {
 	#work-area-design-btn-forward {
 		right:0px;
 	}
+
+	.design-book-page-left, .design-book-page-right {
+		position: absolute;
+		border: 1px solid black;
+		background-color: white;
+		.box-sizing(content-box);
+		.pageTitle {
+				position:absolute;
+				bottom: -35px;
+				width: 100%;
+				text-align: center;
+			}
+	}
 	.designPage {
 		position: absolute;
 		.transform-origin(left, top);
 	}
+
 	#work-area-print {
 		display:none;
 		background-color: green;
