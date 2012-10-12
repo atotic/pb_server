@@ -126,6 +126,7 @@ Free DNS redirects for everyone: http://xip.io/
 Building iOS hybrid apps: http://www.cocoacontrols.com/posts/a-primer-on-hybrid-apps-for-ios
 
 OTHER
+Nice drawing program. Might do text here. http://sketchpad.io/sketch/?newfile
 Wild stuff done for $5: http://fiverr.com/
 Page Layers: web site to psd converter http://www.ralfebert.de/apps/page-layers-photoshop-osx-website-screenshots/
 Tim Bray: net matters, and he knows photographers. He might know someone who'd print my books?
@@ -136,11 +137,9 @@ Super resolution from a single image: would be useful filter to run on low-res p
 http://www.wisdom.weizmann.ac.il/~vision/SingleImageSR.html
 Redirect file from nginx http://wiki.nginx.org/XSendfile
 Google drive integration: https://developers.google.com/drive/get_started#integrate_with_the_drive_ui
-Use Picasa Web API for storage?
 Hire people through https://www.odesk.com/
 Common sense development guidelines for web apps http://www.12factor.net/
 MailGun for photo upload via email: mailgun.net
-Google Cloud Storage looks great. Looks like I could run the entire site for less than $10K a month.
 Open source freelancers, where to register non-seizable domain: http://gun.io/
 PlentyOfFish website run by one guy, 10M page views a month. http://highscalability.com/blog/2011/12/27/plentyoffish-update-6-billion-pageviews-and-32-billion-image.html
 ssh tips, useful for Amazon: http://shebang.brandonmintern.com/tips-for-remote-unix-work-ssh-screen-and-vnc

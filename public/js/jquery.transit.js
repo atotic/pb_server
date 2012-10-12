@@ -33,7 +33,6 @@
     useTransitionEnd: true
   };
 
-
   var div = document.createElement('div');
   var support = {};
 
@@ -191,7 +190,6 @@
       elem.style[support.transitionTimingFunction] = value;
     }
   };
-
 
   // ## Other CSS hooks
   // Allows you to rotate, scale and translate.
@@ -501,11 +499,11 @@
   //       complete: function() { /* ... */ }
   //      });
   //
-
   $.fn.transition = $.fn.transit = function(properties, duration, easing, callback) {
     var self  = this;
     var delay = 0;
     var queue = true;
+
     // Account for `.transition(properties, callback)`.
     if (typeof duration === 'function') {
       callback = duration;
@@ -562,7 +560,6 @@
     if (i === 0) {
       var fn = function(next) {
         self.css(properties);
-
         if (callback) { callback.apply(self); }
         if (next) { next(); }
       };
@@ -594,7 +591,6 @@
       if ((i > 0) && (transitionEnd) && ($.transit.useTransitionEnd)) {
         // Use the 'transitionend' event if it's available.
         bound = true;
-
         self.bind(transitionEnd, cb);
       } else {
         // Fallback to timers if the 'transitionend' event isn't supported.
@@ -613,13 +609,8 @@
     // Defer running. This allows the browser to paint any pending CSS it hasn't
     // painted yet before doing the transitions.
     var deferredRun = function(next) {
-      var i = 0;
-
-      // Durations that are too slow will get transitions mixed up.
-      // (Tested on Mac/FF 7.0.1)
-      if ((support.transition === 'MozTransition') && (i < 25)) { i = 25; }
-
-      window.setTimeout(function() { run(next); }, i);
+      this.offsetWidth; // force a repaint
+      run(next);
     };
 
     // Use jQuery's fx queue.
@@ -637,21 +628,12 @@
 
     $.cssHooks[prop] = {
       get: function(elem) {
-        var t = $(elem).css('transform');
-
-        if (!t || t === "none") {
-          t = new Transform();
-        }
+        var t = $(elem).css('transform') || new Transform();
         return t.get(prop);
       },
 
       set: function(elem, value) {
-        var t = $(elem).css('transform');
-
-        if (!t || t === "none") {
-          t = new Transform();
-        }
-
+        var t = $(elem).css('transform') || new Transform();
         t.setFromString(prop, value);
 
         $(elem).css({ transform: t });

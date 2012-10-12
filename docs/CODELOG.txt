@@ -46,9 +46,9 @@ book template:
 
 Next:
 - bugfix: iPad -- too slow button click
-- bugfix: reflow work area when palette resizes
 - better picture positionsing
 - select different page elements, apply transformations
+- text
 - Rough pages: enforcing consistency:
 	keep number of pages legal
 	keep spanning pages together when dragging
@@ -58,6 +58,11 @@ Next:
 - account page should load book list dynamically  $(window).unload(function(){});
 - Bookshelf in account
 
+Oct 12
+Bugfix: reflow work area when palette resizes
+Community: fork jquery.transit on github, submit pull request
+upgrade to font awesome for fonts
+
 Oct 11
 page flip polish:
 Bugfix: flaps -- jquery.transit had did not set transform correctly
@@ -65,9 +70,6 @@ Bugfix: hide the old digits when animation starts
 Bugfix: cover reanimates if arrow hit too quickly
 Bugfix: fast flipping of pages by using low-res page for the flip
 
-fork jquery.transit on github, submit patch
-pre cache images for page flipping
-upgrade to font awesome for fonts
 
 Oct 10
 Replaced transform.js with jquery.transit
