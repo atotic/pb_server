@@ -451,7 +451,8 @@ class SvegApp < Sinatra::Base
 			json_response(photo)
 		else
 			begin
-				headers['Cache-Control'] = 'max-age=84600'
+				headers['Cache-Control'] = 'private, max-age=84600'
+				expires 84600 * 7
 				send_file photo.file_path(params[:size])
 			rescue => ex
 				headers['Cache-Control'] = ''
