@@ -124,14 +124,7 @@ var DesignWorkArea = {
 			ev.preventDefault();
 		});
 		$(window).resize(function() {
-			if (!($(ID).is(':visible')))
-				return;
-			try {
-				DesignWorkArea.showPages(DesignWorkArea.currentPages, null, true);
-			}
-			catch(ex) {
-				debugger;
-			}
+			DesignWorkArea.resize();
 		});
 	},
 	bindToBook: function(book) {
@@ -189,6 +182,19 @@ var DesignWorkArea = {
 		$('#theme-picker').detach();
 		GUI.CommandManager.removeCommandSet(this.commandSet);
 	},
+	resize: function() {
+		if (!($(ID).is(':visible')))
+			return;
+		try {
+			var cur = this.currentPages;
+			if (cur[0] || cur[1])
+				this.showPages(cur, null, true);
+		}
+		catch(ex) {
+			debugger;
+		}
+
+	},
 	showThemePicker: function() {
 		$('#palette, ' + ID).hide();
 		var picker = GUI.Template.append($('#work-area-container'), 'theme-picker');
@@ -233,10 +239,6 @@ var DesignWorkArea = {
 			PB.error("page does not exist");
 			this.goTo();
 		}
-		var myLogCounter = ++logCounter;
-		var d = new Date();
-		d = d.getUTCSeconds() + "." + d.getUTCMilliseconds();
-//		console.log(myLogCounter,   "showPages");
 		var currentPages = this.currentPages;
 		if (currentPages.length == pages.length) {
 			var diff = false;
@@ -244,17 +246,14 @@ var DesignWorkArea = {
 				if (currentPages[i] != pages[i])
 					diff = true;
 			if (!diff && !force) {	// pages already shown, nothing to do
-//				console.log(myLogCounter,   "showPages returns, pages already there");
 				return;
 			}
 		}
-
 		var pos = this.getPagePositions(this.book);
 		var animate = direction == 'forward' || direction == 'back';
 
 		// create new pages
 		var pagesDom = [];
-		var bigPagesDom = [];
 		function makePageDom(page, size) {
 			return $(page.dom(size))
 							.addClass('designPage')
@@ -265,7 +264,7 @@ var DesignWorkArea = {
 				continue;
 			if (animate) {
 				pagesDom[i] = makePageDom(pages[i], PB.PhotoProxy.SMALL);
-				bigPagesDom[i] = makePageDom(pages[i], PB.PhotoProxy.MEDIUM);
+				pagesDom[i].data('highDpi', makePageDom(pages[i], PB.PhotoProxy.MEDIUM));
 			}
 			else
 				pagesDom[i] = makePageDom(pages[i], PB.PhotoProxy.MEDIUM);
@@ -289,8 +288,8 @@ var DesignWorkArea = {
 		if (pagesDom[0]) {
 			var transform = 'scale(' + pos.scale.toFixed(4) + ')';
 			pagesDom[0].css('transform', transform);
-			if (bigPagesDom[0])
-				bigPagesDom[0].css('transform', transform);
+			if (pagesDom[0].data('highDpi'))
+				pagesDom[0].data('highDpi').css('transform', transform);
 			leftDom.append(pagesDom[0]);
 			leftDom.append($('<p class="pageTitle">').text(pages[0].pageTitle()));
 		}
@@ -301,8 +300,8 @@ var DesignWorkArea = {
 				transform += ' translate(' + widthDiff.toFixed(4) + 'px)';
 			}
 			pagesDom[1].css('transform', transform);
-			if (bigPagesDom[1])
-				bigPagesDom[1].css('transform', transform);
+			if (pagesDom[1].data('highDpi'))
+				pagesDom[1].data('highDpi').css('transform', transform);
 			rightDom.append(pagesDom[1]);
 			rightDom.append($('<p class="pageTitle">').text(pages[1].pageTitle()));
 		}
@@ -314,26 +313,20 @@ var DesignWorkArea = {
 		var oldRight = workAreaDiv.find('.design-book-page-right').not(':data(removed)'); // 2
 		var newLeft = pagesDom[0] ? leftDom : null; 								// 3
 		var newRight = pagesDom[1] ? rightDom : null; 							// 4
+
 		oldLeft.data('removed', true);
 		oldRight.data('removed', true);
-		var cleanupCount = 0;
-		function cleanUp() {
-			cleanupCount++;
-//			console.log(myLogCounter,   "showPages cleanup");
-			if (cleanupCount > 1)
-				console.error(myLogCounter, "showPages cleanup", cleanupCount);
-			oldLeft.detach();
-			oldRight.detach();
-			if (animate) {
-//				console.log(myLogCounter,   "showPages animate replace");
 
-				if (bigPagesDom[0])
-					leftDom.children('.designPage').replaceWith(bigPagesDom[0]);
-				if (bigPagesDom[1])
-					rightDom.children('.designPage').replaceWith(bigPagesDom[1]);
-			}
+		function cleanUp() {
+//			console.log('removing ', $(ID).children(':data(removed)').length);
+			$(ID).children(':data(removed)').detach();
+			$(ID).find('div:data(highDpi)').each( function() {
+				var el = $(this);
+				el.replaceWith(el.data('highDpi'));
+			});
 		};
-		if (animate) {
+
+ 		if (animate) {
 			oldLeft.find('.pageTitle').detach();
 			oldRight.find('.pageTitle').detach();
 			var duration = 500;
@@ -348,7 +341,6 @@ var DesignWorkArea = {
 				});
 				// add pages in correct order for proper flip visibility
 				// 4 1 3 2
-	//			console.log(myLogCounter,   "showPages forward, pages appended in order");
 				$(ID).append(newRight).append(oldLeft).append(newLeft).append(oldRight);
 				if (oldRight.length > 0)
 					oldRight.transition({transform: 'rotateY(-180deg)'}, duration, cleanUp);
@@ -369,7 +361,6 @@ var DesignWorkArea = {
 					transformOrigin: 'center left',
 					backfaceVisibility: 'hidden'
 				});
-//				console.log(myLogCounter,   "showPages back, pages appended in order");
 				$(ID).append(newLeft).append(oldLeft).append(oldRight).append(newRight);
 				if (oldLeft.length > 0)
 					oldLeft.transition({transform: 'rotateY(180deg)'}, duration, cleanUp);
@@ -384,9 +375,7 @@ var DesignWorkArea = {
 		else { // no animation
 			cleanUp();
 			workAreaDiv.append(newRight).append(newLeft);
-//			console.log(myLogCounter,   "showPages no animation complete");
 		}
-//		console.log(myLogCounter,   "showPages done");
 	},
 	showDesignArea: function(page) {
 		$('#theme-picker').detach();
@@ -415,7 +404,7 @@ var DesignWorkArea = {
 			show = 0;
 		else
 			GUI.Options.designPage = page.id;
-//		console.log("show", show, this.page, this.currentPage);
+//		console.log("show", show, this.currentPage);
 		this.showPages(facingPages.get(show), direction);
 	},
 	goBack: function() {

@@ -59,6 +59,12 @@ var WorkArea = {
 			$('#' + showId + '-nav').addClass('active');
 			GUI.fixSizes();
 		}
+	},
+	resize: function() {
+		// called after resize has happened
+		var visArea = this.areaIdToObject(this.visibleWorkAreaId);
+		if (visArea && 'resize' in visArea)
+			visArea.resize();
 	}
 };
 scope.WorkArea = WorkArea;
