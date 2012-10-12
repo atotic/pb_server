@@ -97,6 +97,7 @@ var ThemePicker = {
 	}
 };
 
+var logCounter = 0;
 var DesignWorkArea = {
 	init: function() {
 		this.commandSet = new GUI.CommandSet("design");
@@ -148,14 +149,14 @@ var DesignWorkArea = {
 		return $(ID).data('model');
 	},
 	get currentPage() {	// just first page
-		return $(ID).find('.designPage').data('model');
+		var cp = this.currentPages;
+		return cp[0] || cp[1];
 	},
-	get currentPages() { // all pages
-		var retVal = [];
-		$(ID).find('.designPage').each( function() {
-			retVal.push($(this).data('model'));
-		});
-		return retVal;
+	get currentPages() { // returns left & right page. They might be null
+		return [
+		$('.design-book-page-left').not(':data(removed)').children('.designPage').data('model'),
+		$('.design-book-page-right').not(':data(removed)').children('.designPage').data('model')
+		];
 	},
 	bookChanged: function(ev, model, prop, options) {
 		switch(prop) {
@@ -232,27 +233,42 @@ var DesignWorkArea = {
 			PB.error("page does not exist");
 			this.goTo();
 		}
+		var myLogCounter = ++logCounter;
+		var d = new Date();
+		d = d.getUTCSeconds() + "." + d.getUTCMilliseconds();
+//		console.log(myLogCounter,   "showPages");
 		var currentPages = this.currentPages;
 		if (currentPages.length == pages.length) {
 			var diff = false;
 			for (var i=0; i<currentPages.length; i++)
 				if (currentPages[i] != pages[i])
 					diff = true;
-			if (!diff && !force)	// pages already shown, nothing to do
+			if (!diff && !force) {	// pages already shown, nothing to do
+//				console.log(myLogCounter,   "showPages returns, pages already there");
 				return;
+			}
 		}
 
 		var pos = this.getPagePositions(this.book);
+		var animate = direction == 'forward' || direction == 'back';
 
 		// create new pages
 		var pagesDom = [];
+		var bigPagesDom = [];
+		function makePageDom(page, size) {
+			return $(page.dom(size))
+							.addClass('designPage')
+							.data('model', pages[i]);
+		}
 		for (var i=0; i<pages.length; i++) {
 			if (pages[i] == null)
 				continue;
-			var dom = $(pages[i].dom(PB.PhotoProxy.MEDIUM));
-			dom.addClass('designPage');
-			dom.data('model', pages[i]);
-			pagesDom[i] = dom;
+			if (animate) {
+				pagesDom[i] = makePageDom(pages[i], PB.PhotoProxy.SMALL);
+				bigPagesDom[i] = makePageDom(pages[i], PB.PhotoProxy.MEDIUM);
+			}
+			else
+				pagesDom[i] = makePageDom(pages[i], PB.PhotoProxy.MEDIUM);
 		}
 		// create page containers
 		var leftDom = $("<div class='design-book-page-left'/>");
@@ -271,8 +287,10 @@ var DesignWorkArea = {
 		});
 		// place new pages into containers
 		if (pagesDom[0]) {
-			var scaleTransform = 'scale(' + pos.scale.toFixed(4) + ')';
-			pagesDom[0].css('transform', scaleTransform);
+			var transform = 'scale(' + pos.scale.toFixed(4) + ')';
+			pagesDom[0].css('transform', transform);
+			if (bigPagesDom[0])
+				bigPagesDom[0].css('transform', transform);
 			leftDom.append(pagesDom[0]);
 			leftDom.append($('<p class="pageTitle">').text(pages[0].pageTitle()));
 		}
@@ -283,8 +301,8 @@ var DesignWorkArea = {
 				transform += ' translate(' + widthDiff.toFixed(4) + 'px)';
 			}
 			pagesDom[1].css('transform', transform);
-			console.log('transform is ', transform);
-			console.log(pagesDom[1].get(0));
+			if (bigPagesDom[1])
+				bigPagesDom[1].css('transform', transform);
 			rightDom.append(pagesDom[1]);
 			rightDom.append($('<p class="pageTitle">').text(pages[1].pageTitle()));
 		}
@@ -292,15 +310,30 @@ var DesignWorkArea = {
 		// based upon http://jsfiddle.net/atotic/B8Rng/
 
 		var workAreaDiv = $(ID);
-		var oldLeft = workAreaDiv.find('.design-book-page-left'); 	// 1
-		var oldRight = workAreaDiv.find('.design-book-page-right'); // 2
+		var oldLeft = workAreaDiv.find('.design-book-page-left').not(':data(removed)'); 	// 1
+		var oldRight = workAreaDiv.find('.design-book-page-right').not(':data(removed)'); // 2
 		var newLeft = pagesDom[0] ? leftDom : null; 								// 3
 		var newRight = pagesDom[1] ? rightDom : null; 							// 4
+		oldLeft.data('removed', true);
+		oldRight.data('removed', true);
+		var cleanupCount = 0;
 		function cleanUp() {
+			cleanupCount++;
+//			console.log(myLogCounter,   "showPages cleanup");
+			if (cleanupCount > 1)
+				console.error(myLogCounter, "showPages cleanup", cleanupCount);
 			oldLeft.detach();
 			oldRight.detach();
+			if (animate) {
+//				console.log(myLogCounter,   "showPages animate replace");
+
+				if (bigPagesDom[0])
+					leftDom.children('.designPage').replaceWith(bigPagesDom[0]);
+				if (bigPagesDom[1])
+					rightDom.children('.designPage').replaceWith(bigPagesDom[1]);
+			}
 		};
-		if (direction == 'forward' || direction == 'back') {
+		if (animate) {
 			oldLeft.find('.pageTitle').detach();
 			oldRight.find('.pageTitle').detach();
 			var duration = 500;
@@ -315,6 +348,7 @@ var DesignWorkArea = {
 				});
 				// add pages in correct order for proper flip visibility
 				// 4 1 3 2
+	//			console.log(myLogCounter,   "showPages forward, pages appended in order");
 				$(ID).append(newRight).append(oldLeft).append(newLeft).append(oldRight);
 				if (oldRight.length > 0)
 					oldRight.transition({transform: 'rotateY(-180deg)'}, duration, cleanUp);
@@ -335,6 +369,7 @@ var DesignWorkArea = {
 					transformOrigin: 'center left',
 					backfaceVisibility: 'hidden'
 				});
+//				console.log(myLogCounter,   "showPages back, pages appended in order");
 				$(ID).append(newLeft).append(oldLeft).append(oldRight).append(newRight);
 				if (oldLeft.length > 0)
 					oldLeft.transition({transform: 'rotateY(180deg)'}, duration, cleanUp);
@@ -349,7 +384,9 @@ var DesignWorkArea = {
 		else { // no animation
 			cleanUp();
 			workAreaDiv.append(newRight).append(newLeft);
+//			console.log(myLogCounter,   "showPages no animation complete");
 		}
+//		console.log(myLogCounter,   "showPages done");
 	},
 	showDesignArea: function(page) {
 		$('#theme-picker').detach();
@@ -378,13 +415,18 @@ var DesignWorkArea = {
 			show = 0;
 		else
 			GUI.Options.designPage = page.id;
+//		console.log("show", show, this.page, this.currentPage);
 		this.showPages(facingPages.get(show), direction);
 	},
 	goBack: function() {
+		if (this.currentPage == null)
+			return;
 		var show = this.book.facingPages.before(this.currentPage);
 		this.goTo(show[0], 'back');
 	},
 	goForward: function() {
+		if (this.currentPage == null)
+			return;
 		var show = this.book.facingPages.after(this.currentPage);
 		this.goTo(show[0], 'forward');
 	}

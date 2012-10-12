@@ -30,7 +30,7 @@
     enabled: true,
 
     // Set this to false if you don't want to use the transition end property.
-    useTransitionEnd: false
+    useTransitionEnd: true
   };
 
 
@@ -501,11 +501,11 @@
   //       complete: function() { /* ... */ }
   //      });
   //
+
   $.fn.transition = $.fn.transit = function(properties, duration, easing, callback) {
     var self  = this;
     var delay = 0;
     var queue = true;
-
     // Account for `.transition(properties, callback)`.
     if (typeof duration === 'function') {
       callback = duration;
@@ -562,6 +562,7 @@
     if (i === 0) {
       var fn = function(next) {
         self.css(properties);
+
         if (callback) { callback.apply(self); }
         if (next) { next(); }
       };
@@ -593,6 +594,7 @@
       if ((i > 0) && (transitionEnd) && ($.transit.useTransitionEnd)) {
         // Use the 'transitionend' event if it's available.
         bound = true;
+
         self.bind(transitionEnd, cb);
       } else {
         // Fallback to timers if the 'transitionend' event isn't supported.

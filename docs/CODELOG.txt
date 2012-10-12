@@ -45,6 +45,8 @@ book template:
 - users can build derivative works.
 
 Next:
+- bugfix: iPad -- too slow button click
+- bugfix: reflow work area when palette resizes
 - better picture positionsing
 - select different page elements, apply transformations
 - Rough pages: enforcing consistency:
@@ -59,13 +61,13 @@ Next:
 Oct 11
 page flip polish:
 Bugfix: flaps -- jquery.transit had did not set transform correctly
-iPad -- too slow button click
-all -- too slow for fast flipping
-hide the old digits when animation starts
+Bugfix: hide the old digits when animation starts
+Bugfix: cover reanimates if arrow hit too quickly
+Bugfix: fast flipping of pages by using low-res page for the flip
+
 fork jquery.transit on github, submit patch
 pre cache images for page flipping
 upgrade to font awesome for fonts
-show two pages under each other when it makes sense?
 
 Oct 10
 Replaced transform.js with jquery.transit
