@@ -77,7 +77,7 @@
 			}
 		},
 		isDraggable: function() {
-			return this.id.match(coverRegex) == null;
+			return this.id.match(coverRegex) === null;
 		},
 		isDroppable: function(flavor) {
 			switch(flavor) {
@@ -135,7 +135,7 @@
 				p.photoList[idx] = newId;
 		},
 		addPhoto: function(photo, options) {
-			if (photo == null)
+			if (photo === null)
 				return;
 			var p = this.p;
 			p.photoList.push(photo.id);

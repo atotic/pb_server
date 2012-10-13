@@ -61,10 +61,11 @@ Next:
 Oct 12
 Bugfix: reflow work area when palette resizes
 Community: fork jquery.transit on github, submit pull request
-upgrade to font awesome for fonts
+Upgrade: Use font-awesome icons
+Tried JSLint. Did not find anything interesting in 5K loc. Will not use it. All of the warnings were frivolous.
 
 Oct 11
-page flip polish:
+Page flip polish:
 Bugfix: flaps -- jquery.transit had did not set transform correctly
 Bugfix: hide the old digits when animation starts
 Bugfix: cover reanimates if arrow hit too quickly

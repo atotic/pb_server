@@ -103,13 +103,13 @@ patch format:
 		},
 		// jsonpath to the property
 		path: function() {
-			var r = this._path.map(function(x) { return x[0]}).join('.');
+			var r = this._path.map(function(x) { return x[0];}).join('.');
 			if (this._prop != undefined ) r += "." + this._prop;
 			return r;
 		},
 		// array of objects leading to property
 		objectPath: function() {
-			var op = this._path.map(function(x) { return x[1]});
+			var op = this._path.map(function(x) { return x[1];});
 			if (this._prop != undefined) op.push(this._prop);
 			return op;
 		},

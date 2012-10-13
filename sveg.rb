@@ -227,12 +227,18 @@ class SvegApp < Sinatra::Base
 					arg = "jquery-1.8.1.js" if arg.eql? "jquery.js"
 					retVal += "<script src='/js/#{arg}'></script>\n"
 				elsif arg.end_with?("css")
+					if arg.eql? 'bootstrap.css'
+						retVal += "<link href='/css/#{arg}' rel='stylesheet' type='text/css' />\n"
+						retVal += "<link href='/css/font-awesome.css' rel='stylesheet' type='text/css' />\n"
+					else
+						retVal += "<link href='/css/#{arg}' rel='stylesheet' type='text/css' />\n"
+					end
 					retVal += "<link href='/css/#{arg}' rel='stylesheet' type='text/css' />\n"
 				elsif arg.eql? "qunit"
 					retVal += "<script src='http://code.jquery.com/qunit/qunit-git.js'></script>\n"
 					retVal += "<link href='http://code.jquery.com/qunit/qunit-git.css' rel='stylesheet' type='text/css' />\n"
 				elsif arg.eql? "bootstrap"
-					retVal += asset_link( "bootstrap.css", "bootstrap.js")
+					retVal += asset_link( "bootstrap.css",  "font-awesome.css", "bootstrap.js")
 				else
 					raise "Unknown asset #{arg}"
 				end

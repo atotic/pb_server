@@ -23,6 +23,7 @@ var WorkArea = {
 					break;
 				default:
 					console.warn("unknown designStage", val);
+					break;
 			}
 	},
 	get visibleWorkAreaId() {

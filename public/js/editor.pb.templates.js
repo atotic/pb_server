@@ -23,7 +23,7 @@ var	Template = {
 
 		var retVal = $.Deferred();
 
-		if (idList.length == 0) {
+		if (idList.length === 0) {
 			retVal.resolve({});
 			return retVal;
 		}
@@ -38,7 +38,7 @@ var	Template = {
 				missingIds.push( idList[i] );
 		}
 
-		if (missingIds.length == 0) { // no need for network, we are good
+		if (missingIds.length === 0) { // no need for network, we are good
 			retVal.resolve(result);
 			return retVal;
 		}
@@ -63,6 +63,7 @@ var	Template = {
 					case 404:
 					default:
 						console.warn('template failed to load', status, msg);
+						break;
 				}
 				retVal.reject(result);
 			});
@@ -119,7 +120,7 @@ var	Template = {
 			default:
 				templateExtend = template;
 				break;
-		};
+		}
 		templateExtend.freeze;	// templates cannot modify their data
 		cache[templateExtend.id] = templateExtend;
 	}
@@ -129,6 +130,8 @@ scope.Template = Template;
 })(PB);
 
 (function(scope) {
+	var DPI = 96;
+
 	var Theme = function(t) {
 		$.extend(this, t);
 	};
@@ -141,10 +144,10 @@ scope.Template = Template;
 	};
 	Book.prototype = {
 		get pixelWidth() {
-			return this.width * 72;
+			return this.width * DPI;
 		},
 		get pixelHeight() {
-			return this.height * 72;
+			return this.height * DPI;
 		},
 		loadLayoutTemplates: function() {
 			return PB.Template.get(this.layouts);
@@ -157,7 +160,7 @@ scope.Template = Template;
 				 	&& ( 'pageClass' in query && layout.pageClass == query.pageClass))
 					retVal.push(layout);
 			}
-			if (retVal.length == 0)
+			if (retVal.length === 0)
 				retVal.push( PB.Template.cached('layout_algorithmic'));
 			return retVal;
 		}
@@ -167,6 +170,7 @@ scope.Template = Template;
 	var Layout = function(t) {
 		$.extend(this, t);
 	};
+
 	Layout.prototype = {
 		getWidth: function(page) {
 			var inches = this.width || PB.Template.cached(page.book.bookTemplateId).width;
@@ -174,12 +178,14 @@ scope.Template = Template;
 				case 'back-flap':
 				case 'cover-flap':
 					inches /= 3;
+					break;
+				default: break;
 			}
-			return inches * 72;
+			return inches * DPI;
 		},
 		getHeight: function(page) {
 			var inches = this.height || PB.Template.cached(page.book.bookTemplateId).height;
-			return inches * 72;
+			return inches * DPI;
 		},
 		generateDom: function(page, resolution) {	// resolution: PhotoProxy.SMALL|MEDIUM|LARGE
 			var width = this.getWidth(page);
@@ -198,7 +204,7 @@ scope.Template = Template;
 			var imgIdx = 0;
 			for (var v=0; v < perRow; v++)
 				for (var h=0; h<perRow; h++) {
-					var imgIdx = v * perRow + h;
+					imgIdx = v * perRow + h;
 					if (imgIdx >= photos.length)
 						continue;
 					var imgTag = $('<img>');
@@ -233,7 +239,7 @@ BookThemeAPI = {
 			PB.broadcastChange(this, 'themeId');
 			changed = true;
 		}
-		if (changed == true)
+		if (changed === true)
 			PB.broadcastChange(this, 'template');
 	},
 	loadTemplates: function() {

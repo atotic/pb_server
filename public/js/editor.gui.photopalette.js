@@ -52,14 +52,14 @@
 					bottom: parseInt(photoList.css('margin-bottom'))
 				},
 				photoDiv: {	top: 2, bottom: 2, height: GUI.Options.photoSizeHeight} // guess
-			}
+			};
 			var photoDiv = $('#photo-list > .photo-div');
-			if (photoDiv.length != 0)
+			if (photoDiv.length !== 0)
 				domBoxInfo.photoDiv = {
 					top: parseInt(photoDiv.css('margin-top')),
 					bottom: parseInt(photoDiv.css('margin-bottom')),
 					height: GUI.Options.photoSizeHeight
-				}
+				};
 			return domBoxInfo;
 		},
 		// Have to return margins too
@@ -128,6 +128,8 @@
 							ev.preventDefault();
 							GUI.DragStore.hadDrop = true;
 						break;
+						default:
+						break;
 					}
 				}
 			});
@@ -136,7 +138,7 @@
 			var statusDiv = tile.children('.status');
 			var msg = model.status;
 			if (msg) {
-				if (statusDiv.length == 0) {
+				if (statusDiv.length === 0) {
 					statusDiv = $("<div class='status'>");
 					tile.append(statusDiv);
 				}
@@ -159,9 +161,12 @@
 				case 'name':
 					infoTxt = model.display_name;
 					break;
+				default:
+					console.warn("unknown sort type", GUI.Options.photoSort);
+					break;
 			}
 			if (infoTxt) {
-				if (infoDiv.length == 0) {
+				if (infoDiv.length === 0) {
 					infoDiv = $("<div class='info'>");
 					tile.append(infoDiv);
 				}
@@ -174,7 +179,7 @@
 			var progressDiv = tile.children('.progress');
 			var percent = model.progress;
 			if (percent) {
-				if (progressDiv.length == 0) {
+				if (progressDiv.length === 0) {
 					progressDiv = $("<div class='progress'><div class='bar' style='width:0%;'></div></div>");
 					tile.append(progressDiv);
 				}
@@ -260,7 +265,7 @@
 				});
 
 			var oldPhotos = oldChildren.get().map(
-				function(el, i) { return $.data(el,'model').id});
+				function(el, i) { return $.data(el,'model').id;});
 
 			var newPhotos = GUI.Options.photoFilter == 'all' ? bookModel.photoList : bookModel.unusedPhotoList;
 			newPhotos = PB.ServerPhotoCache.sortPhotos(newPhotos);

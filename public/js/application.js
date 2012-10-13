@@ -7,19 +7,19 @@
 		  return window.matchMedia("(max-width: 650px)").matches;
 		},
 		get isSmallHost() {
-			return window.location.hostname.match(/^touch/) != null;
+			return window.location.hostname.match(/^touch/) !== null;
 		},
 		// redirects to small or large site
 		redirectToProperHost: function() {
 			var wantSmallHost = PB.isSmallScreen();
-			var hasSmallHost = window.location.hostname.match(/^touch/) != null;
+			var hasSmallHost = window.location.hostname.match(/^touch/) !== null;
 			if (wantSmallHost != hasSmallHost) {
 				var isDev = window.location.hostname.match(/dev/);
 				var desiredHost = wantSmallHost ? ( isDev ? 'touchdev.pb4us.com' : 'touch.pb4us.com')
 															: (isDev ? 'dev.pb4us.com' : 'www.pb4us.com');
-				var url = window.location.protocol + '//' + desiredHost
-								+ (window.location.port != "" ? ':' + window.location.port : '')
-								+ window.location.pathname;
+				var url = window.location.protocol + '//' + desiredHost;
+				url +=  window.location.port != "" ? ':' + window.location.port : '';
+				url += window.location.pathname;
 				alert('want ' + url);
 				window.location.replace(url);
 			}
@@ -31,7 +31,7 @@
 		},
 		_getAlertContainer: function() {
 			var c = $('#alert-container');
-			if (c.length == 0)
+			if (c.length === 0)
 				$('body').append("<div id='alert-container'/>");
 			return $('#alert-container');
 		},
@@ -54,10 +54,10 @@
 		showXhrFlash: function(event, jqXHR, ajaxOptions) {
 			var msg = jqXHR.getResponseHeader('X-FlashError');
 			if (msg) PB.error(msg);
-			var msg = jqXHR.getResponseHeader('X-FlashNotice');
+			msg = jqXHR.getResponseHeader('X-FlashNotice');
 			if (msg) PB.info(msg);
 		}
-	}
+	};
 	// Timer utility class
 	var Timer = function(name, ignoreUnder) {
 		this.startMili = Date.now();
@@ -65,7 +65,7 @@
 		this.name = name;
 		this.ignoreUnder = ignoreUnder || 100;
 		this.start();
-	}
+	};
 
 	Timer.prototype = {
 		start: function() {

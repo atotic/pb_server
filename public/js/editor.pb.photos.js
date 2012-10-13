@@ -42,8 +42,8 @@
 				if (a_date && b_date)
 					return a_date - b_date;
 				else {
-					if (a_date == null) {
-						if (b_date == null)
+					if (a_date === null) {
+						if (b_date === null)
 							return b.loc - a.loc;
 						else
 							return -1;
@@ -51,10 +51,10 @@
 					else
 						return 1;
 				}
-			};
+			}
 			function addedComparator(a,b) {
 				return a.loc - b.loc;
-			};
+			}
 			function nameComparator(a,b) {
 				var a_name = a.photo.display_name;
 				var b_name = b.photo.display_name;
@@ -77,8 +77,8 @@
 					else
 						return a_num - b_num;
 				}
-			};
-			if (photos.length == 0)
+			}
+			if (photos.length === 0)
 				return photos;
 			var modelArray = [];
 			for (var i=0; i<photos.length; i++)
@@ -88,11 +88,11 @@
 				case 'added': compareFn = addedComparator; break;
 				case 'taken': compareFn = dateComparator; break;
 				case 'name': compareFn = nameComparator; break;
-				default: console.error("unknown compare fn for sortPhotos");
+				default: console.error("unknown compare fn for sortPhotos");break;
 			}
 			modelArray.sort(compareFn);
 			return modelArray.map(function(a) { return a.photo.id});
-		},
+		}
 	}
 
 	var ServerPhoto = function(id) {
@@ -116,10 +116,10 @@ var ImgLoadThrottler = {
 		window.setTimeout(function() {ImgLoadThrottler._process()}, 10);
 	},
 	_process: function() {
-		if (this.loading != null)
+		if (this.loading !== null)
 			return;
 		this.loading = this.waiting.shift();
-		if (this.loading == null)
+		if (this.loading === null)
 			return;
 		$(this.loading.img).on({
 			load: function() {
@@ -289,6 +289,8 @@ var ImgLoadThrottler = {
 			    trans = {x:canvasWidth /2, y:canvasHeight /2};
 			    drawLoc = {x:-imageWidth * scale /2, y:-imageHeight * scale /2};
 			    break;
+			default:
+				console.warn("unknown orientation", orientation);break;
 			}
 			var c = $('<canvas>')
 			    .attr('width', canvasWidth)
@@ -384,7 +386,7 @@ var ImgLoadThrottler = {
 		// with options {newId: new_value}. Listeners should reregister their interest
 		loadFromJson: function(json, noBroadcast) {
 			if ('id' in json && this.id != json.id) {
-				if (!/^temp/.exec(this.id))
+				if (! /^temp/.exec(this.id))
 					throw "Photo id is immutable once assigned (unless temp id)";
 				PB.broadcastChange(this, 'id', {newId: json.id});
 				ServerPhotoCache.replaceTempId(this, json.id);
@@ -413,7 +415,7 @@ var ImgLoadThrottler = {
 			console.log("saveError " + val);
 		},
 		getSaveDeferred: function() {
-			if (this._localFile == null)
+			if (this._localFile === null)
 				return null;
 			var fd = new FormData();
 			fd.append('display_name', this._localFile.name);

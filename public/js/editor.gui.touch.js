@@ -38,7 +38,7 @@
 						contains: function() { return false;}
 					}
 				}
-			}
+			};
 			var jqEvent = $.Event(eventType);
 			jqEvent.originalEvent = ev;
 			$(target).trigger(jqEvent);
@@ -58,7 +58,7 @@
 			this.sendEvent(dropTarget, 'drop');
 			this.setDropTarget();
 		}
-	}
+	};
 	scope.TouchDrop = TouchDrop;
 })(window.GUI);
 
@@ -72,7 +72,7 @@
 				element = $(element).get(0);
 				var r = element.getBoundingClientRect();
 				return { dom: element, type: targetType,
-					offsetX: clientX - r.left, offsetY: clientY - r.top }
+					offsetX: clientX - r.left, offsetY: clientY - r.top };
 			}
 		}
 		this._findTargetCb = findTargetCb;
@@ -83,7 +83,7 @@
 		this._domCopy = null; // clone of the element we are dragging
 		this._source = null; // element we are dragging
 		this._delayed = false;	// delayed start of tracking, holds id of delayTimeotu
-	}
+	};
 
 	TouchTrack.prototype = {
 		startTracking: function(element, touchEvent, delayed) {
@@ -158,14 +158,14 @@
 		},
 		get delayed() { return this._delayed; },
 
-		get last() { return this._last },
+		get last() { return this._last; },
 		set last(touchEvent) {
 			if (touchEvent) {
 				this._last.clientX = touchEvent.clientX;
-				this._last.clientY = touchEvent.clientY
+				this._last.clientY = touchEvent.clientY;
 			}
 			else
-				this._last = {}
+				this._last = {};
 		},
 
 		get start() { return this._start; },
@@ -192,9 +192,10 @@
 			});
 		},
 		touchItemById: function(touchList, identifier) {
-			for (var i=0; i<touchList.length; i++)
+			for (var i=0; i<touchList.length; i++) {
 				if (touchList[i].identifier == identifier)
 					return touchList[i];
+			}
 			return null;
 		},
 		touchstart: function(ev, touchTrack) {

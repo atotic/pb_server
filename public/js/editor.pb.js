@@ -85,7 +85,7 @@ window.PB.Photo // Photo objects
 				var idx = changeListeners[id].indexOf(listener);
 				if (idx != -1) {
 					changeListeners[id].slice(idx, 1);
-					if (changeListeners[id].length == 0)
+					if (changeListeners[id].length === 0)
 						delete changeListeners[id];
 				}
 				else

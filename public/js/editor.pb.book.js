@@ -263,9 +263,8 @@
 		},
 		applyBroadcastPatches: function(patchArray) {
 			if (this._locked) {
-				throw "Patch ignored, book is locked";
 				console.warn("Ignored patch, book is locked");
-				return;
+				throw "Patch ignored, book is locked";
 			}
 			var t = new PB.Timer("applyBroadcastPatches");
 			var changes = [];
@@ -319,7 +318,7 @@
 				}
 			}
 			var diff = this.getDiff();
-			if (diff.length == 0) {
+			if (diff.length === 0) {
 				this._dirty = false;
 				return null;
 			}
@@ -342,6 +341,7 @@
 						break;
 					default:
 						console.warn("unknown success code ", jqXHR.status);
+						break;
 				}
 			});
 			ajax.fail(function(jqXHR, textStatus, message) {
@@ -353,9 +353,11 @@
 					case 412:
 						console.error("We did not send the right header, should never see this");
 						debugger;
+						break;
 					default:
 						console.error("Unexpected network error submitting patch", jqXHR.status);
 						debugger;
+						break;
 				}
 			});
 			return ajax;
@@ -455,7 +457,7 @@
 			var facing = [];
 			var pagePair = [];
 			function pairDone() {
-				if (pagePair.length != 0)
+				if (pagePair.length !== 0)
 					facing.push(pagePair);
 				pagePair = [];
 			}
@@ -496,6 +498,7 @@
 						break;
 					default:
 						console.warn("unknown page class", page.pageClass);
+						break;
 				}
 			}
 			// after while loop, last page is in pagePair
@@ -506,14 +509,16 @@
 				facing.splice(0, 0, [null, cover]);
 
 			// coverFlap with firstPage
-			if (coverFlap)
+			if (coverFlap) {
 				if (firstPage)
 					facing.splice(1, 0, [coverFlap, firstPage]);
 				else
 					facing.splice(1,0, [coverFlap, null]);
-			else
+			}
+			else {
 				if (firstPage)
 					facing.splice(1, 0, [null, firstPage]);
+			}
 			// backFlap with lastPage
 			if (backFlap) {
 				if (pagePair.length == 1) {
@@ -536,9 +541,10 @@
 			return this._facing[index];
 		},
 		find: function(page) {
-			for (var i=0; i<this._facing.length; i++)
+			for (var i=0; i<this._facing.length; i++) {
 				if (this._facing[i].indexOf(page) != -1)
 					return i;
+			}
 			return undefined;
 		},
 		before: function(page) {

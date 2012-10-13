@@ -25,7 +25,7 @@
 					GUI.RoughWorkArea.resizeAllPages();
 					break;
 				default:
-				;
+					break;
 			}
 		},
 		show: function() {
@@ -124,7 +124,7 @@
 				if (direction) {
 					newTarget = this;
 					newDirection = direction;
-					return false;
+					return;
 				}
 			});
 			// Display visual feedback
@@ -153,6 +153,7 @@
 				break;
 			default:
 				console.error("Unknown drag type", GUI.DragStore.flavor);
+				break;
 			}
 		},
 		dragleave: function(ev) {
