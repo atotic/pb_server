@@ -45,7 +45,6 @@ book template:
 - users can build derivative works.
 
 Next:
-- bugfix: iPad -- too slow button click
 - better picture positionsing
 - select different page elements, apply transformations
 - text
@@ -54,9 +53,15 @@ Next:
 	keep spanning pages together when dragging
 
 - rewrite our local drag code, avoid drag events. Check if IE works then
+- backgrounds, frames, gadgets
 - keep track of file sizes in db
 - account page should load book list dynamically  $(window).unload(function(){});
 - Bookshelf in account
+- suggest using google frame for IE users
+
+Oct 15
+Feature: Google Frame meta tag -- makes IE with Google Frame render pages in Chrome
+Bugfix: back/forward buttons continuous, beautiful on ipad
 
 Oct 12
 Bugfix: reflow work area when palette resizes

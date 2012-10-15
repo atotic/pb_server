@@ -183,7 +183,48 @@
 		}
 	}
 
+	// Button that repeatedly fires (like back/fwd for page flips)
+	// callback gets called on fire
+	// delay is either a number, or delayCb(fireCount) -> delay in ms. fireCount is number of times
+	// button has fired in this cycle
+	function makeRepeatingButton(el, callback, delay) {
+			el = $(el);
+			var fireCount;
+			if ((typeof delay) == 'number') {
+				var numDelay = delay;
+				delay = function() { return numDelay;}
+			}
+			function fireAndCallAgain() {
+					if ($(document.querySelectorAll('*:active')).filter(el).length > 0) {
+	//					console.log("active!");
+						callback(el);
+						window.setTimeout(fireAndCallAgain, delay(++fireCount));
+					}
+					else {
+						; //console.log("inactive, but these are:", $('*:active'));
+					}
+			};
+			// touch event is on timeout because button is not active until next main loop
+			if (PB.hasTouch())
+				el.on( {
+					touchstart: function() {
+						fireCount = 0;
+						window.setTimeout(fireAndCallAgain,0);
+					}
+				});
+			else
+				el.on( {
+					mousedown: function() {
+						fireCount = 0;
+						fireAndCallAgain();
+					}
+				});
+			return true;
+	};
+
 	scope.Buttons = Buttons;
+	scope.Buttons.makeRepeatingButton = makeRepeatingButton;
+
 	scope.Buttons.ResizePaletteButton = ResizePaletteButton;
 })(window.GUI);
 

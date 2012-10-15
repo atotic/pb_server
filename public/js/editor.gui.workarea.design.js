@@ -115,14 +115,22 @@ var DesignWorkArea = {
 				false,
 				function() {GUI.DesignWorkArea.goForward()}
 			));
-		$('#work-area-design-btn-back').click(function(ev) {
-			GUI.DesignWorkArea.goBack();
-			ev.preventDefault();
-		});
-		$('#work-area-design-btn-forward').click(function(ev) {
-			GUI.DesignWorkArea.goForward();
-			ev.preventDefault();
-		});
+		function buttonTimer(clickCount) {
+			if (clickCount < 10)
+				return 400;
+			else
+				return 100;
+		};
+		GUI.Buttons.makeRepeatingButton(
+			$('#work-area-design-btn-back'),
+			function() {GUI.DesignWorkArea.goBack();},
+			buttonTimer
+			);
+		GUI.Buttons.makeRepeatingButton(
+			$('#work-area-design-btn-forward'),
+			function() {GUI.DesignWorkArea.goForward();},
+			buttonTimer
+			);
 		$(window).resize(function() {
 			DesignWorkArea.resize();
 		});
@@ -335,10 +343,11 @@ var DesignWorkArea = {
 					transformOrigin: 'center left',
 					backfaceVisibility: 'hidden'
 				});
-				newLeft.css({
-					transformOrigin: 'center right',
-					backfaceVisibility: 'hidden'
-				});
+				if (newLeft)	// can be null in malformed books
+					newLeft.css({
+						transformOrigin: 'center right',
+						backfaceVisibility: 'hidden'
+					});
 				// add pages in correct order for proper flip visibility
 				// 4 1 3 2
 				$(ID).append(newRight).append(oldLeft).append(newLeft).append(oldRight);
@@ -411,13 +420,13 @@ var DesignWorkArea = {
 		if (this.currentPage == null)
 			return;
 		var show = this.book.facingPages.before(this.currentPage);
-		this.goTo(show[0], 'back');
+		this.goTo(show[0] || show[1], 'back');
 	},
 	goForward: function() {
 		if (this.currentPage == null)
 			return;
 		var show = this.book.facingPages.after(this.currentPage);
-		this.goTo(show[0], 'forward');
+		this.goTo(show[0] || show[1], 'forward');
 	}
 }
 
