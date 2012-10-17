@@ -195,6 +195,23 @@
 			else
 				progressDiv.detach();
 		},
+		setTileFaces: function(tile, model) {
+			tile.children('.face').detach();
+			var width = tile.children('img').width();
+			var height = tile.children('img').height()
+			for (var i=0; i<model.faces.length; i++) {
+				var face = model.faces[i];
+				var faceDiv = $(document.createElement('div'))
+					.addClass('face')
+					.css({
+						top: face.top * height,
+						left: face.left * width,
+						width: (face.right - face.left) * width,
+						height: (face.bottom - face.top) * height
+					});
+				tile.append(faceDiv);
+			}
+		},
 		resizeAllImages: function() {
 			$('.photo-div > img').each(function() {
 				var el = $(this);
@@ -241,6 +258,7 @@
 			this.setTileStatus(tile, photo);
 			this.setTileProgress(tile, photo);
 			this.setTileInfo(tile, photo);
+			this.setTileFaces(tile, photo);
 			window.setTimeout(function() {
 				// iPad bug workaround. Without timer, touch handlers are not registered
 				THIS.makeDraggable(tile);

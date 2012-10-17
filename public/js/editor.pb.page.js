@@ -42,6 +42,9 @@
 		},
 		get display_name() {
 			return this.p.display_name;
+		},
+		get faces() {
+			return this.p.faces;
 		}
 	}
 

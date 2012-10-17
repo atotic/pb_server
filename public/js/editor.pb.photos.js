@@ -395,7 +395,7 @@ var ImgLoadThrottler = {
 			for (var i=0; i<nonBroadcastProps.length; i++)
 				this[nonBroadcastProps[i]] = json[nonBroadcastProps[i]];
 
-			var props = ['original_url', 'display_url', 'icon_url', 'display_name', 'date_taken', 'caption'];
+			var props = ['original_url', 'display_url', 'icon_url', 'display_name', 'date_taken', 'caption','faces'];
 			for (var i=0; i<props.length; i++)
 				if ( (!(props[i] in this))
 						 || ( (props[i] in this) && this[props[i]] != json[props[i]])) {
