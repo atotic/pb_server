@@ -45,7 +45,8 @@ book template:
 - users can build derivative works.
 
 Next:
-- better picture positionsing
+- better picture positionsing. Use opencv for face recognition?
+- commands: rate limiting, enable/disable GUI
 - select different page elements, apply transformations
 - text
 - Rough pages: enforcing consistency:
@@ -57,11 +58,20 @@ Next:
 - keep track of file sizes in db
 - account page should load book list dynamically  $(window).unload(function(){});
 - Bookshelf in account
-- suggest using google frame for IE users
+
+Oct 16
+dead tired, lazy day. Talked to with Rob Sethre from Photizo. No great insights yet,
+but it might work. Emailed him what I'd like.
+Drugstores as partners, hah! Yucky, yucky quality
+Surprised that CEWE was shipping my book from Germany
+I think their view of the world is many local fulfillment centers. I thought it'd be
+more centralized.
+Implemented python face detection with OpenCV. Neat!
 
 Oct 15
 Feature: Google Frame meta tag -- makes IE with Google Frame render pages in Chrome
 Bugfix: back/forward buttons continuous, beautiful on ipad
+Trying to get OpenCV for face detection. Why? Because it is cool :)
 
 Oct 12
 Bugfix: reflow work area when palette resizes
