@@ -33,6 +33,7 @@ Sequel.migration do
 			# Exif data
 			String :date_taken
 			String :caption, :size=>256
+			String :faces, :size=>256
 
 			# Images
 			String :original_file, :size=>128	# Original file

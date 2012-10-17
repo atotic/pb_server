@@ -26,6 +26,7 @@ class Photo < Sequel::Model(:photos)
 			:display_name => self.display_name,
 			:date_taken => self.date_taken,
 			:caption => self.caption,
+			:faces => JSON.parse(self.faces),
 			:original_url => self.original_file ? self.url(:original) : false,
 			:original_w => self.original_file_width,
 			:original_h => self.original_file_height,
@@ -194,6 +195,12 @@ class PhotoStorage
 		retVal
 	end
 
+	def self.face_detect(photo)
+		file_path = photo.file_path(:display)
+		cmd_line = "#{SvegSettings.python_binary} #{SvegSettings.face_script} #{file_path}"
+		photo.faces = `#{cmd_line}`
+	end
+
 	def self.store_file(photo, file_path)
 		raise "Photo must have a primary key" unless photo.pk
 		dir = self.get_user_dir(photo)
@@ -211,6 +218,7 @@ class PhotoStorage
 		photo.caption = (exif[:description] || exif[:title] || "")[0,255]
 		photo.original_file_width, photo.original_file_height = self.get_size(photo.file_path)
 		self.resize(photo)
+		self.face_detect(photo)
 		photo.save
 	end
 

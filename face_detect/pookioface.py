@@ -1,10 +1,11 @@
 #!/usr/bin/python
 
-import numpy as np
-import getopt
 import sys
-import cv2
+import os
+import getopt
 import json
+import numpy as np
+import cv2
 
 help_message = "USAGE: pookioface.py [--display] [--out <out_file>] <img_file>"
 def usage(msg):
@@ -29,8 +30,9 @@ img = cv2.imread(img_file, 0)
 if img == None:
 	usage("file not found:" + img_file)
 
-cascade = cv2.CascadeClassifier("./haarcascade_frontalface_alt.xml")
-nested = cv2.CascadeClassifier("./haarcascade_eye.xml")
+face_trainer_file = os.path.split(__file__)[0] + "/haarcascade_frontalface_alt.xml"
+cascade = cv2.CascadeClassifier(face_trainer_file)
+#nested = cv2.CascadeClassifier(os.path.basename(__file__) + "/haarcascade_eye.xml")
 
 img = cv2.equalizeHist(img)
 num_rects = cascade.detectMultiScale(img, scaleFactor=1.3, minNeighbors=4, minSize=(30,30), flags = cv2.cv.CV_HAAR_SCALE_IMAGE)
@@ -54,6 +56,7 @@ if '--display' in args:
 	cv2.imshow("image", img);
 	cv2.waitKey();
 
+rects = rects[0:3]	# limit to 3 faces
 if '--out' in args:
 	try:
 		f = open(args['--out'], 'w')

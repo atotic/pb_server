@@ -43,6 +43,7 @@ class SvegSettings
 		@convert_binary = "/usr/local/bin/convert".freeze
 		@graphicsmagick_binary = "/usr/local/bin/gm".freeze
 		@exiv2_binary = "/usr/local/bin/exiv2".freeze
+		@python_binary = "/usr/bin/python".freeze
 	elsif @platform == :linux
 		@chrome_binary = File.join(@pb_chrome_dir, "bin/linux_64/chrome").freeze
 		@chrome_dir = File.join(@pb_chrome_dir, "bin/linux_64").freeze
@@ -51,7 +52,9 @@ class SvegSettings
 		@convert_binary = "/usr/bin/convert".freeze
 		@graphicsmagick_binary = "/usr/bin/gm".freeze
 		@exiv2_binary = "/usr/bin/exiv2".freeze
+		@python_binary = "/usr/bin/python".freeze
 	end
+	@face_script = File.join(@root_dir, 'face_detect', 'pookioface.py').freeze
 	#
 	@comet_port = 28000
 	@comet_host = "localhost"
@@ -61,7 +64,8 @@ class SvegSettings
 		attr_accessor :environment, :platform
 		attr_accessor :book_templates_dir, :photo_dir, :book2pdf_dir
 		attr_accessor :chrome_binary, :chrome_dir, :chrome_log_dir, :chrome_profile_dir, :pdf_toolkit_binary
-		attr_accessor :convert_binary, :graphicsmagick_binary, :exiv2_binary
+		attr_accessor :convert_binary, :graphicsmagick_binary, :exiv2_binary, :python_binary
+		attr_accessor :face_script
 		attr_accessor :comet_port, :comet_host
 	end
 

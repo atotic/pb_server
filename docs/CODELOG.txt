@@ -59,6 +59,13 @@ Next:
 - account page should load book list dynamically  $(window).unload(function(){});
 - Bookshelf in account
 
+Oct 17
+Wish Olga a happy birthday
+add python/opencv as dependencies
+support faces in database, generate them on upload
+display faces in photopalette
+use faces for better fit!
+
 Oct 16
 dead tired, lazy day. Talked to with Rob Sethre from Photizo. No great insights yet,
 but it might work. Emailed him what I'd like.
