@@ -1,7 +1,61 @@
 // editor.pb.photos.js
 
+
+// PB.PhotoProxy
 (function(scope) {
 
+	// See ReferenceAPI
+	var PhotoProxy = function(id, book) {
+		this.id = id;
+		this.book = book;
+	}
+
+	PhotoProxy.SMALL = 128;
+	PhotoProxy.MEDIUM = 1024;
+	PhotoProxy.LARGE = 2000;
+
+	PhotoProxy.prototype = {
+		get p() {
+			if (!('_serverPhoto' in this))
+				this._serverPhoto = PB.ServerPhotoCache.get(this.id);
+			return this._serverPhoto;
+		},
+		getUrl: function(size) {
+			if (size <= PhotoProxy.SMALL)
+				return this.p.iconUrl;
+			else if (size <= PhotoProxy.MEDIUM)
+				return this.p.displayUrl;
+			else
+				return this.p.originalUrl;
+		},
+		get dimensions() {
+			return this.p.dimensions;
+		},
+		isDraggable: function() {
+			return true;
+		},
+		get status() {
+			return this.p.status;
+		},
+		get progress() {
+			return this.p.progress;
+		},
+		get jsDate() {
+			return this.p.jsDate;
+		},
+		get display_name() {
+			return this.p.display_name;
+		},
+		get faces() {
+			return this.p.faces;
+		}
+	}
+
+	scope.PhotoProxy = PhotoProxy;
+})(window.PB);
+
+// PB.ServerPhotoCache
+(function(scope) {
 
 	var cache = {};
 	var tempPrefix = 'temp-';
@@ -95,6 +149,39 @@
 		}
 	}
 
+	var ImgLoadThrottler = {
+		waiting: [],
+		loading: null,
+		setSrc: function(img, src) {
+			this.waiting.push({img: img, src: src});
+			this._process();
+		},
+		_doneLoading: function(img) {
+			$(this.loading.img).unbind();
+			this.loading = null;
+			window.setTimeout(function() {ImgLoadThrottler._process()}, 10);
+		},
+		_process: function() {
+			if (this.loading != null)
+				return;
+			this.loading = this.waiting.shift();
+			if (this.loading == null)
+				return;
+			$(this.loading.img).on({
+				load: function() {
+					ImgLoadThrottler._doneLoading();
+				},
+				error: function() {
+					ImgLoadThrottler._doneLoading();
+				},
+				abort: function() {
+					ImgLoadThrottler._doneLoading();
+				}
+			});
+			this.loading.img.src = this.loading.src;
+		}
+	}
+
 	var ServerPhoto = function(id) {
 		if (!id)
 			throw "ServerPhoto must have an id";
@@ -102,39 +189,6 @@
 		this._status = "";
 		this._progress = 0;
 	}
-
-var ImgLoadThrottler = {
-	waiting: [],
-	loading: null,
-	setSrc: function(img, src) {
-		this.waiting.push({img: img, src: src});
-		this._process();
-	},
-	_doneLoading: function(img) {
-		$(this.loading.img).unbind();
-		this.loading = null;
-		window.setTimeout(function() {ImgLoadThrottler._process()}, 10);
-	},
-	_process: function() {
-		if (this.loading != null)
-			return;
-		this.loading = this.waiting.shift();
-		if (!this.loading == null)
-			return;
-		$(this.loading.img).on({
-			load: function() {
-				ImgLoadThrottler._doneLoading();
-			},
-			error: function() {
-				ImgLoadThrottler._doneLoading();
-			},
-			abort: function() {
-				ImgLoadThrottler._doneLoading();
-			}
-		});
-		this.loading.img.src = this.loading.src;
-	}
-}
 
 /*
  * ServerPhoto represents photo stored on server (PB::Photo class)
@@ -204,6 +258,14 @@ var ImgLoadThrottler = {
 			else
 				return this._getDataUrl();
 		},
+		get dimensions() {
+			if ('original_url' in this)
+				return { width: this.original_w, height: this.original_h};
+			else if ('_data_natural_w' in this)
+				return { width: this._data_natural_w, height: this._data_natural_h};
+			else
+				return { width: 1936, height: 1936};
+		},
 		displayName: function() {
 			if ('display_name' in this)
 				return this.display_name;
@@ -267,37 +329,49 @@ var ImgLoadThrottler = {
 			var drawLoc = {x:0, y:0};
 			var canvasWidth = imageWidth * scale;
 			var canvasHeight = imageHeight * scale;
+
+			// if loading a thumbnail, assume real image is larger
+			var scale = img.naturalWidth <= 320 ? (1936 / img.naturalWidth) : 1;
+			this._data_natural_w = img.naturalWidth * scale;
+			this._data_natural_h = img.naturalHeight * scale;
+
+			function swapWidthHeight() {
+				var tmp = canvasWidth;
+				canvasWidth = canvasHeight;
+				canvasHeight = tmp;
+				tmp = this._data_natural_w;
+				this._data_natural_h = this._data_natural_w;
+				this._data_natural_w = tmp;
+			}
+
 			switch (orientation) {
 			case 1: // no rotation
 				break;
 			case 6:
-			    rot = Math.PI/2; //Math.PI /2.2;
-			    tmp = canvasWidth;
-			    canvasWidth = canvasHeight;
-			    canvasHeight = tmp;
-			    trans = {x:canvasWidth / 2,y:canvasHeight/2};
-			    drawLoc = {x:-imageWidth * scale /2, y:-imageHeight * scale /2};
-			    break;
+					rot = Math.PI/2; //Math.PI /2.2;
+					swapWidthHeight();
+					trans = {x:canvasWidth / 2,y:canvasHeight/2};
+					drawLoc = {x:-imageWidth * scale /2, y:-imageHeight * scale /2};
+					break;
 			case 3:
-			    rot = Math.PI;
-			    trans = {x:canvasWidth /2, y:canvasHeight /2};
-			    drawLoc = {x:-imageWidth * scale /2, y:-imageHeight * scale /2};
-			    break;
+					rot = Math.PI;
+					trans = {x:canvasWidth /2, y:canvasHeight /2};
+					drawLoc = {x:-imageWidth * scale /2, y:-imageHeight * scale /2};
+					break;
 			case 8:
-			    rot = Math.PI * 3 / 2;
-			    tmp = canvasWidth;
-			    canvasWidth = canvasHeight;
-			    canvasHeight = tmp;
-			    trans = {x:canvasWidth /2, y:canvasHeight /2};
-			    drawLoc = {x:-imageWidth * scale /2, y:-imageHeight * scale /2};
-			    break;
+					rot = Math.PI * 3 / 2;
+					swapWidthHeight();
+					trans = {x:canvasWidth /2, y:canvasHeight /2};
+					drawLoc = {x:-imageWidth * scale /2, y:-imageHeight * scale /2};
+					break;
 			default:
 				console.warn("unknown orientation", orientation);break;
 			}
+
 			var c = $('<canvas>')
-			    .attr('width', canvasWidth)
-			    .attr('height',canvasHeight)
-			    .get(0);
+					.attr('width', canvasWidth)
+					.attr('height',canvasHeight)
+					.get(0);
 			ctx = c.getContext('2d');
 			ctx.translate(trans.x,trans.y)
 			ctx.rotate(rot);

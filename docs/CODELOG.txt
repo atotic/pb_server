@@ -45,7 +45,7 @@ book template:
 - users can build derivative works.
 
 Next:
-- commands: rate limiting, enable/disable GUI
+- commands: enable/disable GUI
 - select different page elements, apply transformations
 - text
 - Rough pages: enforcing consistency:
@@ -58,13 +58,16 @@ Next:
 - account page should load book list dynamically  $(window).unload(function(){});
 - Bookshelf in account
 
+Oct 18
+Bugfix: use photo dimensions when placing photos
+
 Oct 17
 Wish Olga a happy birthday
 Feature: add python/opencv as dependencies
 Feature: support faces in database, generate them on upload
 Feature: display faces in photopalette
 Better picture positionsing.
-use faces for better fit!
+Photo in template: fit positioning
 
 Oct 16
 dead tired, lazy day. Talked to with Rob Sethre from Photizo. No great insights yet,

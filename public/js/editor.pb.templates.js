@@ -191,8 +191,7 @@ scope.Template = Template;
 		},
 		fitPhotoInRect: function(photo, enclosingRect, options) {
 			options = $.extend({ }, options);
-			var url = photo.getUrl(PB.PhotoProxy.LARGE);
-			var imgRect = new GUI.Rect({width: url.width, height: url.height});
+			var imgRect = new GUI.Rect(photo.dimensions);
 			var scale = Math.min(1, enclosingRect.fit(imgRect));
 			imgRect.scaleBy(scale);
 			imgRect.centerIn(enclosingRect);

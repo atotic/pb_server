@@ -119,7 +119,7 @@ var DesignWorkArea = {
 			if (clickCount < 10)
 				return 400;
 			else
-				return 100;
+				return 400;
 		};
 		GUI.Buttons.makeRepeatingButton(
 			$('#work-area-design-btn-back'),
@@ -140,7 +140,7 @@ var DesignWorkArea = {
 			.data('model', book)
 			.on(PB.MODEL_CHANGED, this.bookChanged);
 		try {
-			this._lastPage = book.page(GUI.Options.designPage);
+			this._lastPage = GUI.Options.designPage ? book.page(GUI.Options.designPage) : null;
 		}
 		catch(ex) {
 			console.log("last page not found");
@@ -330,6 +330,7 @@ var DesignWorkArea = {
 			$(ID).children(':data(removed)').detach();
 			$(ID).find('div:data(highDpi)').each( function() {
 				var el = $(this);
+				console.log("highDpi replace");
 				el.replaceWith(el.data('highDpi'));
 			});
 		};
@@ -409,7 +410,7 @@ var DesignWorkArea = {
 	goTo: function(page, direction) {
 		var facingPages = this.book.facingPages;
 		var show = facingPages.find(page);
-		if (!show)
+		if (show === undefined)
 			show = 0;
 		else
 			GUI.Options.designPage = page.id;

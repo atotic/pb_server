@@ -1,57 +1,6 @@
 // editor.pb.page.js
 
 
-// PB.PhotoProxy
-(function(scope) {
-
-	// See ReferenceAPI
-	var PhotoProxy = function(id, book) {
-		this.id = id;
-		this.book = book;
-	}
-
-	PhotoProxy.SMALL = 128;
-	PhotoProxy.MEDIUM = 1024;
-	PhotoProxy.LARGE = 2000;
-
-	PhotoProxy.prototype = {
-		get p() {
-			if (!('_serverPhoto' in this))
-				this._serverPhoto = PB.ServerPhotoCache.get(this.id);
-			return this._serverPhoto;
-		},
-		getUrl: function(size) {
-			if (size <= PhotoProxy.SMALL)
-				return this.p.iconUrl;
-			else if (size <= PhotoProxy.MEDIUM)
-				return this.p.displayUrl;
-			else
-				return this.p.originalUrl;
-		},
-		isDraggable: function() {
-			return true;
-		},
-		get status() {
-			return this.p.status;
-		},
-		get progress() {
-			return this.p.progress;
-		},
-		get jsDate() {
-			return this.p.jsDate;
-		},
-		get display_name() {
-			return this.p.display_name;
-		},
-		get faces() {
-			return this.p.faces;
-		}
-	}
-
-	scope.PhotoProxy = PhotoProxy;
-})(window.PB);
-
-
 // PB.PageProxy
 (function(scope) {
 	"use strict";
