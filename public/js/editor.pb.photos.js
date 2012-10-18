@@ -116,10 +116,10 @@ var ImgLoadThrottler = {
 		window.setTimeout(function() {ImgLoadThrottler._process()}, 10);
 	},
 	_process: function() {
-		if (this.loading !== null)
+		if (this.loading != null)
 			return;
 		this.loading = this.waiting.shift();
-		if (this.loading === null)
+		if (!this.loading == null)
 			return;
 		$(this.loading.img).on({
 			load: function() {
@@ -268,6 +268,8 @@ var ImgLoadThrottler = {
 			var canvasWidth = imageWidth * scale;
 			var canvasHeight = imageHeight * scale;
 			switch (orientation) {
+			case 1: // no rotation
+				break;
 			case 6:
 			    rot = Math.PI/2; //Math.PI /2.2;
 			    tmp = canvasWidth;

@@ -198,7 +198,9 @@
 		setTileFaces: function(tile, model) {
 			tile.children('.face').detach();
 			var width = tile.children('img').width();
-			var height = tile.children('img').height()
+			var height = tile.children('img').height();
+			if (!model.faces)
+				return;
 			for (var i=0; i<model.faces.length; i++) {
 				var face = model.faces[i];
 				var faceDiv = $(document.createElement('div'))

@@ -577,3 +577,73 @@ show: function() {
 	scope.DelayUntilVisible = DelayUntilVisible;
 
 })(GUI.Mixin);
+
+(function(scope) {
+	var Rect = function(r) {
+		this.top = this.left = this.width = this.height = 0;
+		if (!('bottom' in r || 'height' in r))
+			throw "rect must have bottom or height";
+		if (!('right' in r || 'width' in r))
+			throw "rect must have right or height";
+		if ('top' in r)
+			this.top = r.top;
+		if ('left' in r)
+			this.left = r.left;
+		if ('width' in r)
+			this.width = r.width;
+		else
+			this.width = r.right - this.left;
+		if ('height' in r)
+			this.height = r.height;
+		else
+			this.height = r.bottom - this.top;
+		if (r.height < 0 || r.width < 0)
+			throw "rect widht & height must be > 0";
+	}
+
+	Rect.prototype = {
+		get right() {
+			return this.left + this.width;
+		},
+		set right(val) {
+			this.width = val - this.left;
+			if (this.width < 0)
+				console.warn("width is < 0");
+		},
+		get bottom() {
+			return this.top + this.height;
+		},
+		set bottom(val) {
+			this.height = val - this.top;
+			if (this.height < 0)
+				console.warn("height < 0");
+		},
+		union: function(rectOrArray) {
+			var rArray = $.isArray(rectOrArray) ? rectOrArray :
+				rectOrArray ? [rectOrArray] : [];
+			rArray = rArray.concat(this);
+			var retVal = new Rect();
+			for (var i=0; i< rArray.length; i++) {
+				retVal.top = Math.min(retVal.top, rArray[i].top);
+				retVal.left = Math.min(retVal.left, rArray[i].left);
+				retVal.bottom = Math.max(retVal.bottom, rArray[i].bottom);
+				retVal.right = Math.max(retVal.right, rArray[i].right);
+			}
+		},
+		// rect * fit = this
+		fit: function(rect) {
+			var vscale = this.height / rect.height;
+			var hscale = this.width / rect.width;
+			return Math.min(vscale, hscale);
+		},
+		scaleBy: function(scale) {
+			this.width *= scale;
+			this.height *= scale;
+		},
+		centerIn: function(enclosingRect) {
+			this.left = (enclosingRect.width - this.width) / 2;
+			this.top = (enclosingRect.height - this.height) / 2;
+		}
+	}
+	GUI.Rect = Rect;
+})(GUI);

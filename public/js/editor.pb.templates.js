@@ -187,6 +187,18 @@ scope.Template = Template;
 			var inches = this.height || PB.Template.cached(page.book.bookTemplateId).height;
 			return inches * DPI;
 		},
+		fillPhotoInRect: function(photo, rect) {
+		},
+		fitPhotoInRect: function(photo, enclosingRect, options) {
+			options = $.extend({ }, options);
+			var url = photo.getUrl(PB.PhotoProxy.LARGE);
+			var imgRect = new GUI.Rect({width: url.width, height: url.height});
+			var scale = Math.min(1, enclosingRect.fit(imgRect));
+			imgRect.scaleBy(scale);
+			imgRect.centerIn(enclosingRect);
+			return imgRect;
+		},
+
 		generateDom: function(page, resolution) {	// resolution: PhotoProxy.SMALL|MEDIUM|LARGE
 			var width = this.getWidth(page);
 			var height = this.getHeight(page);
@@ -199,22 +211,22 @@ scope.Template = Template;
 			var photos = page.photos();
 			var perRow = Math.floor(Math.sqrt(photos.length) + 0.99);
 
-			var photoWidth = width / perRow;
-			var photoHeight = height / perRow;
+			var dim = new GUI.Rect({width: width / perRow, height: height /perRow});
 			var imgIdx = 0;
 			for (var v=0; v < perRow; v++)
 				for (var h=0; h<perRow; h++) {
 					imgIdx = v * perRow + h;
 					if (imgIdx >= photos.length)
 						continue;
-					var imgTag = $('<img>');
+					var imgTag = $(document.createElement('img'));
+					var imgRect = this.fitPhotoInRect(photos[imgIdx], dim, {resolution: resolution});
 					var info = photos[imgIdx].getUrl(resolution);
 					imgTag.css({
 						position: 'absolute',
-						top: v * photoHeight,
-						left: h * photoWidth,
-						width: photoWidth,
-						height: photoHeight
+						top: v * dim.height + imgRect.top,
+						left: h * dim.width + imgRect.left,
+						width: imgRect.width,
+						height: imgRect.height
 					});
 					imgTag.prop('src', info.url);
 					retVal.append(imgTag);

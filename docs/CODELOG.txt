@@ -45,7 +45,6 @@ book template:
 - users can build derivative works.
 
 Next:
-- better picture positionsing. Use opencv for face recognition?
 - commands: rate limiting, enable/disable GUI
 - select different page elements, apply transformations
 - text
@@ -61,9 +60,10 @@ Next:
 
 Oct 17
 Wish Olga a happy birthday
-add python/opencv as dependencies
-support faces in database, generate them on upload
-display faces in photopalette
+Feature: add python/opencv as dependencies
+Feature: support faces in database, generate them on upload
+Feature: display faces in photopalette
+Better picture positionsing.
 use faces for better fit!
 
 Oct 16
