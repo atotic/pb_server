@@ -60,6 +60,7 @@ Next:
 
 Oct 18
 Bugfix: use photo dimensions when placing photos
+Fit and fill placements now both work
 
 Oct 17
 Wish Olga a happy birthday

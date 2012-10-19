@@ -541,6 +541,8 @@
 			return this._facing[index];
 		},
 		find: function(page) {
+			if (page === null)
+				return undefined;
 			for (var i=0; i<this._facing.length; i++) {
 				if (this._facing[i].indexOf(page) != -1)
 					return i;

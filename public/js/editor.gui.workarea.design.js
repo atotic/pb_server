@@ -155,8 +155,8 @@ var DesignWorkArea = {
 	},
 	get currentPages() { // returns left & right page. They might be null
 		return [
-		$('.design-book-page-left').not(':data(removed)').children('.designPage').data('model'),
-		$('.design-book-page-right').not(':data(removed)').children('.designPage').data('model')
+		$('.design-book-page-left').not(':data(removed)').children('.design-page').data('model'),
+		$('.design-book-page-right').not(':data(removed)').children('.design-page').data('model')
 		];
 	},
 	bookChanged: function(ev, model, prop, options) {
@@ -264,7 +264,7 @@ var DesignWorkArea = {
 		var pagesDom = [];
 		function makePageDom(page, size) {
 			return $(page.dom(size))
-							.addClass('designPage')
+							.addClass('design-page')
 							.data('model', pages[i]);
 		}
 		for (var i=0; i<pages.length; i++) {

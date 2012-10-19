@@ -630,11 +630,17 @@ show: function() {
 				retVal.right = Math.max(retVal.right, rArray[i].right);
 			}
 		},
-		// rect * fit = this
+		// scaled rect will fit completely inside this rect
 		fit: function(rect) {
 			var vscale = this.height / rect.height;
 			var hscale = this.width / rect.width;
 			return Math.min(vscale, hscale);
+		},
+		// scaled rect will fill this rect
+		fill: function(rect) {
+			var vscale = this.height / rect.height;
+			var hscale = this.width / rect.width;
+			return Math.max(vscale, hscale);
 		},
 		scaleBy: function(scale) {
 			this.width *= scale;

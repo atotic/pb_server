@@ -1,0 +1,7 @@
+FEATURES.TXT
+
+Photo information
+	Face detection
+  Date
+  Caption
+

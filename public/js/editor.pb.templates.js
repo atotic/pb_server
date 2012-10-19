@@ -187,17 +187,23 @@ scope.Template = Template;
 			var inches = this.height || PB.Template.cached(page.book.bookTemplateId).height;
 			return inches * DPI;
 		},
-		fillPhotoInRect: function(photo, rect) {
-		},
-		fitPhotoInRect: function(photo, enclosingRect, options) {
-			options = $.extend({ }, options);
+		positionPhotoInRect: function(photo, enclosingRect, options) {
+			options = $.extend( {
+				style: 'fit'	// fit|fill
+			}, options);
 			var imgRect = new GUI.Rect(photo.dimensions);
-			var scale = Math.min(1, enclosingRect.fit(imgRect));
+			var scale;
+			switch(options.style) {
+				case 'fit':
+					scale = Math.min(1, enclosingRect.fit(imgRect));
+					break;
+				case 'fill':
+					scale = enclosingRect.fill(imgRect);
+			}
 			imgRect.scaleBy(scale);
 			imgRect.centerIn(enclosingRect);
 			return imgRect;
 		},
-
 		generateDom: function(page, resolution) {	// resolution: PhotoProxy.SMALL|MEDIUM|LARGE
 			var width = this.getWidth(page);
 			var height = this.getHeight(page);
@@ -211,24 +217,63 @@ scope.Template = Template;
 			var perRow = Math.floor(Math.sqrt(photos.length) + 0.99);
 
 			var dim = new GUI.Rect({width: width / perRow, height: height /perRow});
-			var imgIdx = 0;
+
+			var style = 'fill';
+
 			for (var v=0; v < perRow; v++)
 				for (var h=0; h<perRow; h++) {
-					imgIdx = v * perRow + h;
+					var imgIdx = v * perRow + h;
 					if (imgIdx >= photos.length)
 						continue;
-					var imgTag = $(document.createElement('img'));
-					var imgRect = this.fitPhotoInRect(photos[imgIdx], dim, {resolution: resolution});
+
+					var imgRect = this.positionPhotoInRect(photos[imgIdx], dim, {style:style});
 					var info = photos[imgIdx].getUrl(resolution);
-					imgTag.css({
-						position: 'absolute',
-						top: v * dim.height + imgRect.top,
-						left: h * dim.width + imgRect.left,
-						width: imgRect.width,
-						height: imgRect.height
-					});
-					imgTag.prop('src', info.url);
-					retVal.append(imgTag);
+
+					var designPhotoImg = $(document.createElement('img'))
+						.addClass('design-photo-img')
+						.prop('src', info.url)
+						.css({
+								width: imgRect.width,
+								height: imgRect.height
+						});
+					var designPhotoInner = $(document.createElement('div'))
+						.addClass('design-photo-inner')
+						.append(designPhotoImg);
+					var designPhotoDiv = $(document.createElement('div'))
+						.addClass('design-photo')
+						.append(designPhotoInner);
+
+					switch(style) {
+						case 'fit':
+							designPhotoInner.css({
+								width: imgRect.width,
+								height: imgRect.height
+							});
+							designPhotoDiv.css({
+								top: v * dim.height + imgRect.top,
+								left: h * dim.width + imgRect.left,
+								width: imgRect.width,
+								height: imgRect.height
+							});
+							break;
+						case 'fill':
+							designPhotoImg.css({
+									top: imgRect.top,
+									left: imgRect.left
+								});
+							designPhotoInner.css({
+								width: dim.width,
+								height: dim.height
+							});
+							designPhotoDiv.css({
+								top: v * dim.height,
+								left: h * dim.width,
+								width: dim.width,
+								height: dim.height
+							});
+						break;
+					}
+					retVal.append(designPhotoDiv);
 				}
 			return retVal;
 		}
