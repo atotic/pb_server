@@ -86,6 +86,19 @@ Thumbnail extraction: http://code.flickr.com/blog/2012/06/01/parsing-exif-client
 					return this.view.getUint16(offset+8, littleEndian);
 				case 4:
 					return this.view.getUint32(offset+8, littleEndian);
+				case 7: // unclear. When encountered, lots of 0s
+				/*
+					if (numValues == 1)
+						return this.view.getUint8(offset + 8, littleEndian);
+					else {
+						var valOffset = numValues > 4 ? dataValue + tiffStart : offset + 8;
+						var aVals = [];
+						for (var i=0; i < numValues; i++)
+							aVals[i] = this.view.getUint8(valOffset + i, littleEndian);
+					return aVals;
+					}
+					*/
+					break;
 				default:
 					console.warn("Trying to read unknown tag type", type);
 					return null;

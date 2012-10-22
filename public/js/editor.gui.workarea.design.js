@@ -330,7 +330,7 @@ var DesignWorkArea = {
 			$(ID).children(':data(removed)').detach();
 			$(ID).find('div:data(highDpi)').each( function() {
 				var el = $(this);
-				console.log("highDpi replace");
+				console.log("highDpi replace ", el.data('model').id);
 				el.replaceWith(el.data('highDpi'));
 			});
 		};

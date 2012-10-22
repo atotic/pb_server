@@ -77,6 +77,7 @@ Operational Transformation is an official name for type of editor I am building 
 Page turning in JS: http://www.turnjs.com/#usage, http://tympanus.net/Development/FlipboardPageLayout/?page=0
 
 TOUCH
+Various mobile bugs: http://mobile-browsers-attack.appspot.com/#/12
 Preparing Web Content for iPad https://developer.apple.com/library/safari/#technotes/tn2010/tn2262/_index.html
 Safari handling events http://developer.apple.com/library/ios/#DOCUMENTATION/AppleApplications/Reference/SafariWebContent/HandlingEvents/HandlingEvents.html
 Using drag and drop from javascript https://developer.apple.com/library/mac/#documentation/appleapplications/conceptual/safarijsprogtopics/tasks/draganddrop.html
@@ -120,6 +121,7 @@ Chrome based javascript browser, has PDF generation capability: http://code.goog
 http://www.exiv2.org/?utm_source=dlvr.it&utm_medium=twitter
 
 MOBILE
+Webkit mobile guide http://developer.apple.com/library/ios/#documentation/AppleApplications/Reference/SafariWebContent/HandlingEvents/HandlingEvents.html
 Viewport scoller https://github.com/zynga/scroller
 Developing a nice mobile site: http://davidbcalhoun.com/2011/mobile-performance-manifesto
 Touch event history and future: http://blog.jquery.com/2012/04/10/getting-touchy-about-patents/

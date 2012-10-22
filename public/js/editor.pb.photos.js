@@ -327,13 +327,14 @@
 			var rot = 0;
 			var trans = {x:0, y:0};
 			var drawLoc = {x:0, y:0};
-			var canvasWidth = imageWidth * scale;
-			var canvasHeight = imageHeight * scale;
 
 			// if loading a thumbnail, assume real image is larger
 			var scale = img.naturalWidth <= 320 ? (1936 / img.naturalWidth) : 1;
 			this._data_natural_w = img.naturalWidth * scale;
 			this._data_natural_h = img.naturalHeight * scale;
+
+			var canvasWidth = imageWidth * scale;
+			var canvasHeight = imageHeight * scale;
 
 			function swapWidthHeight() {
 				var tmp = canvasWidth;
@@ -454,7 +455,7 @@
 					else {
 						THIS.status = "Retrying";
 						PB.NetworkErrorRetry.retryLater();
-						window.setTimeout(function() { THIS.load()}, PB.NetworkErrorRetry.nextRetryInterval);
+						window.setTimeout(function() { THIS.load()}, PB.NetworkErrorRetry.whenToRetry);
 					}
 				});
 		},

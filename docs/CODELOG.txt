@@ -58,6 +58,14 @@ Next:
 - account page should load book list dynamically  $(window).unload(function(){});
 - Bookshelf in account
 
+Oct 22
+Bug: too large icons while uploading
+?? callback parameter for jsonp templates
+
+Oct 19
+My trackpad died, so I bought a new laptop after unsuccessful
+attempts at repair. UI is a lot faster.
+
 Oct 18
 Bugfix: use photo dimensions when placing photos
 Fit and fill placements now both work
