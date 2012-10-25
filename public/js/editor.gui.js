@@ -39,10 +39,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			});
 			$(window).resize(function() { GUI.fixSizes($(document.body))});
 
-			$(document.body).on({
-				click: GUI.clearPopups,
-				touchstart: GUI.clearPopups
-			});
+			GUI.Events.Down.bind(document.body,  {action: GUI.clearPopups});
 			GUI.Options.init();
 			GUI.Buttons.init();
 			GUI.CommandManager.init();

@@ -3,6 +3,8 @@
 // Merge touch and mouse,
 
 (function(scope) {
+	"use strict";
+
 	var Events = {
 		// selection overlays forward their events the underlying element
 		forward: function(src, dest, events) {
@@ -32,11 +34,13 @@
 			this.clientY = touches.item(0).clientY;
 		}
 	};
+
 	// mousedown|touchdown, immediate trigger
-	var Down = {
+	Events.Down = {
 		bind: function(el, options) {
 			if (!el)
 				return;
+			el = $(el);
 			options = $.extend({ action: $.noop} , options);
 			if (PB.hasTouch())
 				el.on( { touchstart: function(ev) { options.action (new PBMouseEvent(ev)) }});
@@ -45,7 +49,56 @@
 		}
 	}
 
-	Events.Down = Down;
+	// Fires repeatedly until mouse leaves the button
+	// options.action: function(el, callCount)
+	// options.delay: msDelay | function(callCount) -> msDelay
+	Events.RepeatFireButton = {
+		bind: function(el, options) {
+			if (!el)
+				return;
+			el = $(el);
 
-	scope.Events = Events;
+		options = $.extend( { action: $.noop, delay: 100}, options);
+		if ((typeof options.delay == 'number')) {
+			var trueDelay = options.delay;
+			options.delay = function() { return trueDelay};
+		}
+
+		var firing = false;
+		var fireCount = 0;
+
+		function fireAction() {
+			if (firing) {
+				options.action(el, fireCount++);
+				window.setTimeout(fireAction, options.delay(fireCount));
+			}
+		};
+		function startFiring() {
+			firing = true;
+			fireCount = 0;
+			window.setTimeout(fireAction, 0);
+		}
+		function endFiring() {
+			firing = false;
+		}
+		var handlers;
+		if (PB.hasTouch()) {
+			handlers = {
+				touchstart: function() { startFiring() },
+				touchcancel: function() { endFiring() },
+				touchend: function() { endFiring() }
+			}
+		}
+		else {
+			handlers = {
+				mousedown: function() { startFiring() },
+				mouseup: function() { endFiring() },
+				mouseleave: function() {endFiring() }
+			}
+		};
+		el.on(handlers);
+	}
+}
+
+scope.Events = Events;
 })(GUI);

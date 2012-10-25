@@ -221,25 +221,19 @@ var DesignWorkArea = {
 				function() {GUI.DesignWorkArea.goForward()}
 			));
 		function buttonTimer(clickCount) {
-			if (clickCount < 10)
+			if (clickCount < 2)
 				return 400;
 			else
-				return 400;
+				return 100;
 		};
-		GUI.Buttons.makeRepeatingButton(
-			$('#work-area-design-btn-back'),
-			function() {
-				GUI.DesignWorkArea.goBack();
-			},
-			buttonTimer
-		);
-		GUI.Buttons.makeRepeatingButton(
-			$('#work-area-design-btn-forward'),
-			function() {
-				GUI.DesignWorkArea.goForward();
-			},
-			buttonTimer
-		);
+		GUI.Events.RepeatFireButton.bind($('#work-area-design-btn-back'), {
+			action: function() {GUI.DesignWorkArea.goBack()},
+			delay: buttonTimer
+		});
+		GUI.Events.RepeatFireButton.bind($('#work-area-design-btn-forward'), {
+			action: function() { GUI.DesignWorkArea.goForward()},
+			delay: buttonTimer
+		});
 		$(ID).data('resize', function() {
 			DesignWorkArea.resize();
 		});
