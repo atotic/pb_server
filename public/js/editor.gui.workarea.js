@@ -3,6 +3,16 @@
 (function(scope) {
 
 var WorkArea = {
+	init: function() {
+		$('#work-area').data('resize', function() {
+			var paletteHeight = $('#palette:visible').length == 1 ? $('#palette').outerHeight() : 0;
+			var h = $('body').height() - $('#top-menu').height() - paletteHeight;
+			$('#work-area').css('height', h);
+			$('#work-area-container').css('height', h - parseInt($('#work-area').css('padding-top')));
+			GUI.Buttons.ResizePaletteButton.fixPosition();
+		});
+		GUI.DesignWorkArea.init();
+	},
 	bindToBook: function(book) {
 		GUI.Options.addListener(this.optionsChanged);
 		GUI.RoughWorkArea.bindToBook(book);
@@ -58,14 +68,8 @@ var WorkArea = {
 		if (showArea) {
 			showArea.show();
 			$('#' + showId + '-nav').addClass('active');
-			GUI.fixSizes();
+			GUI.fixSizes($('#work-area'));
 		}
-	},
-	resize: function() {
-		// called after resize has happened
-		var visArea = this.areaIdToObject(this.visibleWorkAreaId);
-		if (visArea && 'resize' in visArea)
-			visArea.resize();
 	}
 };
 scope.WorkArea = WorkArea;

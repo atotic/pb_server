@@ -241,6 +241,7 @@ scope.Template = Template;
 						.append(designPhotoImg);
 					var designPhotoDiv = $(document.createElement('div'))
 						.addClass('design-photo')
+						.data('model', photos[imgIdx])
 						.append(designPhotoInner);
 
 					switch(style) {

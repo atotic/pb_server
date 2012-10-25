@@ -129,6 +129,7 @@ Free DNS redirects for everyone: http://xip.io/
 Building iOS hybrid apps: http://www.cocoacontrols.com/posts/a-primer-on-hybrid-apps-for-ios
 
 OTHER
+
 Nice drawing program. Might do text here. http://sketchpad.io/sketch/?newfile
 Wild stuff done for $5: http://fiverr.com/
 Page Layers: web site to psd converter http://www.ralfebert.de/apps/page-layers-photoshop-osx-website-screenshots/
@@ -164,8 +165,25 @@ PRINTING
 Reviews http://insig.ht/2009/06/print-on-demand-review/
 Print resources for independent art publishers: http://print-resources.tumblr.com/
 
+COMPETITION
+ArtsCow Hong Kong based, prints on photo paper. Looks well done, uses silverlight.
+http://www.artscow.com/about.aspx
+Minimalist photobook for mobile:
+http://readwrite.com/2012/10/22/hands-on-with-the-mosaic-photobook
+First on Google search for photobooks
+http://www.mixbook.com/
+Jeff McMahon, Netscape guy CEO of Digilife http://www.linkedin.com/profile/connections?id=464352
+Keepsy: Menlo Park photo book focussed place: http://www.keepsy.com/main/about_us
+http://www.myphotocreations.com/
+http://blurb.com/
+Mixbook: First on google search for photo books: San Jose startup
+http://www.mixbook.com/careers
+walmart & walgreens both use snapfish photo book creation software.
+Adorama: seems to have their own book solution based upon flash
+
 BUSINESS
 Ideal partners: a community builder: http://rapgenius.com/Marc-andreessen-why-andreessen-horowitz-is-investing-in-rap-genius-lyrics
+Hiring designers: http://www.authenticjobs.com/
 Great post about pricing strategies: http://blog.keen.io/post/32269955563/pricing-is-hard-we-need-your-help
 Photobook market: http://www.ceatec.com/report_analysis/en/ra_0906.html
 Dominic Brezinski, USA manager for SmileBooks http://www.linkedin.com/profile/view?id=22895307&authType=NAME_SEARCH&authToken=7oR-&locale=en_US&srchid=18e9484d-5cb3-4c52-a39a-ddefd83801a9-0&srchindex=2&srchtotal=2&goback=%2Efps_PBCK_Dominic+Brezinski_*1_*1_*1_*1_*1_*1_*2_*1_Y_*1_*1_*1_false_1_R_*1_*51_*1_*51_true_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2_*2&pvs=ps&trk=pp_profile_name_link
@@ -180,22 +198,17 @@ Luke http://www.linkedin.com/pub/luke-knowland/0/771/861
 Apago: looks like the place to get PDF optimization done http://www.apagoinc.com/prod_home.php?prod_id=37
 Designer fund: funds for designers, maybe find me a co-founder here http://designerfund.com/
 Minted: they are designer focused, my solution would be a great fit
-Adorama: seems to have their own book solution based upon flash
 Wholesale photo book printing: http://www.provenpictures.com/history.html
 More wholesale photo book printing: http://flexbind.com/how-to-buy/photographers/
-First on google search for photo books: San Jose startup http://www.mixbook.com/careers
 Various business services: http://nat.org/blog/2011/06/instant-company/
 Photo book reviews: http://www.make-your-own-photobooks.com/about-us.html
-http://www.myphotocreations.com/
-http://blurb.com/
 http://online.wsj.com/article/SB10001424052748703509104576329272101144568.html
 smugmug: they are photo oriented
-hotprints: free cheap photo books
 picplum: mail best photos, http://paulstamatiou.com/picplum-automatic-photo-prints-parents
 nation's photo lab
-Menlo Park photo book focussed place: http://www.keepsy.com/main/about_us
-walmart & walgreens both use snapfish photo book creation software.
-Jeff McMahon, Netscape guy CEO of Digilife http://www.linkedin.com/profile/connections?id=464352
+
+
+
 Cute polish design studio: http://www.hipopotamstudio.pl/
 
 What I'd like:

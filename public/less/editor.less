@@ -1,6 +1,7 @@
 /* editor.less */
 
 @import "mixin.less";
+@import "bootstrap-variables.less";
 
 * { .box-sizing(border-box) }
 
@@ -10,7 +11,7 @@
 @dark-bg-color-lighten: #5c5c5c;
 @work-area-color: #ddd;
 
-@navbar-height: 40px;
+@navbar-height: @navbarHeight;
 @navbar-color: #1b1b1b;
 
 @sidebar-width: 160px;
@@ -253,7 +254,7 @@ body {
 
 	.design-book-page-left, .design-book-page-right {
 		position: absolute;
-		border: 1px solid black;
+		border: 1px solid #DDD;
 		background-color: white;
 		.box-sizing(content-box);
 		.pageTitle {
@@ -282,7 +283,16 @@ body {
 			position:absolute;
 			max-width: none;
 		}
-
+		.design-selection {
+			position:absolute;
+			border: 2px solid Highlight;
+		}
+		.design-select-popup {
+			position: absolute;
+			top:auto;
+			bottom:105%;
+			display:block;
+		}
 	#work-area-print {
 		display:none;
 		background-color: green;

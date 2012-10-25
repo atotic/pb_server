@@ -204,11 +204,11 @@
 						; //console.log("inactive, but these are:", $('*:active'));
 					}
 			};
-			// touch event is on timeout because button is not active until next main loop
 			if (PB.hasTouch())
 				el.on( {
 					touchstart: function() {
 						fireCount = 0;
+			// on timeout because button is not active until main loop | Chrome
 						window.setTimeout(fireAndCallAgain,0);
 					}
 				});
@@ -216,7 +216,8 @@
 				el.on( {
 					mousedown: function() {
 						fireCount = 0;
-						fireAndCallAgain();
+			// on timeout because button is not active until main loop | FF
+						window.setTimeout(fireAndCallAgain,0);
 					}
 				});
 			return true;

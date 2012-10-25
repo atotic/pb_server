@@ -57,10 +57,21 @@ Next:
 - keep track of file sizes in db
 - account page should load book list dynamically  $(window).unload(function(){});
 - Bookshelf in account
+- callback parameter for jsonp templates, make them cacheable
+
+Oct 24
+New resize architecture. Instead of 1 big method, elements register for
+resize handlers with data('resize')
+Using bootstrap-variables in our less code now
+Making progress on the action popup
+
+Oct 23
+Finding the click http://dev.w3.org/csswg/cssom-view/
+Simplest photo selection works
 
 Oct 22
+select/move
 Bug: too large icons while uploading
-?? callback parameter for jsonp templates
 
 Oct 19
 My trackpad died, so I bought a new laptop after unsuccessful

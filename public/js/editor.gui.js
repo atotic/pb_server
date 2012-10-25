@@ -16,26 +16,41 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		var GUI = {
 		init: function() {
 			this.initGlobalShortcuts();
-			window.setTimeout(GUI.fixSizes,0);
-			$(window).resize(GUI.fixSizes);
+			window.setTimeout(function() {
+				// One time sizing fix
+				$('#sidebar').css('top', $('#top-menu').height());
+				$('#main-content').css('top', $('#top-menu').height());
+				GUI.fixSizes();
+			},0);
+			$('#main-content').data('resize', function(el) {
+				$('#main-content').width($('body').width() - $('#sidebar').width());
+			});
+			$(window).resize(function() { GUI.fixSizes()});
 
 			GUI.Options.init();
 			GUI.Buttons.init();
 			GUI.CommandManager.init();
 			GUI.Tools.init();
-			GUI.DesignWorkArea.init();
-
+			GUI.WorkArea.init();
 		},
-		fixSizes: function() {
-			$('#sidebar').css('top', $('#top-menu').height());
-			$('#main-content').css('top', $('#top-menu').height());
-			$('#main-content').width($('body').width() - $('#sidebar').width());
-			var paletteHeight = $('#palette:visible').length == 1 ? $('#palette').outerHeight() : 0;
-			var h = $('body').height() - $('#top-menu').height() - paletteHeight;
-			$('#work-area').css('height', h);
-			$('#work-area-container').css('height', h - parseInt($('#work-area').css('padding-top')));
-			GUI.Buttons.ResizePaletteButton.fixPosition();
-			GUI.WorkArea.resize();
+/* HTML hierarchy
+#top-menu
+#sidebar
+#main-content
+	#palette
+	#work-area
+		#work-area-container
+			#work-area-rough
+			#work-area-design
+			#work-area-print
+	#palette-resize-btn
+*/
+		// root can be undefined, selector,
+		fixSizes: function(root) {
+			root = root ? $(root) : $(document.body);
+			$('*:data("resize")').each(function() {
+				($(this).data('resize'))(this);
+			});
 		},
 		initGlobalShortcuts: function() {
 			var cs = new GUI.CommandSet("global");
@@ -249,6 +264,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 
 // Graphics utilities
 (function(scope) {
+"use strict"
 	var Util = {
 		// false not in rect, 'left' to the left, 'right' to the right
 		pointInClientRect: function(x, y, r) {
@@ -339,6 +355,39 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			canvas.getContext('2d')
 				.drawImage(img, 0,0, img.width, img.height);
 			return canvas;
+		},
+		// returns css path, parent
+		getPath: function (el, parent_id) {
+			var el = $(el);
+			if (parent_id === undefined)
+				parent_id = 'this is not an id';
+
+			var path = "";
+
+			while (el.length > 0) {
+				var realEl = el.get(0);
+				if (realEl.id === parent_id) {
+					path = '#' + realEl.id + ">" + path;
+					return path;
+				}
+				var name = el.get(0).localName;
+				if (!name) break;
+				name = name.toLowerCase();
+
+				if (realEl.id)
+					// As soon as an id is found, there's no need to specify more.
+					return name + '#' + realEl.id + (path ? '>' + path : '');
+				else if (realEl.className)
+					name += '.' + realEl.className.split(/\s+/).join('.');
+
+				var parent = el.parent();
+				var siblings = parent.children(name);
+				if (siblings.length > 1)
+					name += ':eq(' + siblings.index(el) + ')';
+				path = name + (path ? '>' + path : '');
+				el = parent;
+			}
+			return path;
 		}
 	}
 

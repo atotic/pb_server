@@ -407,7 +407,7 @@
 			var padding = parseInt(palette.css('padding-top')) + parseInt(palette.css('padding-bottom'));
 			var containerHeight = height - padding;
 			$('#photo-list-container').css({minHeight: containerHeight, maxHeight: containerHeight});
-			GUI.fixSizes();
+			GUI.fixSizes($('#work-area'));
 		},
 		viewMore: function() {
 			var heights = this.getPossibleHeights();
