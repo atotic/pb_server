@@ -59,6 +59,14 @@ Next:
 - Bookshelf in account
 - callback parameter for jsonp templates, make them cacheable
 
+Oct 25
+- Position popup on top of everything, still make sure top > 0
+- bubble pointer
+- test on ipad/android
+- Popup comes, popup goes away
+Fix arrows: do not work on android, button active state is unreliable
+Hookup actions: who makes, who executes, how does it all tie up.
+
 Oct 24
 New resize architecture. Instead of 1 big method, elements register for
 resize handlers with data('resize')

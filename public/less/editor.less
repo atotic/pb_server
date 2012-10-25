@@ -289,9 +289,19 @@ body {
 		}
 		.design-select-popup {
 			position: absolute;
-			top:auto;
-			bottom:105%;
 			display:block;
+		}
+		@arrow-size: 10px;
+		.design-select-popup:after {
+			content: "";
+			position: absolute;
+			width: 0;
+			height: 0;
+			border-left: @arrow-size solid transparent;
+			border-right: @arrow-size solid transparent;
+			border-top: @arrow-size solid @white;
+			left: 20px;
+			bottom: -@arrow-size;
 		}
 	#work-area-print {
 		display:none;

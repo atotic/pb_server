@@ -126,14 +126,17 @@ var Page = {
 		page.find(".design-photo").each(function() {
 			var r = this.getBoundingClientRect();
 			if (ev.clientX > r.left && ev.clientX < r.right
-				&& ev.clientY > r.top && ev.clientY < r.bottom)
+				&& ev.clientY > r.top && ev.clientY < r.bottom) {
+				ev.stopPropagation();
+				ev.preventDefault();
 				Page.select(this);
+		}
 		});
 	},
 	createSelectPopup: function(model) {
 		if (model == null)
 			return null;
-		var popup = $("<ul class='dropdown-menu'></ul>");
+		var popup = $("<ul class='dropdown-menu pb-popup'></ul>");
 		['pan', 'move', 'zoom', 'resize', 'rotate', 'clear', 'touchup'].forEach(
 			function(title) {
 				popup.append($("<li><a href='#'>" + title + "</a></li>"));
@@ -143,7 +146,11 @@ var Page = {
 		return popup;
 	},
 	select: function(el) {
-		$(ID).find('.design-selection').detach();	// clears selection
+		$(ID).find('.design-selection')
+			.each(function() {
+				$(this).data('select-popup').detach();
+			})
+			.detach();	// clears selection
 		if (el == null)
 			return;
 		var designFrame = document.getElementById('work-area-design').getBoundingClientRect();
@@ -151,6 +158,7 @@ var Page = {
 		var newSel = $(document.createElement('div'))
 			.data('select-target', GUI.Util.getPath(el, 'work-area-design'))
 			.addClass('design-selection');
+		GUI.Events.forward(newSel, $(el).parents('.design-page'), ['mousedown', 'touchstart']);
 		newSel.data('select-popup', this.createSelectPopup($(el).data('model')));
 		this.positionSelection(newSel);
 
@@ -175,9 +183,14 @@ var Page = {
 		var popup = el.data('select-popup');
 		// position popup here
 		if (popup) {
+			$(document.body).append(popup);
+			var height = popup.height();
+			var top  = frame.top - height - 16;
+			top = Math.max(top, 4);
 			popup.css({
+				top: top,
+				left: frame.left
 			});
-			el.append(popup);
 		}
 	},
 	resizeSelection: function() {

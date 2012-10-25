@@ -5,6 +5,18 @@ GUI holds references to model objects in $(dom element).data('model')
 Each dom element holding a model listens for PB.MODEL_CHANGED events
 */
 
+/* HTML hierarchy
+#top-menu
+#sidebar
+#main-content
+	#palette
+	#work-area
+		#work-area-container
+			#work-area-rough
+			#work-area-design
+			#work-area-print
+	#palette-resize-btn
+*/
 
 (function(window) {
 "use strict";
@@ -25,26 +37,21 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			$('#main-content').data('resize', function(el) {
 				$('#main-content').width($('body').width() - $('#sidebar').width());
 			});
-			$(window).resize(function() { GUI.fixSizes()});
+			$(window).resize(function() { GUI.fixSizes($(document.body))});
 
+			$(document.body).on({
+				click: GUI.clearPopups,
+				touchstart: GUI.clearPopups
+			});
 			GUI.Options.init();
 			GUI.Buttons.init();
 			GUI.CommandManager.init();
 			GUI.Tools.init();
 			GUI.WorkArea.init();
 		},
-/* HTML hierarchy
-#top-menu
-#sidebar
-#main-content
-	#palette
-	#work-area
-		#work-area-container
-			#work-area-rough
-			#work-area-design
-			#work-area-print
-	#palette-resize-btn
-*/
+		clearPopups: function() {
+			$('.pb-popup').detach();
+		},
 		// root can be undefined, selector,
 		fixSizes: function(root) {
 			root = root ? $(root) : $(document.body);
