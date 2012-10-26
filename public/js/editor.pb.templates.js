@@ -11,7 +11,7 @@ var	Template = {
 	// id => template, returns deferred that yields the result.
 	// return: a deferred
 	// deferred result is a map id => object, { id => <requested object>, id => <requested_object> }
-	get: function(idOrIdArray)  { //takes <id> | [ id* ]
+	get: function(idOrIdArray) { //takes <id> | [ id* ]
 		if (idOrIdArray === null)
 			throw "Template.get(id) id must not be null";
 
@@ -187,6 +187,9 @@ scope.Template = Template;
 			var inches = this.height || PB.Template.cached(page.book.bookTemplateId).height;
 			return inches * DPI;
 		},
+		getEditMenu: function(page, layoutItemId) {
+			return ['pan', 'move', 'zoom', 'resize', 'rotate', 'clear', 'touchup'];
+		},
 		positionPhotoInRect: function(photo, enclosingRect, options) {
 			options = $.extend( {
 				style: 'fit'	// fit|fill
@@ -242,6 +245,7 @@ scope.Template = Template;
 					var designPhotoDiv = $(document.createElement('div'))
 						.addClass('design-photo')
 						.data('model', photos[imgIdx])
+						.data('layout-item-id', 'photo' + imgIdx)
 						.append(designPhotoInner);
 
 					switch(style) {
@@ -337,7 +341,7 @@ BookThemeAPI = {
 						pageClass: page.pageClass,
 						imageCount: page.photoList.length
 					});
-		var layout  = layoutTemplates[0];
+		var layout = layoutTemplates[0];
 		page.layoutId = layout.id;
 	}
 }

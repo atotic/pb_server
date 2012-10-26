@@ -47,7 +47,7 @@
 			else
 				el.on( { mousedown: function(ev) { options.action (new PBMouseEvent(ev)) }});
 		}
-	}
+	};
 
 	// Fires repeatedly until mouse leaves the button
 	// options.action: function(el, callCount)
@@ -98,7 +98,25 @@
 		};
 		el.on(handlers);
 	}
-}
+};
+
+Events.JSAnchor = {
+	bind: function(el, options) {
+		if (!el || el.length === 0) {
+			console.warn("null element passed to Events.JSAnchor");
+			return;
+		}
+		el = $(el);
+
+		options = $.extend({action: $.noop, title: ''}, options);
+		el.attr('href', '/#' + options.title);
+		el.click(function(ev) {
+			options.action(ev);
+//			ev.stopPropagation();
+			ev.preventDefault();
+		});
+	}
+};
 
 scope.Events = Events;
 })(GUI);

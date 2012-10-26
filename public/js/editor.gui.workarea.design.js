@@ -8,10 +8,10 @@ HTML hierarchy:
 #work-area-design -> model(book)
  .design-book-page-left
  .design-book-page-right
- 	.design-page -> model(page)
- 		.design-photo
- 			.design-photo-inner
- 			img.design-photo-img
+	.design-page -> model(page)
+		.design-photo -> layout-item-id(layoutId)
+			.design-photo-inner
+			img.design-photo-img
 	.design-selection select-target(dom)
 */
 
@@ -133,13 +133,18 @@ var Page = {
 		}
 		});
 	},
-	createSelectPopup: function(model) {
-		if (model == null)
-			return null;
+	createSelectPopup: function(page, layoutItemId) {
 		var popup = $("<ul class='dropdown-menu pb-popup'></ul>");
-		['pan', 'move', 'zoom', 'resize', 'rotate', 'clear', 'touchup'].forEach(
+		page.getEditMenu(layoutItemId).forEach(
 			function(title) {
-				popup.append($("<li><a href='#'>" + title + "</a></li>"));
+				var li = $("<li><a href='#'>" + title + "</a></li>");
+				GUI.Events.JSAnchor.bind(li.children('a'), {
+					action: function(){
+						GUI.DesignWorkArea.startEdit(page, layoutItemId, title);
+					},
+					title: title
+				});
+				popup.append(li);
 			}
 		);
 		popup.addClass('design-select-popup');
@@ -158,8 +163,13 @@ var Page = {
 		var newSel = $(document.createElement('div'))
 			.data('select-target', GUI.Util.getPath(el, 'work-area-design'))
 			.addClass('design-selection');
-		GUI.Events.forward(newSel, $(el).parents('.design-page'), ['mousedown', 'touchstart']);
-		newSel.data('select-popup', this.createSelectPopup($(el).data('model')));
+
+		var designPage = $(el).parents('.design-page');
+		GUI.Events.forward(newSel, designPage, ['mousedown', 'touchstart']);
+		newSel.data('select-popup',
+			this.createSelectPopup(
+				designPage.data('model'),
+				$(el).data('layout-item-id')));
 		this.positionSelection(newSel);
 
 		$(ID).append(newSel);
@@ -185,7 +195,7 @@ var Page = {
 		if (popup) {
 			$(document.body).append(popup);
 			var height = popup.height();
-			var top  = frame.top - height - 16;
+			var top = frame.top - height - 16;
 			top = Math.max(top, 4);
 			popup.css({
 				top: top,
@@ -200,26 +210,9 @@ var Page = {
 	}
 }
 
-var Selection = {
-}
-
 var DesignWorkArea = {
 	init: function() {
-		this.commandSet = new GUI.CommandSet("design");
-		this.commandSet.add(
-			new GUI.Command(
-				'designBack',
-				GUI.CommandManager.keys.leftArrow,
-				false,
-				function() {GUI.DesignWorkArea.goBack()}
-			));
-		this.commandSet.add(
-			new GUI.Command(
-				'designForward',
-				GUI.CommandManager.keys.rightArrow,
-				false,
-				function() {GUI.DesignWorkArea.goForward()}
-			));
+		this.createCommandSet();
 		function buttonTimer(clickCount) {
 			if (clickCount < 2)
 				return 400;
@@ -237,6 +230,23 @@ var DesignWorkArea = {
 		$(ID).data('resize', function() {
 			DesignWorkArea.resize();
 		});
+	},
+	createCommandSet: function() {
+		this.commandSet = new GUI.CommandSet("design");
+		this.commandSet.add(
+			new GUI.Command(
+				'designBack',
+				GUI.CommandManager.keys.leftArrow,
+				false,
+				function() {GUI.DesignWorkArea.goBack()}
+			));
+		this.commandSet.add(
+			new GUI.Command(
+				'designForward',
+				GUI.CommandManager.keys.rightArrow,
+				false,
+				function() {GUI.DesignWorkArea.goForward()}
+			));
 	},
 	bindToBook: function(book) {
 		$(ID)
@@ -262,6 +272,16 @@ var DesignWorkArea = {
 		$('.design-book-page-right').not(':data(removed)').children('.design-page').data('model')
 		];
 	},
+	popupMenuClickHandler: function() {
+		debugger;
+		var popupCallback = $(this).parents('li').data('menu-action');
+		if (popupCallback)
+			popupCallback(this);
+	},
+	startEdit: function(page, layoutItemId, title) {
+		console.log("startEdit");
+	},
+
 	bookChanged: function(ev, model, prop, options) {
 		switch(prop) {
 			case 'template':
@@ -410,7 +430,7 @@ var DesignWorkArea = {
 		}
 		if (pagesDom[1]) {
 			var transform = 'scale(' + pos.scale.toFixed(4) + ')';
-			var widthDiff = pos.pageWidth  - pagesDom[1].width();
+			var widthDiff = pos.pageWidth - pagesDom[1].width();
 			if (widthDiff > 5) {
 				transform += ' translate(' + widthDiff.toFixed(4) + 'px)';
 			}
@@ -443,7 +463,7 @@ var DesignWorkArea = {
 			});
 		};
 
- 		if (animate) {
+		if (animate) {
 			oldLeft.find('.pageTitle').detach();
 			oldRight.find('.pageTitle').detach();
 			var duration = 500;

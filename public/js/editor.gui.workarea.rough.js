@@ -288,7 +288,7 @@
 			var newSize = GUI.Options.pageSizePixels;
 			try {
 				var link = $('link[href="/css/editor.css"]').get(0);
-				var rules  = link.sheet.cssRules;
+				var rules = link.sheet.cssRules;
 				for (var i=0; i<rules.length; i++) {
 					var rule = rules[i];
 					if (rule.type == 1) {
@@ -306,7 +306,7 @@
 						}
 					}
 				}
-				$('#work-area-rough .rough-page').each(function()  {
+				$('#work-area-rough .rough-page').each(function() {
 					GUI.RoughWorkArea.layoutRoughInsideTiles(this, false);
 				});
 			}
@@ -330,7 +330,7 @@
 				.on(PB.MODEL_CHANGED, function(ev, model, prop, options) {
 						switch(prop) {
 							case 'icon_url':
-								domPhoto.css('background-image',  'url("' + photo.getUrl(128).url + '")');
+								domPhoto.css('background-image', 'url("' + photo.getUrl(128).url + '")');
 							break;
 							default:;
 							break;

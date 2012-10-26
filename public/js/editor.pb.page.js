@@ -21,12 +21,22 @@
 		get layoutId() {
 			return this.book.localData.document.pages[this.id].layoutId;
 		},
+		get layout() {
+			var id = this.book.localData.document.pages[this.id].layoutId;
+			if (id)
+				return PB.Template.cached(id);
+			else
+				return null;
+		},
 		set layoutId(val) {
 			if (val != this.book.localData.document.pages[this.id].layoutId) {
 				this.book.localData.document.pages[this.id].layoutId = val;
 				this.book._pageChanged(this);
 				PB.broadcastChange(this, 'layoutId');
 			}
+		},
+		getEditMenu: function(layoutItemId) {
+			return this.layout.getEditMenu(this, layoutItemId);
 		},
 		isDraggable: function() {
 			return this.id.match(coverRegex) === null;

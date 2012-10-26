@@ -277,7 +277,7 @@
 					for (var j=0; j<modelChanges.length; j++) {
 						var bChange = this.modelToBroadcastChange(modelChanges[j]);
 						for (var k=0; k<bChange.length; k++) {
-							var key =  bChange[k].model.id + "-" + bChange[k].prop;
+							var key = bChange[k].model.id + "-" + bChange[k].prop;
 							if (! (key in alreadySeen)) {
 								broadcastChanges.push(bChange[k]);
 								alreadySeen[key] = true;
@@ -450,7 +450,7 @@
 		this._initFacing();
 	};
 
-	Book.FacingPages.prototype  = {
+	Book.FacingPages.prototype = {
 		_initFacing: function() {
 			this._facing = [];
 			var pageList = this.book.pageList;

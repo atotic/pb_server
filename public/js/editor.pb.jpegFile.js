@@ -105,7 +105,7 @@ Thumbnail extraction: http://code.flickr.com/blog/2012/06/01/parsing-exif-client
 			}
 		},
 		readIFD: function(tiffOffset, ifdOffset, littleEndian, isThumbnail) {
-			var tagCount  = this.view.getUint16(ifdOffset, littleEndian);
+			var tagCount = this.view.getUint16(ifdOffset, littleEndian);
 			var tags = {};
 			var thumbnail = {
 				compression: null,
@@ -119,7 +119,7 @@ Thumbnail extraction: http://code.flickr.com/blog/2012/06/01/parsing-exif-client
 				switch (tagId) {
 					case 0x8769: // ExifIFDPointer
 //						console.log("ExifIDPointer");
-						var exifPtr  = this.readTagValue(tiffOffset, tagOffset, littleEndian);
+						var exifPtr = this.readTagValue(tiffOffset, tagOffset, littleEndian);
 						var newExifOffset = tiffOffset + exifPtr;
 						this.readIFD(tiffOffset, newExifOffset, littleEndian);
 						break;

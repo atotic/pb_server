@@ -38,15 +38,14 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				$('#main-content').width($('body').width() - $('#sidebar').width());
 			});
 			$(window).resize(function() { GUI.fixSizes($(document.body))});
-
-			GUI.Events.Down.bind(document.body,  {action: GUI.clearPopups});
+			$('html').click(GUI.clearPopups);
 			GUI.Options.init();
 			GUI.Buttons.init();
 			GUI.CommandManager.init();
 			GUI.Tools.init();
 			GUI.WorkArea.init();
 		},
-		clearPopups: function() {
+		clearPopups: function(ev) {
 			$('.pb-popup').detach();
 		},
 		// root can be undefined, selector,
@@ -470,7 +469,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				bigAlert.prop('id', 'big-alert');
 			}
 			PB.Book.default.removePhoto(photo, {animate:true});
-			var photoMsg = $("<p><img src='" + photo.iconUrl.url + "' style='height:128px'>" + photo.displayName() +  "</p>");
+			var photoMsg = $("<p><img src='" + photo.iconUrl.url + "' style='height:128px'>" + photo.displayName() + "</p>");
 			photoMsg.children('img')
 				.data('model', photo)
 				.on(PB.MODEL_CHANGED, function(ev, model, prop, options) {

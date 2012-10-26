@@ -59,12 +59,16 @@ Next:
 - Bookshelf in account
 - callback parameter for jsonp templates, make them cacheable
 
+Oct 26
+Fixed: event propagation bug for menu closure
+
 Oct 25
 - Position popup on top of everything, still make sure top > 0
 - bubble pointer
 - test on ipad/android
 - Popup comes, popup goes away
-Fix arrows: do not work on android, button active state is unreliable
+- Fixed arrows to they work consistenly
+- Create popup dynamically from layout
 Hookup actions: who makes, who executes, how does it all tie up.
 
 Oct 24
