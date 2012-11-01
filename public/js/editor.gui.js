@@ -1,7 +1,7 @@
 /*
 	GUI Manipulation
 
-GUI holds references to model objects in $(dom element).data('model')
+GUI holds references to model objects in $(dom element).data('model_id')
 Each dom element holding a model listens for PB.MODEL_CHANGED events
 */
 
@@ -69,7 +69,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		},
 		bindToBook: function(book) {
 			$('body')
-				.data('model', book)
+				.data('model_id', book.id)
 				.attr('dropzone', true)
 				.on(PB.MODEL_CHANGED, function(ev, model, prop, options) {
 					if (prop === 'locked' && book.locked) {
@@ -471,7 +471,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			PB.Book.default.removePhoto(photo, {animate:true});
 			var photoMsg = $("<p><img src='" + photo.iconUrl.url + "' style='height:128px'>" + photo.displayName() + "</p>");
 			photoMsg.children('img')
-				.data('model', photo)
+				.data('model_id', photo.id)
 				.on(PB.MODEL_CHANGED, function(ev, model, prop, options) {
 					if (prop == 'icon_url')
 						this.src = photo.iconUrl.url;

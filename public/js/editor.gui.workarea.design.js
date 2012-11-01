@@ -168,7 +168,7 @@ var Page = {
 		GUI.Events.forward(newSel, designPage, ['mousedown', 'touchstart']);
 		newSel.data('select-popup',
 			this.createSelectPopup(
-				designPage.data('model'),
+				PB.ModelMap.domToModel(designPage),
 				$(el).data('layout-item-id')));
 		this.positionSelection(newSel);
 
@@ -250,7 +250,7 @@ var DesignWorkArea = {
 	},
 	bindToBook: function(book) {
 		$(ID)
-			.data('model', book)
+			.data('model_id', book.id)
 			.on(PB.MODEL_CHANGED, this.bookChanged);
 		try {
 			this._lastPage = GUI.Options.designPage ? book.page(GUI.Options.designPage) : null;
@@ -260,7 +260,7 @@ var DesignWorkArea = {
 		}
 	},
 	get book() {
-		return $(ID).data('model');
+		return PB.ModelMap.domToModel($(ID));
 	},
 	get currentPage() {	// just first page
 		var cp = this.currentPages;
@@ -268,8 +268,10 @@ var DesignWorkArea = {
 	},
 	get currentPages() { // returns left & right page. They might be null
 		return [
-		$('.design-book-page-left').not(':data(removed)').children('.design-page').data('model'),
-		$('.design-book-page-right').not(':data(removed)').children('.design-page').data('model')
+		PB.ModelMap.domToModel(
+			$('.design-book-page-left').not(':data(removed)').children('.design-page')),
+		PB.ModelMap.domToModel(
+			$('.design-book-page-right').not(':data(removed)').children('.design-page'))
 		];
 	},
 	popupMenuClickHandler: function() {
@@ -378,12 +380,13 @@ var DesignWorkArea = {
 			for (var i=0; i<currentPages.length; i++)
 				if (currentPages[i] != pages[i])
 					diff = true;
-			if (!diff && !force) {	// pages already shown, nothing to do
+			if (!diff && !force)	// pages already shown, nothing to do
 				return;
-			}
 		}
+
 		if (!force)
 			Page.select();
+
 		var pos = this.getPagePositions(this.book);
 		var animate = direction == 'forward' || direction == 'back';
 
@@ -392,7 +395,7 @@ var DesignWorkArea = {
 		function makePageDom(page, size) {
 			return $(page.dom(size))
 							.addClass('design-page')
-							.data('model', pages[i]);
+							.data('model_id', pages[i].id);
 		}
 		for (var i=0; i<pages.length; i++) {
 			if (pages[i] == null)
@@ -531,7 +534,7 @@ var DesignWorkArea = {
 			.fail(function() { PB.error("Missing page template");});
 	},
 	pickTheme: function(themeTemplate, bookTemplate) {
-		var book = $(ID).data('model');
+		var book = PB.ModelMap.domToModel($(ID));
 		book.setBookTemplate(themeTemplate.id, bookTemplate.id);
 		book.generateAllPagesHtml(function(msg) {
 			PB.error("msg");

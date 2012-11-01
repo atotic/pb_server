@@ -18,6 +18,7 @@
 		this.serverData = PB.clone(serverJson);	// keep original data for diffs
 		this.localData = PB.clone(serverJson); // all data from server are here
 		this._localId = PB.randomString(6);	// local id broadcast with patches
+		PB.ModelMap.set(this);
 		bookCache.push(this);
 		this.connectStream();
 	}
@@ -85,6 +86,10 @@
 		page: function(id) {
 			return this._getPageProxy(id);
 		},
+		pageResolver: function() {
+			var THIS = this;
+			return function(id) { return THIS._getPageProxy(id);}
+		},
 		_getPhotoProxy: function(id) {
 			if (id in this._proxies)
 				return this._proxies[id];
@@ -97,6 +102,10 @@
 					this._proxies[id] = new PB.PhotoProxy(id, this);
 			// Non-existent proxies
 			return this._proxies[id];
+		},
+		photoResolver: function() {
+			var THIS = this;
+			return function(id) { return THIS._getPhotoProxy(id);};
 		},
 		photo: function(id) {
 			return this._getPhotoProxy(id);

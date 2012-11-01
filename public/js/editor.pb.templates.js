@@ -190,6 +190,11 @@ scope.Template = Template;
 		getEditMenu: function(page, layoutItemId) {
 			return ['pan', 'move', 'zoom', 'resize', 'rotate', 'clear', 'touchup'];
 		},
+		pageChanged: function(page, dom, resolution, ev, model, prop, options) {
+			var newDom = this.generateDom(page, resolution);
+			dom.children().detach();
+			dom.append(newDom.children());
+		},
 		positionPhotoInRect: function(photo, enclosingRect, options) {
 			options = $.extend( {
 				style: 'fit'	// fit|fill
@@ -211,11 +216,15 @@ scope.Template = Template;
 			var width = this.getWidth(page);
 			var height = this.getHeight(page);
 			var retVal = $('<div/>');
+			var THIS = this;
 			retVal.css({
 					width: width,
 					height: height
+				})
+				.data('model_id', page.id)
+				.on( PB.MODEL_CHANGED, function(ev, model, prop, options) {
+					THIS.pageChanged(page, retVal, resolution,  ev, model, prop, options);
 				});
-
 			var photos = page.photos();
 			var perRow = Math.floor(Math.sqrt(photos.length) + 0.99);
 
@@ -244,7 +253,7 @@ scope.Template = Template;
 						.append(designPhotoImg);
 					var designPhotoDiv = $(document.createElement('div'))
 						.addClass('design-photo')
-						.data('model', photos[imgIdx])
+						.data('model_id', photos[imgIdx].id)
 						.data('layout-item-id', 'photo' + imgIdx)
 						.append(designPhotoInner);
 

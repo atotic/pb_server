@@ -12,8 +12,8 @@ function createBlankBook(options) {
 		"document": {
 			"title": "testBook",
 			"photoList": [],
-			"roughPageList": ["cover", "cover-flap", "back-flap", "back"],
-			"roughPages": {
+			"pageList": ["cover", "cover-flap", "back-flap", "back"],
+			"pages": {
 				"cover": { "id": "cover", "photoList": [] },
 				"cover-flap": { "id": "cover-flap", "photoList": [] },
 				"back-flap": { "id": "back-flap", "photoList": [] },
@@ -23,8 +23,8 @@ function createBlankBook(options) {
 	}
 	for (var i=0; i<options.pages; i++) {
 		var pageId = "P" + (i +1);
-		bookJson.document.roughPageList.push(pageId);
-		bookJson.document.roughPages[pageId] = {
+		bookJson.document.pageList.push(pageId);
+		bookJson.document.pages[pageId] = {
 			id: pageId, photoList:[]
 		}
 	}
@@ -33,7 +33,7 @@ function createBlankBook(options) {
 	for (var i=0; i<options.photos; i++)
 		book.addPhotoById(i);
 	if (options.pagesWithPhotos) {
-		var roughPages = book.roughPageList;
+		var roughPages = book.pageList;
 		var photos = book.photoList.map(function(photoId) { return book.photo(photoId)});
 		for (var i=0; i<roughPages.length; i++) {
 			var page = book.page(roughPages[i]);
@@ -52,7 +52,7 @@ function createBlankBook(options) {
 
 function cmp(a,b) {
 	function fail() {
-		debugger;
+		console.log("fail");
 	}
 	if (typeof a != typeof b)
 		fail();
@@ -66,8 +66,10 @@ function cmp(a,b) {
 					cmp(a[x], b[x]);
 			break;
 		default:
-			if (a != b)
+			if (a != b) {
+				equal(a,b, 'comparasance fail');
 				fail();
+			}
 	}
 }
 function cloneBook(b) {
@@ -189,11 +191,11 @@ test("page add photo", function() {
 	var b2 = cloneBook(b1);
 
 	// add photos to pages
-	var b1page = b1.page(b1.roughPageList[5])
+	var b1page = b1.page(b1.pageList[5])
 	b1page.addPhoto(b1.photo(b1.photoList[0]));
 	b1page.addPhoto(b1.photo(b1.photoList[1]));
 
-	var b2page = b2.page(b2.roughPageList[5])
+	var b2page = b2.page(b2.pageList[5])
 	b2page.addPhoto(b2.photo(b2.photoList[2]));
 	b2page.addPhoto(b2.photo(b2.photoList[3]));
 
@@ -215,39 +217,39 @@ test("pages, b1 add, b2 remove, same position", function() {
 	var b2 = cloneBook(b1);
 
 	// add page to b1
-//	console.log("before", b1.roughPageList);
+//	console.log("before", b1.pageList);
 	var insertedPage = b1.insertRoughPage(4).id;
 //	console.log("inserting", insertedPage);
-//	console.log("after b1 page insert", b1.roughPageList);
-	var removedPage = b2.roughPageList[4];
-	b2.page(b2.roughPageList[4]).remove();
+//	console.log("after b1 page insert", b1.pageList);
+	var removedPage = b2.pageList[4];
+	b2.page(b2.pageList[4]).remove();
 //	console.log("removing", removedPage);
-//	console.log("after b2 page removal", b2.roughPageList);
+//	console.log("after b2 page removal", b2.pageList);
 	// patch b2
 	var d = {id:10, diff: b1.getDiff()};
 	//JsonDiff.prettyPrint(d.diff);
 	b1.applyBroadcastPatch(d.id, d.diff);
 	b2.applyBroadcastPatch(d.id, d.diff);
-//	console.log("b2 got b1 patch", b2.roughPageList);
+//	console.log("b2 got b1 patch", b2.pageList);
 	// patch b1
 	var d = {id:20, diff: b2.getDiff()};
 	// JsonDiff.prettyPrint(d.diff);
 	b1.applyBroadcastPatch(d.id, d.diff);
 	b2.applyBroadcastPatch(d.id, d.diff);
 
-//	console.log("final state", b1.roughPageList);
+//	console.log("final state", b1.pageList);
 
 	cmp(b1.localData, b2.localData);
 	deepEqual(b1.localData, b2.localData, "books should now be identical");
-	ok(b1.roughPageList.indexOf(removedPage) == -1, "removed page is gone");
-	ok(b1.roughPageList.indexOf(insertedPage) != -1, "added page still there");
+	ok(b1.pageList.indexOf(removedPage) == -1, "removed page is gone");
+	ok(b1.pageList.indexOf(insertedPage) != -1, "added page still there");
 });
 
 test("pages b1 move page", function() {
 	var b1 = createBlankBook({pages:6});
 	var b2 = cloneBook(b1);
 
-	b1.moveRoughPage(b1.page(b1.roughPageList[4]), 9)
+	b1.moveRoughPage(b1.page(b1.pageList[4]), 9)
 	var d = {id: 10, diff: b1.getDiff()};
 //	JsonDiff.prettyPrint(d.diff);
 //	console.log(JSON.stringify(b1.serverData.document));
@@ -262,8 +264,8 @@ test("pages b1 move page, b2 move page", function() {
 	var b1 = createBlankBook({pages:6, photos: 5, pagesWithPhotos: true});
 	var b2 = cloneBook(b1);
 
-	b1.moveRoughPage(b1.page(b1.roughPageList[4]), 9);
-	b2.moveRoughPage(b2.page(b2.roughPageList[5]), 7);
+	b1.moveRoughPage(b1.page(b1.pageList[4]), 9);
+	b2.moveRoughPage(b2.page(b2.pageList[5]), 7);
 	var d = {id: 10, diff: b1.getDiff()};
 //	JsonDiff.prettyPrint(d.diff);
 	b1.applyBroadcastPatch(d.id, d.diff);
@@ -277,18 +279,6 @@ test("pages b1 move page, b2 move page", function() {
 	deepEqual(b1.localData, b2.localData, "books should now be identical");
 });
 
-test("pages b1 move page, bug case", function() {
-	var b1 = createBlankBook({pages:4, photos: 0, pagesWithPhotos: 0});
-	var pageList = b1.roughPageList;
-	b1.moveRoughPage(b1.page(pageList[4]), 7);
-	var d = {id: 10, diff: b1.getDiff()};
-	JsonDiff.prettyPrint(d.diff);
-	b1.applyBroadcastPatch(d.id, d.diff);
-	var tmp = pageList[4];
-	pageList[4] = pageList[7];
-	pageList[7] = tmp;
-	cmp(pageList, b1.roughPageList);
-});
 
 });
 </script>

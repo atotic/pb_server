@@ -9,7 +9,7 @@
 			this.makeDroppable();
 			// Keep models in sync
 			$('#photo-list')
-				.data('model', book)
+				.data('model_id', book.id)
 				.on(PB.MODEL_CHANGED,
 					function(ev, model, prop, options) {
 						if (prop == 'photoList')
@@ -29,8 +29,7 @@
 				case 'photoSort':
 					GUI.PhotoPalette.synchronizePhotoList();
 					$('#photo-list .photo-div').each(function() {
-						var el = $(this);
-						GUI.PhotoPalette.setTileInfo(el, $.data(this,'model'));
+						GUI.PhotoPalette.setTileInfo(this, PB.ModelMap.domToModel(this));
 					});
 					break;
 				default:
@@ -121,8 +120,8 @@
 						return; // Document will handle the drop
 						case 'roughImage':
 							var ri = $(GUI.DragStore.dom);
-							var photo = ri.data('model');
-							var roughPage = ri.parent().data('model');
+							var photo = PB.ModelMap.domToModel(ri);
+							var roughPage = PB.ModelMap.domToModel(ri.parent());
 							roughPage.removePhoto(photo, {animate: true});
 							ev.stopPropagation();
 							ev.preventDefault();
@@ -148,6 +147,7 @@
 				statusDiv.detach();
 		},
 		setTileInfo: function(tile, model) {
+			tile = $(tile);
 			var infoDiv = tile.children('.info');
 			var infoTxt;
 			switch(GUI.Options.photoSort) {
@@ -235,7 +235,7 @@
 			var img = $(tile).children('img');
 			var scaled = this.scaleTileDimensions(imgData);
 			img.width(scaled.width).height(scaled.height);
-			tile.data('model', photo)
+			tile.data('model_id', photo.id)
 				.on(PB.MODEL_CHANGED,
 					function(ev, model, prop, options) {
 						var img = $(tile).children('img');
@@ -273,7 +273,7 @@
 				return;
 			options = $.extend({animate:false}, options);
 			var containerDom = $('#photo-list');
-			var bookModel = containerDom.data('model');
+			var bookModel = PB.ModelMap.domToModel(containerDom);
 			var sel = '.photo-div';
 
 			var oldChildren = containerDom.children( sel )
@@ -285,7 +285,7 @@
 				});
 
 			var oldPhotos = oldChildren.get().map(
-				function(el, i) { return $.data(el,'model').id;});
+				function(el, i) { return $.data(el,'model_id'); });
 
 			var newPhotos = GUI.Options.photoFilter == 'all' ? bookModel.photoList : bookModel.unusedPhotoList;
 			newPhotos = PB.ServerPhotoCache.sortPhotos(newPhotos);

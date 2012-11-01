@@ -59,6 +59,55 @@ Next:
 - Bookshelf in account
 - callback parameter for jsonp templates, make them cacheable
 
+Nov 1
+
+Bugfix: qunit tests now pass. I'd love to have tests for new APIs, but DOM api testing
+is tricky.
+Selection: what happens
+Bootstrap customization:
+Components
+Base css: no icons
+JS Components: no carousel
+Responsive: uncheck all
+jQuery plugins
+no modals, no carousel
+Fix getParent:
+  function getParent($this) {
+    var selector = $this.attr('data-target')
+      , $parent
+
+    if (!selector) {
+      selector = $this.attr('href')
+      selector = selector && /#/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') //strip for ie7
+      if (selector == '#')
+        selector = '';
+    }
+
+    $parent = $(selector)
+    $parent.length || ($parent = $this.parent())
+
+    return $parent
+  }
+
+
+Oct 31
+Storing of design data is a thorny problem. The hard part is what happens
+when layout type changes. What happens when rough mode changes the
+number of photos? Does the layout change? Yes, but what does it change into?
+This will depend on how layouts are defined, which bubbles all the way to
+how will we allow designers to extend our layout.
+Punt for now, and go with plan B instead.
+Plan B
+Desing a quick and dirty model that only uses algorithmic layout.
+- model pointers have to becode model_id pointers, because some of our models are so lightweight.
+- store model_ids for layout compontents
+- respond to model changes for layout components
+- create the UI for changing the model
+
+Oct 30
+Working on storing of design data
+Upgraded bootstrap 2.2
+
 Oct 26
 Fixed: event propagation bug for menu closure
 

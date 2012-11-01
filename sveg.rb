@@ -234,7 +234,6 @@ class SvegApp < Sinatra::Base
 					else
 						retVal += "<link href='/css/#{arg}' rel='stylesheet' type='text/css' />\n"
 					end
-					retVal += "<link href='/css/#{arg}' rel='stylesheet' type='text/css' />\n"
 				elsif arg.eql? "qunit"
 					retVal += "<script src='http://code.jquery.com/qunit/qunit-git.js'></script>\n"
 					retVal += "<link href='http://code.jquery.com/qunit/qunit-git.css' rel='stylesheet' type='text/css' />\n"

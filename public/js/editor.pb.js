@@ -3,8 +3,6 @@ PB stands for PhotoBook
 Common code, used by mobile and desktop
 
 window.PB // Generic utilities
-window.PB.Book // Book access
-window.PB.Photo // Photo objects
 */
 
 // PB, general utility routines
@@ -36,10 +34,10 @@ window.PB.Photo // Photo objects
 		broadcastChangeBatch: function() {
 			var batch = this._changeBatch;
 			delete this._changeBatch;
-			var filter = $('*:data("model")');
+			var filter = $('*:data("model_id")');
 			var dataMapper = {};
 			filter.each(function() {
-				var id = $.data(this,'model').id;
+				var id = $.data(this,'model_id');
 				if (id in dataMapper)
 					dataMapper[id].push(this);
 				else
@@ -63,8 +61,8 @@ window.PB.Photo // Photo objects
 								$(dataMapper[model.id][i]).trigger(PB.MODEL_CHANGED, [model, propName, options]);
 					}
 					else {
-						var filter = $('*:data("model")');
-						filter.filter('*:data("model.id=' + model.id + '")').trigger(PB.MODEL_CHANGED, [model, propName, options]);
+						var filter = $('*:data("model_id")');
+						filter.filter('*:data("model_id=' + model.id + '")').trigger(PB.MODEL_CHANGED, [model, propName, options]);
 				}
 				} catch(ex) {
 					debugger;
@@ -100,4 +98,39 @@ window.PB.Photo // Photo objects
 
 })(window);
 
+// PB.ModelMap: maps model ids to models
+(function(scope) {
+"use strict";
+
+	var objectCache = []; // objects cached by
+	var resolverCache = [];
+
+	var ModelMap = {
+		model: function(id) {
+			return objectCache[id] || (resolverCache[id] || $.noop)(id)
+		},
+		set: function(model) {
+			objectCache[model.id] = model;
+		},
+		setResolver: function(model_id, resolver) {
+			resolverCache[model_id] = resolver;
+		},
+		domToModel: function(el) {
+			try {
+				var e = el.nodeType ? el : el.get(0);
+				if (e)
+					return this.model($.data(e, 'model_id'));
+				else
+					return undefined;
+			}
+			catch(ex) {
+				console.warn(ex.message);
+				debugger;
+			}
+			return undefined;
+		}
+	};
+	scope.ModelMap = ModelMap;
+
+})(PB);
 

@@ -68,16 +68,16 @@
 					$(this).removeClass('drop-target');
 					switch(GUI.DragStore.flavor) {
 					case 'roughPage':
-						$(GUI.DragStore.dom).data('model').remove({animate:true});
+						PB.ModelMap.domToModel(GUI.DragStore.dom).remove({animate:true});
 						break;
 					case 'image':
 						GUI.RoughWorkArea.book.removePhoto(
-							$(GUI.DragStore.dom).data('model'), {animate: true});
+							PB.ModelMap.domToModel(GUI.DragStore.dom), {animate: true});
 						break;
 					case 'roughImage':
 						var ri = $(GUI.DragStore.dom);
-						var photo = ri.data('model');
-						var roughPage = ri.parent().data('model');
+						var photo = PB.ModelMap.domToModel(ri);
+						var roughPage = PB.ModelMap.domToModel(ri.parent());
 						roughPage.removePhoto(photo, {animate: true});
 						break;
 					}

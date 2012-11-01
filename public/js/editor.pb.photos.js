@@ -8,6 +8,7 @@
 	var PhotoProxy = function(id, book) {
 		this.id = id;
 		this.book = book;
+		PB.ModelMap.setResolver(id, book.photoResolver());
 	}
 
 	PhotoProxy.SMALL = 128;

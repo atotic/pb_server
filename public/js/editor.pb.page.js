@@ -5,9 +5,47 @@
 (function(scope) {
 	"use strict";
 
+/*
+Page data design
+photo_id => PB.ServerPhoto. globally unique, sql server id
+						fetch with PB.ServerPhotoCache.get(photo_id)
+           	warning: can mutate while image is being saved
+background_id => PB.Template.Background, background template.
+						fetch with PB.Template.get
+text_id => Points to an object in page: page.texts[text_id]. Page unique, not global
+
+	Page json => {
+		id:
+		photoList: [photo_id*]
+		layoutId:
+		layoutData: {
+			// layout dependent. suggested:
+			object_id => {
+				layout data
+			}
+		}
+		background: background_id
+		textList: [text_id*]
+		texts: {
+			id => {
+				text:
+				font:
+				size:
+		}
+		photoLayout: {
+			id => {
+				top
+				left
+				width
+				height
+			}*
+		}
+	}
+*/
 	var PageProxy = function(id, book) {
 		this.id = id;
 		this.book = book;
+		PB.ModelMap.setResolver(id, book.pageResolver());
 	}
 
 	var coverRegex = /^cover|^cover-flap|^back-flap|^back/;
