@@ -195,22 +195,63 @@ scope.Template = Template;
 			dom.children().detach();
 			dom.append(newDom.children());
 		},
-		positionPhotoInRect: function(photo, enclosingRect, options) {
-			options = $.extend( {
-				style: 'fit'	// fit|fill
-			}, options);
-			var imgRect = new GUI.Rect(photo.dimensions);
-			var scale;
+		_generatePhotoDiv: function(photo, enclosingDim, options) {
+			var initPhoto = new GUI.Rect(photo.dimensions);
+			var initEnclosure  = new GUI.Rect(enclosingDim);
+			var initViewport = new GUI.Rect(photo.dimensions);
+			initViewport = new GUI.Rect({top:200, left: 200, width: 200, height: 200});
+			initViewport = initViewport.forceInside(initPhoto); // just for safety
+
 			switch(options.style) {
 				case 'fit':
-					scale = Math.min(1, enclosingRect.fit(imgRect));
+					var scale = initViewport.fitInside(initEnclosure);
+					var scaledViewport = initViewport.scaleBy(scale, true);
+					var finalPhoto = initPhoto.scaleBy(scale);
+					var maxViewport = finalPhoto.intersect(initEnclosure);
+					var sizedViewport = scaledViewport.moveBy(
+						-(maxViewport.width - scaledViewport.width) / 2,
+						-(maxViewport.height - scaledViewport.height) /2);
+					sizedViewport.height = maxViewport.height;
+					sizedViewport.width = maxViewport.width;
+					var finalViewport = sizedViewport.forceInside(finalPhoto);
 					break;
 				case 'fill':
-					scale = enclosingRect.fill(imgRect);
+					var scale = initViewport.fillInside(initEnclosure);
+					var scaledViewport = initViewport.scaleBy(scale, true);
+					var centeredViewport = scaledViewport.centerIn(initEnclosure);
+					var finalViewport = scaledViewport.moveBy(-centeredViewport.x, -centeredViewport.y);
+					var finalPhoto = initPhoto.scaleBy(scale);
+					break;
 			}
-			imgRect.scaleBy(scale);
-			imgRect.centerIn(enclosingRect);
-			return imgRect;
+			var info = photo.getUrl(options.resolution);
+			var img = $(document.createElement('img'))
+				.addClass('design-photo-img')
+				.prop('src', info.url)
+				.css({
+						top: -finalViewport.top,
+						left: -finalViewport.left,
+						width: finalPhoto.width,
+						height: finalPhoto.height
+				});
+			var outerFrame = finalViewport.centerIn(initEnclosure).intersect(initEnclosure);
+			var innerDiv = $(document.createElement('div'))
+				.addClass('design-photo-inner')
+				.css({
+					width: outerFrame.width,
+					height: outerFrame.height
+				})
+				.append(img);
+			var outerDiv = $(document.createElement('div'))
+				.addClass('design-photo')
+				.data('model_id', photo.id)
+				.css({
+					top: outerFrame.top,
+					left: outerFrame.left,
+					width: outerFrame.width,
+					height: outerFrame.height
+				})
+				.append(innerDiv);
+			return outerDiv;
 		},
 		generateDom: function(page, resolution) {	// resolution: PhotoProxy.SMALL|MEDIUM|LARGE
 			var width = this.getWidth(page);
@@ -225,69 +266,24 @@ scope.Template = Template;
 				.on( PB.MODEL_CHANGED, function(ev, model, prop, options) {
 					THIS.pageChanged(page, retVal, resolution,  ev, model, prop, options);
 				});
+
+			var style = 'fit';
 			var photos = page.photos();
 			var perRow = Math.floor(Math.sqrt(photos.length) + 0.99);
-
 			var dim = new GUI.Rect({width: width / perRow, height: height /perRow});
 
-			var style = 'fill';
-
 			for (var v=0; v < perRow; v++)
-				for (var h=0; h<perRow; h++) {
+				for (var h=0; h < perRow; h++) {
 					var imgIdx = v * perRow + h;
 					if (imgIdx >= photos.length)
-						continue;
-
-					var imgRect = this.positionPhotoInRect(photos[imgIdx], dim, {style:style});
-					var info = photos[imgIdx].getUrl(resolution);
-
-					var designPhotoImg = $(document.createElement('img'))
-						.addClass('design-photo-img')
-						.prop('src', info.url)
-						.css({
-								width: imgRect.width,
-								height: imgRect.height
-						});
-					var designPhotoInner = $(document.createElement('div'))
-						.addClass('design-photo-inner')
-						.append(designPhotoImg);
-					var designPhotoDiv = $(document.createElement('div'))
-						.addClass('design-photo')
-						.data('model_id', photos[imgIdx].id)
-						.data('layout-item-id', 'photo' + imgIdx)
-						.append(designPhotoInner);
-
-					switch(style) {
-						case 'fit':
-							designPhotoInner.css({
-								width: imgRect.width,
-								height: imgRect.height
-							});
-							designPhotoDiv.css({
-								top: v * dim.height + imgRect.top,
-								left: h * dim.width + imgRect.left,
-								width: imgRect.width,
-								height: imgRect.height
-							});
-							break;
-						case 'fill':
-							designPhotoImg.css({
-									top: imgRect.top,
-									left: imgRect.left
-								});
-							designPhotoInner.css({
-								width: dim.width,
-								height: dim.height
-							});
-							designPhotoDiv.css({
-								top: v * dim.height,
-								left: h * dim.width,
-								width: dim.width,
-								height: dim.height
-							});
 						break;
-					}
-					retVal.append(designPhotoDiv);
+					var photoDiv = this._generatePhotoDiv(photos[imgIdx], dim, {
+						style:style,
+						resolution: resolution
+					});
+					photoDiv.css('top', parseFloat(photoDiv.css('top')) + v * dim.height);
+					photoDiv.css('left', parseFloat(photoDiv.css('left')) + h * dim.width);
+					retVal.append(photoDiv);
 				}
 			return retVal;
 		}

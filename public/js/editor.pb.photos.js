@@ -282,16 +282,17 @@
 				var match = this.date_taken.match(/(\d+):(\d+):(\d+) (\d+):(\d+):(\d+)/);
 				if (match)
 					try {
-					this._jsDate = new Date(
-						parseInt(match[1], 10),
-						parseInt(match[2], 10),
-						parseInt(match[3], 10),
-						parseInt(match[4], 10),
-						parseInt(match[5], 10),
-						parseInt(match[6], 10));
-				}catch(ex) {
-					console.warn("error parsing date", this.date_taken);
-				}
+						this._jsDate = new Date(
+							parseInt(match[1], 10),
+							parseInt(match[2], 10),
+							parseInt(match[3], 10),
+							parseInt(match[4], 10),
+							parseInt(match[5], 10),
+							parseInt(match[6], 10));
+					}
+					catch(ex) {
+						console.warn("error parsing date", this.date_taken);
+					}
 			}
 			return this._jsDate;
 		},

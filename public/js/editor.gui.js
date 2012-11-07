@@ -649,11 +649,20 @@ show: function() {
 			this.height = r.height;
 		else
 			this.height = r.bottom - this.top;
-		if (r.height < 0 || r.width < 0)
-			throw "rect widht & height must be > 0";
+		if (this.height < 0) {
+			console.warn('this.height < 0');
+			this.height = 0;
+		}
+		if (this.width < 0) {
+			console.warn('this.width < 0');
+			this.width = 0;
+		}
 	}
 
 	Rect.prototype = {
+		toString: function() {
+			return "t:" + this.top + ' l:' + this.left + ' w:' + this.width + ' h:' + this.height;
+		},
 		get right() {
 			return this.left + this.width;
 		},
@@ -670,6 +679,12 @@ show: function() {
 			if (this.height < 0)
 				console.warn("height < 0");
 		},
+		get x() {
+			return this.left;
+		},
+		get y() {
+			return this.top;
+		},
 		union: function(rectOrArray) {
 			var rArray = $.isArray(rectOrArray) ? rectOrArray :
 				rectOrArray ? [rectOrArray] : [];
@@ -681,26 +696,72 @@ show: function() {
 				retVal.bottom = Math.max(retVal.bottom, rArray[i].bottom);
 				retVal.right = Math.max(retVal.right, rArray[i].right);
 			}
+			return retVal;
 		},
-		// scaled rect will fit completely inside this rect
-		fit: function(rect) {
-			var vscale = this.height / rect.height;
-			var hscale = this.width / rect.width;
-			return Math.min(vscale, hscale);
+		intersect: function(r) {
+			return new Rect({
+				top: Math.max(this.top, r.top),
+				left: Math.max(this.left, r.left),
+				bottom: Math.min(this.bottom, r.bottom),
+				right:Math.min(this.right, r.right)
+			});
 		},
-		// scaled rect will fill this rect
-		fill: function(rect) {
-			var vscale = this.height / rect.height;
-			var hscale = this.width / rect.width;
+		// return: scale
+		fitInside: function(enclosure) {
+			var vscale = enclosure.height / this.height;
+			var hscale = enclosure.width / this.width;
+			return Math.min(vscale, hscale) ;
+		},
+		// return: scale
+		fillInside: function(enclosure) {
+			var vscale = enclosure.height / this.height;
+			var hscale = enclosure.width / this.width;
 			return Math.max(vscale, hscale);
 		},
-		scaleBy: function(scale) {
-			this.width *= scale;
-			this.height *= scale;
+		scaleBy: function(scale, scaleOrigin) {
+			var retVal = new Rect(this);
+			retVal.width = retVal.width * scale;
+			retVal.height = retVal.height * scale;
+			if (scaleOrigin) {
+				if (retVal.top)
+					retVal.top *= scale;
+				if (retVal.left)
+					retVal.left *= scale;
+			}
+			return retVal;
 		},
 		centerIn: function(enclosingRect) {
-			this.left = (enclosingRect.width - this.width) / 2;
-			this.top = (enclosingRect.height - this.height) / 2;
+			return new Rect({
+				left: (enclosingRect.width - this.width) / 2,
+				top: (enclosingRect.height - this.height) / 2,
+				width: this.width,
+				height: this.height
+			});
+		},
+		moveBy: function(x, y) {
+			return new Rect({
+				top: this.top + y,
+				left: this.left + x,
+				width: this.width,
+				height: this.height
+			});
+		},
+		forceInside: function(enclosure) {
+			var scale = this.fitInside(enclosure);
+			var retVal;
+			if (scale < 1)
+				retVal = this.scaleBy(scale);
+			else
+				retVal = new Rect(this);
+			if (retVal.top < enclosure.top)
+				retVal.top = enclosure.top;
+			if (retVal.left < enclosure.left)
+				retVal.left = enclosure.left;
+			if (retVal.bottom > enclosure.bottom)
+				retVal.top = enclosure.bottom - this.height;
+			if (retVal.right > enclosure.right)
+				retVal.left = enclosure.right - this.width;
+			return retVal;
 		}
 	}
 	GUI.Rect = Rect;

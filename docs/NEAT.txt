@@ -182,6 +182,8 @@ walmart & walgreens both use snapfish photo book creation software.
 Adorama: seems to have their own book solution based upon flash
 
 BUSINESS
+Weavora: they have a nice set of templates for bootstrap, might be a good choice for outsourcing
+http://weavora.com/
 Hiring at angellist: developers like star founders, money, education: http://numeratechoir.com/why-developers-arent-interested-in-your-startup/?utm_source=twitter&utm_medium=social&utm_content=52ce1909-7967-4970-b509-1dc7af2f3a92
 Ideal partners: a community builder: http://rapgenius.com/Marc-andreessen-why-andreessen-horowitz-is-investing-in-rap-genius-lyrics
 Hiring designers: http://www.authenticjobs.com/

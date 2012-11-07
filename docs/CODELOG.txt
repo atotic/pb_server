@@ -59,6 +59,12 @@ Next:
 - Bookshelf in account
 - callback parameter for jsonp templates, make them cacheable
 
+Nov 7
+Fitting the photos inside display rect. Now works with fit/fill algorithms.
+This was hard to get just right, I am rusty with my geometry.
+Drawing with colored pencils helped.
+5 days of work => 100 lines of code, and 30 pages of drawings
+
 Nov 1
 
 Bugfix: qunit tests now pass. I'd love to have tests for new APIs, but DOM api testing
