@@ -16,6 +16,21 @@ text_id => Points to an object in page: page.texts[text_id]. Page unique, not gl
 
 	Page json => {
 		id:
+		itemList: [local_id*]
+		items: {
+			local_id: {
+				type: photo|widget|text
+				resource_id:
+				top:
+				left:
+				width:
+				height:
+				layout_data: {
+				}
+			}*
+		}
+
+// OLD
 		photoList: [photo_id*]
 		layoutId:
 		layoutData: {
@@ -52,9 +67,6 @@ text_id => Points to an object in page: page.texts[text_id]. Page unique, not gl
 	PageProxy.prototype = {
 		get p() {
 			return this.book.localData.document.pages[this.id];
-		},
-		get photoList() {
-			return this.book.localData.document.pages[this.id].photoList;
 		},
 		get layoutId() {
 			return this.book.localData.document.pages[this.id].layoutId;
@@ -114,13 +126,6 @@ text_id => Points to an object in page: page.texts[text_id]. Page unique, not gl
 					return this.book.pageList.indexOf(this.id) - 3;
 			}
 		},
-		photos: function() {
-			var list = [];
-			var p = this.p;
-			for (var i=0; i<p.photoList.length; i++)
-				list.push(this.book.photo(this.photoList[i]));
-			return list;
-		},
 		dom: function(resolution) {
 			if (!this.layoutId)
 				this.book.assignTemplate(this);
@@ -128,27 +133,98 @@ text_id => Points to an object in page: page.texts[text_id]. Page unique, not gl
 				throw "no dom yet";
 			return PB.Template.cached(this.layoutId).generateDom(this, resolution);
 		},
-		patchPhotoIdChange: function(photo, newId) {
-			var p = this.p;
-			var idx = p.photoList.indexOf(photo.id);
-			if (idx != -1)
-				p.photoList[idx] = newId;
+		guessItemType: function(item) {
+			if ('_serverPhoto' in item)
+				return 'photo';
+			else {
+				console.warn("Unknown item type:", item);
+				throw new Error("Unknown item type");
+			}
+		},
+		get _itemList() {
+			return this.book.localData.document.pages[this.id].itemList;
+		},
+		get _items() {
+			return this.book.localData.document.pages[this.id].items;
+		},
+		addItem: function(item, options) {
+			var newId = this.book.generateId();
+			var itemType = this.guessItemType(item);
+			this._itemList.push(newId);
+			Object.defineProperty(this._items, newId, {
+				value: {
+					type: itemType,
+					resource_id: item.id,
+					id: newId
+				},
+				enumerable: true,
+				writable: true,
+				configurable: true
+			});
+			if (itemType == 'photo')
+				this.book._pagePhotosChanged(this, options);
+			PB.broadcastChange(this, 'itemList', options);
+		},
+		removeItem: function(removeItem, options) {
+			var itemList = this._itemList;
+			var items = this._items;
+			for (var i=0; i<itemList.length; i++)
+				if (items[itemList[i]].resource_id == removeItem.id) {
+					var isPhoto = items[itemList[i]].type == 'photo';
+					delete items[itemList[i]];
+					itemList.splice(i, 1);
+					PB.broadcastChange(this, 'itemList', options);
+					if (isPhoto)
+						this.book._pagePhotosChanged(this, options);
+					return;
+				}
+			throw new Error("no such item");
+		},
+		get allItems() {
+			var items = this._items;
+			return this._itemList.map(function(item_id) {
+				return items[item_id];
+			});
+		},
+		itemsByType: function(type) {
+			var itemList = this._itemList;
+			var items = this._items;
+			var THIS = this;
+			return itemList
+				.filter(function(item_id) {
+					return items[item_id].type == type;
+				})
+				.map(function(item_id) {
+					return items[item_id];
+				});
+		},
+		item: function(id) {
+			return this._items[id]
 		},
 		addPhoto: function(photo, options) {
 			if (photo === null)
 				return;
-			var p = this.p;
-			p.photoList.push(photo.id);
-			this.book._pagePhotosChanged(this, options);
-			PB.broadcastChange(this, 'photoList', options);
+			this.addItem(photo, options);
 		},
 		removePhoto: function(photo, options) {
-			var p = this.p;
-			var index = p.photoList.indexOf(photo.id);
-			if (index == -1) throw "no such photo";
-			p.photoList.splice(index, 1);
-			this.book._pagePhotosChanged(this, options);
-			PB.broadcastChange(this, 'photoList', options);
+			this.removeItem(photo, options);
+		},
+		get photoList() {
+			debugger;
+			return this.book.localData.document.pages[this.id].photoList;
+		},
+		photos: function() {
+			var THIS = this;
+			return this.itemsByType('photo').map(function(item) {
+				return THIS.book.photo(item.resource_id);
+			});
+		},
+		patchPhotoIdChange: function(photo, newId) {
+			var THIS = this;
+			this.itemsByType('photo').forEach(function(item) {
+				if (item.resource_id == photo.id)
+					item.resource_id = newId;
+			});
 		},
 		remove: function(options) {
 			this.book.deleteRoughPage(this, options);
@@ -157,7 +233,8 @@ text_id => Points to an object in page: page.texts[text_id]. Page unique, not gl
 	PageProxy.blank = function(book) {
 		return {
 			id: book.generateId(),
-			photoList: []
+			itemList: [],
+			items: {}
 		};
 	}
 

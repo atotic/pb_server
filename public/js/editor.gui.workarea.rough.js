@@ -167,7 +167,6 @@
 			ev.stopPropagation();
 			var t = {target: roughPageTarget.target, direction: roughPageTarget.direction};
 			this.setTarget();	// reset the drag visuals
-
 			switch(GUI.DragStore.flavor) {
 			case 'roughPage':
 				this.dropRoughPage(ev, t);
@@ -197,9 +196,10 @@
 			book.moveRoughPage(src, book.pageList.indexOf(dest.id));
 		},
 		dropImage: function(ev, t) {
+			var d = GUI.DragStore.dom;
 			var src = $(GUI.DragStore.dom);
 			var roughModel = PB.ModelMap.domToModel(t.target);
-			var photoModel = PB.ModelMap.domToModel(scope.DragStore.dom);
+			var photoModel = PB.ModelMap.domToModel(GUI.DragStore.dom);
 			roughModel.addPhoto(photoModel, {animate: true});
 		},
 		dropOsFile: function(ev, t) {
@@ -454,7 +454,7 @@
 		pageChanged: function(ev, model, prop, options) {
 			options = $.extend( { animate: false }, options);
 			var roughDom = $(this);
-			if (prop === 'photoList')
+			if (prop === 'itemList')
 				RoughWorkArea.synchronizeRoughPhotoList(roughDom, options);
 		}
 	};

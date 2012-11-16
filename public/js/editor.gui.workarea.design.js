@@ -23,7 +23,7 @@ var ThemePicker = {
 		this.initButtonList(dom);
 		dom.find('#theme-picker-submit').click(function() {
 			if (!$(this).hasClass('disabled') && ThemePicker.selectedTheme && ThemePicker.selectedSize)
-				DesignWorkArea.pickTheme(ThemePicker.selectedTheme, ThemePicker.selectedSize) });
+				GUI.DesignWorkArea.pickTheme(ThemePicker.selectedTheme, ThemePicker.selectedSize) });
 	},
 	initThemeList: function(dom) {
 		var themeList = dom.find(THEME_LIST_SELECTOR);

@@ -25,7 +25,10 @@
 
 	Book.prototype = {
 		get id() {
-			return this.localData.id;
+			return 'book' + this.localData.id; // because image ids can conflict
+		},
+		get db_id() {
+			return this.localData.id;	//
 		},
 		get dirty() {
 			return this._dirty;
@@ -126,14 +129,14 @@
 		reset: function() {	// destroys the book pages
 			this.localData.document.pageList = ["cover", "cover-flap", "back-flap", "back","P1","P2","P3","P4"];
 			this.localData.document.pages = {
-				"cover": { "id": "cover", "photoList": [] },
-				"cover-flap": { "id": "cover-flap", "photoList": [] },
-				"back-flap": { "id": "back-flap", "photoList": [] },
-				"back": {"id": "back", "photoList": [] },
-				"P1": {"id": "P1", "photoList": [] },
-				"P2": {"id": "P2", "photoList": [] },
-				"P3": {"id": "P3", "photoList": [] },
-				"P4": {"id": "P4", "photoList": [] }
+				"cover": { "id": "cover", "itemList": [], "items":{} },
+				"cover-flap": { "id": "cover-flap", "itemList": [], "items":{} },
+				"back-flap": { "id": "back-flap", "itemList": [], "items":{} },
+				"back": {"id": "back", "itemList": [], "items":{} },
+				"P1": {"id": "P1", "itemList": [], "items":{} },
+				"P2": {"id": "P2", "itemList": [], "items":{} },
+				"P3": {"id": "P3", "itemList": [], "items":{} },
+				"P4": {"id": "P4", "itemList": [], "items":{} }
 			};
 			PB.broadcastChange(this, 'pageList');
 			PB.broadcastChange(this, 'photoList');
@@ -145,10 +148,10 @@
 		_collectUsedImages: function() {
 			var retVal = {};
 			var pageList = this.pageList;
-			for (var i=0; i<pageList.length; i++) {
-				var page = this.page(pageList[i]);
-				for (var j=0; j<page.photoList.length; j++)
-					retVal[page.photoList[j]] = true;
+			for (var i=0; i < pageList.length; i++) {
+				var photoItems = this.page( pageList[i] ).itemsByType('photo');
+				for (var j=0; j < photoItems.length; j++)
+					retVal[ photoItems[j].resource_id ]  = true;
 			}
 			return retVal;
 		},
@@ -206,10 +209,11 @@
 		// generates id unique to this book
 		generateId: function() {
 			var id = PB.randomString(6);
+/*
 			if (this.localData.document.photoList.indexOf(id) != -1
 				|| this.localData.document.pageList.indexOf(id) != -1)
 				return this.generateId();
-			return id;
+*/			return id;
 		},
 		_applySinglePatch: function(patch_id, patch) {
 			if (patch_id <= this.last_diff) {
@@ -254,10 +258,10 @@
 				if (objectPath.length > 3) {
 					var roughPage = member(objectPath, 2);
 					var rough_page_var = member(objectPath, 3);
-					if (rough_page_var == roughPage.photoList) {
+					if (rough_page_var == roughPage.itemList) {
 						return [
-						{model: roughPage, prop: 'photoList'},
-						{model: this, prop:'photoList'}
+						{model: roughPage, prop: 'itemList'},
+						{model: this, prop:'itemList'}
 						]
 					}
 					else
@@ -332,7 +336,7 @@
 				return null;
 			}
 
-			var ajax = $.ajax('/books/' + this.id, {
+			var ajax = $.ajax('/books/' + this.db_id, {
 				data: JSON.stringify(diff),
 				type: "PATCH",
 				contentType: 'application/json',

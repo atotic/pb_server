@@ -99,6 +99,7 @@ window.PB // Generic utilities
 })(window);
 
 // PB.ModelMap: maps model ids to models
+// We store model ids, beause models cannot be stored, they change
 (function(scope) {
 "use strict";
 

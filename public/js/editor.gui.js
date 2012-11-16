@@ -422,7 +422,6 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		// Common props:
 		// dom: dom element being dragged
 		setFlavor: function(flavor, props) {
-//			console.log("DragStore.setFlavor", flavor);
 			this._source = { flavor: flavor }
 			$.extend(this._source, props);
 		},

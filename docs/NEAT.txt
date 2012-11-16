@@ -32,6 +32,8 @@ Excellent CSS effects: bounce, rotate, etc. If I ever need visual candy http://b
 CSS arrow please: http://cssarrowplease.com/
 
 JS
+Detect node insertion/removal with JS/CSS (animation complete callback)
+http://blog.streak.com/2012/11/how-to-detect-dom-changes-in-css.htmlhttp://davidwalsh.name/detect-node-insertion
 pdf.js: http://people.mozilla.com/~ydelendik/pdfjs-ttf-2012.pdf
 Vjeux blogs about different image layout algorithms http://blog.vjeux.com/2012/javascript/image-layout-algorithm-lightbox-android.html
 JavaScript macros http://sweetjs.org/

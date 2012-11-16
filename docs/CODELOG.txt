@@ -45,6 +45,7 @@ book template:
 - users can build derivative works.
 
 Next:
+- bug: cannot drop just-uploaded images into pages
 - commands: enable/disable GUI
 - select different page elements, apply transformations
 - text
@@ -58,6 +59,31 @@ Next:
 - account page should load book list dynamically  $(window).unload(function(){});
 - Bookshelf in account
 - callback parameter for jsonp templates, make them cacheable
+
+Nov 15
+Page photoList migrated to itemList. Page is no longer a list of images,
+now it is a list of items to be laid out. Part of the new layout architecture.
+
+algorithmic_layout becomes default_layout
+2 layout defaults:
+every layout extends PB.Template.Layout. Override its methods at will
+PB.Template.Layout uses fallbackLayout (or default_layout if none) to layout photos.
+
+layout json gets photoPosition
+photoPosition {
+1: [{top,left,width, height}]
+2: [{top, left, width, height}, {top, left, width, height}]
+etc
+}
+Stuck designing the layouts. Many issues:
+
+- Dependent resources: book consists of many resources.
+  how and when to load?
+    gotcha: missing resource can reference further missing resources
+  how to deal with missing resources while rendering?
+
+- Layout:
+  every layout can render everything.
 
 Nov 7
 Fitting the photos inside display rect. Now works with fit/fill algorithms.

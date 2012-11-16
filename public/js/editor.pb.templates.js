@@ -78,7 +78,7 @@ var	Template = {
 		if (id in cache)
 			return cache[id];
 		else
-			throw "id not found";
+			throw new Error("cache id not found " + id);
 	},
 	// return theme|book|layout|image
 	getClass: function(template) {
@@ -161,7 +161,7 @@ scope.Template = Template;
 					retVal.push(layout);
 			}
 			if (retVal.length === 0)
-				retVal.push( PB.Template.cached('layout_algorithmic'));
+				retVal.push( PB.Template.cached('default_layout'));
 			return retVal;
 		}
 	}
@@ -172,6 +172,10 @@ scope.Template = Template;
 	};
 
 	Layout.prototype = {
+		getFallbackLayout: function() {
+			var fallbackId = this.fallback_layout_id || 'default_layout';
+			return PB.Template.cached(fallbackId);
+		},
 		getWidth: function(page) {
 			var inches = this.width || PB.Template.cached(page.book.bookTemplateId).width;
 			switch(page.pageClass) {
@@ -195,11 +199,10 @@ scope.Template = Template;
 			dom.children().detach();
 			dom.append(newDom.children());
 		},
-		_generatePhotoDiv: function(photo, enclosingDim, options) {
+		_generatePhotoDom: function(photo, enclosingDim, options) {
 			var initPhoto = new GUI.Rect(photo.dimensions);
 			var initEnclosure  = new GUI.Rect(enclosingDim);
 			var initViewport = new GUI.Rect(photo.dimensions);
-			initViewport = new GUI.Rect({top:200, left: 200, width: 200, height: 200});
 			initViewport = initViewport.forceInside(initPhoto); // just for safety
 
 			switch(options.style) {
@@ -256,7 +259,7 @@ scope.Template = Template;
 		generateDom: function(page, resolution) {	// resolution: PhotoProxy.SMALL|MEDIUM|LARGE
 			var width = this.getWidth(page);
 			var height = this.getHeight(page);
-			var retVal = $('<div/>');
+			var retVal = $(document.createElement('div'));
 			var THIS = this;
 			retVal.css({
 					width: width,
@@ -277,7 +280,7 @@ scope.Template = Template;
 					var imgIdx = v * perRow + h;
 					if (imgIdx >= photos.length)
 						break;
-					var photoDiv = this._generatePhotoDiv(photos[imgIdx], dim, {
+					var photoDiv = this._generatePhotoDom(photos[imgIdx], dim, {
 						style:style,
 						resolution: resolution
 					});
@@ -286,9 +289,71 @@ scope.Template = Template;
 					retVal.append(photoDiv);
 				}
 			return retVal;
+		},
+		generateDom2: function(page, options) {
+			options = $.extend({
+				liveRefresh: false,
+				resolution: PB.PhotoProxy.MEDIUM,
+				largeText: false,
+				width: this.getWidth(page),
+				height: this.getHeight(page)
+			}, options);
+			var retVal = $(document.createElement('div'))
+				.css({ width: options.width, height: options.height });
+			try {
+				var allItems = page.allItems();
+				var photoItems = allItems.filter(function(item) { return item.type == 'photo'});
+				var photoPositions = this.getPhotoPositions(page, photoItems, options);
+				var options = { style: 'fill'};
+				for (var i=0; i<allItems.length; i++) {
+					switch(items[i].type) {
+						case 'photo':
+							var position = photoPositions.pop();
+							var photo = page.book.photo(items[i].resource_id);
+							var photoDiv = this._generatePhotoDom(photo, position, options);
+							photoDiv.css('top', parseFloat(photoDiv.css('top')) + v * dim.height);
+							photoDiv.css('left', parseFloat(photoDiv.css('left')) + h * dim.width);
+							retVal.append(photoDiv);
+					}
+				}
+			}
+			catch(e) {
+				debugger;
+				// load resources here
+				retVal.addClass('incomplete');
+			}
+			return retVal;
+		},
+		getPhotoPositions: function(page, photoItems, options) {
+			if (('photoPositions' in this) && photos.length in this.photoPositions)
+				return this.photoPositions;
+			else
+				return this.getFallbackLayout().getPhotoPositions(page, photos, options);
 		}
 	}
+
 	scope.Layout = Layout;
+
+// Default implementation of layout
+	layout_algorithmic = {
+		id: 'default_layout',
+		pageClass: '*',
+		getPhotoPositions: function(page, photoItems, options) {
+			var retVal = [];
+			var perRow = Math.floor(Math.sqrt(photoItems.length) + 0.99);
+			var width = this.getWidth(page) / perRow;
+			var height = this.getHeight(page) / perRow;
+
+			for (var v=0; v < perRow; v++)
+				for (var h=0; h < perRow; h++) {
+					if (photos.length == retVal.length)
+						return retVal;
+					retVal.push({top: v * height, left: h * width, width: width, height: height});
+				}
+			return retVal;
+		}
+	}
+	PB.Template.put(layout_algorithmic);
 
 })(PB.Template);
 
@@ -344,7 +409,7 @@ BookThemeAPI = {
 		var bookTemplate = PB.Template.cached(this.bookTemplateId);
 		var layoutTemplates = bookTemplate.getMatchingLayouts({
 						pageClass: page.pageClass,
-						imageCount: page.photoList.length
+						imageCount: page.itemsByType('photo').length
 					});
 		var layout = layoutTemplates[0];
 		page.layoutId = layout.id;
@@ -352,12 +417,5 @@ BookThemeAPI = {
 }
 
 $.extend(PB.Book.prototype, BookThemeAPI);
-
-layout_algorithmic = {
-	id: 'layout_algorithmic',
-	pageClass: '*'
-}
-
-PB.Template.put(layout_algorithmic);
 
 

@@ -502,7 +502,7 @@
 			this.status = 'uploading';
 			var THIS = this;
 			var xhr = $.ajax({
-				url: "/photos?book=" + PB.Book.default.id,
+				url: "/photos?book=" + PB.Book.default.db_id,
 				type: "POST",
 				data: fd,
 				processData: false,

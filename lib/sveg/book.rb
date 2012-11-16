@@ -23,14 +23,14 @@ class Book < Sequel::Model(:books)
 	"photoList": [],
 	"pageList": ["cover", "cover-flap", "back-flap", "back","P1","P2","P3","P4"],
 	"pages": {
-		"cover": { "id": "cover", "photoList": [] },
-		"cover-flap": { "id": "cover-flap", "photoList": [] },
-		"back-flap": { "id": "back-flap", "photoList": [] },
-		"back": {"id": "back", "photoList": [] },
-		"P1": {"id": "P1", "photoList": [] },
-		"P2": {"id": "P2", "photoList": [] },
-		"P3": {"id": "P3", "photoList": [] },
-		"P4": {"id": "P4", "photoList": [] }
+		"cover": { "id": "cover", "itemList": [], "items": {} },
+		"cover-flap": { "id": "cover-flap", "itemList": [], "items": {} },
+		"back-flap": { "id": "back-flap", "itemList": [], "items": {} },
+		"back": {"id": "back", "itemList": [], "items": {} },
+		"P1": {"id": "P1", "itemList": [], "items": {} },
+		"P2": {"id": "P2", "itemList": [], "items": {} },
+		"P3": {"id": "P3", "itemList": [], "items": {} },
+		"P4": {"id": "P4", "itemList": [], "items": {} }
 	}
 }
 eos

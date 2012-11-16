@@ -157,7 +157,7 @@
 		init: function() {
 		},
 		url: function(book) {
-			return "/subscribe/book/" + book.id + "?last_diff=" + book.last_diff;
+			return "/subscribe/book/" + book.db_id + "?last_diff=" + book.last_diff;
 		},
 		handleMessage: function(book, message) {
 			switch(message.type) {

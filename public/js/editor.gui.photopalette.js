@@ -345,7 +345,6 @@
 					ev = ev.originalEvent;
 					ev.dataTransfer.clearData();
 					var img = $(this).children('img').get(0);
-					console.log("img", img.src);
 					try {
 						ev.dataTransfer.setData('text/uri-list', img.src);
 					}
