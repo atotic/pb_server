@@ -131,7 +131,7 @@ text_id => Points to an object in page: page.texts[text_id]. Page unique, not gl
 				this.book.assignTemplate(this);
 			if (!this.layoutId)
 				throw "no dom yet";
-			return PB.Template.cached(this.layoutId).generateDom(this, resolution);
+			return PB.Template.cached(this.layoutId).generateDom(this, {resolution: resolution});
 		},
 		guessItemType: function(item) {
 			if ('_serverPhoto' in item)
@@ -180,7 +180,7 @@ text_id => Points to an object in page: page.texts[text_id]. Page unique, not gl
 				}
 			throw new Error("no such item");
 		},
-		get allItems() {
+		allItems: function() {
 			var items = this._items;
 			return this._itemList.map(function(item_id) {
 				return items[item_id];

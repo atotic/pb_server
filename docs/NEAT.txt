@@ -76,6 +76,7 @@ FileAPI resumable uploads https://github.com/23/resumable.js
 Fullscreen: http://hacks.mozilla.org/2012/01/using-the-fullscreen-api-in-web-browsers/
 Image to canvas: http://hacks.mozilla.org/2012/02/creating-thumbnails-with-drag-and-drop-and-html5-canvas/
 Operational Transformation is an official name for type of editor I am building  http://sharejs.org/
+Visualizing Operational Transformation http://ot.substance.io/visualization/
 Page turning in JS: http://www.turnjs.com/#usage, http://tympanus.net/Development/FlipboardPageLayout/?page=0
 
 TOUCH
@@ -129,9 +130,10 @@ Developing a nice mobile site: http://davidbcalhoun.com/2011/mobile-performance-
 Touch event history and future: http://blog.jquery.com/2012/04/10/getting-touchy-about-patents/
 Free DNS redirects for everyone: http://xip.io/
 Building iOS hybrid apps: http://www.cocoacontrols.com/posts/a-primer-on-hybrid-apps-for-ios
+NODE
+Lessons from multiplayer game with node.js http://codeofrob.com/entries/lessons-learned-building-a-multiplayer-game-in-nodejs-and-webgl.html
 
 OTHER
-
 Nice drawing program. Might do text here. http://sketchpad.io/sketch/?newfile
 Wild stuff done for $5: http://fiverr.com/
 Page Layers: web site to psd converter http://www.ralfebert.de/apps/page-layers-photoshop-osx-website-screenshots/
@@ -212,7 +214,8 @@ smugmug: they are photo oriented
 picplum: mail best photos, http://paulstamatiou.com/picplum-automatic-photo-prints-parents
 nation's photo lab
 
-
+Photostream of the future: Area woman finally uploads
+http://www.theonion.com/articles/area-woman-finally-uploads-all-12-million-pictures,30443/
 
 Cute polish design studio: http://www.hipopotamstudio.pl/
 

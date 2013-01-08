@@ -141,7 +141,7 @@
 			PB.broadcastChange(this, 'pageList');
 			PB.broadcastChange(this, 'photoList');
 			for (var i=0; i<this.localData.document.pageList.length; i++)
-				PB.broadcastChange(this.page(this.localData.document.pageList[i]), 'photoList');
+				PB.broadcastChange(this.page(this.localData.document.pageList[i]), 'itemList');
 			this._dirty = true;
 		},
 		// returns hash of images that appear in pages
@@ -261,7 +261,7 @@
 					if (rough_page_var == roughPage.itemList) {
 						return [
 						{model: roughPage, prop: 'itemList'},
-						{model: this, prop:'itemList'}
+						{model: this, prop:'photoList'}
 						]
 					}
 					else

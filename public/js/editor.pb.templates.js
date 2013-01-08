@@ -156,8 +156,11 @@ scope.Template = Template;
 			var retVal = [];
 			for (var i = 0; i< this.layouts.length; i++) {
 				var layout = PB.Template.cached(this.layouts[i]);
-				if (('imageCount' in query && layout.imageCount == query.imageCount)
-				 	&& ( 'pageClass' in query && layout.pageClass == query.pageClass))
+				var pageClassOk = 'pageClass' in query && layout.pageClass == query.pageClass;
+				var photoCountOk = pageClassOk && 'photoCount' in query
+					&& 'preferredPhotoCount' in layout
+					&& layout.preferredPhotoCount.indexOf(query.photoCount) != -1;
+				if ( photoCountOk && pageClassOk )
 					retVal.push(layout);
 			}
 			if (retVal.length === 0)
@@ -195,7 +198,7 @@ scope.Template = Template;
 			return ['pan', 'move', 'zoom', 'resize', 'rotate', 'clear', 'touchup'];
 		},
 		pageChanged: function(page, dom, resolution, ev, model, prop, options) {
-			var newDom = this.generateDom(page, resolution);
+			var newDom = this.generateDom(page, { resolution: resolution});
 			dom.children().detach();
 			dom.append(newDom.children());
 		},
@@ -256,7 +259,7 @@ scope.Template = Template;
 				.append(innerDiv);
 			return outerDiv;
 		},
-		generateDom: function(page, resolution) {	// resolution: PhotoProxy.SMALL|MEDIUM|LARGE
+		generateDom2: function(page, resolution) {	// resolution: PhotoProxy.SMALL|MEDIUM|LARGE
 			var width = this.getWidth(page);
 			var height = this.getHeight(page);
 			var retVal = $(document.createElement('div'));
@@ -290,7 +293,7 @@ scope.Template = Template;
 				}
 			return retVal;
 		},
-		generateDom2: function(page, options) {
+		generateDom: function(page, options) {
 			options = $.extend({
 				liveRefresh: false,
 				resolution: PB.PhotoProxy.MEDIUM,
@@ -304,15 +307,18 @@ scope.Template = Template;
 				var allItems = page.allItems();
 				var photoItems = allItems.filter(function(item) { return item.type == 'photo'});
 				var photoPositions = this.getPhotoPositions(page, photoItems, options);
-				var options = { style: 'fill'};
+				var photoOptions = {
+					style: 'fit',
+					resolution: options.resolution
+				};
 				for (var i=0; i<allItems.length; i++) {
-					switch(items[i].type) {
+					switch(allItems[i].type) {
 						case 'photo':
 							var position = photoPositions.pop();
-							var photo = page.book.photo(items[i].resource_id);
-							var photoDiv = this._generatePhotoDom(photo, position, options);
-							photoDiv.css('top', parseFloat(photoDiv.css('top')) + v * dim.height);
-							photoDiv.css('left', parseFloat(photoDiv.css('left')) + h * dim.width);
+							var photo = page.book.photo(allItems[i].resource_id);
+							var photoDiv = this._generatePhotoDom(photo, {width: position.width, height: position.height}, photoOptions);
+							photoDiv.css('top', parseFloat(photoDiv.css('top')) + position.top);
+							photoDiv.css('left', parseFloat(photoDiv.css('left')) + position.left);
 							retVal.append(photoDiv);
 					}
 				}
@@ -325,10 +331,10 @@ scope.Template = Template;
 			return retVal;
 		},
 		getPhotoPositions: function(page, photoItems, options) {
-			if (('photoPositions' in this) && photos.length in this.photoPositions)
-				return this.photoPositions;
+			if (('photoPositions' in this) && photoItems.length in this.photoPositions)
+				return this.photoPositions[photoItems.length].slice();
 			else
-				return this.getFallbackLayout().getPhotoPositions(page, photos, options);
+				return this.getFallbackLayout().getPhotoPositions(page, photoItems, options);
 		}
 	}
 
@@ -346,7 +352,7 @@ scope.Template = Template;
 
 			for (var v=0; v < perRow; v++)
 				for (var h=0; h < perRow; h++) {
-					if (photos.length == retVal.length)
+					if (photoItems.length == retVal.length)
 						return retVal;
 					retVal.push({top: v * height, left: h * width, width: width, height: height});
 				}
@@ -397,7 +403,7 @@ BookThemeAPI = {
 		var THIS = this;
 		this.loadTemplates()
 			.done( function() {
-//				var bookTemplate = PB.Template.cached(THIS.bookTemplateId);
+				var bookTemplate = PB.Template.cached(THIS.bookTemplateId);
 				for (var i=0; i< THIS.localData.document.pageList.length; i++) {
 					var page = THIS.page( THIS.localData.document.pageList[i]);
 					THIS.assignTemplate(page);
@@ -409,7 +415,7 @@ BookThemeAPI = {
 		var bookTemplate = PB.Template.cached(this.bookTemplateId);
 		var layoutTemplates = bookTemplate.getMatchingLayouts({
 						pageClass: page.pageClass,
-						imageCount: page.itemsByType('photo').length
+						photoCount: page.itemsByType('photo').length
 					});
 		var layout = layoutTemplates[0];
 		page.layoutId = layout.id;

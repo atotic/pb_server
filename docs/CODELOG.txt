@@ -46,6 +46,7 @@ book template:
 
 Next:
 - bug: cannot drop just-uploaded images into pages
+- bug: broadcasting itemList updates
 - commands: enable/disable GUI
 - select different page elements, apply transformations
 - text
@@ -59,6 +60,9 @@ Next:
 - account page should load book list dynamically  $(window).unload(function(){});
 - Bookshelf in account
 - callback parameter for jsonp templates, make them cacheable
+
+Nov 18
+commented out photo detection, no benefit yet, but slow
 
 Nov 15
 Page photoList migrated to itemList. Page is no longer a list of images,
