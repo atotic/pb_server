@@ -45,7 +45,6 @@ book template:
 - users can build derivative works.
 
 Next:
-- bug: cannot drop just-uploaded images into pages
 - commands: enable/disable GUI
 - select different page elements, apply transformations
 - text
@@ -59,6 +58,14 @@ Next:
 - account page should load book list dynamically  $(window).unload(function(){});
 - Bookshelf in account
 - callback parameter for jsonp templates, make them cacheable
+
+Next
+- bug: page sorting
+- library updates: jquery 1.9, transit
+
+Jan 17:
+Jquery 1.9 upgrade
+Bug fixin
 
 Jan 16:
 Photo id migration to internal book ids complete

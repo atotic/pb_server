@@ -550,7 +550,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 					return (value === null || value === undefined) ? "" : value;
 				});
 			}
-			var dom = $(text);
+			var dom = $($.parseHTML(text)).filter(function() { return this.nodeType == 1});
 			if (options.assignId)
 				dom.attr('id', templateId);
 			return dom.get(0);

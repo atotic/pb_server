@@ -225,7 +225,7 @@ class SvegApp < Sinatra::Base
 						"editor.gui.tools.js"
 						)
 				elsif arg.end_with?("js")
-					arg = "jquery-1.8.3.js" if arg.eql? "jquery.js"
+					arg = "jquery-1.9.0.js" if arg.eql? "jquery.js"
 					retVal += "<script src='/js/#{arg}'></script>\n"
 				elsif arg.end_with?("css")
 					if arg.eql? 'bootstrap.css'

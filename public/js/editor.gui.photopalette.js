@@ -155,6 +155,8 @@
 					var d = model.jsDate;
 					if (d)
 						infoTxt = d.getFullYear() + "/" + (d.getMonth() + 1) + "/" + d.getDate();
+					else
+						infoTxt = "n/a";
 					break;
 				case 'added':
 					break;
