@@ -1,5 +1,29 @@
 // editor.pb.book.js
 
+/*
+	Book => {
+		_dirty:
+		_localId: each browser session has a unique id, used to avoid duplicate patches
+		_locked: no save, true if book is corrupted
+		_proxies: {id => proxy } mapping. There are proxies for pages/photos
+		_stream: stream to server
+		serverData: book as stored on the server
+ 			id: book database id
+ 			last_diff: id of the last diff that was applied to this document
+ 			document:
+ 				bookTemplateId: book template
+ 				pageList: [page_id*]
+ 				pages: {
+ 					page_id => Page object
+ 					}
+ 				photoList: [photo_local_id*]
+ 				photoMap: {
+ 					photo_local_id => server_id
+ 				}
+		localData: serverData with local mods
+			}*
+		}
+*/
 // PB.Book
 (function(scope) {
 "use strict";
@@ -74,6 +98,9 @@
 		get bookTemplateId() {
 			return this.localData.document.bookTemplateId;
 		},
+		serverPhotoId: function(photoId) {
+			return this.localData.document.photoMap[photoId];
+		},
 		_getPageProxy: function(id) {
 			if (id === undefined)
 				return undefined;
@@ -103,7 +130,6 @@
 				}
 				else
 					this._proxies[id] = new PB.PhotoProxy(id, this);
-			// Non-existent proxies
 			return this._proxies[id];
 		},
 		photoResolver: function() {
@@ -162,39 +188,29 @@
 		_pageChanged: function(page, options) {
 			this._dirty = true;
 		},
-		_patchPhotoIdChange: function(photo, propName, options) {
-//			console.log("patching photo ids", photo.id, options.newId);
-			PB.unbindChangeListener(photo.id, this);
-			// Patch the proxy
-			if (photo.id in this._proxies) {
-				var proxy = this._proxies[photo.id];
-				delete this._proxies[photo.id];
-				proxy.id = options.newId;
-				if (! (proxy.id in this._proxies)) // duplicate detection
-					this._proxies[proxy.id] = proxy;
-			}
-			// Patch the photoList
-			var currentIdx = this.localData.document.photoList.indexOf(photo.id);
-			if (currentIdx == -1)
-				throw "Photo not in photoList changing id";
-			var newIdx = this.localData.document.photoList.indexOf(options.newId);
-			if (newIdx == -1)
-				this.localData.document.photoList[currentIdx] = options.newId;
-			else {
-				// if the photo was a duplicate, and in our list, just remove it
-				this.localData.document.photoList.splice(currentIdx, 1);
-				PB.broadcastChange(this, 'photoList', options);
-			}
-			// Patch all the rough pages
-			var pages = this.pageList;
-			for (var i=0; i< pages.length; i++) {
-				try {
-					this.page(pages[i]).patchPhotoIdChange(photo, options.newId);
+		_patchPhotoIdChange: function(oldServerId, newServerId) {
+			console.log("patching photo ids", oldServerId, newServerId);
+			// Patch photoMap
+			var oldLocalId;
+			var duplicatePhotoId = false;
+			for (var p in this.localData.document.photoMap) {
+				if (this.localData.document.photoMap[p] == oldServerId) {
+					oldLocalId = p;
+					this.localData.document.photoMap[p] = newServerId;
 				}
-				catch(ex) {
-					console.log(this.page(pages[i]));
-					debugger;
+				else if (this.localData.document.photoMap[p] == newServerId)
+					duplicatePhotoId = p;
+			}
+			if (duplicatePhotoId) {
+				debugger;
+				// Replace photo in all pages with the duplicate
+				var pageList = this.pageList;
+				for (var i=0; i<pageList.length; i++) {
+					this.page(pageList[i]).swapPhoto(oldLocalId, duplicatePhotoId);
 				}
+				// Remove photo from our photo list and map
+				this.localData.document.photoList.splice(this.localData.document.photoList.indexOf(oldLocalId), 1);
+				delete this.localData.document.photoMap[oldLocalId];
 			}
 		},
 		handleChangeEvent: function(model, propName, options) {
@@ -323,9 +339,8 @@
 		getSaveDeferred: function() {
 			// safeguard, do not save book with temporary photo ids
 			// wait until all images have been saved
-			for (var i=0; i<this.localData.document.photoList.length; i++) {
-				var id = this.localData.document.photoList[i];
-				if (typeof id == 'string' && id.match(/temp/)) {
+			for (var p in this.localData.document.photoMap) {
+				if (typeof p == 'string' && p.match(/temp/)) {
 					// console.log("trying to save with temp ids", id);
 					return null;
 				}
@@ -378,21 +393,19 @@
 		addLocalPhoto: function(localFile, options) {
 			try { // Local file creation can fail
 				var serverPhoto = PB.ServerPhotoCache.createFromLocalFile(localFile);
-				this.localData.document.photoList.push(serverPhoto.id);
+				var localId = this.generateId();
+				var THIS = this;
+				serverPhoto.addIdChangeListener(function(oldId, newId) { THIS._patchPhotoIdChange(oldId, newId)});
+				this.localData.document.photoList.push(localId);
+				this.localData.document.photoMap[localId] = serverPhoto.id;
 				this._dirty = true;
-				PB.bindChangeListener(serverPhoto.id, this);
 				PB.broadcastChange(this, 'photoList', options);
-				return serverPhoto;
+				return this.photo(localId);
 			}
 			catch(e) {
 				console.log("addLocalPhoto fail",e);
 				return null;
 			}
-		},
-		addPhotoById: function(photoId, options) {
-			this.localData.document.photoList.push(photoId);
-			PB.bindChangeListener(photoId, this);
-			PB.broadcastChange(this, 'photoList', options);
 		},
 		removePhoto: function(photo, options) {
 			//
@@ -412,6 +425,7 @@
 				return;
 			}
 			this.localData.document.photoList.splice(index, 1);
+			delete this.localData.document.photoMap[photo.id];
 			this._dirty = true;
 			PB.broadcastChange(this, 'photoList', options);
 		},

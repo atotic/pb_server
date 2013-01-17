@@ -46,7 +46,6 @@ book template:
 
 Next:
 - bug: cannot drop just-uploaded images into pages
-- bug: broadcasting itemList updates
 - commands: enable/disable GUI
 - select different page elements, apply transformations
 - text
@@ -60,6 +59,23 @@ Next:
 - account page should load book list dynamically  $(window).unload(function(){});
 - Bookshelf in account
 - callback parameter for jsonp templates, make them cacheable
+
+Jan 16:
+Photo id migration to internal book ids complete
+
+Jan 14:
+Book should reference photos indirectly (photoMap)
+Photos broadcast their changes through listeners
+ServerPhoto no longer PB.broadcast, now listener pattern
+ServerPhoto broadcasts id changes with addIdChangeListener
+Removed changeListeners from PB
+Testing the image changes
+
+Jan 8:
+got everything running again, upgrade bootstrap to 2.2.2
+
+2013:
+Long break, Ingrid pneumonia, thanksgiving, parents, sinus infection, christmas, christmas break, lenka gone, oy!
 
 Nov 18
 commented out photo detection, no benefit yet, but slow

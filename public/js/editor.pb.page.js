@@ -134,8 +134,10 @@ text_id => Points to an object in page: page.texts[text_id]. Page unique, not gl
 			return PB.Template.cached(this.layoutId).generateDom(this, {resolution: resolution});
 		},
 		guessItemType: function(item) {
-			if ('_serverPhoto' in item)
+			if (item instanceof PB.PhotoProxy)
 				return 'photo';
+			else if (item instanceof PB.ServerPhoto)
+				return 'serverPhoto';
 			else {
 				console.warn("Unknown item type:", item);
 				throw new Error("Unknown item type");
@@ -208,6 +210,16 @@ text_id => Points to an object in page: page.texts[text_id]. Page unique, not gl
 		},
 		removePhoto: function(photo, options) {
 			this.removeItem(photo, options);
+		},
+		swapPhoto: function(oldId, newId) {
+			var itemList = this._itemList;
+			var idx = itemList.indexOf(oldId);
+			if (idx == -1)
+				return;
+			var items = this._items;
+			itemList[idx] = newId;
+			items[newId] = items[oldId];
+			delete items[oldId];
 		},
 		get photoList() {
 			debugger;

@@ -137,6 +137,7 @@
 
 	// Save before navigating away
 	window.onbeforeunload = function(e) {
+		return;	// DEBUGGING ONLY
 		NetworkErrorRetry.resetRetry();
 		Uploader.saveAll();
 		if (Uploader.hasRequests()) {

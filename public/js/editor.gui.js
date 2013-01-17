@@ -237,31 +237,9 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				if (idx != -1)
 					this[optNames[idx]] = eqlSplit[1];
 			}
-		},
-		_listeners: [],
-		// listener: function(propertyName, newValue)
-		addListener: function(listener) {
-			var idx = this._listeners.indexOf(listener);
-			if (idx == -1)
-				this._listeners.push(listener);
-		},
-		removeListener: function(listener) {
-			var idx = this._listeners.indexOf(listener);
-			if (idx != -1)
-				this._listeners.splice(idx, 1);
-			else
-				console.warn('GUI.Options removing non-existent listener',listener);
-		},
-		broadcast: function(propName, propVal) {
-			try {
-				for (var i=0; i<this._listeners.length; i++)
-					this._listeners[i](propName, propVal);
-			}
-			catch(ex) {
-				console.error("Unexpected error broadcasting options", ex);
-			}
 		}
 	};
+	$.extend(Options, PB.ListenerMixin);
 	scope.Options = Options;
 })(GUI);
 
@@ -427,7 +405,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		},
 		setDataTransferFlavor: function(dataTransfer) {
 			var isFile;
-			(!dataTransfer.types)
+			if (!dataTransfer.types)
 				return;
 			if ('contains' in dataTransfer.types)	// Firefox
 				isFile = dataTransfer.types.contains("Files");

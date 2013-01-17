@@ -110,7 +110,6 @@
 			// Ignore unless drag has the right flavor
 			if (!this.hasDragFlavors())
 				return;
-
 			ev.preventDefault();
 			// Find the current drop location
 			var newTarget = null;

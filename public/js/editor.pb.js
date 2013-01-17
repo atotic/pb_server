@@ -9,8 +9,6 @@ window.PB // Generic utilities
 (function(window) {
 "use strict";
 
-	var changeListeners = {};
-
 	var PB = {
 		init: function() {
 			$.event.special[this.MODEL_CHANGED] = {noBubble: true};
@@ -27,6 +25,9 @@ window.PB // Generic utilities
 			}
 			return randomString;
 		},
+
+		// changes to DOM broadcasts
+
 		MODEL_CHANGED: 'modelchanged',
 		startChangeBatch: function() {
 			this._changeBatch = [];
@@ -67,27 +68,6 @@ window.PB // Generic utilities
 				} catch(ex) {
 					debugger;
 				}
-				if (model.id in changeListeners)
-					for (var i=0; i<changeListeners[model.id].length; i++)
-						changeListeners[model.id][i].handleChangeEvent(model, propName, options);
-			}
-		},
-		bindChangeListener: function(id, listener) {
-			if (id in changeListeners)
-				changeListeners[id].push(listener);
-			else
-				changeListeners[id] = [listener];
-		},
-		unbindChangeListener: function(id, listener) {
-			if (id in changeListeners) {
-				var idx = changeListeners[id].indexOf(listener);
-				if (idx != -1) {
-					changeListeners[id].slice(idx, 1);
-					if (changeListeners[id].length === 0)
-						delete changeListeners[id];
-				}
-				else
-					console.warn("could not unregister listener");
 			}
 		}
 	};
@@ -133,5 +113,38 @@ window.PB // Generic utilities
 	};
 	scope.ModelMap = ModelMap;
 
+})(PB);
+
+// ListenerMixin: extend objects with addListener/removeListener pattern
+(function(scope) {
+"use strict";
+	var ListenerMixin = {
+		// listener: function(propertyName, newValue)
+		addListener: function(listener) {
+			if (!this._listeners) this._listeners = [];
+			var idx = this._listeners.indexOf(listener);
+			if (idx == -1)
+				this._listeners.push(listener);
+		},
+		removeListener: function(listener) {
+			if (!this._listeners) return;
+			var idx = this._listeners.indexOf(listener);
+			if (idx != -1)
+				this._listeners.splice(idx, 1);
+			else
+				console.warn('Removing non-existent listener',listener);
+		},
+		broadcast: function(propName, propVal) {
+			if (!this._listeners) return;
+			try {
+				for (var i=0; i<this._listeners.length; i++)
+					this._listeners[i](propName, propVal);
+			}
+			catch(ex) {
+				console.error("Unexpected error broadcasting options", ex);
+			}
+		}
+	};
+	scope.ListenerMixin = ListenerMixin;
 })(PB);
 

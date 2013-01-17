@@ -17,8 +17,13 @@
 
 	PhotoProxy.prototype = {
 		get p() {
-			if (!('_serverPhoto' in this))
-				this._serverPhoto = PB.ServerPhotoCache.get(this.id);
+			if (!('_serverPhoto' in this)) {
+				this._serverPhoto = PB.ServerPhotoCache.get(this.book.serverPhotoId(this.id));
+				var THIS = this;
+				this._serverPhoto.addListener( function(propName, propVal) {
+					PB.broadcastChange(THIS, propName);
+				});
+			}
 			return this._serverPhoto;
 		},
 		getUrl: function(size) {
@@ -71,10 +76,11 @@
 				return cache[id];
 			}
 		},
-		replaceTempId: function(photo, newId) {
-			delete cache[photo.id];
+		serverPhotoIdChanged: function(oldId, newId) {
+			var photo = cache[oldId];
+			delete cache[oldId];
 			photo._id = newId;
-			if (! newId in cache)
+			if (!newId in cache)
 				cache[newId] = photo;
 			else
 				console.log('duplicate photo detection');
@@ -82,6 +88,8 @@
 		createFromLocalFile: function(file) {
 			var id = tempPrefix + PB.randomString(5);
 			cache[id] = new ServerPhoto(id);
+			var THIS = this;
+			cache[id].addIdChangeListener(function(oldId, newId) { THIS.serverPhotoIdChanged(oldId, newId)});
 			cache[id].uploadLocalFile(file);
 			return cache[id];
 		},
@@ -90,7 +98,7 @@
 			cache[json.id].loadFromJson(json, true);
 			return cache[json.id];
 		},
-		sortPhotos: function(photos) {
+		sortPhotos: function(photos,book) {
 			function dateComparator(a,b) {
 				var a_date = a.photo.jsDate;
 				var b_date = b.photo.jsDate;
@@ -137,7 +145,7 @@
 				return photos;
 			var modelArray = [];
 			for (var i=0; i<photos.length; i++)
-				modelArray.push({photo: PB.ServerPhotoCache.get( photos[i]), loc: i});
+				modelArray.push({photo: PB.ServerPhotoCache.get( book.serverPhotoId(photos[i])), loc: i, id: photos[i]});
 			var compareFn;
 			switch (GUI.Options.photoSort) {
 				case 'added': compareFn = addedComparator; break;
@@ -146,7 +154,7 @@
 				default: console.error("unknown compare fn for sortPhotos");break;
 			}
 			modelArray.sort(compareFn);
-			return modelArray.map(function(a) { return a.photo.id});
+			return modelArray.map(function(a) { return a.id});
 		}
 	}
 
@@ -195,8 +203,7 @@
  * ServerPhoto represents photo stored on server (PB::Photo class)
  * Functionality:
  * - objects last forever, and are stored in the cache
- * - objects can be patched, and patches are broadcast to modelref
- * - modelref
+ * - objects modifications are broadcast to listeners
  */
 	ServerPhoto.prototype = {
 		SIZE_LIMIT: 10000000,	// Upload size limit
@@ -206,7 +213,7 @@
 		},
 		set status(msg) {
 			this._status = msg;
-			PB.broadcastChange(this, 'status');
+			this.broadcast('status', msg);
 		},
 		get status() {
 			return this._status;
@@ -216,7 +223,7 @@
 		},
 		set progress(percent) {
 			this._progress = percent;
-			PB.broadcastChange(this, 'progress');
+			this.broadcast('progress', percent);
 		},
 		get doNotSave() {
 			return this._doNotSave;
@@ -312,9 +319,9 @@
 			this._dataUrl = url;
 			this._data_w = width;
 			this._data_h = height;
-			PB.broadcastChange(this, 'icon_url');
-			PB.broadcastChange(this, 'display_url');
-			PB.broadcastChange(this, 'original_url');
+			this.broadcast('icon_url');
+			this.broadcast('display_url');
+			this.broadcast('original_url');
 		},
 		_setDataUrlFromImage: function(img) {
 			this._dataUrlCreateInProgress = false;
@@ -461,14 +468,22 @@
 					}
 				});
 		},
+		addIdChangeListener: function(listener) {
+			if (!this._idChangeListeners)
+				this._idChangeListeners = [];
+			this._idChangeListeners.push(listener);
+		},
 		// When temporary id changes, change is broadcast to all the listeners
 		// with options {newId: new_value}. Listeners should reregister their interest
 		loadFromJson: function(json, noBroadcast) {
 			if ('id' in json && this.id != json.id) {
 				if (! /^temp/.exec(this.id))
 					throw "Photo id is immutable once assigned (unless temp id)";
-				PB.broadcastChange(this, 'id', {newId: json.id});
-				ServerPhotoCache.replaceTempId(this, json.id);
+				if (this._idChangeListeners) {
+					var oldId = this.id;
+					for (var i=0; i<this._idChangeListeners.length; i++)
+						this._idChangeListeners[i](oldId, json.id);
+				}
 			}
 			var nonBroadcastProps = ['original_w','original_h','display_w','display_h','icon_w','icon_h'];
 			for (var i=0; i<nonBroadcastProps.length; i++)
@@ -480,7 +495,7 @@
 						 || ( (props[i] in this) && this[props[i]] != json[props[i]])) {
 					this[props[i]] = json[props[i]];
 					if (!noBroadcast)
-						PB.broadcastChange(this, props[i]);
+						this.broadcast(props[i]);
 				}
 			'exif'
 			if ('display_url' in this)	// clean up generated image
@@ -543,5 +558,8 @@
 			return xhr;
 		}
 	}
+	$.extend(ServerPhoto.prototype, PB.ListenerMixin);
+
+	scope.ServerPhoto = ServerPhoto;
 	scope.ServerPhotoCache = ServerPhotoCache;
 })(PB);

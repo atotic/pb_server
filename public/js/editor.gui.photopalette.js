@@ -288,7 +288,7 @@
 				function(el, i) { return $.data(el,'model_id'); });
 
 			var newPhotos = GUI.Options.photoFilter == 'all' ? bookModel.photoList : bookModel.unusedPhotoList;
-			newPhotos = PB.ServerPhotoCache.sortPhotos(newPhotos);
+			newPhotos = PB.ServerPhotoCache.sortPhotos(newPhotos, bookModel);
 			var diff = JsonDiff.diff(oldPhotos, newPhotos);
 			for (var i=0; i<diff.length; i++) {
 				var targetPath = JsonPath.query(oldPhotos, diff[i].path, {just_one: true, ghost_props: true});

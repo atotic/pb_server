@@ -21,6 +21,7 @@ class Book < Sequel::Model(:books)
 {
 	"title": #{self.title.to_json},
 	"photoList": [],
+	"photoMap": {},
 	"pageList": ["cover", "cover-flap", "back-flap", "back","P1","P2","P3","P4"],
 	"pages": {
 		"cover": { "id": "cover", "itemList": [], "items": {} },
@@ -60,9 +61,9 @@ eos
 	end
 
 	def to_json(*a)
-		# TODO insert photos into document
-	photoList = JSON.parse(self.document)['photoList']
-	photoJson = "[" + PB::Photo.where(:id=>photoList).map{|x| x.to_json}.join(',') + "]"
+		doc = JSON.parse(self.document)
+		photoIds = doc['photoList'].map { |id| doc['photoMap'][id]}
+		photoJson = "[" + PB::Photo.where(:id=>photoIds).map{|x| x.to_json}.join(',') + "]"
 <<-eos
 {
 	"id": #{self.pk},
