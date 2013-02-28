@@ -32,6 +32,9 @@ Excellent CSS effects: bounce, rotate, etc. If I ever need visual candy http://b
 CSS arrow please: http://cssarrowplease.com/
 
 JS
+Secrets of layout: how does DOM access interracts with layout: http://kellegous.com/j/2013/01/26/layout-performance/
+
+WebDriver: testing framework that's a W3 standard (can be used on selenium too)
 Detect node insertion/removal with JS/CSS (animation complete callback)
 http://blog.streak.com/2012/11/how-to-detect-dom-changes-in-css.htmlhttp://davidwalsh.name/detect-node-insertion
 pdf.js: http://people.mozilla.com/~ydelendik/pdfjs-ttf-2012.pdf
@@ -105,6 +108,7 @@ Free ssl cert https://www.startssl.com/?app=40
 Use bcrypt to store passwords http://codahale.com/how-to-safely-store-a-password/
 
 Servers
+Vaurien: chaos proxy http://vaurien.readthedocs.org/en/1.5/
 Deployment: all the web services csstricks uses:
 http://css-tricks.com/web-developer-economics-monthly-service-costs/
 Rackspace Cloudfiles
@@ -124,6 +128,7 @@ Chrome based javascript browser, has PDF generation capability: http://code.goog
 http://www.exiv2.org/?utm_source=dlvr.it&utm_medium=twitter
 
 MOBILE
+Mobile debugger: https://itunes.apple.com/us/app/mihtool/id584739126?ls=1&mt=8
 Webkit mobile guide http://developer.apple.com/library/ios/#documentation/AppleApplications/Reference/SafariWebContent/HandlingEvents/HandlingEvents.html
 Viewport scoller https://github.com/zynga/scroller
 Developing a nice mobile site: http://davidbcalhoun.com/2011/mobile-performance-manifesto
@@ -186,6 +191,8 @@ walmart & walgreens both use snapfish photo book creation software.
 Adorama: seems to have their own book solution based upon flash
 
 BUSINESS
+Pastbook: social memories in book form http://hub.pastbook.com/en/
+Move your photos anywhere http://pi.pe/
 Weavora: they have a nice set of templates for bootstrap, might be a good choice for outsourcing
 http://weavora.com/
 Hiring at angellist: developers like star founders, money, education: http://numeratechoir.com/why-developers-arent-interested-in-your-startup/?utm_source=twitter&utm_medium=social&utm_content=52ce1909-7967-4970-b509-1dc7af2f3a92

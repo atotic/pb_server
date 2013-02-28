@@ -231,13 +231,6 @@ text_id => Points to an object in page: page.texts[text_id]. Page unique, not gl
 				return THIS.book.photo(item.resource_id);
 			});
 		},
-		patchPhotoIdChange: function(photo, newId) {
-			var THIS = this;
-			this.itemsByType('photo').forEach(function(item) {
-				if (item.resource_id == photo.id)
-					item.resource_id = newId;
-			});
-		},
 		remove: function(options) {
 			this.book.deleteRoughPage(this, options);
 		}
