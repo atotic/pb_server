@@ -662,6 +662,14 @@ show: function() {
 		get y() {
 			return this.top;
 		},
+		round: function() {
+			return new Rect({
+				top: Math.round(this.top),
+				left: Math.round(this.left),
+				width: Math.round(this.width),
+				height: Math.round(this.height)
+			});
+		},
 		union: function(rectOrArray) {
 			var rArray = $.isArray(rectOrArray) ? rectOrArray :
 				rectOrArray ? [rectOrArray] : [];

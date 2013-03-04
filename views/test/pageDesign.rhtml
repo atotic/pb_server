@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>PageDesignTransformation</title>
+<title>PageDesign Mockup</title>
 
 <%= asset_link("application.css") %>
 <%= asset_link("jquery.js", "application.js") %>
@@ -15,12 +15,46 @@
 <style type="text/css">
 </style>
 <script type="text/javascript">
-/*
-.design-book-page-left
-	.design-page, css transform(scale), width, height
-		.design-photo
-*/
 "use strict"
+
+/*
+bugfix: make all pixel positions in integers to avoid subpixel errors
+*/
+
+var IntegerArithmetic = {
+	// line gets divided into segmentCount,
+	// segments are forced to integer length
+	// return: [segmentCount + 1] of segment terminating points
+	segmentLine: function(line, segmentCount) {
+		if (isNaN(segmentCount) || segmentCount == 0)
+			return [];
+		var rem = line % segmentCount;
+		var segLength = Math.round((line - rem) / segmentCount);
+		var segments = new Array(segmentCount + 1);
+		segments[0] = 0;
+		for (var i=1; i<= segmentCount; i++) {
+			var padding = 0;
+			if (rem > 0) { // pad each segment by 1 until no more extra pixels
+				padding += 1;
+				rem -=1;
+			}
+			segments[i] = segments[i-1] + segLength + padding;
+		}
+		return segments;
+	}
+}
+
+var ResourceCache = {
+	cache: {},
+	put: function(id, res) {
+		this.cache[id] = res;
+	},
+	get: function(res_url) {
+		if (id in this.cache)
+			return cache[id];
+		throw "No such resource " + id;
+	}
+}
 
 var PhotoCache = {
 	cache: {},
@@ -46,6 +80,7 @@ var Photo = function(id, url, width, height) {
 	this.width = width;
 	this.height = height;
 };
+
 PhotoCache.put(new Photo('h1', '/img/h1.png', 723, 541));
 PhotoCache.put(new Photo('h2', '/img/h2.png', 717, 538));
 PhotoCache.put(new Photo('h3', '/img/h3.png', 751, 561));
@@ -87,8 +122,10 @@ var GenericDesign = {
 		var totalCount = photoCount + textCount;
 		var tileCountH = Math.round(Math.sqrt(totalCount * width / height));
 		var tileCountV = Math.ceil(totalCount / tileCountH);
-		var tileWidth = width / tileCountH;
-		var tileHeight = height / tileCountV;
+		var widthSegments = IntegerArithmetic.segmentLine(width, tileCountH);
+		var heightSegments = IntegerArithmetic.segmentLine(height, tileCountV);
+//		var tileWidth = width / tileCountH;
+//		var tileHeight = height / tileCountV;
 		var design = [];
 		for (var v=0; v < tileCountV; v++) {
 			for (var h=0; h < tileCountH; h++) {
@@ -96,11 +133,12 @@ var GenericDesign = {
 				if (imgIdx >= totalCount)
 					break;
 				var assetData = {
-					top: v * tileHeight,
-					left: h * tileWidth,
-					width: tileWidth,
-					height: tileHeight
+					top: heightSegments[v],// v * tileHeight,
+					left: widthSegments[h], //h * tileWidth,
+					height: heightSegments[v+1] - heightSegments[v], //tileHeight
+					width: widthSegments[h+1] - widthSegments[h] //tileWidth,
 				}
+				console.log(assetData);
 				if (imgIdx < photoCount) {
 					assetData.type = 'photo';
 					design.push(assetData);
@@ -122,9 +160,26 @@ var GenericDesign = {
 	}
 }
 
+var GenericFrameDesign = {
+	id: 'genericFrameDesign',
+	getPageLayout: function(assetData, width, height) {
+		var layout = GenericDesign.getPageLayout(assetData, width, height);
+		var design = layout.design;
+		var frameOffset = 10;
+		for (var i=0; i < design.length; i++) {
+			design[i].top += frameOffset;
+			design[i].left += frameOffset;
+			design[i].width -= frameOffset * 2;
+			design[i].height -= frameOffset * 2;
+		}
+		return layout;
+	},
+}
+
 var Book = {
 	designs: {
-		genericDesign: GenericDesign
+		genericDesign: GenericDesign,
+		genericFrameDesign: GenericFrameDesign
 	},
 	designById: function(id) {
 		if (id in this.designs)
@@ -203,7 +258,7 @@ BookPage.prototype = {
 			var photo = PhotoCache.get(assetData.photoId)
 			var photoRect = new GUI.Rect(photo);
 			var scale = photoRect.fillInside(dd);
-			photoRect = photoRect.scaleBy(scale).centerIn(dd);
+			photoRect = photoRect.scaleBy(scale).centerIn(dd).round();
 			$.extend(this.p.assetData[this.p.assets[i]],{
 				type: 'photo',
 				top: dd.top,
@@ -252,7 +307,7 @@ BookPage.prototype = {
 			});
 		// overlapFudge hack grows images by .5 of a pixel
 		// without it, there could be a small gap between adjacent images
-		var overlapFudge = 0.5;
+		var overlapFudge = 0;
 		var designPhotoInner = $(document.createElement('div'))
 			.addClass('design-photo-inner')
 			.css({
@@ -273,6 +328,11 @@ BookPage.prototype = {
 		designPhoto.append(designPhotoInner.append(img));
 		return designPhoto;
 	},
+/*
+.design-book-page-left
+	.design-page, css transform(scale), width, height
+		.design-photo
+*/
 	generateDom: function(options) {
 		options = $.extend({
 			sync: false,	//
@@ -333,6 +393,7 @@ $(document).ready(function() {
 	<button onclick="Util.removePhoto()">Remove photo</button>
 	<button onclick="Util.addText()">Add text</button>
 	<button onclick="Util.setDesign('genericDesign')">Set generic design</button>
+	<button onclick="Util.setDesign('genericFrameDesign')">Set generic frame design</button>
 
 <div class='design-book-page-left'>
 </div>
