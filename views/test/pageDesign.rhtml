@@ -17,9 +17,6 @@
 <script type="text/javascript">
 "use strict"
 
-/*
-bugfix: make all pixel positions in integers to avoid subpixel errors
-*/
 
 var IntegerArithmetic = {
 	// line gets divided into segmentCount,
@@ -44,17 +41,6 @@ var IntegerArithmetic = {
 	}
 }
 
-var ResourceCache = {
-	cache: {},
-	put: function(id, res) {
-		this.cache[id] = res;
-	},
-	get: function(res_url) {
-		if (id in this.cache)
-			return cache[id];
-		throw "No such resource " + id;
-	}
-}
 
 var PhotoCache = {
 	cache: {},
@@ -79,18 +65,8 @@ var Photo = function(id, url, width, height) {
 	this.url = url;
 	this.width = width;
 	this.height = height;
-};
+}
 
-PhotoCache.put(new Photo('h1', '/img/h1.png', 723, 541));
-PhotoCache.put(new Photo('h2', '/img/h2.png', 717, 538));
-PhotoCache.put(new Photo('h3', '/img/h3.png', 751, 561));
-PhotoCache.put(new Photo('h4', '/img/h4.png', 718, 538));
-PhotoCache.put(new Photo('h5', '/img/h5.png', 710, 533));
-PhotoCache.put(new Photo('h6', '/img/h6.png', 719, 534));
-PhotoCache.put(new Photo('v1', '/img/v1.png', 785, 1127));
-PhotoCache.put(new Photo('v2', '/img/v2.png', 483, 646));
-PhotoCache.put(new Photo('v3', '/img/v3.png', 484, 650));
-PhotoCache.put(new Photo('v4', '/img/v4.png', 482, 644));
 
 var BlankPage = {
 	background: {
@@ -98,94 +74,157 @@ var BlankPage = {
 	assets: [],
 	assetData: {
 	},
-	designId: null,
+	layoutId: null,
 	width: 768,
 	height: 512,
-	hasDesign: false
+	hasLayout: false
 
 }
-
-var GenericDesign = {
-	id: 'genericDesign',
-	getPageLayout: function(assetData, width, height) { 	// assetData is read-only
-		if (!width || width < 50) {	// Enforce minimum
-			debugger;
-			width = 50;
-		}
-		if (!height || height < 50) {
-			debugger;
-			height = 50;
-		}
-		// Generate optimum tiles
-		var photoCount = AssetDataUtils.photoCount(assetData);
-		var textCount = AssetDataUtils.textCount(assetData);
-		var totalCount = photoCount + textCount;
-		var tileCountH = Math.round(Math.sqrt(totalCount * width / height));
-		var tileCountV = Math.ceil(totalCount / tileCountH);
-		var widthSegments = IntegerArithmetic.segmentLine(width, tileCountH);
-		var heightSegments = IntegerArithmetic.segmentLine(height, tileCountV);
-//		var tileWidth = width / tileCountH;
-//		var tileHeight = height / tileCountV;
-		var design = [];
-		for (var v=0; v < tileCountV; v++) {
-			for (var h=0; h < tileCountH; h++) {
-				var imgIdx = v * tileCountH + h;
-				if (imgIdx >= totalCount)
-					break;
-				var assetData = {
-					top: heightSegments[v],// v * tileHeight,
-					left: widthSegments[h], //h * tileWidth,
-					height: heightSegments[v+1] - heightSegments[v], //tileHeight
-					width: widthSegments[h+1] - widthSegments[h] //tileWidth,
-				}
-				console.log(assetData);
-				if (imgIdx < photoCount) {
-					assetData.type = 'photo';
-					design.push(assetData);
-				}
-				else {
-					assetData.type = 'text';
-					design.push(assetData);
-				}
-			}
-		}
+// what every layout class should look like
+var AbstractLayout = {
+	id: '',
+	// assetData from book-page, read-only
+	// page width/height 
+	// options are layout-dependent (ex inset....)
+	getPageLayout: function(assetData, width, height, options) {
 		return {
-			design: design,
+			design: [ {
+				top: 0, left: 0, width: 0, height: 0, type: 'photo'
+			}],
 			background: {
-				css: {
-					backgroundColor: 'teal'
+				id: '',
+				data: {
+					// background-specific data
 				}
 			}
 		}
 	}
-}
+};
 
-var GenericFrameDesign = {
-	id: 'genericFrameDesign',
-	getPageLayout: function(assetData, width, height) {
-		var layout = GenericDesign.getPageLayout(assetData, width, height);
-		var design = layout.design;
-		var frameOffset = 10;
-		for (var i=0; i < design.length; i++) {
-			design[i].top += frameOffset;
-			design[i].left += frameOffset;
-			design[i].width -= frameOffset * 2;
-			design[i].height -= frameOffset * 2;
-		}
-		return layout;
+var ThemeCache = {
+	cache: {},
+	get: function(id) {
+		if (id in this.cache) 
+			return this.cache[id];
+		throw "No such theme " + id;
 	},
-}
+	put: function(theme) {
+		if (theme.id in this.cache) 
+			throw "theme already defined " + theme.id; 
+		this.cache[theme.id] = theme;
+	},
+	themeRegex: new RegExp("^theme\:\/\/([^\/]+)/(.*)$"),
+	// Resource url scheme
+	// theme://theme_id/:res_type/:res_id
+	resource: function(resUrl) {
+		var match = this.themeRegex.exec(resUrl);
+		if (!match) {
+			var err = "Malformed theme resource url " + resUrl; console.error(err); throw err;
+		}
+		var themeId = match[1],
+			pathStr = match[2];
+		var theme = this.cache[themeId];
+		if (!theme) {
+			var err = "Theme not found " + resUrl; console.error(err); throw err;
+		}
+		var p,
+			res = theme,
+			path = pathStr.split('/');
+		while (p = path.shift()) {
+			res =  res[p];
+			if (res === undefined) {
+				var err = "Resource not found  " + resUrl + " problem: " + p; console.error(err); throw err;
+			}
+		}
+		return res;
+	}
+};
+
+
+// Base Theme
+(function(themeCache) {
+	var PackLayout = {
+		id: 'packLayout',
+		getPageLayout: function(assetData, width, height, options) {
+			options = $.extend({inset: 0}, options);
+			width = Math.max(width - 2 * options.inset, 0);
+			height = Math.max(height - 2 * options.inset, 0);
+			if (!width || width < 50 || !height || height < 50) {
+				console.error('getPageLayout width/height too small', width, height);
+				return;
+			}
+			// Generate optimum tiles
+			var photoCount = AssetDataUtils.photoCount(assetData);
+			var textCount = AssetDataUtils.textCount(assetData);
+			var totalCount = photoCount + textCount;
+			var tileCountH = Math.round(Math.sqrt(totalCount * width / height));
+			var tileCountV = Math.ceil(totalCount / tileCountH);
+			var widthSegments = IntegerArithmetic.segmentLine(width, tileCountH);
+			var heightSegments = IntegerArithmetic.segmentLine(height, tileCountV);
+			var design = [];
+			for (var v=0; v < tileCountV; v++) {
+				for (var h=0; h < tileCountH; h++) {
+					var imgIdx = v * tileCountH + h;
+					if (imgIdx >= totalCount)
+						break;
+					var assetData = {
+						top: options.inset + heightSegments[v],// v * tileHeight,
+						left: options.inset + widthSegments[h], //h * tileWidth,
+						height: heightSegments[v+1] - heightSegments[v], //tileHeight
+						width: widthSegments[h+1] - widthSegments[h] //tileWidth,
+					}
+					console.log(assetData);
+					if (imgIdx < photoCount) {
+						assetData.type = 'photo';
+						design.push(assetData);
+					}
+					else {
+						assetData.type = 'text';
+						design.push(assetData);
+					}
+				}
+			}
+			return {
+				design: design,
+				background: {
+					css: {
+						backgroundColor: 'teal'
+					}
+				}
+			}
+		}
+	};
+
+	var PackFrameLayout = {
+		id: 'packFrameLayout',
+		getPageLayout: function(assetData, width, height, options) {
+			options = $.extend({
+				frameOffset: 0	
+			}, options);
+			var layout = PackLayout.getPageLayout(assetData, width, height, $.extend({ inset: options.frameOffset}, options));
+			var design = layout.design;
+			for (var i=0; i < design.length; i++) {
+				design[i].top += options.frameOffset;
+				design[i].left += options.frameOffset;
+				design[i].width -= options.frameOffset * 2;
+				design[i].height -= options.frameOffset * 2;
+			}
+			return layout;
+		},
+	};
+
+	var BaseTheme = {
+		id: 'base',
+		layouts: {
+			packLayout : PackLayout,
+			packFrameLayout : PackFrameLayout
+		}
+	 };
+	 themeCache.put(BaseTheme)
+})(ThemeCache);
+
 
 var Book = {
-	designs: {
-		genericDesign: GenericDesign,
-		genericFrameDesign: GenericFrameDesign
-	},
-	designById: function(id) {
-		if (id in this.designs)
-			return this.designs[id];
-		throw "No such design:" + id;
-	}
 }
 
 
@@ -222,7 +261,7 @@ BookPage.prototype = {
 	addAsset: function(id, assetData) {
 		this.p.assets.push(id);
 		this.p.assetData[id] = assetData;
-		this.p.hasDesign = false;
+		this.p.hasLayout = false;
 	},
 	addPhoto: function(id) {
 		var data = {
@@ -233,9 +272,10 @@ BookPage.prototype = {
 	},
 	addText: function() {
 	},
-	setDesign: function(designId) {
-		this.p.designId = designId;
-		this.hasDesign = false;
+	setLayout: function(layoutId, layoutOptions) {
+		this.p.layoutId = layoutId;
+		this.p.layoutOptions = layoutOptions;
+		this.hasLayout = false;
 	},
 	enclosingDom: function(options) {
 		return $(document.createElement('div'))
@@ -246,11 +286,11 @@ BookPage.prototype = {
 				});
 	},
 	layoutFromDesign: function() {
-		this.hasDesign = false;
-		if (!this.p.designId)
+		this.hasLayout = false;
+		if (!this.p.layoutId)
 			return;
-		var design = this.book.designById(this.p.designId);
-		var layout =  design.getPageLayout(this.p.assetData, this.width, this.height);
+		var design = ThemeCache.resource(this.p.layoutId);
+		var layout =  design.getPageLayout(this.p.assetData, this.width, this.height, this.p.layoutOptions);
 		var designData = layout.design;
 		for (var i=0; i<this.p.assets.length; i++) {
 			var dd = designData.shift();
@@ -275,7 +315,7 @@ BookPage.prototype = {
 		}
 		if (layout.background)
 			this.p.background = PB.clone(layout.background);
-		this.p.hasDesign = true;
+		this.p.hasLayout = true;
 	},
 	/*
 	photoAsset JSON{
@@ -328,18 +368,18 @@ BookPage.prototype = {
 		designPhoto.append(designPhotoInner.append(img));
 		return designPhoto;
 	},
-/*
-.design-book-page-left
-	.design-page, css transform(scale), width, height
-		.design-photo
-*/
+	/*
+	.design-book-page-left
+		.design-page, css transform(scale), width, height
+			.design-photo
+	*/
 	generateDom: function(options) {
 		options = $.extend({
 			sync: false,	//
 			editable: false
 		}, options);
 		var encloseDom = this.enclosingDom(options);
-		if (this.p.hasDesign)
+		if (this.p.hasLayout)
 		{	// layout all parts of the page
 			var p = this.p;
 			if (p.background) {
@@ -366,6 +406,18 @@ BookPage.prototype = {
 
 var currentPage = new BookPage(Book, BlankPage);
 var Util = {
+	init: function() {
+		PhotoCache.put(new Photo('h1', '/img/h1.png', 723, 541));
+		PhotoCache.put(new Photo('h2', '/img/h2.png', 717, 538));
+		PhotoCache.put(new Photo('h3', '/img/h3.png', 751, 561));
+		PhotoCache.put(new Photo('h4', '/img/h4.png', 718, 538));
+		PhotoCache.put(new Photo('h5', '/img/h5.png', 710, 533));
+		PhotoCache.put(new Photo('h6', '/img/h6.png', 719, 534));
+		PhotoCache.put(new Photo('v1', '/img/v1.png', 785, 1127));
+		PhotoCache.put(new Photo('v2', '/img/v2.png', 483, 646));
+		PhotoCache.put(new Photo('v3', '/img/v3.png', 484, 650));
+		PhotoCache.put(new Photo('v4', '/img/v4.png', 482, 644));
+	},
 	showPage: function() {
 		var dom = currentPage.generateDom();
 		$('.design-book-page-left').children().remove();
@@ -378,13 +430,14 @@ var Util = {
 		currentPage.layoutFromDesign();
 		this.showPage();
 	},
-	setDesign: function(designId) {
-		currentPage.setDesign(designId);
+	setLayout: function(layoutId, layoutOptions) {
+		currentPage.setLayout(layoutId, layoutOptions);
 		currentPage.layoutFromDesign();
 		this.showPage();
 	}
 }
 $(document).ready(function() {
+	Util.init();
 	Util.showPage();
 });
 </script>
@@ -392,8 +445,8 @@ $(document).ready(function() {
 	<button onclick="Util.addPhoto()">Add photo</button>
 	<button onclick="Util.removePhoto()">Remove photo</button>
 	<button onclick="Util.addText()">Add text</button>
-	<button onclick="Util.setDesign('genericDesign')">Set generic design</button>
-	<button onclick="Util.setDesign('genericFrameDesign')">Set generic frame design</button>
+	<button onclick="Util.setLayout('theme://base/layouts/packLayout')">Set pack layout</button>
+	<button onclick="Util.setLayout('theme://base/layouts/packFrameLayout', {frameOffset: 10})">Set frame layout</button>
 
 <div class='design-book-page-left'>
 </div>
