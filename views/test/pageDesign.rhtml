@@ -6,7 +6,6 @@
 <%= asset_link("jquery.js", "application.js") %>
 <%= asset_link("gradients.js") %>
 <%= asset_link("bootstrap") %>
-<link href='/css/application.css' rel='stylesheet' type='text/css' />
 <link href='/css/editor.css' rel='stylesheet' type='text/css' />
 <script src="/js/editor.pb.js"></script>
 <script src="/js/editor.gui.js"></script>
@@ -35,6 +34,7 @@ all assets {
 	left
 	width
 	height
+	rotate	// angle in degrees
 	frameId
 	frameData
 	frameOffset { tlwh }
@@ -353,28 +353,6 @@ var ThemeCache = {
 	var FramedLayout = {
 		id: 'framedLayout',
 
-		// Converts frameWidth to canonical form [t,r,b,l].
-		canonicalFrameWidth: function(frameWidth) {
-			if (typeof frameWidth == 'number')
-				return [frameWidth, frameWidth, frameWidth, frameWidth];
-			switch(frameWidth.length) {
-				case 1:
-					return [frameWidth[0], frameWidth[0], frameWidth[0], frameWidth[0]];
-					break;
-				case 2:
-					return [frameWidth[0], frameWidth[1], frameWidth[0], frameWidth[1]];
-					break;
-				case 3:
-					return [frameWidth[0], frameWidth[1], frameWidth[2], frameWidth[1]];
-					break;
-				case 4:
-					return frameWidth;
-					break;
-				default:
-					console.error('illegal frame width ', frameWidth);
-					return [0,0,0,0];
-			}
-		},
 		getPageLayout: function(assetData, width, height, options) {
 			options = $.extend({
 				frameWidth: 10,	// syntax same as border-image-width https://developer.mozilla.org/en-US/docs/CSS/border-image-width
@@ -383,8 +361,11 @@ var ThemeCache = {
 			var Utils = ThemeCache.resource('theme://base/utilities');
 			var layout = ThemeCache.resource('theme://base/layouts/gridSpacedLayout').getPageLayout(assetData, width, height, options );
 			var design = layout.design;
+			var rotate = 0;
 			var frameOffset = Utils.canonicalFrameWidth(options.frameWidth);
 			for (var i=0; i < design.length; i++) {
+				design[i].rotate = rotate;
+				rotate += 10;
 				design[i].frameId = 'theme://base/frames/cssFrame';
 				design[i].frameOffset = frameOffset;
 				design[i].frameData = { backgroundColor: 'red'}
@@ -461,7 +442,7 @@ BookPage.prototype = {
 	},
 	enclosingDom: function(options) {
 		return $(document.createElement('div'))
-				.addClass('designPage')
+				.addClass('design-page')
 				.css({
 					width: this.width,
 					height: this.height
@@ -508,6 +489,7 @@ BookPage.prototype = {
 						left: dd.left,
 						width: dd.width,
 						height: dd.height,
+						rotate: dd.rotate,
 						photoRect: {
 							top: photoRect.top,
 							left: photoRect.left,
@@ -529,8 +511,7 @@ BookPage.prototype = {
 						left: dd.left,
 						width: dd.width,
 						height: dd.height,
-						fontId: dd.fontId,
-						fontData: dd.fontData
+						rotate: dd.rotate
 					});
 				}
 				break;
@@ -678,6 +659,9 @@ BookPage.prototype = {
 						break;
 					default:
 						debugger;
+				}
+				if (item.rotate) {
+					itemDom.css('transform', 'rotate(' + item.rotate + 'deg)');
 				}
 				encloseDom.append( itemDom );
 			}

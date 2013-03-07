@@ -238,7 +238,7 @@ class SvegApp < Sinatra::Base
 					retVal += "<script src='http://code.jquery.com/qunit/qunit-git.js'></script>\n"
 					retVal += "<link href='http://code.jquery.com/qunit/qunit-git.css' rel='stylesheet' type='text/css' />\n"
 				elsif arg.eql? "bootstrap"
-					retVal += asset_link( "bootstrap.css",  "font-awesome.css", "bootstrap.js")
+					retVal += asset_link( "bootstrap.css", "bootstrap.js")
 				else
 					raise "Unknown asset #{arg}"
 				end
