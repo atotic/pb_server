@@ -4,9 +4,7 @@
 
 <%= asset_link("application.css") %>
 <%= asset_link("jquery.js", "application.js") %>
-<%= asset_link("bootstrap") %>
-<%= asset_link("application.css") %>
-<%= asset_link("jquery.js", "application.js") %>
+<%= asset_link("gradients.js") %>
 <%= asset_link("bootstrap") %>
 <link href='/css/application.css' rel='stylesheet' type='text/css' />
 <link href='/css/editor.css' rel='stylesheet' type='text/css' />
@@ -17,6 +15,68 @@
 <script type="text/javascript">
 "use strict"
 
+/* DATA DICTIONARY
+
+BookPage JSON {
+	width: 768,
+	height: 512,
+	assets: [ asset_id*],
+	assetData: { asset_id : {asset}},
+	backgroundId: null,
+	backgroundData: null,
+	layoutId: null,
+	layoutOptions: null,
+	hasLayout: false
+}
+}
+all assets {
+	type: 'photo', 'text'
+	top
+	left
+	width
+	height
+	frameId
+	frameData
+	frameOffset { tlwh }
+}
+asset photo {
+	type: 'photo'
+	photoId
+	photoRect { tlwh }
+}
+asset text {
+	type: 'text'
+	content: '' // plain text
+}
+*/
+
+// AbstractLayout documents minimal layout class looks like. not functional
+var AbstractLayout = {
+	id: '',
+	// assetData from book-page, read-only
+	// page width/height
+	// options are layout-dependent (ex inset....)
+	getPageLayout: function(assetData, width, height, options) {
+		return {
+			design: [ {
+				type: 'photo',
+				top: 0,
+				left: 0,
+				width: 0,
+				height: 0,
+				frameId: '', // optional
+				frameOffset: [0,0,0,0], // TRBL, optional
+				frameData: {} // frameId specific
+			}],
+			background: {
+				id: '',
+				data: {
+					// background-specific data
+				}
+			}
+		}
+	}
+};
 
 var IntegerArithmetic = {
 	// line gets divided into segmentCount,
@@ -74,42 +134,23 @@ var BlankPage = {
 	assets: [],
 	assetData: {},
 	backgroundId: null,
-	backgroundOptions: null,
+	backgroundData: null,
 	layoutId: null,
 	layoutOptions: null,
 	hasLayout: false
 }
-// AbstractLayout documents minimal layout class looks like. not functional
-var AbstractLayout = {
-	id: '',
-	// assetData from book-page, read-only
-	// page width/height 
-	// options are layout-dependent (ex inset....)
-	getPageLayout: function(assetData, width, height, options) {
-		return {
-			design: [ {
-				top: 0, left: 0, width: 0, height: 0, type: 'photo'
-			}],
-			background: {
-				id: '',
-				data: {
-					// background-specific data
-				}
-			}
-		}
-	}
-};
+
 
 var ThemeCache = {
 	cache: {},
 	get: function(id) {
-		if (id in this.cache) 
+		if (id in this.cache)
 			return this.cache[id];
 		throw "No such theme " + id;
 	},
 	put: function(theme) {
-		if (theme.id in this.cache) 
-			throw "theme already defined " + theme.id; 
+		if (theme.id in this.cache)
+			throw "theme already defined " + theme.id;
 		this.cache[theme.id] = theme;
 	},
 	themeRegex: new RegExp("^theme\:\/\/([^\/]+)/(.*)$"),
@@ -142,6 +183,30 @@ var ThemeCache = {
 
 // Base Theme
 (function(themeCache) {
+	var Utils = {
+		canonicalFrameWidth: function(frameWidth) {
+			if (typeof frameWidth == 'number')
+				return [frameWidth, frameWidth, frameWidth, frameWidth];
+			switch(frameWidth.length) {
+				case 1:
+					return [frameWidth[0], frameWidth[0], frameWidth[0], frameWidth[0]];
+					break;
+				case 2:
+					return [frameWidth[0], frameWidth[1], frameWidth[0], frameWidth[1]];
+					break;
+				case 3:
+					return [frameWidth[0], frameWidth[1], frameWidth[2], frameWidth[1]];
+					break;
+				case 4:
+					return frameWidth;
+					break;
+				default:
+					console.error('illegal frame width ', frameWidth);
+					return [0,0,0,0];
+			}
+		}
+	};
+
 	var GridLayout = {
 		id: 'gridLayout',
 		getPageLayout: function(assetData, width, height, options) {
@@ -172,7 +237,7 @@ var ThemeCache = {
 						height: heightSegments[v+1] - heightSegments[v], //tileHeight
 						width: widthSegments[h+1] - widthSegments[h] //tileWidth,
 					}
-					console.log(assetData);
+//					console.log(assetData);
 					if (imgIdx < photoCount) {
 						assetData.type = 'photo';
 						design.push(assetData);
@@ -189,25 +254,25 @@ var ThemeCache = {
 		}
 	};
 
-	var GridFrameLayout = {
-		id: 'gridFrameLayout',
+	var GridSpacedLayout = {
+		id: 'GridSpacedLayout',
 		getPageLayout: function(assetData, width, height, options) {
 			options = $.extend({
-				frameOffset: 0	
+				spaceOffset: 0
 			}, options);
-			var layout = GridLayout.getPageLayout(assetData, width, height, $.extend({ inset: options.frameOffset}, options));
+			var layout = GridLayout.getPageLayout(assetData, width, height, $.extend({ inset: options.spaceOffset}, options));
 			var design = layout.design;
 			for (var i=0; i < design.length; i++) {
-				design[i].top += options.frameOffset;
-				design[i].left += options.frameOffset;
-				design[i].width -= options.frameOffset * 2;
-				design[i].height -= options.frameOffset * 2;
+				design[i].top += options.spaceOffset;
+				design[i].left += options.spaceOffset;
+				design[i].width -= options.spaceOffset * 2;
+				design[i].height -= options.spaceOffset * 2;
 			}
 			return layout;
 		},
 	};
 
-	var CSSBackground = {
+	var CssBackground = {
 		id: 'cssBackground',
 		sampleOption: {
 			css: {
@@ -227,21 +292,21 @@ var ThemeCache = {
 			}
 		},
 
-		fillBackground: function( $div, options) {
-			options = $.extend({ 
+		fillBackground: function( $div, backgroundData, options) {
+			backgroundData = $.extend({
 				css: { // from http://lea.verou.me/css3patterns/#weave
 					background: 'linear-gradient(135deg, #708090 22px, #d9ecff 22px, #d9ecff 24px, transparent 24px, transparent 67px, #d9ecff 67px, #d9ecff 69px, transparent 69px), linear-gradient(225deg, #708090 22px, #d9ecff 22px, #d9ecff 24px, transparent 24px, transparent 67px, #d9ecff 67px, #d9ecff 69px, transparent 69px) 0 64px',
-backgroundColor: '#708090',
-backgroundSize: '64px 128px'
+					backgroundColor: '#708090',
+					backgroundSize: '64px 128px'
 				}
-			}, options);
-			if (options.css.backgroundImage) {
+			}, backgroundData);
+			if (backgroundData.css.backgroundImage) {
 				var defaultSize = 'original';
-				var match = options.css.backgroundImage.match(/(\$[\w]+)/g);
+				var match = backgroundData.css.backgroundImage.match(/(\$[\w]+)/g);
 				for (var i=0; i<match.length; i++) {
-					if (match[i] in options.imageSubstitution) {
+					if (match[i] in backgroundData.imageSubstitution) {
 						debugger;	// need url substitution here
-						options.css.backgroundImage = options.css.backgroundImage.replace(match[i], options.imageSubstitution[p][defaultSize]);
+						backgroundData.css.backgroundImage = backgroundData.css.backgroundImage.replace(match[i], backgroundData.imageSubstitution[p][defaultSize]);
 					}
 					else {
 						console.error("unable to substitute css image " + match[i]);
@@ -249,27 +314,93 @@ backgroundSize: '64px 128px'
 					}
 				}
 			}
+			$div.css(backgroundData.css);
+		}
+	};
+
+	var CssFrame = {
+		id: 'cssFrame',
+		fillFrame: function($div, frameOffset, frameData, options) {
+			options = $.extend({
+				css: {
+					backgroundColor: 'green',
+					boxShadow: '5px 5px 5px rgba(0,0,0,0.3)'
+				}
+			}, options);
 			$div.css(options.css);
 		}
-
 	};
+
 	var BaseTheme = {
 		id: 'base',
 		layouts: {
 			gridLayout : GridLayout,
-			gridFrameLayout : GridFrameLayout
+			gridSpacedLayout : GridSpacedLayout
 		},
 		backgrounds: {
-			cssBackground: CSSBackground
-		}
+			cssBackground: CssBackground
+		},
+		frames: {
+			cssFrame: CssFrame
+		},
+		utilities: Utils
 	 };
 	 themeCache.put(BaseTheme)
 })(ThemeCache);
 
+// ExperimentalTheme
+(function(themeCache) {
+	var FramedLayout = {
+		id: 'framedLayout',
 
-var Book = {
-}
+		// Converts frameWidth to canonical form [t,r,b,l].
+		canonicalFrameWidth: function(frameWidth) {
+			if (typeof frameWidth == 'number')
+				return [frameWidth, frameWidth, frameWidth, frameWidth];
+			switch(frameWidth.length) {
+				case 1:
+					return [frameWidth[0], frameWidth[0], frameWidth[0], frameWidth[0]];
+					break;
+				case 2:
+					return [frameWidth[0], frameWidth[1], frameWidth[0], frameWidth[1]];
+					break;
+				case 3:
+					return [frameWidth[0], frameWidth[1], frameWidth[2], frameWidth[1]];
+					break;
+				case 4:
+					return frameWidth;
+					break;
+				default:
+					console.error('illegal frame width ', frameWidth);
+					return [0,0,0,0];
+			}
+		},
+		getPageLayout: function(assetData, width, height, options) {
+			options = $.extend({
+				frameWidth: 10,	// syntax same as border-image-width https://developer.mozilla.org/en-US/docs/CSS/border-image-width
+				spaceOffset: 10
+			}, options);
+			var Utils = ThemeCache.resource('theme://base/utilities');
+			var layout = ThemeCache.resource('theme://base/layouts/gridSpacedLayout').getPageLayout(assetData, width, height, options );
+			var design = layout.design;
+			var frameOffset = Utils.canonicalFrameWidth(options.frameWidth);
+			for (var i=0; i < design.length; i++) {
+				design[i].frameId = 'theme://base/frames/cssFrame';
+				design[i].frameOffset = frameOffset;
+				design[i].frameData = { backgroundColor: 'red'}
+			}
+			return layout;
+		}
+	};
 
+	var ExperimentalTheme = {
+		id: 'experimental',
+		layouts: {
+			framedLayout: FramedLayout
+		}
+	};
+	themeCache.put(ExperimentalTheme);
+})(ThemeCache);
 
 var AssetDataUtils = {
 	genericCount: function(assetData, type) {
@@ -313,16 +444,20 @@ BookPage.prototype = {
 		};
 		this.addAsset(PB.randomString(6), data);
 	},
-	addText: function() {
+	addText: function(content) {
+		this.addAsset(PB.randomString(6), {
+			type: 'text',
+			content: content
+		});
 	},
 	setLayout: function(layoutId, layoutOptions) {
 		this.p.layoutId = layoutId;
 		this.p.layoutOptions = layoutOptions;
 		this.hasLayout = false;
 	},
-	setBackground: function(backgroundId, backgroundOptions) {
+	setBackground: function(backgroundId, backgroundData) {
 		this.p.backgroundId = backgroundId;
-		this.p.backgroundOptions = backgroundOptions;
+		this.p.backgroundData = backgroundData;
 	},
 	enclosingDom: function(options) {
 		return $(document.createElement('div'))
@@ -333,118 +468,218 @@ BookPage.prototype = {
 				});
 	},
 	layoutFromDesign: function() {
+		// reconcile existing layout with layout from design
 		this.hasLayout = false;
 		if (!this.p.layoutId)
 			return;
 		var design = ThemeCache.resource(this.p.layoutId);
-		var layout =  design.getPageLayout(this.p.assetData, this.width, this.height, this.p.layoutOptions);
+		var layout = design.getPageLayout(this.p.assetData, this.width, this.height, this.p.layoutOptions);
 		var designData = layout.design;
-		for (var i=0; i<this.p.assets.length; i++) {
+
+		var photoAssetIds = this.p.assets.filter( function(val) { return this.p.assetData[val].type == 'photo' }, this );
+		var textAssetIds = this.p.assets.filter( function(val) { return this.p.assetData[val].type == 'text' }, this );
+
+		var designExhausted = false;
+		while (!designExhausted) {
 			var dd = designData.shift();
-			var assetData = this.p.assetData[this.p.assets[i]];
-			var photo = PhotoCache.get(assetData.photoId)
-			var photoRect = new GUI.Rect(photo);
-			var scale = photoRect.fillInside(dd);
-			photoRect = photoRect.scaleBy(scale).centerIn(dd).round();
-			$.extend(this.p.assetData[this.p.assets[i]],{
-				type: 'photo',
-				top: dd.top,
-				left: dd.left,
-				width: dd.width,
-				height: dd.height,
-				photoRect: {
-					top: photoRect.top,
-					left: photoRect.left,
-					width: photoRect.width,
-					height: photoRect.height
+			designExhausted = (dd == null);
+			if (designExhausted)
+				break;
+
+			var assetData;
+			switch(dd.type) {
+				case 'photo': {
+					var photoId = photoAssetIds.shift();
+					if (photoId == null) {
+						console.error("Should add more photos dynamically");
+						break;
+					}
+					var assetData = this.p.assetData[photoId];
+					var innerRect = new GUI.Rect({width: dd.width, height: dd.height});
+					if(dd.frameId)
+						innerRect = innerRect.inset(dd.frameOffset);
+
+					var photo = PhotoCache.get(assetData.photoId);
+					var photoRect = new GUI.Rect(photo);
+					var scale = photoRect.fillInside(innerRect);
+					photoRect = photoRect.scaleBy(scale).centerIn(innerRect).round();
+					$.extend(assetData,{
+						top: dd.top,
+						left: dd.left,
+						width: dd.width,
+						height: dd.height,
+						photoRect: {
+							top: photoRect.top,
+							left: photoRect.left,
+							width: photoRect.width,
+							height: photoRect.height
+						}
+					});
 				}
-			});
-		}
+				break;
+				case 'text': {
+					var textId = textAssetIds.shift();
+					if (textId == null) {
+						console.error("Should add more text dynamically");
+						break;
+					}
+					var assetData = this.p.assetData[textId];
+					$.extend(assetData, {
+						top: dd.top,
+						left: dd.left,
+						width: dd.width,
+						height: dd.height,
+						fontId: dd.fontId,
+						fontData: dd.fontData
+					});
+				}
+				break;
+				default: {
+					console.error("do not know how to handle assets", dd.type);
+				}
+			}
+			if (dd.frameId) {
+				assetData.frameId = dd.frameId;
+				assetData.frameOffset = dd.frameOffset;
+				assetData.frameData = dd.frameData;
+			}
+			else {
+				delete assetData.frameId;
+				delete assetData.frameOffset;
+				delete assetData.frameData;
+			}
+		};
+		if (photoAssetIds.length > 0 )
+			console.error("layout has ignored photo data");
+		if (textAssetIds.length > 0)
+			console.error("layout has ignored text data");
+
 		if (layout.background) {
 			this.p.backgroundId = layout.background.backgroundId;
 			this.p.backgroundData = layout.background.backgroundData;
 		}
 		this.p.hasLayout = true;
+
+	},
+	generateFrame: function(asset, options) {
+		var innerBounds = new GUI.Rect({width: asset.width, height: asset.height});
+		if (!asset.frameId)
+			return { frame: null, innerBounds: innerBounds};
+		innerBounds = innerBounds.inset(asset.frameOffset);
+
+		var frame = $(document.createElement('div'))
+			.addClass('design-frame')
+			.css({
+				width: asset.width,
+				height: asset.height
+			});
+		ThemeCache.resource(asset.frameId).fillFrame(frame, asset.frameOffset, asset.frameData, options);
+		return { frame: frame, innerBounds: innerBounds};
+	},
+	/* textDom
+		div.design-text tlwh
+			div.design-text-content
+	*/
+	generateTextDom: function(asset, options) {
+		var designText = $(document.createElement('div'))
+			.addClass('design-text')
+			.css ({
+				top: asset.top,
+				left: asset.left,
+				width: asset.width,
+				height: asset.height
+			});
+		var fr = this.generateFrame(asset, options);
+		var innerFrame = fr.innerBounds;
+		if (fr.frame)
+			designText.append(fr.frame);
+		var t = 'Your text here';
+		if (((typeof asset.content) == 'string') && asset.content != '')
+			t = asset.content();
+		var textContent = $(document.createElement('div'))
+			.addClass('design-text-content')
+			.css({
+				top:innerFrame.top,
+				left: innerFrame.left,
+				width: innerFrame.width,
+				height: innerFrame.height
+			})
+			.text(t);
+		designText.append(textContent);
+		return designText;
 	},
 	/*
-	photoAsset JSON{
-		type: 'photo'
-		top
-		left
-		width
-		height
-		photoId
-		photoRect { tlwh }
-		frameId
-		frameOffset { tlwh }
-	}
-	photoDom {
-		div.design-photo top: left: width: height	// photo with frame
+		photoDom
+		div.design-photo tlwh	// photo with frame
 			div.design-photo-frame top: 0, left: 0, width: height:
 			div.design-photo-inner top: left: width: height: // photo enclosure, no overflow, position absolute
 				img.design-photo-img top: left: width: height: // just photo
-	}
 	*/
-	generatePhotoDom: function(photoAsset, options) {
+	generatePhotoDom: function(asset, options) {
 		var designPhoto = $(document.createElement('div'))
 			.addClass('design-photo')
 			.css({
-				top: photoAsset.top,
-				left: photoAsset.left,
-				width: photoAsset.width,
-				height: photoAsset.height
+				top: asset.top,
+				left: asset.left,
+				width: asset.width,
+				height: asset.height
 			});
-		// overlapFudge hack grows images by .5 of a pixel
-		// without it, there could be a small gap between adjacent images
-		var overlapFudge = 0;
-		var designPhotoInner = $(document.createElement('div'))
-			.addClass('design-photo-inner')
-			.css({
-				top: 0,
-				left: 0,
-				width: photoAsset.width + overlapFudge,
-				height: photoAsset.height + overlapFudge
+		var fr = this.generateFrame(asset, options);
+		var innerFrame = fr.innerBounds;
+		if (fr.frame)
+			designPhoto.append( fr.frame );
+		var designPhotoInner = $( document.createElement('div') )
+			.addClass( 'design-photo-inner' )
+			.css( {
+				top: innerFrame.top,
+				left: innerFrame.left,
+				width: innerFrame.width,
+				height: innerFrame.height
 			});
-		var img = $(document.createElement('img'))
+		var img = $( document.createElement('img') )
 			.addClass('design-photo-img')
-			.prop('src', PhotoCache.get(photoAsset.photoId).url)
+			.prop('src', PhotoCache.get( asset.photoId).url )
 			.css({
-				top: photoAsset.photoRect.top,
-				left: photoAsset.photoRect.left,
-				width: photoAsset.photoRect.width + overlapFudge,
-				height: photoAsset.photoRect.height + overlapFudge
+				top: asset.photoRect.top,
+				left: asset.photoRect.left,
+				width: asset.photoRect.width,
+				height: asset.photoRect.height
 			});
-		designPhoto.append(designPhotoInner.append(img));
+		designPhoto.append( designPhotoInner.append( img ) );
 		return designPhoto;
 	},
 	/*
 	.design-book-page-left
 		.design-page, css transform(scale), width, height
 			.design-photo
+			.design-text
 	*/
 	generateDom: function(options) {
 		options = $.extend({
 			sync: false,	//
 			editable: false
 		}, options);
-		var encloseDom = this.enclosingDom(options);
+		var encloseDom = this.enclosingDom( options );
 		if (this.p.hasLayout)
 		{	// layout all parts of the page
 			var p = this.p;
 			if (p.backgroundId) {
-				ThemeCache.resource(p.backgroundId).fillBackground(encloseDom, p.backgroundOptions);
+				ThemeCache.resource( p.backgroundId ).fillBackground( encloseDom, p.backgroundData, options );
 			}
 			for (var i=0; i < p.assets.length; i++) {
 				var item = p.assetData[p.assets[i]];
 				var itemDom;
 				switch(item.type) {
 					case 'photo':
-						itemDom = this.generatePhotoDom(item, options);
+						itemDom = this.generatePhotoDom( item, options );
+						break;
+					case 'text':
+						itemDom = this.generateTextDom( item, options );
 						break;
 					default:
 						debugger;
 				}
-				encloseDom.append(itemDom);
+				encloseDom.append( itemDom );
 			}
 		}
 		else
@@ -453,6 +688,7 @@ BookPage.prototype = {
 	}
 }
 
+var Book = {};
 var currentPage = new BookPage(Book, BlankPage);
 var Util = {
 	init: function() {
@@ -479,6 +715,14 @@ var Util = {
 		currentPage.layoutFromDesign();
 		this.showPage();
 	},
+	words: ["one", "two", "and a much longer three, how much longer i am not sure"],
+	addText: function() {
+		var word = this.words.shift();
+		this.words.push(word);
+		currentPage.addText()
+		currentPage.layoutFromDesign();
+		this.showPage();
+	},
 	setLayout: function(layoutId, layoutOptions) {
 		currentPage.setLayout(layoutId, layoutOptions);
 		currentPage.layoutFromDesign();
@@ -492,15 +736,20 @@ var Util = {
 $(document).ready(function() {
 	Util.init();
 	Util.showPage();
+	$(document.body).css('background', 'linear-gradient(45deg, red, blue)');
 });
 </script>
 <body>
 	<button onclick="Util.addPhoto()">Add photo</button>
 	<button onclick="Util.removePhoto()">Remove photo</button>
 	<button onclick="Util.addText()">Add text</button>
+	<br>
+	<p>Layouts:</p>
 	<button onclick="Util.setLayout('theme://base/layouts/gridLayout')">Set gridLayout</button>
-	<button onclick="Util.setLayout('theme://base/layouts/gridFrameLayout', {frameOffset: 10})">Set gridFrameLayout 10</button>
-	<button onclick="Util.setLayout('theme://base/layouts/gridFrameLayout', {frameOffset: 20})">Set gridFrameLayout 20</button>
+	<button onclick="Util.setLayout('theme://base/layouts/gridSpacedLayout', {spaceOffset: 10})">Set GridSpacedLayout 10</button>
+	<button onclick="Util.setLayout('theme://base/layouts/gridSpacedLayout', {spaceOffset: 20})">Set GridSpacedLayout 20</button>
+	<button onclick="Util.setLayout('theme://experimental/layouts/framedLayout', {frameWidth: 10})">Set layout with frames 20</button>
+	<p>Backgrounds:</p>
 	<button onclick="Util.setBackground('theme://base/backgrounds/cssBackground', {})">Set default css background 20</button>
 	<button onclick="Util.setBackground('theme://base/backgrounds/cssBackground', { css: {backgroundColor: 'yellow'}})">Set yellow css background 20</button>
 

@@ -670,6 +670,26 @@ show: function() {
 				height: Math.round(this.height)
 			});
 		},
+		inset: function(inset) { // inset is number, or [t r b l]
+			if (typeof inset == 'number') {
+				return new Rect({
+					top: this.top + inset,
+					left: this.left + inset,
+					width: this.width - inset * 2,
+					height: this.height - inset * 2
+				});
+			}
+			else if ($.isArray(inset) && inset.length == 4) {// TRBL
+				return new Rect({
+					top: this.top + inset[0],
+					left: this.left + inset[3],
+					width: this.width - inset[1] - inset[3],
+					height: this.height - inset[0] - inset[2]
+				});
+			}
+			else
+				console.error("illegal inset value " + inset);
+		},
 		union: function(rectOrArray) {
 			var rArray = $.isArray(rectOrArray) ? rectOrArray :
 				rectOrArray ? [rectOrArray] : [];

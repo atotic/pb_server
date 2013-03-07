@@ -1,0 +1,48 @@
+<html>
+<head>
+<title>PageDesign Mockup</title>
+<%= asset_link("application.css") %>
+<%= asset_link("jquery.js", "application.js") %>
+<%= asset_link("bootstrap") %>
+<%= asset_link("application.css") %>
+<style type="text/css">
+body {
+	background-color: white;
+}
+.left {
+	position: absolute;
+	background-color: red;
+}
+.right {
+	position: absolute;
+	background-color: green;
+}
+</style>
+<script type="text/javascript">
+function generateTiles() {
+	var w = 300, h = 100;
+	var top = 100;
+	var left = 50;
+	for (var gap = -1; gap < 1; gap += 0.1) {
+		var left = $('<div/>').addClass('left').text(gap).css({
+			top: top,
+			left: 0,
+			width: w - (-gap),
+			height: h
+		});
+		var right = $('<div/>').addClass('right').css({
+			top: top,
+			left: w,
+			width: w,
+			height: h
+		});
+		top += h;
+		$('body').append(left).append(right);
+	}
+}
+$(document).ready(function() {
+	generateTiles();
+});
+</script>
+</head>
+<body>
