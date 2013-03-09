@@ -1,0 +1,79 @@
+<html>
+<head>
+<title>Pookio Hammer tests</title>
+
+<%= asset_link("application.css") %>
+<%= asset_link("jquery.js", "application.js") %>
+<%= asset_link("gradients.js") %>
+<%= asset_link("bootstrap") %>
+<%= asset_link("jquery.hammer.js") %>
+<link href='/css/editor.css' rel='stylesheet' type='text/css' />
+<script src="/js/editor.pb.js"></script>
+<script src="/js/editor.gui.js"></script>
+<style type="text/css">
+div {
+	width: 100%;
+	background-color: yellow;
+	font-size: large;
+}
+</style>
+<script type="text/javascript">
+"use strict"
+
+function createTester(eventType) {
+	var d = $('<div>').text(eventType).appendTo(document.body);
+	d.hammer().on(eventType, {}, function(ev) {
+		var d = new Date();
+		console.log(eventType, d.toString(), d.getMilliseconds());
+	});
+}
+function initHammer() {
+	var events = [
+	'hold',
+	'tap',
+	'doubletap',
+	'drag',
+	'dragstart',
+	'dragend',
+	'dragup',
+	'dragdown',
+	'dragleft',
+	'dragright',
+	'swipe',
+	'swipeup',
+	'swipedown',
+	'swipeleft',
+	'swiperight',
+	'transform',
+	 'transformstart',
+	 'transformend',
+	 'rotate',
+	 'pinch',
+	 'pinchin',
+	 'pinchout',
+	 'touch',
+	 'release'
+	];
+
+	var d = $('<div>').text("All events").appendTo(document.body);
+	events.forEach(function(name) {
+		d.hammer().on(name, {}, function(ev) {
+			console.log(ev);
+		});
+	});
+	events.forEach(function(name) {
+		createTester(name);
+	});
+
+}
+$(document).ready(initHammer);
+
+</script>
+</head>
+<body>
+It would save me a couple of weeks if this library  worked:
+
+<div id='taptest'>
+	Test tapping
+</div>
+</body>

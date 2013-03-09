@@ -5,6 +5,8 @@
 <%= asset_link("application.css") %>
 <%= asset_link("jquery.js", "application.js") %>
 <%= asset_link("gradients.js") %>
+<%= asset_link("jquery.hammer.js") %>
+<%= asset_link("jquery.dataSelector.js") %>
 <%= asset_link("bootstrap") %>
 <link href='/css/editor.css' rel='stylesheet' type='text/css' />
 <script src="/js/editor.pb.js"></script>
@@ -78,30 +80,6 @@ var AbstractLayout = {
 	}
 };
 
-var IntegerArithmetic = {
-	// line gets divided into segmentCount,
-	// segments are forced to integer length
-	// return: [segmentCount + 1] of segment terminating points
-	segmentLine: function(line, segmentCount) {
-		if (isNaN(segmentCount) || segmentCount == 0)
-			return [];
-		var rem = line % segmentCount;
-		var segLength = Math.round((line - rem) / segmentCount);
-		var segments = new Array(segmentCount + 1);
-		segments[0] = 0;
-		for (var i=1; i<= segmentCount; i++) {
-			var padding = 0;
-			if (rem > 0) { // pad each segment by 1 until no more extra pixels
-				padding += 1;
-				rem -=1;
-			}
-			segments[i] = segments[i-1] + segLength + padding;
-		}
-		return segments;
-	}
-}
-
-
 var PhotoCache = {
 	cache: {},
 	put: function(photo) {
@@ -119,27 +97,6 @@ var PhotoCache = {
 		return this.cache[props[Math.floor(Math.random() * props.length)]];
 	}
 }
-
-var Photo = function(id, url, width, height) {
-	this.id = id;
-	this.url = url;
-	this.width = width;
-	this.height = height;
-}
-
-
-var BlankPage = {
-	width: 768,
-	height: 512,
-	assets: [],
-	assetData: {},
-	backgroundId: null,
-	backgroundData: null,
-	layoutId: null,
-	layoutOptions: null,
-	hasLayout: false
-}
-
 
 var ThemeCache = {
 	cache: {},
@@ -204,6 +161,39 @@ var ThemeCache = {
 					console.error('illegal frame width ', frameWidth);
 					return [0,0,0,0];
 			}
+		},
+		// line gets divided into segmentCount,
+		// segments are forced to integer length
+		// return: [segmentCount + 1] of segment terminating points
+		segmentLine: function(line, segmentCount) {
+			if (isNaN(segmentCount) || segmentCount == 0)
+				return [];
+			var rem = line % segmentCount;
+			var segLength = Math.round((line - rem) / segmentCount);
+			var segments = new Array(segmentCount + 1);
+			segments[0] = 0;
+			for (var i=1; i<= segmentCount; i++) {
+				var padding = 0;
+				if (rem > 0) { // pad each segment by 1 until no more extra pixels
+					padding += 1;
+					rem -=1;
+				}
+				segments[i] = segments[i-1] + segLength + padding;
+			}
+			return segments;
+		},
+		assetGenericCount: function(assetData, type) {
+			var c = 0;
+			for (var p in assetData)
+				if (assetData[p].type === type)
+					c++;
+			return c;
+		},
+		assetPhotoCount: function(assetData) {
+			return this.assetGenericCount(assetData, 'photo');
+		},
+		assetTextCount: function(assetData) {
+			return this.assetGenericCount(assetData, 'text');
 		}
 	};
 
@@ -218,13 +208,13 @@ var ThemeCache = {
 				return;
 			}
 			// Generate optimum tiles
-			var photoCount = AssetDataUtils.photoCount(assetData);
-			var textCount = AssetDataUtils.textCount(assetData);
+			var photoCount = Utils.assetPhotoCount(assetData);
+			var textCount = Utils.assetTextCount(assetData);
 			var totalCount = photoCount + textCount;
 			var tileCountH = Math.round(Math.sqrt(totalCount * width / height));
 			var tileCountV = Math.ceil(totalCount / tileCountH);
-			var widthSegments = IntegerArithmetic.segmentLine(width, tileCountH);
-			var heightSegments = IntegerArithmetic.segmentLine(height, tileCountV);
+			var widthSegments = Utils.segmentLine(width, tileCountH);
+			var heightSegments = Utils.segmentLine(height, tileCountV);
 			var design = [];
 			for (var v=0; v < tileCountV; v++) {
 				for (var h=0; h < tileCountH; h++) {
@@ -237,7 +227,6 @@ var ThemeCache = {
 						height: heightSegments[v+1] - heightSegments[v], //tileHeight
 						width: widthSegments[h+1] - widthSegments[h] //tileWidth,
 					}
-//					console.log(assetData);
 					if (imgIdx < photoCount) {
 						assetData.type = 'photo';
 						design.push(assetData);
@@ -383,21 +372,7 @@ var ThemeCache = {
 	themeCache.put(ExperimentalTheme);
 })(ThemeCache);
 
-var AssetDataUtils = {
-	genericCount: function(assetData, type) {
-		var c = 0;
-		for (var p in assetData)
-			if (assetData[p].type === type)
-				c++;
-		return c;
-	},
-	photoCount: function(assetData) {
-		return this.genericCount(assetData, 'photo');
-	},
-	textCount: function(assetData) {
-		return this.genericCount(assetData, 'text');
-	}
-}
+
 var BookPage = function(book, bookPage) {
 	this.book = book;
 	this.data = bookPage;
@@ -489,7 +464,7 @@ BookPage.prototype = {
 						left: dd.left,
 						width: dd.width,
 						height: dd.height,
-						rotate: dd.rotate,
+						rotate: dd.rotate || 0,
 						photoRect: {
 							top: photoRect.top,
 							left: photoRect.left,
@@ -511,7 +486,7 @@ BookPage.prototype = {
 						left: dd.left,
 						width: dd.width,
 						height: dd.height,
-						rotate: dd.rotate
+						rotate: dd.rotate || 0
 					});
 				}
 				break;
@@ -576,7 +551,7 @@ BookPage.prototype = {
 			designText.append(fr.frame);
 		var t = 'Your text here';
 		if (((typeof asset.content) == 'string') && asset.content != '')
-			t = asset.content();
+			t = asset.content;
 		var textContent = $(document.createElement('div'))
 			.addClass('design-text-content')
 			.css({
@@ -637,7 +612,7 @@ BookPage.prototype = {
 	*/
 	generateDom: function(options) {
 		options = $.extend({
-			sync: false,	//
+			syncable: false,	//
 			editable: false
 		}, options);
 		var encloseDom = this.enclosingDom( options );
@@ -664,18 +639,86 @@ BookPage.prototype = {
 					itemDom.css('transform', 'rotate(' + item.rotate + 'deg)');
 				}
 				encloseDom.append( itemDom );
+				if (options.editable) {
+					itemDom.data('model_id', p.assets[i]);
+					this.makeEditable(item, itemDom);
+				};
 			}
 		}
 		else
 			encloseDom.text("Design not available." + this.p.assets.length + " items on this page");
+		if (options.editable) {
+			var ps = new PageSelection(this, encloseDom);
+		}
 		return encloseDom;
 	}
 }
 
+var BookPageEditable = {
+	touchItemCb: function(ev) {
+		var itemDom = $(ev.currentTarget);
+		var itemId = itemDom.data('model_id');
+		PageSelection.findInParent(itemDom)
+			.setSelection(itemId);
+		console.log("item was clicked");
+	},
+	makeEditable: function(item, $itemDom) {
+		$itemDom.hammer().on('touch', {}, this.touchItemCb);
+	}
+};
+
+$.extend(BookPage.prototype, BookPageEditable);
+
+var PageSelection = function(bookPage, dom) {
+	this.bookPage = bookPage;
+	this.dom = dom;
+	dom.data(PageSelection.DATA_ID, this);
+	this.selection = [];
+};
+
+PageSelection.DATA_ID = 'pageSelection';
+
+PageSelection.findInParent = function($dom) {
+	var ps = $dom.parents('*:data("pageSelection")').data(PageSelection.DATA_ID);
+	if (ps == null) {
+		console.error("could not find pageselection in ", $dom);
+		throw "Could not find pageselection";
+	}
+	return ps;
+};
+PageSelection.prototype = {
+	setSelection: function(itemId) {
+		this.selection = [itemId];
+		this.dom.find('.selected').removeClass('selected');
+		this.dom.find('*:data("model_id=' + itemId + '")').addClass('selected');
+	}
+};
+// Local code
+var Photo = function(id, url, width, height) {
+	this.id = id;
+	this.url = url;
+	this.width = width;
+	this.height = height;
+}
+
+
+var BlankPage = {
+	width: 768,
+	height: 512,
+	assets: [],
+	assetData: {},
+	backgroundId: null,
+	backgroundData: null,
+	layoutId: null,
+	layoutOptions: null,
+	hasLayout: false
+}
+
 var Book = {};
 var currentPage = new BookPage(Book, BlankPage);
-var Util = {
+var Controller = {
 	init: function() {
+
 		PhotoCache.put(new Photo('h1', '/img/h1.png', 723, 541));
 		PhotoCache.put(new Photo('h2', '/img/h2.png', 717, 538));
 		PhotoCache.put(new Photo('h3', '/img/h3.png', 751, 561));
@@ -686,9 +729,17 @@ var Util = {
 		PhotoCache.put(new Photo('v2', '/img/v2.png', 483, 646));
 		PhotoCache.put(new Photo('v3', '/img/v3.png', 484, 650));
 		PhotoCache.put(new Photo('v4', '/img/v4.png', 482, 644));
+
+		currentPage.setLayout('theme://base/layouts/gridLayout');
+		currentPage.setBackground('theme://base/backgrounds/cssBackground');
+		this.addPhoto();
 	},
 	showPage: function() {
-		var dom = currentPage.generateDom();
+		var options = {
+			editable: $('#editable').prop('checked'),
+			syncable: $('#syncable').prop('checked')
+		};
+		var dom = currentPage.generateDom(options);
 		$('.design-book-page-left').children().remove();
 		$('.design-book-page-left').append(dom);
 	},
@@ -703,7 +754,7 @@ var Util = {
 	addText: function() {
 		var word = this.words.shift();
 		this.words.push(word);
-		currentPage.addText()
+		currentPage.addText(word);
 		currentPage.layoutFromDesign();
 		this.showPage();
 	},
@@ -718,24 +769,24 @@ var Util = {
 	},
 }
 $(document).ready(function() {
-	Util.init();
-	Util.showPage();
-	$(document.body).css('background', 'linear-gradient(45deg, red, blue)');
+	Controller.init();
+//	$(document.body).css('background', 'linear-gradient(45deg, red, blue)');
 });
 </script>
 <body>
-	<button onclick="Util.addPhoto()">Add photo</button>
-	<button onclick="Util.removePhoto()">Remove photo</button>
-	<button onclick="Util.addText()">Add text</button>
+	<label for='editable'>Editable <input type='checkbox' id='editable' checked onClick='Controller.showPage()'/></label>
+	<label for='syncable'>syncable <input type='checkbox' id='syncable' onClick='Controller.showPage()'/></label>
+	<button onclick="Controller.addPhoto()">Add photo</button>
+	<button onclick="Controller.removePhoto()">Remove photo</button>
+	<button onclick="Controller.addText()">Add text</button>
 	<br>
 	<p>Layouts:</p>
-	<button onclick="Util.setLayout('theme://base/layouts/gridLayout')">Set gridLayout</button>
-	<button onclick="Util.setLayout('theme://base/layouts/gridSpacedLayout', {spaceOffset: 10})">Set GridSpacedLayout 10</button>
-	<button onclick="Util.setLayout('theme://base/layouts/gridSpacedLayout', {spaceOffset: 20})">Set GridSpacedLayout 20</button>
-	<button onclick="Util.setLayout('theme://experimental/layouts/framedLayout', {frameWidth: 10})">Set layout with frames 20</button>
+	<button onclick="Controller.setLayout('theme://base/layouts/gridLayout')">Set gridLayout</button>
+	<button onclick="Controller.setLayout('theme://base/layouts/gridSpacedLayout', {spaceOffset: 10})">Set GridSpacedLayout 10</button>
+	<button onclick="Controller.setLayout('theme://base/layouts/gridSpacedLayout', {spaceOffset: 20})">Set GridSpacedLayout 20</button>
+	<button onclick="Controller.setLayout('theme://experimental/layouts/framedLayout', {frameWidth: 10})">Set layout with frames 20</button>
 	<p>Backgrounds:</p>
-	<button onclick="Util.setBackground('theme://base/backgrounds/cssBackground', {})">Set default css background 20</button>
-	<button onclick="Util.setBackground('theme://base/backgrounds/cssBackground', { css: {backgroundColor: 'yellow'}})">Set yellow css background 20</button>
-
+	<button onclick="Controller.setBackground('theme://base/backgrounds/cssBackground', {})">Set default css background 20</button>
+	<button onclick="Controller.setBackground('theme://base/backgrounds/cssBackground', { css: {backgroundColor: 'yellow'}})">Set yellow css background 20</button>
 	<div class='design-book-page-left'></div>
 </body>
