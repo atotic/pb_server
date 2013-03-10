@@ -63,6 +63,17 @@ Next
 - bug: page sorting
 - library updates: jquery 1.9, transit
 
+Mar 8:
+First great week in a long time. Implementing full-featured page editing in a sandbox
+Working:
+- displaying images
+- displaying text
+- text and images in frames
+- background
+- rotation
+- selectiom
+using hammer.js as a gesture library
+
 Jan 17:
 Jquery 1.9 upgrade
 Bug fixin

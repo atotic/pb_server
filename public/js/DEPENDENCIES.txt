@@ -3,20 +3,47 @@
 jquery: http://jquery.com/
 
 bootstrap.js http://twitter.github.com/bootstrap/
+Customized download:
+Base css: -icons
+JS Components: -carousel
+Responsive: -all
+jQuery plugins: -modals, -carousel
+Fix getParent:
+  function getParent($this) {
+    var selector = $this.attr('data-target')
+      , $parent
+
+    if (!selector) {
+      selector = $this.attr('href')
+      selector = selector && /#/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') //strip for ie7
+      if (selector == '#')
+        selector = '';
+    }
+
+    $parent = $(selector)
+    $parent.length || ($parent = $this.parent())
+
+    return $parent
+  }
+
+fontawesome http://fortawesome.github.com/Font-Awesome/
+Bootstrap icon font
 
 gradients.js css hook:
 https://github.com/brandonaaron/jquery-cssHooks
 used for background: linear-gradient
 accepted a patch in hours
 
-jdataview.js
-https://github.com/vjeux/jDataView
-backports DataView standard, used for reading image files
-
 jquery.dataSelector.js
 https://code.google.com/p/jquerypluginsblog/downloads/detail?name=jquery.dataSelector.js
 implements $.find('*:data("model_id=abcd")')
 heavily modified, I own it now
+
+
+Need update
+jdataview.js
+https://github.com/vjeux/jDataView
+backports DataView standard, used for reading image files
 
 jquery.stream http://code.google.com/p/jquery-stream/
 xhr streaming.
