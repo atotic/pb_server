@@ -39,6 +39,8 @@ https://code.google.com/p/jquerypluginsblog/downloads/detail?name=jquery.dataSel
 implements $.find('*:data("model_id=abcd")')
 heavily modified, I own it now
 
+jquery.fullscreen.js
+https://github.com/kayahr/jquery-fullscreen-plugin
 
 Need update
 jdataview.js

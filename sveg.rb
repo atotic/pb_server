@@ -203,6 +203,7 @@ class SvegApp < Sinatra::Base
 						"jquery.stream-1.2.js",
 						"jquery.dataSelector.js",
 						"jquery.transit.js",
+						"jquery.fullscreen.js",
 						"diff.js",
 						"jdataview.js",
 						"application.js",

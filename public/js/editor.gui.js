@@ -39,6 +39,8 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			});
 			$(window).resize(function() { GUI.fixSizes($(document.body))});
 			$('html').click(GUI.clearPopups);
+			if ($(document.body).fullScreen() === null)
+				$('#fullscreen').hide();
 			GUI.Options.init();
 			GUI.Buttons.init();
 			GUI.CommandManager.init();
@@ -369,6 +371,9 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				el = parent;
 			}
 			return path;
+		},
+		toggleFullscreen: function() {
+
 		}
 	}
 
