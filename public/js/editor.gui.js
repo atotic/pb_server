@@ -371,9 +371,6 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				el = parent;
 			}
 			return path;
-		},
-		toggleFullscreen: function() {
-
 		}
 	}
 

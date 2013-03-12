@@ -9,6 +9,7 @@ window.PB // Generic utilities
 (function(window) {
 "use strict";
 
+
 	var PB = {
 		init: function() {
 			$.event.special[this.MODEL_CHANGED] = {noBubble: true};
@@ -25,7 +26,19 @@ window.PB // Generic utilities
 			}
 			return randomString;
 		},
-
+		hashCode : function(str) {
+			if (typeof str != 'string')
+				str = str.toString();
+			var i, char,
+				hash = 0;
+			if (str.length == 0) return hash;
+			for (i = 0; i < str.length; i++) {
+				char = str.charCodeAt(i);
+				hash = ((hash<<5)-hash)+char;
+				hash = hash & hash;
+			}
+			return hash;
+		},
 		// changes to DOM broadcasts
 
 		MODEL_CHANGED: 'modelchanged',

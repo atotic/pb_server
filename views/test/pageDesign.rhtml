@@ -28,6 +28,7 @@
 #layoutPicker li {
 	display: inline-block;
 	list-style-type: none;
+	margin-left: 10px;
 }
 </style>
 <script type="text/javascript">
@@ -127,8 +128,6 @@ var Controller = {
 		this.updateLayoutPicker();
 	},
 	addPhoto: function() {
-		var	photoUrls = ["h1.png", "h2.png", "h3.png", "h4.png", "h5.png", "h6.png", "v1.png", "v2.png", "v3.png", "v4.png"];
-		var url = '/img/' + photoUrls[Math.floor(Math.random() * photoUrls.length)];
 		currentPage.addPhoto(PhotoPlaceholder.random().id);
 		currentPage.layoutFromDesign();
 		this.showPage();
@@ -167,10 +166,6 @@ $(document).ready(function() {
 	<p>Layouts:</p>
 	<ul id='layoutPicker'>
 	</ul>
-	<button onclick="Controller.setLayout('theme://base/layouts/gridLayout')">Set gridLayout</button>
-	<button onclick="Controller.setLayout('theme://base/layouts/gridSpacedLayout', {spaceOffset: 10})">Set GridSpacedLayout 10</button>
-	<button onclick="Controller.setLayout('theme://base/layouts/gridSpacedLayout', {spaceOffset: 20})">Set GridSpacedLayout 20</button>
-	<button onclick="Controller.setLayout('theme://experimental/layouts/framedLayout', {frameWidth: 10})">Set layout with frames 20</button>
 	<p>Backgrounds:</p>
 	<ul id='backgroundPicker'>
 	</ul>

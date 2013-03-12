@@ -101,17 +101,29 @@ var PhotoPlaceholder = {
 	},
 	vphotos: ['v1', 'v2', 'v3', 'v4'],
 	hphotos: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
-	randomH: function(seed) {
-		return PhotoCache.get( this.hphotos[ Math.floor( Math.random() * this.hphotos.length )] );
-	},
-	randomV: function(seed) {
-		return PhotoCache.get( this.vphotos[ Math.floor( Math.random() * this.vphotos.length )] );
-	},
-	random: function() {
-		if (Math.random() > 0.5)
-			return this.randomH();
+	randomH: function(guess) {
+		var index;
+		if ((typeof guess) === 'number')
+			index = Math.floor(guess % this.hphotos.length);
 		else
-			return this.randomV();
+			index =  Math.floor( Math.random() * this.hphotos.length );
+		return PhotoCache.get( this.hphotos[index] );
+	},
+	randomV: function(guess) {
+		var index;
+		if ((typeof guess) === 'number')
+			index = Math.floor(guess % this.vphotos.length);
+		else
+			index =  Math.floor( Math.random()* this.vphotos.length );
+		return PhotoCache.get( this.vphotos[ index] );
+	},
+	random: function(guess) {
+		if ((typeof guess) === 'number')
+			return (Math.floor(guess % 2) == 0) ?
+				this.randomH(guess) : this.randomV(guess);
+		else
+			return  (Math.random() > 0.5) ?
+				this.randomH(guess) : this.randomV(guess);
 	}
 };
 PhotoPlaceholder.init();
@@ -484,7 +496,7 @@ BookPage.prototype = {
 		for (var i=0; i<layout.length; i++) {
 			switch(layout[i].type) {
 				case 'photo': {
-					var loadDef = LoadImageDeferred(PhotoPlaceholder.random().url);
+					var loadDef = LoadImageDeferred(PhotoPlaceholder.random(i).url);
 					loadDef.done(storeResolvedImage(layout[i]));
 					imageDeferreds.push(loadDef);
 				}
