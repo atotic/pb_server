@@ -8,699 +8,29 @@
 <%= asset_link("jquery.hammer.js") %>
 <%= asset_link("jquery.dataSelector.js") %>
 <%= asset_link("bootstrap") %>
+
 <link href='/css/editor.css' rel='stylesheet' type='text/css' />
 <script src="/js/editor.pb.js"></script>
 <script src="/js/editor.gui.js"></script>
+<%= asset_link("newpage.js") %>
 <style type="text/css">
+#backgroundPicker {
+	overflow: auto;
+	max-height: 160px;
+}
+#backgroundPicker li {
+	display: inline-block;
+	list-style-type: none;
+}
+#layoutPicker {
+	overflow: auto;
+}
+#layoutPicker li {
+	display: inline-block;
+	list-style-type: none;
+}
 </style>
 <script type="text/javascript">
-"use strict"
-
-/* DATA DICTIONARY
-
-BookPage JSON {
-	width: 768,
-	height: 512,
-	assets: [ asset_id*],
-	assetData: { asset_id : {asset}},
-	backgroundId: null,
-	backgroundData: null,
-	layoutId: null,
-	layoutOptions: null,
-	hasLayout: false
-}
-}
-all assets {
-	type: 'photo', 'text'
-	top
-	left
-	width
-	height
-	rotate	// angle in degrees
-	frameId
-	frameData
-	frameOffset { tlwh }
-}
-asset photo {
-	type: 'photo'
-	photoId
-	photoRect { tlwh }
-}
-asset text {
-	type: 'text'
-	content: '' // plain text
-}
-*/
-
-// AbstractLayout documents minimal layout class looks like. not functional
-var AbstractLayout = {
-	id: '',
-	// assetData from book-page, read-only
-	// page width/height
-	// options are layout-dependent (ex inset....)
-	getPageLayout: function(assetData, width, height, options) {
-		return {
-			design: [ {
-				type: 'photo',
-				top: 0,
-				left: 0,
-				width: 0,
-				height: 0,
-				frameId: '', // optional
-				frameOffset: [0,0,0,0], // TRBL, optional
-				frameData: {} // frameId specific
-			}],
-			background: {
-				id: '',
-				data: {
-					// background-specific data
-				}
-			}
-		}
-	}
-};
-
-var PhotoCache = {
-	cache: {},
-	put: function(photo) {
-		this.cache[photo.id] = photo;
-	},
-	get: function(id) {
-		if (id in this.cache)
-			return this.cache[id];
-		throw "No such photo" + id;
-	},
-	random: function(id) {
-		var props = [];
-		for (var p in this.cache)
-			props.push(p);
-		return this.cache[props[Math.floor(Math.random() * props.length)]];
-	}
-}
-
-var ThemeCache = {
-	cache: {},
-	get: function(id) {
-		if (id in this.cache)
-			return this.cache[id];
-		throw "No such theme " + id;
-	},
-	put: function(theme) {
-		if (theme.id in this.cache)
-			throw "theme already defined " + theme.id;
-		this.cache[theme.id] = theme;
-	},
-	themeRegex: new RegExp("^theme\:\/\/([^\/]+)/(.*)$"),
-	// Resource url scheme
-	// theme://theme_id/:res_type/:res_id
-	resource: function(resUrl) {
-		var match = this.themeRegex.exec(resUrl);
-		if (!match) {
-			var err = "Malformed theme resource url " + resUrl; console.error(err); throw err;
-		}
-		var themeId = match[1],
-			pathStr = match[2];
-		var theme = this.cache[themeId];
-		if (!theme) {
-			var err = "Theme not found " + resUrl; console.error(err); throw err;
-		}
-		var p,
-			res = theme,
-			path = pathStr.split('/');
-		while (p = path.shift()) {
-			res =  res[p];
-			if (res === undefined) {
-				var err = "Resource not found  " + resUrl + " problem: " + p; console.error(err); throw err;
-			}
-		}
-		return res;
-	}
-};
-
-
-// Base Theme
-(function(themeCache) {
-	var Utils = {
-		canonicalFrameWidth: function(frameWidth) {
-			if (typeof frameWidth == 'number')
-				return [frameWidth, frameWidth, frameWidth, frameWidth];
-			switch(frameWidth.length) {
-				case 1:
-					return [frameWidth[0], frameWidth[0], frameWidth[0], frameWidth[0]];
-					break;
-				case 2:
-					return [frameWidth[0], frameWidth[1], frameWidth[0], frameWidth[1]];
-					break;
-				case 3:
-					return [frameWidth[0], frameWidth[1], frameWidth[2], frameWidth[1]];
-					break;
-				case 4:
-					return frameWidth;
-					break;
-				default:
-					console.error('illegal frame width ', frameWidth);
-					return [0,0,0,0];
-			}
-		},
-		// line gets divided into segmentCount,
-		// segments are forced to integer length
-		// return: [segmentCount + 1] of segment terminating points
-		segmentLine: function(line, segmentCount) {
-			if (isNaN(segmentCount) || segmentCount == 0)
-				return [];
-			var rem = line % segmentCount;
-			var segLength = Math.round((line - rem) / segmentCount);
-			var segments = new Array(segmentCount + 1);
-			segments[0] = 0;
-			for (var i=1; i<= segmentCount; i++) {
-				var padding = 0;
-				if (rem > 0) { // pad each segment by 1 until no more extra pixels
-					padding += 1;
-					rem -=1;
-				}
-				segments[i] = segments[i-1] + segLength + padding;
-			}
-			return segments;
-		},
-		assetGenericCount: function(assetData, type) {
-			var c = 0;
-			for (var p in assetData)
-				if (assetData[p].type === type)
-					c++;
-			return c;
-		},
-		assetPhotoCount: function(assetData) {
-			return this.assetGenericCount(assetData, 'photo');
-		},
-		assetTextCount: function(assetData) {
-			return this.assetGenericCount(assetData, 'text');
-		}
-	};
-
-	var GridLayout = {
-		id: 'gridLayout',
-		getPageLayout: function(assetData, width, height, options) {
-			options = $.extend({inset: 0}, options);
-			width = Math.max(width - 2 * options.inset, 0);
-			height = Math.max(height - 2 * options.inset, 0);
-			if (!width || width < 50 || !height || height < 50) {
-				console.error('getPageLayout width/height too small', width, height);
-				return;
-			}
-			// Generate optimum tiles
-			var photoCount = Utils.assetPhotoCount(assetData);
-			var textCount = Utils.assetTextCount(assetData);
-			var totalCount = photoCount + textCount;
-			var tileCountH = Math.round(Math.sqrt(totalCount * width / height));
-			var tileCountV = Math.ceil(totalCount / tileCountH);
-			var widthSegments = Utils.segmentLine(width, tileCountH);
-			var heightSegments = Utils.segmentLine(height, tileCountV);
-			var design = [];
-			for (var v=0; v < tileCountV; v++) {
-				for (var h=0; h < tileCountH; h++) {
-					var imgIdx = v * tileCountH + h;
-					if (imgIdx >= totalCount)
-						break;
-					var assetData = {
-						top: options.inset + heightSegments[v],// v * tileHeight,
-						left: options.inset + widthSegments[h], //h * tileWidth,
-						height: heightSegments[v+1] - heightSegments[v], //tileHeight
-						width: widthSegments[h+1] - widthSegments[h] //tileWidth,
-					}
-					if (imgIdx < photoCount) {
-						assetData.type = 'photo';
-						design.push(assetData);
-					}
-					else {
-						assetData.type = 'text';
-						design.push(assetData);
-					}
-				}
-			}
-			return {
-				design: design
-			}
-		}
-	};
-
-	var GridSpacedLayout = {
-		id: 'GridSpacedLayout',
-		getPageLayout: function(assetData, width, height, options) {
-			options = $.extend({
-				spaceOffset: 0
-			}, options);
-			var layout = GridLayout.getPageLayout(assetData, width, height, $.extend({ inset: options.spaceOffset}, options));
-			var design = layout.design;
-			for (var i=0; i < design.length; i++) {
-				design[i].top += options.spaceOffset;
-				design[i].left += options.spaceOffset;
-				design[i].width -= options.spaceOffset * 2;
-				design[i].height -= options.spaceOffset * 2;
-			}
-			return layout;
-		},
-	};
-
-	var CssBackground = {
-		id: 'cssBackground',
-		sampleOption: {
-			css: {
-				backgroundColor: 'transparent',
-				backgroundPosition : '0% 0%',
-				backgroundSize: 'auto auto',
-				backgroundRepeat: 'repeat',
-				backgroundClip: 'border-box',
-				backgroundImage: '$IMG'	// Image URLs are substituted with appropriate resolution
-			},
-			imageSubstitution: {
-				$IMG: {
-					small: '',
-					display: '',
-					original: ''
-				}
-			}
-		},
-
-		fillBackground: function( $div, backgroundData, options) {
-			backgroundData = $.extend({
-				css: { // from http://lea.verou.me/css3patterns/#weave
-					background: 'linear-gradient(135deg, #708090 22px, #d9ecff 22px, #d9ecff 24px, transparent 24px, transparent 67px, #d9ecff 67px, #d9ecff 69px, transparent 69px), linear-gradient(225deg, #708090 22px, #d9ecff 22px, #d9ecff 24px, transparent 24px, transparent 67px, #d9ecff 67px, #d9ecff 69px, transparent 69px) 0 64px',
-					backgroundColor: '#708090',
-					backgroundSize: '64px 128px'
-				}
-			}, backgroundData);
-			if (backgroundData.css.backgroundImage) {
-				var defaultSize = 'original';
-				var match = backgroundData.css.backgroundImage.match(/(\$[\w]+)/g);
-				for (var i=0; i<match.length; i++) {
-					if (match[i] in backgroundData.imageSubstitution) {
-						debugger;	// need url substitution here
-						backgroundData.css.backgroundImage = backgroundData.css.backgroundImage.replace(match[i], backgroundData.imageSubstitution[p][defaultSize]);
-					}
-					else {
-						console.error("unable to substitute css image " + match[i]);
-						debugger;
-					}
-				}
-			}
-			$div.css(backgroundData.css);
-		}
-	};
-
-	var CssFrame = {
-		id: 'cssFrame',
-		fillFrame: function($div, frameOffset, frameData, options) {
-			options = $.extend({
-				css: {
-					backgroundColor: 'green',
-					boxShadow: '5px 5px 5px rgba(0,0,0,0.3)'
-				}
-			}, options);
-			$div.css(options.css);
-		}
-	};
-
-	var BaseTheme = {
-		id: 'base',
-		layouts: {
-			gridLayout : GridLayout,
-			gridSpacedLayout : GridSpacedLayout
-		},
-		backgrounds: {
-			cssBackground: CssBackground
-		},
-		frames: {
-			cssFrame: CssFrame
-		},
-		utilities: Utils
-	 };
-	 themeCache.put(BaseTheme)
-})(ThemeCache);
-
-// ExperimentalTheme
-(function(themeCache) {
-	var FramedLayout = {
-		id: 'framedLayout',
-
-		getPageLayout: function(assetData, width, height, options) {
-			options = $.extend({
-				frameWidth: 10,	// syntax same as border-image-width https://developer.mozilla.org/en-US/docs/CSS/border-image-width
-				spaceOffset: 10
-			}, options);
-			var Utils = ThemeCache.resource('theme://base/utilities');
-			var layout = ThemeCache.resource('theme://base/layouts/gridSpacedLayout').getPageLayout(assetData, width, height, options );
-			var design = layout.design;
-			var rotate = 0;
-			var frameOffset = Utils.canonicalFrameWidth(options.frameWidth);
-			for (var i=0; i < design.length; i++) {
-				design[i].rotate = rotate;
-				rotate += 10;
-				design[i].frameId = 'theme://base/frames/cssFrame';
-				design[i].frameOffset = frameOffset;
-				design[i].frameData = { backgroundColor: 'red'}
-			}
-			return layout;
-		}
-	};
-
-	var ExperimentalTheme = {
-		id: 'experimental',
-		layouts: {
-			framedLayout: FramedLayout
-		}
-	};
-	themeCache.put(ExperimentalTheme);
-})(ThemeCache);
-
-
-var BookPage = function(book, bookPage) {
-	this.book = book;
-	this.data = bookPage;
-};
-
-BookPage.prototype = {
-	get p() {
-		return this.data;
-	},
-	get width() {
-		return this.p.width;
-	},
-	get height() {
-		return this.p.height;
-	},
-	addAsset: function(id, assetData) {
-		this.p.assets.push(id);
-		this.p.assetData[id] = assetData;
-		this.p.hasLayout = false;
-	},
-	addPhoto: function(id) {
-		var data = {
-			type: 'photo',
-			photoId: id
-		};
-		this.addAsset(PB.randomString(6), data);
-	},
-	addText: function(content) {
-		this.addAsset(PB.randomString(6), {
-			type: 'text',
-			content: content
-		});
-	},
-	setLayout: function(layoutId, layoutOptions) {
-		this.p.layoutId = layoutId;
-		this.p.layoutOptions = layoutOptions;
-		this.hasLayout = false;
-	},
-	setBackground: function(backgroundId, backgroundData) {
-		this.p.backgroundId = backgroundId;
-		this.p.backgroundData = backgroundData;
-	},
-	enclosingDom: function(options) {
-		return $(document.createElement('div'))
-				.addClass('design-page')
-				.css({
-					width: this.width,
-					height: this.height
-				});
-	},
-	layoutFromDesign: function() {
-		// reconcile existing layout with layout from design
-		this.hasLayout = false;
-		if (!this.p.layoutId)
-			return;
-		var design = ThemeCache.resource(this.p.layoutId);
-		var layout = design.getPageLayout(this.p.assetData, this.width, this.height, this.p.layoutOptions);
-		var designData = layout.design;
-
-		var photoAssetIds = this.p.assets.filter( function(val) { return this.p.assetData[val].type == 'photo' }, this );
-		var textAssetIds = this.p.assets.filter( function(val) { return this.p.assetData[val].type == 'text' }, this );
-
-		var designExhausted = false;
-		while (!designExhausted) {
-			var dd = designData.shift();
-			designExhausted = (dd == null);
-			if (designExhausted)
-				break;
-
-			var assetData;
-			switch(dd.type) {
-				case 'photo': {
-					var photoId = photoAssetIds.shift();
-					if (photoId == null) {
-						console.error("Should add more photos dynamically");
-						break;
-					}
-					var assetData = this.p.assetData[photoId];
-					var innerRect = new GUI.Rect({width: dd.width, height: dd.height});
-					if(dd.frameId)
-						innerRect = innerRect.inset(dd.frameOffset);
-
-					var photo = PhotoCache.get(assetData.photoId);
-					var photoRect = new GUI.Rect(photo);
-					var scale = photoRect.fillInside(innerRect);
-					photoRect = photoRect.scaleBy(scale).centerIn(innerRect).round();
-					$.extend(assetData,{
-						top: dd.top,
-						left: dd.left,
-						width: dd.width,
-						height: dd.height,
-						rotate: dd.rotate || 0,
-						photoRect: {
-							top: photoRect.top,
-							left: photoRect.left,
-							width: photoRect.width,
-							height: photoRect.height
-						}
-					});
-				}
-				break;
-				case 'text': {
-					var textId = textAssetIds.shift();
-					if (textId == null) {
-						console.error("Should add more text dynamically");
-						break;
-					}
-					var assetData = this.p.assetData[textId];
-					$.extend(assetData, {
-						top: dd.top,
-						left: dd.left,
-						width: dd.width,
-						height: dd.height,
-						rotate: dd.rotate || 0
-					});
-				}
-				break;
-				default: {
-					console.error("do not know how to handle assets", dd.type);
-				}
-			}
-			if (dd.frameId) {
-				assetData.frameId = dd.frameId;
-				assetData.frameOffset = dd.frameOffset;
-				assetData.frameData = dd.frameData;
-			}
-			else {
-				delete assetData.frameId;
-				delete assetData.frameOffset;
-				delete assetData.frameData;
-			}
-		};
-		if (photoAssetIds.length > 0 )
-			console.error("layout has ignored photo data");
-		if (textAssetIds.length > 0)
-			console.error("layout has ignored text data");
-
-		if (layout.background) {
-			this.p.backgroundId = layout.background.backgroundId;
-			this.p.backgroundData = layout.background.backgroundData;
-		}
-		this.p.hasLayout = true;
-
-	},
-	generateFrame: function(asset, options) {
-		var innerBounds = new GUI.Rect({width: asset.width, height: asset.height});
-		if (!asset.frameId)
-			return { frame: null, innerBounds: innerBounds};
-		innerBounds = innerBounds.inset(asset.frameOffset);
-
-		var frame = $(document.createElement('div'))
-			.addClass('design-frame')
-			.css({
-				width: asset.width,
-				height: asset.height
-			});
-		ThemeCache.resource(asset.frameId).fillFrame(frame, asset.frameOffset, asset.frameData, options);
-		return { frame: frame, innerBounds: innerBounds};
-	},
-	/* textDom
-		div.design-text tlwh
-			div.design-text-content
-	*/
-	generateTextDom: function(asset, options) {
-		var designText = $(document.createElement('div'))
-			.addClass('design-text')
-			.css ({
-				top: asset.top,
-				left: asset.left,
-				width: asset.width,
-				height: asset.height
-			});
-		var fr = this.generateFrame(asset, options);
-		var innerFrame = fr.innerBounds;
-		if (fr.frame)
-			designText.append(fr.frame);
-		var t = 'Your text here';
-		if (((typeof asset.content) == 'string') && asset.content != '')
-			t = asset.content;
-		var textContent = $(document.createElement('div'))
-			.addClass('design-text-content')
-			.css({
-				top:innerFrame.top,
-				left: innerFrame.left,
-				width: innerFrame.width,
-				height: innerFrame.height
-			})
-			.text(t);
-		designText.append(textContent);
-		return designText;
-	},
-	/*
-		photoDom
-		div.design-photo tlwh	// photo with frame
-			div.design-photo-frame top: 0, left: 0, width: height:
-			div.design-photo-inner top: left: width: height: // photo enclosure, no overflow, position absolute
-				img.design-photo-img top: left: width: height: // just photo
-	*/
-	generatePhotoDom: function(asset, options) {
-		var designPhoto = $(document.createElement('div'))
-			.addClass('design-photo')
-			.css({
-				top: asset.top,
-				left: asset.left,
-				width: asset.width,
-				height: asset.height
-			});
-		var fr = this.generateFrame(asset, options);
-		var innerFrame = fr.innerBounds;
-		if (fr.frame)
-			designPhoto.append( fr.frame );
-		var designPhotoInner = $( document.createElement('div') )
-			.addClass( 'design-photo-inner' )
-			.css( {
-				top: innerFrame.top,
-				left: innerFrame.left,
-				width: innerFrame.width,
-				height: innerFrame.height
-			});
-		var img = $( document.createElement('img') )
-			.addClass('design-photo-img')
-			.prop('src', PhotoCache.get( asset.photoId).url )
-			.css({
-				top: asset.photoRect.top,
-				left: asset.photoRect.left,
-				width: asset.photoRect.width,
-				height: asset.photoRect.height
-			});
-		designPhoto.append( designPhotoInner.append( img ) );
-		return designPhoto;
-	},
-	/*
-	.design-book-page-left
-		.design-page, css transform(scale), width, height
-			.design-photo
-			.design-text
-	*/
-	generateDom: function(options) {
-		options = $.extend({
-			syncable: false,	//
-			editable: false
-		}, options);
-		var encloseDom = this.enclosingDom( options );
-		if (this.p.hasLayout)
-		{	// layout all parts of the page
-			var p = this.p;
-			if (p.backgroundId) {
-				ThemeCache.resource( p.backgroundId ).fillBackground( encloseDom, p.backgroundData, options );
-			}
-			for (var i=0; i < p.assets.length; i++) {
-				var item = p.assetData[p.assets[i]];
-				var itemDom;
-				switch(item.type) {
-					case 'photo':
-						itemDom = this.generatePhotoDom( item, options );
-						break;
-					case 'text':
-						itemDom = this.generateTextDom( item, options );
-						break;
-					default:
-						debugger;
-				}
-				if (item.rotate) {
-					itemDom.css('transform', 'rotate(' + item.rotate + 'deg)');
-				}
-				encloseDom.append( itemDom );
-				if (options.editable) {
-					itemDom.data('model_id', p.assets[i]);
-					this.makeEditable(item, itemDom);
-				};
-			}
-		}
-		else
-			encloseDom.text("Design not available." + this.p.assets.length + " items on this page");
-		if (options.editable) {
-			var ps = new PageSelection(this, encloseDom);
-		}
-		return encloseDom;
-	}
-}
-
-var BookPageEditable = {
-	touchItemCb: function(ev) {
-		var itemDom = $(ev.currentTarget);
-		var itemId = itemDom.data('model_id');
-		PageSelection.findInParent(itemDom)
-			.setSelection(itemId);
-		console.log("item was clicked");
-	},
-	makeEditable: function(item, $itemDom) {
-		$itemDom.hammer().on('touch', {}, this.touchItemCb);
-	}
-};
-
-$.extend(BookPage.prototype, BookPageEditable);
-
-var PageSelection = function(bookPage, dom) {
-	this.bookPage = bookPage;
-	this.dom = dom;
-	dom.data(PageSelection.DATA_ID, this);
-	this.selection = [];
-};
-
-PageSelection.DATA_ID = 'pageSelection';
-
-PageSelection.findInParent = function($dom) {
-	var ps = $dom.parents('*:data("pageSelection")').data(PageSelection.DATA_ID);
-	if (ps == null) {
-		console.error("could not find pageselection in ", $dom);
-		throw "Could not find pageselection";
-	}
-	return ps;
-};
-PageSelection.prototype = {
-	setSelection: function(itemId) {
-		this.selection = [itemId];
-		this.dom.find('.selected').removeClass('selected');
-		this.dom.find('*:data("model_id=' + itemId + '")').addClass('selected');
-	}
-};
-// Local code
-var Photo = function(id, url, width, height) {
-	this.id = id;
-	this.url = url;
-	this.width = width;
-	this.height = height;
-}
-
 
 var BlankPage = {
 	width: 768,
@@ -710,7 +40,7 @@ var BlankPage = {
 	backgroundId: null,
 	backgroundData: null,
 	layoutId: null,
-	layoutOptions: null,
+	layoutData: null,
 	hasLayout: false
 }
 
@@ -719,20 +49,72 @@ var currentPage = new BookPage(Book, BlankPage);
 var Controller = {
 	init: function() {
 
-		PhotoCache.put(new Photo('h1', '/img/h1.png', 723, 541));
-		PhotoCache.put(new Photo('h2', '/img/h2.png', 717, 538));
-		PhotoCache.put(new Photo('h3', '/img/h3.png', 751, 561));
-		PhotoCache.put(new Photo('h4', '/img/h4.png', 718, 538));
-		PhotoCache.put(new Photo('h5', '/img/h5.png', 710, 533));
-		PhotoCache.put(new Photo('h6', '/img/h6.png', 719, 534));
-		PhotoCache.put(new Photo('v1', '/img/v1.png', 785, 1127));
-		PhotoCache.put(new Photo('v2', '/img/v2.png', 483, 646));
-		PhotoCache.put(new Photo('v3', '/img/v3.png', 484, 650));
-		PhotoCache.put(new Photo('v4', '/img/v4.png', 482, 644));
-
 		currentPage.setLayout('theme://base/layouts/gridLayout');
 		currentPage.setBackground('theme://base/backgrounds/cssBackground');
 		this.addPhoto();
+		this.initBackPicker();
+	},
+	initBackPicker: function() {
+		var backs = [
+		{ id: 'theme://base/backgrounds/cssBackground',
+			name: 'Default'
+		},
+		{ id: 'theme://base/backgrounds/cssBackground',
+			name: 'Yellow',
+			data: {
+				css: {backgroundColor: 'yellow'}
+			}
+		},
+		{ id: 'theme://base/backgrounds/cssBackground',
+			name: 'Red',
+			data: {
+				css: {backgroundColor: 'red'}
+			}
+		}
+		];
+		function assignBackCb($el, id, data) {
+			$el.hammer().on('touch', {}, function() {
+				Controller.setBackground(id, data);
+			});
+		}
+		for (var i=0; i<backs.length; i++) {
+			var b = ThemeCache.resource(backs[i].id);
+			var $li = $('<li>').css({
+				width: 100,
+				height: 100
+			});
+			b.fillBackground($li, backs[i].data, {});
+			$('#backgroundPicker').append($li);
+			assignBackCb($li, backs[i].id, backs[i].data);
+		};
+	},
+	updateLayoutPicker: function() {
+		$('#layoutPicker').children().remove();
+		var layouts = [
+		{ id: 'theme://base/layouts/gridLayout',
+		},
+		{ id: 'theme://base/layouts/gridSpacedLayout',
+			data:  {spaceOffset: 10}
+		},
+		{ id: 'theme://base/layouts/gridSpacedLayout',
+			data:  {spaceOffset: 20}
+		},
+		{ id: 'theme://experimental/layouts/framedLayout',
+			data:  {frameWidth: 10}
+		}
+		];
+		function assignLayoutCb($el, id, data) {
+			$el.hammer().on('touch', {}, function() {
+				Controller.setLayout(id, data);
+			});
+		};
+		for (var i=0; i<layouts.length; i++) {
+			var icon = currentPage.layoutIcon(layouts[i].id, layouts[i].data, 192);
+			var $li = $(document.createElement('li'));
+			$li.append(icon);
+			$('#layoutPicker').append($li);
+			assignLayoutCb($li, layouts[i].id, layouts[i].data);
+		}
 	},
 	showPage: function() {
 		var options = {
@@ -742,11 +124,12 @@ var Controller = {
 		var dom = currentPage.generateDom(options);
 		$('.design-book-page-left').children().remove();
 		$('.design-book-page-left').append(dom);
+		this.updateLayoutPicker();
 	},
 	addPhoto: function() {
 		var	photoUrls = ["h1.png", "h2.png", "h3.png", "h4.png", "h5.png", "h6.png", "v1.png", "v2.png", "v3.png", "v4.png"];
 		var url = '/img/' + photoUrls[Math.floor(Math.random() * photoUrls.length)];
-		currentPage.addPhoto(PhotoCache.random().id);
+		currentPage.addPhoto(PhotoPlaceholder.random().id);
 		currentPage.layoutFromDesign();
 		this.showPage();
 	},
@@ -758,8 +141,8 @@ var Controller = {
 		currentPage.layoutFromDesign();
 		this.showPage();
 	},
-	setLayout: function(layoutId, layoutOptions) {
-		currentPage.setLayout(layoutId, layoutOptions);
+	setLayout: function(layoutId, layoutData) {
+		currentPage.setLayout(layoutId, layoutData);
 		currentPage.layoutFromDesign();
 		this.showPage();
 	},
@@ -772,6 +155,7 @@ $(document).ready(function() {
 	Controller.init();
 //	$(document.body).css('background', 'linear-gradient(45deg, red, blue)');
 });
+
 </script>
 <body>
 	<label for='editable'>Editable <input type='checkbox' id='editable' checked onClick='Controller.showPage()'/></label>
@@ -781,12 +165,14 @@ $(document).ready(function() {
 	<button onclick="Controller.addText()">Add text</button>
 	<br>
 	<p>Layouts:</p>
+	<ul id='layoutPicker'>
+	</ul>
 	<button onclick="Controller.setLayout('theme://base/layouts/gridLayout')">Set gridLayout</button>
 	<button onclick="Controller.setLayout('theme://base/layouts/gridSpacedLayout', {spaceOffset: 10})">Set GridSpacedLayout 10</button>
 	<button onclick="Controller.setLayout('theme://base/layouts/gridSpacedLayout', {spaceOffset: 20})">Set GridSpacedLayout 20</button>
 	<button onclick="Controller.setLayout('theme://experimental/layouts/framedLayout', {frameWidth: 10})">Set layout with frames 20</button>
 	<p>Backgrounds:</p>
-	<button onclick="Controller.setBackground('theme://base/backgrounds/cssBackground', {})">Set default css background 20</button>
-	<button onclick="Controller.setBackground('theme://base/backgrounds/cssBackground', { css: {backgroundColor: 'yellow'}})">Set yellow css background 20</button>
+	<ul id='backgroundPicker'>
+	</ul>
 	<div class='design-book-page-left'></div>
 </body>

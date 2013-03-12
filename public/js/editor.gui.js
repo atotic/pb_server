@@ -774,5 +774,54 @@ show: function() {
 			return retVal;
 		}
 	}
-	GUI.Rect = Rect;
+	scope.Rect = Rect;
+})(GUI);
+
+(function(scope){
+	var Rotated2DContext = function(context, angleRad) {
+		this.context = context;
+		this.angle = angleRad;
+	}
+
+	Rotated2DContext.prototype = {
+		fillRect: function(x,y,w,h) {
+			if (this.angle) {
+				this.context.save();
+				this.context.translate( x + w/2, y + h/2 );
+				this.context.rotate(this.angle);
+				this.context.fillRect( -w/2, -h/2, w, h );
+				this.context.restore();
+			}
+			else
+				this.context.fillRect(x,y,w,h);
+		},
+		strokeRect: function(x,y,w,h) {
+			if (this.angle) {
+				this.context.save();
+				this.context.translate( x + w/2, y + h/2 );
+				this.context.rotate(this.angle);
+				this.context.strokeRect(-w/2, -h/2, w, h );
+				this.context.restore();
+			}
+			else
+				this.context.fillRect(x,y,w,h);
+		},
+		drawImage: function(img, x,y,w,h) {
+			if (this.angle) {
+				if (w == 0)
+					w = img.width;
+				if (h == 0)
+					h = img.height;
+				this.context.save();
+				this.context.translate( x + w/2, y + h/2 );
+				this.context.rotate(this.angle);
+				this.context.drawImage(img, -w/2, -h/2, w, h );
+				this.context.restore();
+			}
+			else
+				this.context.drawImage(img, x,y,w,h);
+		},
+
+	}
+	scope.Rotated2DContext = Rotated2DContext;
 })(GUI);
