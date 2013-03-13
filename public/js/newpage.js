@@ -76,15 +76,12 @@ var PhotoCache = {
 	}
 };
 
-
-// Local code
 var PlaceholderPhoto = function(id, url, width, height) {
 	this.id = id;
 	this.url = url;
 	this.width = width;
 	this.height = height;
 }
-
 
 var PhotoPlaceholder = {
 	init: function() {
@@ -167,10 +164,12 @@ var ThemeCache = {
 	}
 };
 
-// Base Theme
+// Base Theme 'theme://base/'
 (function(themeCache) {
 	var Utils = {
 		canonicalFrameWidth: function(frameWidth) {
+			if (frameWidth === undefined)
+				return 0;
 			if (typeof frameWidth == 'number')
 				return [frameWidth, frameWidth, frameWidth, frameWidth];
 			switch(frameWidth.length) {
@@ -339,13 +338,13 @@ var ThemeCache = {
 	var CssFrame = {
 		id: 'cssFrame',
 		fillFrame: function($div, frameOffset, frameData, options) {
-			options = $.extend({
+			frameData = $.extend({
 				css: {
 					backgroundColor: 'green',
 					boxShadow: '5px 5px 5px rgba(0,0,0,0.3)'
 				}
-			}, options);
-			$div.css(options.css);
+			}, frameData);
+			$div.css(frameData.css);
 		}
 	};
 
@@ -520,9 +519,8 @@ BookPage.prototype = {
 		if (textDeferred)
 			imageDeferreds.push(textDeferred);
 		var allLoadedDef = $.when.apply($, imageDeferreds);
-//		var allLoadedDef = $.when(imageDeferreds);
-		// When all images load, draw all items
 
+		// When all images load, draw all items
 		var FRAME_FILL = '#888';
 		var ERROR_FILL = 'red';
 
@@ -530,7 +528,7 @@ BookPage.prototype = {
 			for (var i=0; i<layout.length; i++) {
 				var r = new GUI.Rect(layout[i]);
 				r = r.scaleBy(scale, true).round();
-				var rotatedContext = new GUI.Rotated2DContext(context, layout[i].rotate * Math.PI / 360);
+				var rotatedContext = new GUI.Rotated2DContext(context, layout[i].rotate * Math.PI / 180);
 				context.fillStyle = FRAME_FILL;
 				rotatedContext.fillRect(r.left, r.top, r.width, r.height);
 				if (layout[i].frameId && $.isArray(layout[i].frameOffset)) {

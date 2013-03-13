@@ -30,6 +30,17 @@
 	list-style-type: none;
 	margin-left: 10px;
 }
+#framePicker {
+}
+#framePicker li {
+	position: relative;
+	display: inline-block;
+	list-style-type: none;
+	margin: 8px;
+}
+#framePicker li img {
+	position: absolute;
+}
 </style>
 <script type="text/javascript">
 
@@ -54,6 +65,7 @@ var Controller = {
 		currentPage.setBackground('theme://base/backgrounds/cssBackground');
 		this.addPhoto();
 		this.initBackPicker();
+		this.updateFramePicker();
 	},
 	initBackPicker: function() {
 		var backs = [
@@ -73,7 +85,7 @@ var Controller = {
 			}
 		}
 		];
-		function assignBackCb($el, id, data) {
+		function assignCb($el, id, data) {
 			$el.hammer().on('touch', {}, function() {
 				Controller.setBackground(id, data);
 			});
@@ -86,7 +98,7 @@ var Controller = {
 			});
 			b.fillBackground($li, backs[i].data, {});
 			$('#backgroundPicker').append($li);
-			assignBackCb($li, backs[i].id, backs[i].data);
+			assignCb($li, backs[i].id, backs[i].data);
 		};
 	},
 	updateLayoutPicker: function() {
@@ -104,7 +116,7 @@ var Controller = {
 			data:  {frameWidth: 10}
 		}
 		];
-		function assignLayoutCb($el, id, data) {
+		function assignCb($el, id, data) {
 			$el.hammer().on('touch', {}, function() {
 				Controller.setLayout(id, data);
 			});
@@ -114,7 +126,67 @@ var Controller = {
 			var $li = $(document.createElement('li'));
 			$li.append(icon);
 			$('#layoutPicker').append($li);
-			assignLayoutCb($li, layouts[i].id, layouts[i].data);
+			assignCb($li, layouts[i].id, layouts[i].data);
+		}
+	},
+	updateFramePicker: function() {
+		$('#framePicker').children().remove();
+		var frames = [
+		{ id: 'theme://base/frames/cssFrame'
+		},
+		{ id: 'theme://base/frames/cssFrame',
+			data: {
+				css: {
+					backgroundColor: 'blue'
+				}
+			},
+			offset: 10
+		},
+		{ id: 'theme://base/frames/cssFrame',
+			data: {
+				css: {
+					background: 'linear-gradient(to bottom, #b4ddb4 0%,#83c783 17%,#52b152 33%,#008a00 67%,#005700 83%,#002400 100%)'
+				}
+			},
+			offset: [5, 3, 10, 20]
+		},
+		{ id: 'theme://base/frames/cssFrame',
+			data: {
+				css: {
+					backgroundColor: '#9400d3',
+					boxShadow: '5px 5px 5px rgba(148,0,211,0.3)'
+				}
+			},
+			offset: 2
+		}
+		];
+		var ICON_WIDTH = 100;
+		var ICON_HEIGHT = 100;
+		var ThemeUtils = ThemeCache.resource('theme://base/utilities');
+		for (var i=0; i<frames.length; i++) {
+			var f = ThemeCache.resource(frames[i].id);
+			var $li = $('<li>');
+
+			var $frameDiv = $('<div>').css({
+				width: ICON_WIDTH,
+				height: ICON_HEIGHT
+			});
+			f.fillFrame($frameDiv, frames[i].offset, frames[i].data, {});
+
+			var offset = ThemeUtils.canonicalFrameWidth(frames[i].offset);
+			var imgRect = new GUI.Rect({width: ICON_WIDTH, height: ICON_HEIGHT});
+			imgRect = imgRect.inset(offset);
+			$img = $('<img>');
+			$img.attr('src', PhotoPlaceholder.randomH(0).url)
+				.css({
+					top: imgRect.top,
+					left: imgRect.left,
+					width: Math.max(10, imgRect.width),
+					height: Math.max(10, imgRect.height)
+				});
+			$li.append($frameDiv);
+			$li.append($img);
+			$('#framePicker').append($li);
 		}
 	},
 	showPage: function() {
@@ -168,6 +240,9 @@ $(document).ready(function() {
 	</ul>
 	<p>Backgrounds:</p>
 	<ul id='backgroundPicker'>
+	</ul>
+	<p>Frames</p>
+	<ul id='framePicker'>
 	</ul>
 	<div class='design-book-page-left'></div>
 </body>
