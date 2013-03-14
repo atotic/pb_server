@@ -64,66 +64,6 @@ var AbstractLayout = {
 	}
 };
 
-var PhotoCache = {
-	cache: {},
-	put: function(photo) {
-		this.cache[photo.id] = photo;
-	},
-	get: function(id) {
-		if (id in this.cache)
-			return this.cache[id];
-		throw "No such photo" + id;
-	}
-};
-
-var PlaceholderPhoto = function(id, url, width, height) {
-	this.id = id;
-	this.url = url;
-	this.width = width;
-	this.height = height;
-}
-
-var PhotoPlaceholder = {
-	init: function() {
-		PhotoCache.put(new PlaceholderPhoto('h1', '/img/h1.png', 723, 541));
-		PhotoCache.put(new PlaceholderPhoto('h2', '/img/h2.png', 717, 538));
-		PhotoCache.put(new PlaceholderPhoto('h3', '/img/h3.png', 751, 561));
-		PhotoCache.put(new PlaceholderPhoto('h4', '/img/h4.png', 718, 538));
-		PhotoCache.put(new PlaceholderPhoto('h5', '/img/h5.png', 710, 533));
-		PhotoCache.put(new PlaceholderPhoto('h6', '/img/h6.png', 719, 534));
-		PhotoCache.put(new PlaceholderPhoto('v1', '/img/v1.png', 785, 1127));
-		PhotoCache.put(new PlaceholderPhoto('v2', '/img/v2.png', 483, 646));
-		PhotoCache.put(new PlaceholderPhoto('v3', '/img/v3.png', 484, 650));
-		PhotoCache.put(new PlaceholderPhoto('v4', '/img/v4.png', 482, 644));
-	},
-	vphotos: ['v1', 'v2', 'v3', 'v4'],
-	hphotos: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
-	randomH: function(guess) {
-		var index;
-		if ((typeof guess) === 'number')
-			index = Math.floor(guess % this.hphotos.length);
-		else
-			index =  Math.floor( Math.random() * this.hphotos.length );
-		return PhotoCache.get( this.hphotos[index] );
-	},
-	randomV: function(guess) {
-		var index;
-		if ((typeof guess) === 'number')
-			index = Math.floor(guess % this.vphotos.length);
-		else
-			index =  Math.floor( Math.random()* this.vphotos.length );
-		return PhotoCache.get( this.vphotos[ index] );
-	},
-	random: function(guess) {
-		if ((typeof guess) === 'number')
-			return (Math.floor(guess % 2) == 0) ?
-				this.randomH(guess) : this.randomV(guess);
-		else
-			return  (Math.random() > 0.5) ?
-				this.randomH(guess) : this.randomV(guess);
-	}
-};
-PhotoPlaceholder.init();
 
 var ThemeCache = {
 	cache: {},
@@ -167,6 +107,7 @@ var ThemeCache = {
 // Base Theme 'theme://base/'
 (function(themeCache) {
 	var Utils = {
+		// frameWidth can be undefined, number, or [number]
 		canonicalFrameWidth: function(frameWidth) {
 			if (frameWidth === undefined)
 				return 0;
@@ -495,7 +436,7 @@ BookPage.prototype = {
 		for (var i=0; i<layout.length; i++) {
 			switch(layout[i].type) {
 				case 'photo': {
-					var loadDef = LoadImageDeferred(PhotoPlaceholder.random(i).url);
+					var loadDef = LoadImageDeferred(PB.FillerPhotos.random(i).url);
 					loadDef.done(storeResolvedImage(layout[i]));
 					imageDeferreds.push(loadDef);
 				}
@@ -596,7 +537,7 @@ BookPage.prototype = {
 					if(dd.frameId)
 						innerRect = innerRect.inset(dd.frameOffset);
 
-					var photo = PhotoCache.get(assetData.photoId);
+					var photo = PB.ServerPhotoCache.get(assetData.photoId);
 					var photoRect = new GUI.Rect(photo);
 					var scale = photoRect.fillInside(innerRect);
 					photoRect = photoRect.scaleBy(scale).centerIn(innerRect).round();
@@ -735,7 +676,7 @@ BookPage.prototype = {
 			});
 		var img = $( document.createElement('img') )
 			.addClass('design-photo-img')
-			.prop('src', PhotoCache.get( asset.photoId).url )
+			.prop('src', PB.ServerPhotoCache.get( asset.photoId).url )
 			.css({
 				top: asset.photoRect.top,
 				left: asset.photoRect.left,

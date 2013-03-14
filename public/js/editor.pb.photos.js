@@ -98,6 +98,10 @@
 			cache[json.id].loadFromJson(json, true);
 			return cache[json.id];
 		},
+		createFiller: function(filler) {
+			cache[filler.id] = filler;
+			return filler;
+		},
 		sortPhotos: function(photos,book) {
 			function dateComparator(a,b) {
 				var a_date = a.photo.jsDate;
@@ -312,7 +316,7 @@
 			}
 		},
 		_setDataUrl: function(url, width, height) {
-	//		console.log("Data url set", this.id);
+			// console.log("Data url set", this.id);
 			this._dataUrlCreateInProgress = false;
 			if ('display_url' in this)
 				return;	// do not need data if we have real urls
@@ -419,7 +423,7 @@
 				this._createdataUrlFromLocalFile();
 			}
 			this._jpegFile.deferred.then(function() {
-//				console.log("Exif loaded", THIS.id);
+				// console.log("Exif loaded", THIS.id);
 				THIS._jpegFile.readMetadata();
 
 				var thumbDataUrl = THIS._jpegFile.thumbnail;
@@ -502,7 +506,7 @@
 				delete this._dataUrl;
 		},
 		set saveProgress(val) {
-//			console.log("saveProgress " + val);
+			//	console.log("saveProgress " + val);
 			this._saveProgress = val;
 		},
 		set saveError(val) {
@@ -562,4 +566,96 @@
 
 	scope.ServerPhoto = ServerPhoto;
 	scope.ServerPhotoCache = ServerPhotoCache;
+})(PB);
+
+(function(scope) {
+	var vphotos = [];
+	var hphotos = [];
+	var squarephotos = [];
+
+	var FillerPhotos = {
+		randomH: function(guess) {
+			var index;
+			if ((typeof guess) === 'number')
+				index = Math.floor(guess % hphotos.length);
+			else
+				index =  Math.floor( Math.random() * hphotos.length );
+			return PB.ServerPhotoCache.get( hphotos[index] );
+		},
+		randomV: function(guess) {
+			var index;
+			if ((typeof guess) === 'number')
+				index = Math.floor(guess % vphotos.length);
+			else
+				index =  Math.floor( Math.random() * vphotos.length );
+			return PB.ServerPhotoCache.get( vphotos[ index] );
+		},
+		random: function(guess) {
+			if ((typeof guess) === 'number')
+				return (Math.floor(guess % 2) == 0) ?
+					this.randomH(guess) : this.randomV(guess);
+			else
+				return  (Math.random() > 0.5) ?
+					this.randomH(guess) : this.randomV(guess);
+		}
+	};
+
+	var FillerPhoto = function(id, url, width, height) {
+		this.id = id;
+		this.url = url;
+		this.width = width;
+		this.height = height;
+		if (width == height)
+			squarephotos.push(id);
+		else if (width > height)
+			hphotos.push(id);
+		else
+			vphotos.push(id);
+		PB.ServerPhotoCache.createFiller(this);
+	}
+
+	FillerPhoto.prototype = {
+		getUrl: function(size) {
+			return this.url;
+		},
+		get dimensions() {
+			return {width: this.width, height: this.height};
+		},
+		isDraggable: function() {
+			console.error('filler draggable');
+			return false;
+		},
+		get status() {
+			console.error('filler status');
+			return "";
+		},
+		get progress() {
+			console.error('filler progress');
+			return "";
+		},
+		get jsDate() {
+			console.error('filler jsDate');
+			return null;
+		},
+		get display_name() {
+			return "filler";
+		},
+		get faces() {
+			console.error('filler faces');
+			return [];
+		}
+	}
+
+	new FillerPhoto('h1', '/img/h1.png', 723, 541);
+	new FillerPhoto('h2', '/img/h2.png', 717, 538);
+	new FillerPhoto('h3', '/img/h3.png', 751, 561);
+	new FillerPhoto('h4', '/img/h4.png', 718, 538);
+	new FillerPhoto('h5', '/img/h5.png', 710, 533);
+	new FillerPhoto('h6', '/img/h6.png', 719, 534);
+	new FillerPhoto('v1', '/img/v1.png', 785, 1127);
+	new FillerPhoto('v2', '/img/v2.png', 483, 646);
+	new FillerPhoto('v3', '/img/v3.png', 484, 650);
+	new FillerPhoto('v4', '/img/v4.png', 482, 644);
+
+	scope.FillerPhotos = FillerPhotos;
 })(PB);

@@ -11,6 +11,7 @@
 
 <link href='/css/editor.css' rel='stylesheet' type='text/css' />
 <script src="/js/editor.pb.js"></script>
+<script src="/js/editor.pb.photos.js"></script>
 <script src="/js/editor.gui.js"></script>
 <%= asset_link("newpage.js") %>
 <style type="text/css">
@@ -160,8 +161,8 @@ var Controller = {
 			offset: 2
 		}
 		];
-		var ICON_WIDTH = 100;
-		var ICON_HEIGHT = 100;
+		var ICON_WIDTH = 50;
+		var ICON_HEIGHT = 50;
 		var ThemeUtils = ThemeCache.resource('theme://base/utilities');
 		for (var i=0; i<frames.length; i++) {
 			var f = ThemeCache.resource(frames[i].id);
@@ -177,7 +178,7 @@ var Controller = {
 			var imgRect = new GUI.Rect({width: ICON_WIDTH, height: ICON_HEIGHT});
 			imgRect = imgRect.inset(offset);
 			$img = $('<img>');
-			$img.attr('src', PhotoPlaceholder.randomH(0).url)
+			$img.attr('src', PB.FillerPhotos.randomH(0).url)
 				.css({
 					top: imgRect.top,
 					left: imgRect.left,
@@ -200,7 +201,7 @@ var Controller = {
 		this.updateLayoutPicker();
 	},
 	addPhoto: function() {
-		currentPage.addPhoto(PhotoPlaceholder.random().id);
+		currentPage.addPhoto(PB.FillerPhotos.random().id);
 		currentPage.layoutFromDesign();
 		this.showPage();
 	},
