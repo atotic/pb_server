@@ -144,6 +144,8 @@
 			PB.broadcastChange(this, 'locked')
 		},
 		connectStream: function() {
+			if (this.db_id == 0)
+				return;
 			this.disconnectStream();
 			this._stream = PB.DiffStream.connect(this)
 		},
@@ -175,7 +177,7 @@
 			var retVal = {};
 			var pageList = this.pageList;
 			for (var i=0; i < pageList.length; i++) {
-				var photoItems = this.page( pageList[i] ).itemsByType('photo');
+				var photoItems = this.page( pageList[i] ).getAssetData('photo');
 				for (var j=0; j < photoItems.length; j++)
 					retVal[ photoItems[j].resource_id ]  = true;
 			}
@@ -597,6 +599,22 @@
 				retVal.push(bookCache[i]);
 		return retVal;
 	}
+
+	Book.blank = function() {
+		return new Book({
+			id: 0,
+			last_diff: 0,
+			document: {
+				title: "Untitled",
+				bookTemplateId: null,
+				themeId: null,
+				pageList: [],
+				pages: {},
+				photoList: [],
+				photoMap: [],
+			}
+		});
+	};
 
 	scope.Book = Book;
 })(window.PB);

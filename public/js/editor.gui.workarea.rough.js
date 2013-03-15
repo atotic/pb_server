@@ -199,7 +199,7 @@
 			var src = $(GUI.DragStore.dom);
 			var roughModel = PB.ModelMap.domToModel(t.target);
 			var photoModel = PB.ModelMap.domToModel(GUI.DragStore.dom);
-			roughModel.addPhoto(photoModel, {animate: true});
+			roughModel.addPhoto(photoModel.id, {animate: true});
 		},
 		dropOsFile: function(ev, t) {
 			var files = ev.dataTransfer.files;
@@ -222,8 +222,8 @@
 			var oldModel = PB.ModelMap.domToModel(oldParent);
 			var newModel = PB.ModelMap.domToModel(t.target);
 			PB.startChangeBatch();
-			oldModel.removePhoto(photo, {animate:true});
-			newModel.addPhoto(photo, {animate:true});
+			oldModel.removeAsset(photo.id, {animate:true});
+			newModel.addPhoto(photo.id, {animate:true});
 			PB.broadcastChangeBatch();
 
 		},
@@ -407,11 +407,11 @@
 
 			var oldChildren = containerDom.children( sel );
 			var oldPhotos = oldChildren.map(function(i, el) { return PB.ModelMap.domToModel(el)}).get();
-			var newPhotos = pageModel.photos();
+			var newPhotos = pageModel.getAssetData('photo').map(function(ad) {return ad.photoId});
 			var toId = function(el) { return el.id};
 			var diff = JsonDiff.diff(
 				oldPhotos.map(toId),
-				newPhotos.map(toId) );
+				newPhotos );
 
 			for (var i=0; i < diff.length; i++) {
 				var targetPath = JsonPath.query(oldPhotos, diff[i].path, {just_one: true, ghost_props: true});
@@ -453,7 +453,7 @@
 		pageChanged: function(ev, model, prop, options) {
 			options = $.extend( { animate: false }, options);
 			var roughDom = $(this);
-			if (prop === 'itemList')
+			if (prop === 'assetData')
 				RoughWorkArea.synchronizeRoughPhotoList(roughDom, options);
 		}
 	};

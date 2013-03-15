@@ -20,18 +20,21 @@ class Book < Sequel::Model(:books)
 <<-eos
 {
 	"title": #{self.title.to_json},
+	"bookTemplateId": null,
+	"themeId": null,
+	"pageList": ["cover", "cover-flap", "back-flap", "back","P1","P2","P3","P4"],
 	"photoList": [],
 	"photoMap": {},
 	"pageList": ["cover", "cover-flap", "back-flap", "back","P1","P2","P3","P4"],
 	"pages": {
-		"cover": { "id": "cover", "itemList": [], "items": {} },
-		"cover-flap": { "id": "cover-flap", "itemList": [], "items": {} },
-		"back-flap": { "id": "back-flap", "itemList": [], "items": {} },
-		"back": {"id": "back", "itemList": [], "items": {} },
-		"P1": {"id": "P1", "itemList": [], "items": {} },
-		"P2": {"id": "P2", "itemList": [], "items": {} },
-		"P3": {"id": "P3", "itemList": [], "items": {} },
-		"P4": {"id": "P4", "itemList": [], "items": {} }
+		"cover": { "id": "cover", "assets": [], "assetData": {} },
+		"cover-flap": { "id": "cover-flap", "assets": [], "assetData": {} },
+		"back-flap": { "id": "back-flap", "assets": [], "assetData": {} },
+		"back": {"id": "back", "assets": [], "assetData": {} },
+		"P1": {"id": "P1", "assets": [], "assetData": {} },
+		"P2": {"id": "P2", "assets": [], "assetData": {} },
+		"P3": {"id": "P3", "assets": [], "assetData": {} },
+		"P4": {"id": "P4", "assets": [], "assetData": {} }
 	}
 }
 eos

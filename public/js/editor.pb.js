@@ -92,7 +92,8 @@ window.PB // Generic utilities
 })(window);
 
 // PB.ModelMap: maps model ids to models
-// We store model ids, beause models cannot be stored, they change
+// We store model ids, beause models cannot be stored, they can be deleted and recreated
+// by the patching code
 (function(scope) {
 "use strict";
 
@@ -108,6 +109,12 @@ window.PB // Generic utilities
 		},
 		setResolver: function(model_id, resolver) {
 			resolverCache[model_id] = resolver;
+		},
+		unsetResolver: function(model_id) {
+			if (model_id in resolverCache)
+				delete resolverCache[model_id];
+			else
+				console.warn("unsetResolver of not-registered resolver");
 		},
 		domToModel: function(el) {
 			try {

@@ -274,7 +274,7 @@ scope.Template = Template;
 				});
 
 			var style = 'fit';
-			var photos = page.photos();
+			var photos = page.getAssetIds('photo');
 			var perRow = Math.floor(Math.sqrt(photos.length) + 0.99);
 			var dim = new GUI.Rect({width: width / perRow, height: height /perRow});
 

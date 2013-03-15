@@ -11,6 +11,8 @@
 
 <link href='/css/editor.css' rel='stylesheet' type='text/css' />
 <script src="/js/editor.pb.js"></script>
+<script src="/js/editor.pb.book.js"></script>
+<script src="/js/editor.pb.page.js"></script>
 <script src="/js/editor.pb.photos.js"></script>
 <script src="/js/editor.gui.js"></script>
 <%= asset_link("newpage.js") %>
@@ -57,14 +59,16 @@ var BlankPage = {
 	hasLayout: false
 }
 
-var Book = {};
-var currentPage = new BookPage(Book, BlankPage);
+var book = PB.Book.blank();
+var currentPage = book.insertRoughPage(-1);
+
 var Controller = {
 	init: function() {
 
 		currentPage.setLayout('theme://base/layouts/gridLayout');
 		currentPage.setBackground('theme://base/backgrounds/cssBackground');
 		this.addPhoto();
+		this.showPage();
 		this.initBackPicker();
 		this.updateFramePicker();
 	},
@@ -133,7 +137,9 @@ var Controller = {
 	updateFramePicker: function() {
 		$('#framePicker').children().remove();
 		var frames = [
-		{ id: 'theme://base/frames/cssFrame'
+		{ id: 'theme://base/frames/cssFrame',
+			data: {},
+			offset: 0
 		},
 		{ id: 'theme://base/frames/cssFrame',
 			data: {
@@ -164,6 +170,19 @@ var Controller = {
 		var ICON_WIDTH = 50;
 		var ICON_HEIGHT = 50;
 		var ThemeUtils = ThemeCache.resource('theme://base/utilities');
+
+		function assignCb($el, frameId, frameData, frameOffset) {
+			$el.hammer().on('touch', {}, function() {
+				PB.PageSelection.forEach(function(page, itemId) {
+					page.updateAssetData(itemId, {
+						frameId: frameId,
+						frameData: frameData,
+						frameOffset: frameOffset
+					});
+				});
+			});
+		};
+
 		for (var i=0; i<frames.length; i++) {
 			var f = ThemeCache.resource(frames[i].id);
 			var $li = $('<li>');
@@ -188,6 +207,7 @@ var Controller = {
 			$li.append($frameDiv);
 			$li.append($img);
 			$('#framePicker').append($li);
+			assignCb($li, frames[i].id, frames[i].data, frames[i].offset);
 		}
 	},
 	showPage: function() {
@@ -202,25 +222,31 @@ var Controller = {
 	},
 	addPhoto: function() {
 		currentPage.addPhoto(PB.FillerPhotos.random().id);
-		currentPage.layoutFromDesign();
-		this.showPage();
+		this.updateLayoutPicker();
+	},
+	removePhoto: function() {
+		PB.PageSelection.getActiveSelections().forEach(function(pageSel) {
+			pageSel.selection.forEach(function(itemId) {
+				pageSel.bookPage.removeAsset(itemId);
+			});
+			pageSel.setSelection();
+		});
+		this.updateLayoutPicker();
 	},
 	words: ["one", "two", "and a much longer three, how much longer i am not sure"],
 	addText: function() {
 		var word = this.words.shift();
 		this.words.push(word);
 		currentPage.addText(word);
-		currentPage.layoutFromDesign();
-		this.showPage();
 	},
 	setLayout: function(layoutId, layoutData) {
 		currentPage.setLayout(layoutId, layoutData);
-		currentPage.layoutFromDesign();
-		this.showPage();
+//		currentPage.layoutFromDesign();
+//		this.showPage();
 	},
 	setBackground: function(backgroundId, backgroundData) {
 		currentPage.setBackground(backgroundId, backgroundData);
-		this.showPage();
+//		this.showPage();
 	},
 }
 $(document).ready(function() {
@@ -231,7 +257,7 @@ $(document).ready(function() {
 </script>
 <body>
 	<label for='editable'>Editable <input type='checkbox' id='editable' checked onClick='Controller.showPage()'/></label>
-	<label for='syncable'>syncable <input type='checkbox' id='syncable' onClick='Controller.showPage()'/></label>
+	<label for='syncable'>syncable <input type='checkbox' id='syncable' checked onClick='Controller.showPage()'/></label>
 	<button onclick="Controller.addPhoto()">Add photo</button>
 	<button onclick="Controller.removePhoto()">Remove photo</button>
 	<button onclick="Controller.addText()">Add text</button>
