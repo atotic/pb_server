@@ -62,10 +62,8 @@ asset text {
 		PB.ModelMap.setResolver( function() {
 			var page = book.page(pageProxy.id);
 			var item = page.p.assetData[assetId];
-			if (!item) {
-				console.error("Resolving item not there");
-				debugger;
-			};
+			if (!item)
+				PB.debugstr("Resolving item not there");
 			return item;
 		});
 	};
@@ -186,10 +184,8 @@ asset text {
 		},
 		removeAsset: function(id, options) {
 			var idx = this.p.assets.indexOf(id);
-			if (idx == -1) {
-				console.error("removing non-exhistent asset");
-				debugger;
-			}
+			if (idx == -1)
+				return PB.debugstr("removing non-exhistent asset");
 			this.p.assets.splice(idx, 1);
 			var assetData = this.p.assetData[id];
 			delete this.p.assetData[id];
@@ -203,21 +199,18 @@ asset text {
 			options = $.extend({
 				clobber: false	// clobbers all existing data
 			}, options);
-			if (!(id in this.p.assetData)) {
-				console.error("Updating non-existent asset data");
-				debugger;
-			};
+			if (!(id in this.p.assetData))
+				return PB.debugstr("Updating non-existent asset data");
 			if (options.clobber)
 				this.p.assetData[id] = newData;
 			else
 				$.extend(this.p.assetData[id], newData);
+			this.updateItemInner(id);
 			PB.broadcastChange({id: id}, 'alldata', options);
 		},
 		addPhoto: function(id, options) {
-			if ((typeof id) != 'string') {
-				console.error("illegal argument to addPhoto");
-				debugger;
-			}
+			if ((typeof id) != 'string')
+				return PB.debugstr("illegal argument to addPhoto");
 			var data = {
 				type: 'photo',
 				photoId: id
@@ -345,6 +338,35 @@ asset text {
 			});
 			return canvas;
 		},
+		updateItemInner: function(itemId) {
+			if ( !this.p.hasLayout )
+				return;
+			if ( !( itemId in this.p.assetData ))
+				return PB.debugstr("updateItemInner on non-existent item");
+
+			var assetData = this.p.assetData[itemId];
+			switch(assetData.type) {
+				case 'photo':
+					var innerRect = new GUI.Rect(assetData);
+					if (assetData.frameId)
+						innerRect = innerRect.inset(assetData.frameOffset);
+
+					var photo = PB.ServerPhotoCache.get(assetData.photoId);
+					var photoRect = new GUI.Rect(photo);
+					var scale = photoRect.fillInside(innerRect);
+					photoRect = photoRect.scaleBy(scale).centerIn(innerRect).round();
+					$.extend(assetData.photoRect, {
+						top: photoRect.top,
+						left: photoRect.left,
+						width: photoRect.width,
+						height: photoRect.height
+					});
+				break;
+				default:
+				console.warn("not updating item inner of type ", assetData.type);
+				break;
+			}
+		},
 		layoutFromDesign: function() {
 			// reconcile existing layout with layout from design
 			this.hasLayout = false;
@@ -369,7 +391,7 @@ asset text {
 					case 'photo': {
 						var photoId = photoAssetIds.shift();
 						if (photoId == null) {
-							console.error("Should add more photos dynamically");
+							PB.debugstr("Should add more photos dynamically");
 							break;
 						}
 						var assetData = this.p.assetData[photoId];
@@ -649,7 +671,6 @@ asset text {
 			var itemId = itemDom.data('model_id');
 			PageSelection.findInParent(itemDom)
 				.setSelection(itemId);
-			console.log("item was clicked");
 		},
 		makeEditable: function(item, $itemDom) {
 			$itemDom.hammer().on('touch', {}, this.touchItemCb);

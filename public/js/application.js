@@ -50,6 +50,10 @@
 			this._getAlertContainer().append(newDiv);
 			return newDiv;
 		},
+		debugstr: function() {
+			console.error.apply(console, arguments);
+			debugger;
+		},
 		// shows flash messages from xhr headers
 		showXhrFlash: function(event, jqXHR, ajaxOptions) {
 			var msg = jqXHR.getResponseHeader('X-FlashError');
