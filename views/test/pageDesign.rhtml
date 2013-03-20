@@ -2,19 +2,20 @@
 <head>
 <title>PageDesign Mockup</title>
 
-<%= asset_link("application.css") %>
 <%= asset_link("jquery.js", "application.js") %>
 <%= asset_link("gradients.js") %>
 <%= asset_link("jquery.hammer.js") %>
 <%= asset_link("jquery.dataSelector.js") %>
 <%= asset_link("bootstrap") %>
-
+<%= asset_link("application.css") %>
 <link href='/css/editor.css' rel='stylesheet' type='text/css' />
 <script src="/js/editor.pb.js"></script>
 <script src="/js/editor.pb.book.js"></script>
 <script src="/js/editor.pb.page.js"></script>
 <script src="/js/editor.pb.photos.js"></script>
 <script src="/js/editor.gui.js"></script>
+<script src="/js/editor.gui.events.js"></script>
+<script src="/js/editor.gui.popup.js"></script>
 <%= asset_link("newpage.js") %>
 <style type="text/css">
 #backgroundPicker {
@@ -253,10 +254,29 @@ var Controller = {
 $(document).ready(function() {
 	Controller.init();
 //	$(document.body).css('background', 'linear-gradient(45deg, red, blue)');
+	$('#eventTester').on({
+		click: function(ev) {
+			console.log(ev.type);
+			PB.stopEvent(ev);
+		},
+		mousedown: function(ev) {
+			console.log(ev.type);
+			PB.stopEvent(ev);
+		},
+		mouseup: function(ev) {
+			console.log(ev.type);
+			PB.stopEvent(ev);
+		}
+	});
 });
 
 </script>
 <body>
+<ul id='poopup'>
+<li><a href='#'>zoom</a></li>
+<li><a href='#'>pan</a></li>
+<li><a href='#'>move</a></li>
+</ul>
 	<label for='editable'>Editable <input type='checkbox' id='editable' checked onClick='Controller.showPage()'/></label>
 	<label for='syncable'>syncable <input type='checkbox' id='syncable' checked onClick='Controller.showPage()'/></label>
 	<button onclick="Controller.addPhoto()">Add photo</button>

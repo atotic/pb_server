@@ -32,6 +32,7 @@ Excellent CSS effects: bounce, rotate, etc. If I ever need visual candy http://b
 CSS arrow please: http://cssarrowplease.com/
 
 JS
+Google Drive Realtime API: http://googledevelopers.blogspot.com/2013/03/build-collaborative-apps-with-google.html?utm_source=feedburner&utm_medium=feed&utm_campaign=Feed%3A+GDBcode+%28Google+Developers+Blog%29
 Javascript head tracker
 Secrets of layout: how does DOM access interracts with layout: http://kellegous.com/j/2013/01/26/layout-performance/
 

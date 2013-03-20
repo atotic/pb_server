@@ -642,7 +642,7 @@ asset text {
 		'itemsByType',
 		'item',
 		'photos'
-	].forEach(
+		].forEach(
 		function(name) {
 			PageProxy.prototype[name] = function() {
 				console.error("Removed function called", name);
@@ -666,14 +666,30 @@ asset text {
 	};
 
 	var PageProxyEditable = {
-		touchItemCb: function(ev) {
-			var itemDom = $(ev.currentTarget);
-			var itemId = itemDom.data('model_id');
-			PageSelection.findInParent(itemDom)
-				.setSelection(itemId);
+		editItemCb: function(ev) {
+			function popupOverElement($popup, $el) {
+				$popup.pbPopup('show');
+				var elRect = $el.get(0).getBoundingClientRect();
+				var popupRect = $popup.get(0).getBoundingClientRect();
+				$popup.css({
+						position: 'absolute',
+						top: Math.max(window.pageYOffset, elRect.top + window.pageYOffset - popupRect.height + 8),
+						left: Math.max(window.pageXOffset, elRect.left + window.pageXOffset + 8)
+					});
+			};
+			var $itemDom = $( ev.currentTarget );
+			var itemId = $itemDom.data( 'model_id' );
+			PageSelection.findInParent( $itemDom )
+				.setSelection( itemId );
+			// display popup
+			popupOverElement($('#photo-popup'), $itemDom);
+			var srcEvent = ev.gesture.srcEvent;
+//			srcEvent.preventDefault();
+//			srcEvent.stopPropagation();
 		},
 		makeEditable: function(item, $itemDom) {
-			$itemDom.hammer().on('touch', {}, this.touchItemCb);
+//			$itemDom.on('click', this.editItemCb);
+			$itemDom.hammer().on('touch', {}, this.editItemCb);
 		},
 		makeItemSyncable: function(page, $itemDom, options) {
 			$itemDom.on( PB.MODEL_CHANGED, function( ev, model, prop, eventOptions ) {
@@ -768,8 +784,32 @@ asset text {
 			});
 	};
 
+	$(document).ready(function() {
+		// create the action popups
+		function makeLiAction($li, title) {
+			var $a = $(document.createElement('a'));
+			$a.text(title);
+			$a.prop('href', '/#' + title);
+			$a.on("click", function(ev) {
+				console.log(title);
+				ev.preventDefault();
+			});
+			$li.append($a);
+		}
+		var $photoPopup = $('<ul>')
+			.addClass('pb-popup-menu')
+			.prop('id', 'photo-popup');
+		["pan","move","zoom","resize","rotate","clear"]
+			.forEach( function( title ) {
+				var $li = $( "<li>" );
+				makeLiAction($li, title);
+				$photoPopup.append($li);
+			});
+		$(document.body).append($photoPopup);
+	});
 	scope.PageProxy = PageProxy;
 	scope.PageSelection = PageSelection;
+
 })(PB);
 /*
 // PB.OldPageProxy

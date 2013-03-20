@@ -60,6 +60,10 @@
 			if (msg) PB.error(msg);
 			msg = jqXHR.getResponseHeader('X-FlashNotice');
 			if (msg) PB.info(msg);
+		},
+		stopEvent: function(ev) {
+			ev.stopPropagation();
+			ev.preventDefault();
 		}
 	};
 	// Timer utility class

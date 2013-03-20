@@ -60,8 +60,15 @@ Next:
 - callback parameter for jsonp templates, make them cacheable
 
 Next
-- bug: page sorting
 - library updates: jquery 1.9, transit
+
+- Map is a great example of a widget
+
+Mar 14:
+Moved book page to new architecture. Lots of old stuff broken:
+- drag n drop in workarea.rough. Pages no longer list images as photoList, will need id
+conversion, probably as part of drag'n'drop rewrite
+- Design is completely busted with new templates
 
 Mar 8:
 First great week in a long time. Implementing full-featured page editing in a sandbox

@@ -2904,7 +2904,7 @@ jQuery.event = {
 			eventPath = [ elem || document ],
 			type = core_hasOwn.call( event, "type" ) ? event.type : event,
 			namespaces = core_hasOwn.call( event, "namespace" ) ? event.namespace.split(".") : [];
-
+//		console.error("trigger", event);
 		cur = tmp = elem = elem || document;
 
 		// Don't do events on text and comment nodes
@@ -3374,6 +3374,7 @@ jQuery.Event.prototype = {
 
 		this.isDefaultPrevented = returnTrue;
 		if ( !e ) {
+			console.warn("prevent default, but no event", this);
 			return;
 		}
 
