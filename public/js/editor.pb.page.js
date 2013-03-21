@@ -64,7 +64,7 @@ asset text {
 			var item = page.p.assetData[assetId];
 			if (!item)
 				PB.debugstr("Resolving item not there");
-			return {pageId: page, item: item};
+			return { page: page, item: item, itemId: assetId };
 		});
 	};
 	var PageProxy = function(id, book) {
@@ -670,7 +670,58 @@ asset text {
 		}
 	};
 
+	var Popups = {
+		makeLiAction: function ($li, title, cmdId) {
+			var $a = $(document.createElement('a'));
+			$a.text(title);
+			$a.prop('href', '/#' + title);
+			$a.on("click", function(ev) {
+				try {
+					var pageItem = PB.ModelMap.model(
+						$a.parents('ul').data('popupModel'));
+					pageItem.page.handlePopupCommand(pageItem.itemId, cmdId || title);
+				}
+				catch(ex) {
+					console.error(ex);
+				}
+				ev.preventDefault();
+			});
+			$li.append($a);
+		},
+		photoPopup: function() {
+			var $popup = $('photo-popup');
+			if ($popup.length != 0)
+				return $popup;
+			$popup = $('<ul>').addClass('pb-popup-menu').prop('id', 'photo-popup');
+			["move","pan","zoom","resize","rotate","clear"]
+				.forEach( function( title ) {
+					var $li = $( "<li>" );
+					Popups.makeLiAction($li, title);
+					$popup.append($li);
+				});
+			$(document.body).append($popup);
+			return $popup;
+		},
+		textPopup: function() {
+			var $popup = $('text-popup');
+			if ($popup.length != 0)
+				return $popup;
+			var $popup = $('<ul>').addClass('pb-popup-menu').prop('id', 'text-popup');
+			["move","resize","edit"]
+				.forEach( function( title ) {
+					var $li = $( "<li>" );
+					Popups.makeLiAction($li, title);
+					$popup.append($li);
+				});
+			$(document.body).append($popup);
+			return $popup;
+		}
+	}
+
 	var PageProxyEditable = {
+		handlePopupCommand: function(itemId, cmdId) {
+			console.log(cmdId);
+		},
 		editItemCb: function(ev) {
 			function popupOverElement($popup, $el) {
 				$popup.pbPopup('show');
@@ -688,15 +739,20 @@ asset text {
 				.setSelection( itemId );
 			// display popup
 			var itemPage = PB.ModelMap.model(itemId);
+			var $popup;
 			switch(itemPage.item.type) {
 				case 'photo':
-					popupOverElement($('#photo-popup'), $itemDom);
+					$popup = Popups.photoPopup();
 				break;
 				case 'text':
-					popupOverElement($('#text-popup'), $itemDom);
+					$popup = Popups.textPopup();
 				break;
 				default:
 					console.warn("No menus available over items of type", itemPage.item.type);
+			}
+			if ($popup.length != 0) {
+				$popup.data("popupModel", itemId);
+				popupOverElement($popup, $itemDom);
 			}
 			PB.stopEvent(ev);
 //			var srcEvent = ev.gesture.srcEvent;
@@ -804,35 +860,7 @@ asset text {
 			});
 	};
 
-	$(document).ready(function() {
-		// create the action popups
-		function makeLiAction($li, title) {
-			var $a = $(document.createElement('a'));
-			$a.text(title);
-			$a.prop('href', '/#' + title);
-			$a.on("click", function(ev) {
-				console.log(title);
-				ev.preventDefault();
-			});
-			$li.append($a);
-		}
-		var $photoPopup = $('<ul>').addClass('pb-popup-menu').prop('id', 'photo-popup');
-		["move","pan","zoom","resize","rotate","clear"]
-			.forEach( function( title ) {
-				var $li = $( "<li>" );
-				makeLiAction($li, title);
-				$photoPopup.append($li);
-			});
-		$(document.body).append($photoPopup);
-		var $textPopup = $('<ul>').addClass('pb-popup-menu').prop('id', 'text-popup');
-		["move","resize","edit"]
-			.forEach( function( title ) {
-				var $li = $( "<li>" );
-				makeLiAction($li, title);
-				$textPopup.append($li);
-			});
-		$(document.body).append($textPopup);
-	});
+
 	scope.PageProxy = PageProxy;
 	scope.PageSelection = PageSelection;
 
