@@ -59,12 +59,12 @@ asset text {
 
 	function registerPageAssetResolver(pageProxy, assetId) {
 		var book = pageProxy.book;
-		PB.ModelMap.setResolver( function() {
+		PB.ModelMap.setResolver( assetId, function() {
 			var page = book.page(pageProxy.id);
 			var item = page.p.assetData[assetId];
 			if (!item)
 				PB.debugstr("Resolving item not there");
-			return item;
+			return {pageId: page, item: item};
 		});
 	};
 	var PageProxy = function(id, book) {
@@ -625,8 +625,13 @@ asset text {
 			}
 			else
 				$encloseDom.text("Design not available." + this.p.assets.length + " items on this page");
-			if ( options.editable )
+			if ( options.editable ) {
+				$encloseDom.hammer().on( 'touch', {}, function(ev) {
+					console.log("body touch");
+					PageSelection.findInParent($encloseDom).setSelection();
+				});
 				PageSelection.bindToDom( this, $encloseDom )
+			}
 			if ( options.syncable && !options.enclosingDom )
 				this.makePageSyncable( $encloseDom, options );
 			return $encloseDom;
@@ -682,10 +687,20 @@ asset text {
 			PageSelection.findInParent( $itemDom )
 				.setSelection( itemId );
 			// display popup
-			popupOverElement($('#photo-popup'), $itemDom);
-			var srcEvent = ev.gesture.srcEvent;
-//			srcEvent.preventDefault();
-//			srcEvent.stopPropagation();
+			var itemPage = PB.ModelMap.model(itemId);
+			switch(itemPage.item.type) {
+				case 'photo':
+					popupOverElement($('#photo-popup'), $itemDom);
+				break;
+				case 'text':
+					popupOverElement($('#text-popup'), $itemDom);
+				break;
+				default:
+					console.warn("No menus available over items of type", itemPage.item.type);
+			}
+			PB.stopEvent(ev);
+//			var srcEvent = ev.gesture.srcEvent;
+//			PB.stopEvent(srcEvent);
 		},
 		makeEditable: function(item, $itemDom) {
 //			$itemDom.on('click', this.editItemCb);
@@ -693,8 +708,12 @@ asset text {
 		},
 		makeItemSyncable: function(page, $itemDom, options) {
 			$itemDom.on( PB.MODEL_CHANGED, function( ev, model, prop, eventOptions ) {
+				var $pageDom = $itemDom.parents( '.design-page' );
 				$itemDom.remove();
-				page.generateDom($.extend( {}, eventOptions, options));
+				page.generateDom($.extend( {}, eventOptions, options,
+						{enclosingDom: $pageDom }
+						));
+				ev.stopPropagation();
 			});
 		},
 		makePageSyncable: function($pageDom, options) {
@@ -743,7 +762,8 @@ asset text {
 
 	PageSelection.DATA_ID = 'pageSelection';
 	PageSelection.findInParent = function($dom) {
-		var ps = $dom.parents('*:data("pageSelection")').data(PageSelection.DATA_ID);
+		var ps = $dom.parents( '*:data("pageSelection")' ).data(PageSelection.DATA_ID);
+		ps = ps || $dom.data(PageSelection.DATA_ID);
 		if (ps == null) {
 			console.error("could not find pageselection in ", $dom);
 			throw "Could not find pageselection";
@@ -796,16 +816,22 @@ asset text {
 			});
 			$li.append($a);
 		}
-		var $photoPopup = $('<ul>')
-			.addClass('pb-popup-menu')
-			.prop('id', 'photo-popup');
-		["pan","move","zoom","resize","rotate","clear"]
+		var $photoPopup = $('<ul>').addClass('pb-popup-menu').prop('id', 'photo-popup');
+		["move","pan","zoom","resize","rotate","clear"]
 			.forEach( function( title ) {
 				var $li = $( "<li>" );
 				makeLiAction($li, title);
 				$photoPopup.append($li);
 			});
 		$(document.body).append($photoPopup);
+		var $textPopup = $('<ul>').addClass('pb-popup-menu').prop('id', 'text-popup');
+		["move","resize","edit"]
+			.forEach( function( title ) {
+				var $li = $( "<li>" );
+				makeLiAction($li, title);
+				$textPopup.append($li);
+			});
+		$(document.body).append($textPopup);
 	});
 	scope.PageProxy = PageProxy;
 	scope.PageSelection = PageSelection;

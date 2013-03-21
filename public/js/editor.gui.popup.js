@@ -42,8 +42,9 @@ function registerEventHandlers() {
 		unregisterEventHandlers();
 	}
 	var ignoreFirstStart = true;
+	var ignoreFirstStop = true;
 	function start(ev) {
-		// console.log('start');
+//		console.log('start');
 		if (ignoreFirstStart) {
 			ignoreFirstStart = false;
 			// console.log("ignoring start");
@@ -69,6 +70,11 @@ function registerEventHandlers() {
 			cleanup();
 		}
 		else {
+			if (ignoreFirstStop) {
+				ignoreFirstStop = false;
+				return;
+			}
+			cleanup();
 //			console.log("click, no anchor");
 		}
 	};

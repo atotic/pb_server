@@ -69,6 +69,8 @@ var Controller = {
 		currentPage.setLayout('theme://base/layouts/gridLayout');
 		currentPage.setBackground('theme://base/backgrounds/cssBackground');
 		this.addPhoto();
+		this.addPhoto();
+		this.addPhoto();
 		this.showPage();
 		this.initBackPicker();
 		this.updateFramePicker();
@@ -85,9 +87,9 @@ var Controller = {
 			}
 		},
 		{ id: 'theme://base/backgrounds/cssBackground',
-			name: 'Red',
+			name: 'Rainbow',
 			data: {
-				css: {backgroundColor: 'red'}
+				css: {background: 'linear-gradient(red, yellow, orange, green, blue, purple)'}
 			}
 		}
 		];
@@ -153,7 +155,7 @@ var Controller = {
 		{ id: 'theme://base/frames/cssFrame',
 			data: {
 				css: {
-					background: 'linear-gradient(to bottom, #b4ddb4 0%,#83c783 17%,#52b152 33%,#008a00 67%,#005700 83%,#002400 100%)'
+					background: 'linear-gradient(red, yellow, orange, green, blue, purple)'
 				}
 			},
 			offset: [5, 3, 10, 20]
@@ -272,11 +274,6 @@ $(document).ready(function() {
 
 </script>
 <body>
-<ul id='poopup'>
-<li><a href='#'>zoom</a></li>
-<li><a href='#'>pan</a></li>
-<li><a href='#'>move</a></li>
-</ul>
 	<label for='editable'>Editable <input type='checkbox' id='editable' checked onClick='Controller.showPage()'/></label>
 	<label for='syncable'>syncable <input type='checkbox' id='syncable' checked onClick='Controller.showPage()'/></label>
 	<button onclick="Controller.addPhoto()">Add photo</button>

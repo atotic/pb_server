@@ -63,7 +63,8 @@ window.PB // Generic utilities
 					}
 					else {
 						var filter = $('*:data("model_id")');
-						filter.filter('*:data("model_id=' + model.id + '")').trigger(PB.MODEL_CHANGED, [model, propName, options]);
+						filter.filter('*:data("model_id=' + model.id + '")')
+							.trigger(PB.MODEL_CHANGED, [model, propName, options]);
 				}
 				} catch(ex) {
 					debugger;
