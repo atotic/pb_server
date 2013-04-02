@@ -392,17 +392,25 @@ var DesignWorkArea = {
 
 		// create new pages
 		var pagesDom = [];
-		function makePageDom(page, size) {
-			return $(page.dom(size))
-							.addClass('design-page')
-							.data('model_id', pages[i].id);
+		function makePageDom(page, options) {
+			return $(page.generateDom(options));
 		}
+		var loResOptions = {
+			size: PB.PhotoProxy.SMALL,
+			syncable: false,
+			editable: false
+		};
+		var hiResOptions = {
+			size: PB.PhotoProxy.MEDIUM,
+			syncable: true,
+			editable: true
+		};
 		for (var i=0; i<pages.length; i++) {
 			if (pages[i] == null)
 				continue;
 			if (animate) {
-				pagesDom[i] = makePageDom(pages[i], PB.PhotoProxy.SMALL);
-				pagesDom[i].data('highDpi', makePageDom(pages[i], PB.PhotoProxy.MEDIUM));
+				pagesDom[i] = makePageDom( pages[i], loResOptions);
+				pagesDom[i].data('highDpi', makePageDom( pages[i], hiResOptions));
 			}
 			else
 				pagesDom[i] = makePageDom(pages[i], PB.PhotoProxy.MEDIUM);

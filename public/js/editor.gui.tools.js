@@ -87,7 +87,7 @@
 					}
 				}
 				while (want > 0 && photos.length > 0) {
-					nextPage.addPhoto(book.photo(photos.shift()), {animate:false});
+					nextPage.addPhoto(photos.shift(), {animate:false});
 					want--;
 				}
 			}
