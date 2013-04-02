@@ -193,6 +193,7 @@ walmart & walgreens both use snapfish photo book creation software.
 Adorama: seems to have their own book solution based upon flash
 
 BUSINESS
+Cute video production company, nousDecor used them http://www.epipheo.com/
 Pastbook: social memories in book form http://hub.pastbook.com/en/
 Move your photos anywhere http://pi.pe/
 Weavora: they have a nice set of templates for bootstrap, might be a good choice for outsourcing

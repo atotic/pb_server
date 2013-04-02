@@ -37,12 +37,15 @@ function registerEventHandlers() {
 		}
 		return null;
 	};
+
+	var ignoreFirstStart = true;
+	var ignoreFirstStop = true;
+
 	function cleanup() {
 		$(document.body).find('.pbopen').removeClass('pbopen');
 		unregisterEventHandlers();
 	}
-	var ignoreFirstStart = true;
-	var ignoreFirstStop = true;
+
 	function start(ev) {
 //		console.log('start');
 		if (ignoreFirstStart) {
@@ -61,12 +64,14 @@ function registerEventHandlers() {
 			cleanup();
 		}
 	};
+
 	function stop(ev) {
 //		console.log('stop');
 		var $a =  getPopupAnchor(ev);
 		if ($a) {
 //			console.log("anchor click");
-			$a.click();
+			$a.trigger('popupClick');
+			('gesture' in ev) ? PB.stopEvent(ev.gesture.srcEvent) : PB.stopEvent(ev);
 			cleanup();
 		}
 		else {
@@ -78,6 +83,7 @@ function registerEventHandlers() {
 //			console.log("click, no anchor");
 		}
 	};
+
 	function move(ev) {
 		var $a = getPopupAnchor(ev);
 		if ($a) {
@@ -91,6 +97,7 @@ function registerEventHandlers() {
 		};
 		('gesture' in ev ? ev.gesture.srcEvent : ev).preventDefault();
 	};
+
 	unregisterEventHandlers();
 	$(document.body).hammer()
 		.on("touch.pbPopup", start)

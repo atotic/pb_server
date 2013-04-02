@@ -675,17 +675,21 @@ asset text {
 			var $a = $(document.createElement('a'));
 			$a.text(title);
 			$a.prop('href', '/#' + title);
-			$a.on("click", function(ev) {
+			$a.on("popupClick", function(ev) {
 				try {
-					var pageItem = PB.ModelMap.model(
-						$a.parents('ul').data('popupModel'));
-					pageItem.page.handlePopupCommand(pageItem.itemId, cmdId || title);
+					var $popup = $a.parents('.pb-popup-menu');
+					var pageItem = PB.ModelMap.model($popup.data('popupModel'));
+					var $pageDom = $popup.data("popupPageDom");
+					pageItem.page.handlePopupCommand( pageItem.itemId, cmdId || title, $pageDom );
+					$popup.data("popupModel", null);
+					$popup.data("popupPageDom", null);
 				}
 				catch(ex) {
 					console.error(ex);
 				}
-				ev.preventDefault();
-			});
+				PB.stopEvent(ev);
+			})
+			.on('click', PB.stopEvent);
 			$li.append($a);
 		},
 		photoPopup: function() {
@@ -718,9 +722,62 @@ asset text {
 		}
 	}
 
+	// returns corners clockwise, starting topleft
+	function getFourCorners($dom, theta) {
+		theta = theta || 0;
+		theta  = theta % 360;
+		var ratio = $dom.height() / $dom.width();
+		var bBox = $dom.get(0).getBoundingClientRect();
+		var width = bBox.right - bBox.left;
+		var height = bBox.bottom - bBox.top;
+
+		var tanTheta = Math.tan(theta * Math.PI / 180);
+		var h1 = tanTheta == 0 ? 0 : height / ( 1 + ratio/tanTheta);
+		var h2 = height - h1;
+		var w1 = width / ( 1 + ratio * tanTheta);
+		var w2 = width - w1;
+
+		var top = 		{ x: bBox.left + w2, 	y: bBox.top};
+		var right = 	{ x: bBox.right,	 	y: bBox.top + h1 };
+		var bottom = 	{ x: bBox.left + w1, 	y: bBox.bottom };
+		var left = 		{ x: bBox.left,			y: bBox.top + h2 };
+
+		[left,top,bottom,right].forEach(function(el) {
+			el.x += window.pageXOffset;
+			el.y += window.pageYOffset;
+		});
+		return {
+			a: top,
+			b: right,
+			c: bottom,
+			d: left
+		};
+	};
 	var PageProxyEditable = {
-		handlePopupCommand: function(itemId, cmdId) {
+		handlePopupCommand: function(itemId, cmdId, $pageDom) {
+			function makeManipulator(x,y, text) {
+				var $m = $('<div>')
+					.addClass('manipulator-btn')
+					.css({
+						top: y,
+						left: x
+					})
+					.text(text);
+				return $m;
+			}
+			// find item inside page dom
+			// determine item position on the page
+			var $itemDom = $pageDom.find('*:data("model_id=' + itemId + '")');
+			var pageItem = PB.ModelMap.model(itemId);
+			var corners = getFourCorners($itemDom, pageItem.item.rotate);
+			$(document.body)
+				.append(makeManipulator( corners.a.x, corners.a.y, "A"))
+				.append(makeManipulator( corners.b.x, corners.b.y, "B"))
+				.append(makeManipulator( corners.c.x, corners.c.y, "C"))
+				.append(makeManipulator( corners.d.x, corners.d.y, "D"));
+
 			console.log(cmdId);
+			console.log(corners);
 		},
 		editItemCb: function(ev) {
 			function popupOverElement($popup, $el) {
@@ -752,6 +809,7 @@ asset text {
 			}
 			if ($popup.length != 0) {
 				$popup.data("popupModel", itemId);
+				$popup.data("popupPageDom", $itemDom.parents('.design-page'));
 				popupOverElement($popup, $itemDom);
 			}
 			PB.stopEvent(ev);

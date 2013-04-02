@@ -71,6 +71,7 @@ var Controller = {
 		this.addPhoto();
 		this.addPhoto();
 		this.addPhoto();
+		this.setLayout('theme://experimental/layouts/framedLayout');
 		this.showPage();
 		this.initBackPicker();
 		this.updateFramePicker();
@@ -255,20 +256,6 @@ var Controller = {
 $(document).ready(function() {
 	Controller.init();
 //	$(document.body).css('background', 'linear-gradient(45deg, red, blue)');
-	$('#eventTester').on({
-		click: function(ev) {
-			console.log(ev.type);
-			PB.stopEvent(ev);
-		},
-		mousedown: function(ev) {
-			console.log(ev.type);
-			PB.stopEvent(ev);
-		},
-		mouseup: function(ev) {
-			console.log(ev.type);
-			PB.stopEvent(ev);
-		}
-	});
 });
 
 </script>
