@@ -625,13 +625,15 @@ asset text {
 			}
 			else
 				$encloseDom.text("Design not available." + this.p.assets.length + " items on this page");
-			if ( options.editable ) {
+			if ( options.editable && !options.enclosingDom) {
 				$encloseDom.hammer().on( 'touch', {}, function(ev) {
 					console.log("body touch");
 					PageSelection.findInParent($encloseDom).setSelection();
 				});
 				PageSelection.bindToDom( this, $encloseDom )
 			}
+			if (options.editable)
+				PageSelection.findInParent($encloseDom).relayout();
 			if ( options.syncable && !options.enclosingDom )
 				this.makePageSyncable( $encloseDom, options );
 			return $encloseDom;
@@ -693,7 +695,7 @@ asset text {
 			$li.append($a);
 		},
 		photoPopup: function() {
-			var $popup = $('photo-popup');
+			var $popup = $('#photo-popup');
 			if ($popup.length != 0)
 				return $popup;
 			$popup = $('<ul>').addClass('pb-popup-menu').prop('id', 'photo-popup');
@@ -707,7 +709,7 @@ asset text {
 			return $popup;
 		},
 		textPopup: function() {
-			var $popup = $('text-popup');
+			var $popup = $('#text-popup');
 			if ($popup.length != 0)
 				return $popup;
 			var $popup = $('<ul>').addClass('pb-popup-menu').prop('id', 'text-popup');
@@ -722,62 +724,13 @@ asset text {
 		}
 	}
 
-	// returns corners clockwise, starting topleft
-	function getFourCorners($dom, theta) {
-		theta = theta || 0;
-		theta  = theta % 360;
-		var ratio = $dom.height() / $dom.width();
-		var bBox = $dom.get(0).getBoundingClientRect();
-		var width = bBox.right - bBox.left;
-		var height = bBox.bottom - bBox.top;
-
-		var tanTheta = Math.tan(theta * Math.PI / 180);
-		var h1 = tanTheta == 0 ? 0 : height / ( 1 + ratio/tanTheta);
-		var h2 = height - h1;
-		var w1 = width / ( 1 + ratio * tanTheta);
-		var w2 = width - w1;
-
-		var top = 		{ x: bBox.left + w2, 	y: bBox.top};
-		var right = 	{ x: bBox.right,	 	y: bBox.top + h1 };
-		var bottom = 	{ x: bBox.left + w1, 	y: bBox.bottom };
-		var left = 		{ x: bBox.left,			y: bBox.top + h2 };
-
-		[left,top,bottom,right].forEach(function(el) {
-			el.x += window.pageXOffset;
-			el.y += window.pageYOffset;
-		});
-		return {
-			a: top,
-			b: right,
-			c: bottom,
-			d: left
-		};
-	};
 	var PageProxyEditable = {
 		handlePopupCommand: function(itemId, cmdId, $pageDom) {
-			function makeManipulator(x,y, text) {
-				var $m = $('<div>')
-					.addClass('manipulator-btn')
-					.css({
-						top: y,
-						left: x
-					})
-					.text(text);
-				return $m;
-			}
 			// find item inside page dom
 			// determine item position on the page
-			var $itemDom = $pageDom.find('*:data("model_id=' + itemId + '")');
-			var pageItem = PB.ModelMap.model(itemId);
-			var corners = getFourCorners($itemDom, pageItem.item.rotate);
-			$(document.body)
-				.append(makeManipulator( corners.a.x, corners.a.y, "A"))
-				.append(makeManipulator( corners.b.x, corners.b.y, "B"))
-				.append(makeManipulator( corners.c.x, corners.c.y, "C"))
-				.append(makeManipulator( corners.d.x, corners.d.y, "D"));
-
 			console.log(cmdId);
-			console.log(corners);
+			var m = new GUI.DefaultManipulator($pageDom, itemId);
+			PageSelection.findInParent($pageDom).setManipulator(m);
 		},
 		editItemCb: function(ev) {
 			function popupOverElement($popup, $el) {
@@ -813,11 +766,8 @@ asset text {
 				popupOverElement($popup, $itemDom);
 			}
 			PB.stopEvent(ev);
-//			var srcEvent = ev.gesture.srcEvent;
-//			PB.stopEvent(srcEvent);
 		},
 		makeEditable: function(item, $itemDom) {
-//			$itemDom.on('click', this.editItemCb);
 			$itemDom.hammer().on('touch', {}, this.editItemCb);
 		},
 		makeItemSyncable: function(page, $itemDom, options) {
@@ -860,6 +810,7 @@ asset text {
 		this.bookPage = bookPage;
 		this.dom = dom;
 		this.selection = [];
+		this.manipulator = null;
 	};
 	PageSelection.prototype = {
 		setSelection: function(itemId) {
@@ -870,6 +821,17 @@ asset text {
 			this.dom.find('.selected').removeClass('selected');
 			for (var i=0; i<this.selection.length; i++)
 				this.dom.find('*:data("model_id=' + this.selection[i] + '")').addClass('selected');
+		},
+		setManipulator: function(manipulator) {
+			if (this.manipulator)
+				this.manipulator.remove();
+			this.manipulator = manipulator;
+			if (this.manipulator)
+				this.manipulator.show();
+		},
+		relayout: function() {
+			if (this.manipulator)
+				this.manipulator.reposition();
 		}
 	};
 
