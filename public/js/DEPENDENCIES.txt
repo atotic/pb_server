@@ -42,6 +42,10 @@ heavily modified, I own it now
 jquery.fullscreen.js
 https://github.com/kayahr/jquery-fullscreen-plugin
 
+hammer.js
+https://github.com/EightMedia/hammer.js/
+gesture library
+
 Need update
 jdataview.js
 https://github.com/vjeux/jDataView

@@ -201,12 +201,25 @@ asset text {
 			}, options);
 			if (!(id in this.p.assetData))
 				return PB.debugstr("Updating non-existent asset data");
+
+			var dirty = options.clobber;
+
 			if (options.clobber)
 				this.p.assetData[id] = newData;
-			else
+			else {
+				for (var prop in newData) {
+					if (newData[prop] != this.p.assetData[id][prop]) {
+						this.p.assetData[id][prop] = newData[prop];
+						dirty = true;
+					}
+				}
 				$.extend(this.p.assetData[id], newData);
-			this.updateItemInner(id);
-			PB.broadcastChange({id: id}, 'alldata', options);
+			}
+			// optimize: if data does not change, do not broadcast changes. Useful for manipulators
+			if (dirty) {
+				this.updateItemInner(id);
+				PB.broadcastChange({id: id}, 'alldata', options);
+			}
 		},
 		addPhoto: function(id, options) {
 			if ((typeof id) != 'string')
@@ -728,9 +741,17 @@ asset text {
 		handlePopupCommand: function(itemId, cmdId, $pageDom) {
 			// find item inside page dom
 			// determine item position on the page
+			var manipulator;
+			switch(cmdId) {
+				case 'move':
+					manipulator = new GUI.Manipulators.Move( $pageDom, itemId );
+					break;
+				default:
+					manipulator = new GUI.Manipulators.Default( $pageDom, itemId );
+					break;
+			}
 			console.log(cmdId);
-			var m = new GUI.DefaultManipulator($pageDom, itemId);
-			PageSelection.findInParent($pageDom).setManipulator(m);
+			PageSelection.findInParent( $pageDom ).setManipulator( manipulator );
 		},
 		editItemCb: function(ev) {
 			function popupOverElement($popup, $el) {
@@ -777,6 +798,7 @@ asset text {
 				page.generateDom($.extend( {}, eventOptions, options,
 						{enclosingDom: $pageDom }
 						));
+				PageSelection.findInParent($pageDom).highlight();
 				ev.stopPropagation();
 			});
 		},
@@ -816,6 +838,8 @@ asset text {
 		setSelection: function(itemId) {
 			this.selection = itemId ? [itemId] : [];
 			this.highlight();
+			if (this.manipulator && this.manipulator.itemId != itemId)
+				this.setManipulator(null);
 		},
 		highlight: function() {
 			this.dom.find('.selected').removeClass('selected');

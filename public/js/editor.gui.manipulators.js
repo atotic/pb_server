@@ -41,10 +41,15 @@ var Manipulator = {
 		else
 			return { a: left, b: top, c: right, d: bottom};
 	},
-	makeHandle: function(text) {
+	makeTextHandle: function(text) {
 		return $('<div>')
 			.addClass('manipulator-btn')
 			.text(text);
+	},
+	makeIconHandle: function(iconName) {
+		return $('<div>')
+			.addClass('manipulator-btn')
+			.append( $.parseHTML("<i class='icon-" + iconName + "'></i>") );
 	}
 }
 
@@ -65,10 +70,10 @@ DefaultManipulator.prototype = {
 	},
 	show: function() {
 		this.handles = {
-			a: Manipulator.makeHandle('A'),
-			b: Manipulator.makeHandle('B'),
-			c: Manipulator.makeHandle('C'),
-			d: Manipulator.makeHandle('D')
+			a: Manipulator.makeTextHandle('A'),
+			b: Manipulator.makeTextHandle('B'),
+			c: Manipulator.makeTextHandle('C'),
+			d: Manipulator.makeTextHandle('D')
 		};
 		$(document.body)
 			.append(this.handles.a)
@@ -82,7 +87,58 @@ DefaultManipulator.prototype = {
 	}
 }
 
+MoveManipulator = function($pageDom, itemId) {
+	this.pageDom = $pageDom;
+	this.itemId = itemId;
+}
+MoveManipulator.prototype = {
+	reposition: function() {
+		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
+		var pageItem = PB.ModelMap.model(this.itemId);
+		var corners = Manipulator.getBoundingCorners($itemDom, pageItem.item.rotate);
+		this.handles.move.css({
+			top: (corners.c.y + corners.a.y) / 2,
+			left: (corners.c.x + corners.a.x) / 2
+		});
+	},
+	dragstart: function(ev) {
+		this.pageItem = PB.ModelMap.model(this.itemId);
+		this.startPos = { top: this.pageItem.item.top, left: this.pageItem.item.left };
+	},
+	drag: function(ev) {
+		var top = this.startPos.top + ev.gesture.deltaY;
+		var left = this.startPos.left + ev.gesture.deltaX;
+		// constrain
+		top = Math.max( -this.pageItem.item.height / 2, top);
+		left = Math.max( -this.pageItem.item.width / 2, left);
+		top = Math.min( this.pageItem.page.height - this.pageItem.item.height / 2, top);
+		left = Math.min( this.pageItem.page.width - this.pageItem.item.width / 2, left);
+		this.pageItem.page.updateAssetData( this.itemId, {
+			top: top,
+			left: left
+		});
+		ev.gesture.srcEvent.preventDefault();
+	},
+	show: function() {
+		this.handles = {
+			move: Manipulator.makeIconHandle('move')
+		};
+		$(document.body).append(this.handles.move);
+		var THIS = this;
+		this.handles.move.hammer()
+			.on('dragstart', {}, function(ev) { THIS.dragstart(ev) })
+			.on('drag', {}, function(ev) { THIS.drag(ev) });
+		this.reposition();
+	},
+	remove: function() {
+		this.handles.move.remove();
+	}
+}
+
 scope.Manipulator = Manipulator;
-scope.DefaultManipulator = DefaultManipulator;
+scope.Manipulators = {
+	Default: DefaultManipulator,
+	Move: MoveManipulator
+}
 
 })(GUI);
