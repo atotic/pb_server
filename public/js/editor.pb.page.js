@@ -28,7 +28,9 @@ all assets {
 asset photo {
 	type: 'photo'
 	photoId
-	photoRect { tlwh }
+	center { xy %, default 50}
+	zoom { 1.0,}
+	photoRect { tlwh } // automatically generated
 }
 asset text {
 	type: 'text'
@@ -148,13 +150,8 @@ asset text {
 		remove: function(options) {
 			this.book.deleteRoughPage(this, options);
 		},
-		// return: [assetData*]
-		getAssetData: function(itemType) {
-			var ids = this.getAssetIds(itemType);
-			var retVal = [];
-			for (var i=0; i<ids.length; i++)
-				retVal.push(this.p.assetData[ids[i]]);
-			return retVal;
+		getAssetData: function(assetId) {
+			return this.p.assetData[ assetId];
 		},
 		getAssetIds: function(itemType) {
 			var retVal = [];
@@ -196,28 +193,51 @@ asset text {
 			PB.broadcastChange(this, 'assets', options);
 		},
 		updateAssetData: function(id, newData, options) {
+			function myExtend(src, dest) {
+				var dirty = false;
+				for (var prop in src) {
+					switch ($.type(src[prop])) {
+						case 'array':
+							dest[prop] = src[prop].slice(0);
+							dirty = true;
+						break;
+						case 'object':
+							if (typeof dest[prop] !== 'object') {
+								dirty = true;
+								dest[prop] = {}
+							}
+							dirty = myExtend( src[prop], dest[prop] ) || dirty;
+						break;
+						default:
+							if ( src[prop] !== dest[prop] ) {
+								dest[prop] = src[prop];
+								dirty = true;
+							}
+						break;
+					}
+				}
+				return dirty;
+			}
+
 			options = $.extend({
 				clobber: false	// clobbers all existing data
 			}, options);
+
 			if (!(id in this.p.assetData))
 				return PB.debugstr("Updating non-existent asset data");
 
-			var dirty = options.clobber;
+			var dirty = false;
 
-			if (options.clobber)
-				this.p.assetData[id] = newData;
-			else {
-				for (var prop in newData) {
-					if (newData[prop] != this.p.assetData[id][prop]) {
-						this.p.assetData[id][prop] = newData[prop];
-						dirty = true;
-					}
-				}
-				$.extend(this.p.assetData[id], newData);
+			if (options.clobber) {
+				dirty = true;
+				this.p.assetData[id] = PB.clone(newData);
 			}
+			else
+				dirty = myExtend( newData, this.p.assetData[id] );
+
 			// optimize: if data does not change, do not broadcast changes. Useful for manipulators
 			if (dirty) {
-				this.updateItemInner(id);
+				this.layoutInnerItem(id);
 				PB.broadcastChange({id: id}, 'alldata', options);
 			}
 		},
@@ -255,6 +275,7 @@ asset text {
 						height: this.height
 					});
 		},
+		// page + layout => canvas icon. Used to draw layout icons
 		layoutIcon: function(layoutId, layoutData, maxSize) {
 			var l = ThemeCache.resource(layoutId);
 			var design = l.getPageDesign(this.p.assetData, this.width, this.height, layoutData);
@@ -272,7 +293,7 @@ asset text {
 			context.fillStyle = '#AAA';
 			context.fillRect(0,0, pageRect.width, pageRect.height);
 
-			// Load all images as deferred
+			// Load all images as deferred, draw once loadedfgenerate
 			function storeResolvedImage(layoutRecord) {
 				return function(image) {
 					layoutRecord.image = image;
@@ -351,11 +372,9 @@ asset text {
 			});
 			return canvas;
 		},
-		updateItemInner: function(itemId) {
-			if ( !this.p.hasLayout )
-				return;
+		layoutInnerItem: function(itemId) {
 			if ( !( itemId in this.p.assetData ))
-				return PB.debugstr("updateItemInner on non-existent item");
+				return PB.debugstr("layoutInnerItem on non-existent item");
 
 			var assetData = this.p.assetData[itemId];
 			switch(assetData.type) {
@@ -368,12 +387,16 @@ asset text {
 					var photoRect = new GUI.Rect(photo);
 					var scale = photoRect.fillInside(innerRect);
 					photoRect = photoRect.scaleBy(scale).centerIn(innerRect).round();
+					if ((typeof assetData.photoRect) != 'object')
+						assetData.photoRect = {};
 					$.extend(assetData.photoRect, {
 						top: photoRect.top,
 						left: photoRect.left,
 						width: photoRect.width,
 						height: photoRect.height
 					});
+				break;
+				case 'text':
 				break;
 				default:
 				console.warn("not updating item inner of type ", assetData.type);
@@ -399,58 +422,36 @@ asset text {
 				if (layoutExhausted)
 					break;
 
-				var assetData;
+				var assetId;
 				switch(dd.type) {
 					case 'photo': {
-						var photoId = photoAssetIds.shift();
-						if (photoId == null) {
+						var assetId = photoAssetIds.shift();
+						if (assetId == null) {
 							PB.debugstr("Should add more photos dynamically");
 							break;
 						}
-						var assetData = this.p.assetData[photoId];
-						var innerRect = new GUI.Rect({width: dd.width, height: dd.height});
-						if (dd.frameId)
-							innerRect = innerRect.inset(dd.frameOffset);
-
-						var photo = PB.ServerPhotoCache.get(assetData.photoId);
-						var photoRect = new GUI.Rect(photo);
-						var scale = photoRect.fillInside(innerRect);
-						photoRect = photoRect.scaleBy(scale).centerIn(innerRect).round();
-						$.extend(assetData,{
-							top: dd.top,
-							left: dd.left,
-							width: dd.width,
-							height: dd.height,
-							rotate: dd.rotate || 0,
-							photoRect: {
-								top: photoRect.top,
-								left: photoRect.left,
-								width: photoRect.width,
-								height: photoRect.height
-							}
-						});
 					}
 					break;
 					case 'text': {
-						var textId = textAssetIds.shift();
-						if (textId == null) {
+						var assetId = textAssetIds.shift();
+						if (assetId == null) {
 							console.error("Should add more text dynamically");
 							break;
 						}
-						var assetData = this.p.assetData[textId];
-						$.extend(assetData, {
-							top: dd.top,
-							left: dd.left,
-							width: dd.width,
-							height: dd.height,
-							rotate: dd.rotate || 0
-						});
 					}
 					break;
 					default: {
 						console.error("do not know how to handle assets of type", dd.type);
 					}
 				}
+				var assetData = assetData = this.p.assetData[assetId];
+				$.extend(assetData, {
+					top: dd.top,
+					left: dd.left,
+					width: dd.width,
+					height: dd.height,
+					rotate: dd.rotate || 0
+				});
 				if (dd.frameId) {
 					assetData.frameId = dd.frameId;
 					assetData.frameOffset = dd.frameOffset;
@@ -461,6 +462,8 @@ asset text {
 					delete assetData.frameOffset;
 					delete assetData.frameData;
 				}
+				this.layoutInnerItem(assetId);
+
 			};
 			if (photoAssetIds.length > 0 )
 				console.error("layout has ignored photo data");
@@ -745,6 +748,9 @@ asset text {
 			switch(cmdId) {
 				case 'move':
 					manipulator = new GUI.Manipulators.Move( $pageDom, itemId );
+					break;
+				case 'pan':
+					manipulator = new GUI.Manipulators.Pan( $pageDom, itemId );
 					break;
 				default:
 					manipulator = new GUI.Manipulators.Default( $pageDom, itemId );

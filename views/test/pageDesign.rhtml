@@ -47,6 +47,10 @@
 #framePicker li img {
 	position: absolute;
 }
+.design-book-page-left {
+	transform: scale(0.5);
+	-webkit-transform: scale(0.5);
+}
 </style>
 <script type="text/javascript">
 
@@ -180,11 +184,11 @@ var Controller = {
 		function assignCb($el, frameId, frameData, frameOffset) {
 			$el.hammer().on('touch', {}, function() {
 				PB.PageSelection.forEach(function(page, itemId) {
-					page.updateAssetData(itemId, {
-						frameId: frameId,
-						frameData: frameData,
-						frameOffset: frameOffset
-					});
+					var assetData = page.getAssetData(itemId);
+					assetData.frameId = frameId;
+					assetData.frameData = frameData;
+					assetData.frameOffset = frameOffset;
+					page.updateAssetData(itemId, assetData, {clobber: true});
 				});
 			});
 		};
@@ -244,6 +248,7 @@ var Controller = {
 		var word = this.words.shift();
 		this.words.push(word);
 		currentPage.addText(word);
+		this.updateLayoutPicker();
 	},
 	setLayout: function(layoutId, layoutData) {
 		currentPage.setLayout(layoutId, layoutData);
@@ -274,5 +279,5 @@ $(document).ready(function() {
 	<p>Frames</p>
 	<ul id='framePicker'>
 	</ul>
-	<div class='design-book-page-left'></div>
+	<div class='design-book-page-left' ></div>
 </body>

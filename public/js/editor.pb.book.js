@@ -177,9 +177,10 @@
 			var retVal = {};
 			var pageList = this.pageList;
 			for (var i=0; i < pageList.length; i++) {
-				var photoItems = this.page( pageList[i] ).getAssetData('photo');
-				for (var j=0; j < photoItems.length; j++)
-					retVal[ photoItems[j].resource_id ]  = true;
+				var page = this.page( pageList[i] );
+				var assetIds = page.getAssetIds('photo');
+				for (var j=0; j < assetIds.length; j++)
+					retVal[ page.getAssetData( assetIds[j] ).photoId ]  = true;
 			}
 			return retVal;
 		},

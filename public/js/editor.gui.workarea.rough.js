@@ -407,7 +407,10 @@
 
 			var oldChildren = containerDom.children( sel );
 			var oldPhotos = oldChildren.map(function(i, el) { return PB.ModelMap.domToModel(el)}).get();
-			var newPhotos = pageModel.getAssetData('photo').map(function(ad) {return ad.photoId});
+			var newPhotos = pageModel.getAssetIds('photo')
+				.map(function(assetId) {
+					return pageModel.getAssetData( assetId ).photoId
+				});
 			var toId = function(el) { return el.id};
 			var diff = JsonDiff.diff(
 				oldPhotos.map(toId),

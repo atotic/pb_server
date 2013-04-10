@@ -50,6 +50,12 @@ var Manipulator = {
 		return $('<div>')
 			.addClass('manipulator-btn')
 			.append( $.parseHTML("<i class='icon-" + iconName + "'></i>") );
+	},
+	scaleFromCorners: function(corners, pageItem) {
+		var width = Math.sqrt(
+			Math.pow(corners.b.y - corners.a.y, 2) +
+			Math.pow(corners.b.x - corners.a.x, 2));
+		return pageItem.item.width / width;
 	}
 }
 
@@ -67,6 +73,13 @@ DefaultManipulator.prototype = {
 		this.handles.b.css({ top: corners.b.y, left: corners.b.x });
 		this.handles.c.css({ top: corners.c.y, left: corners.c.x });
 		this.handles.d.css({ top: corners.d.y, left: corners.d.x });
+		// figure out the scale
+		var width = Math.sqrt(
+			Math.pow(handles.b.y - handles.a.y, 2) +
+			Math.pow(handles.b.x - handles.b.x, 2));
+
+		this.scale = pageItem.item.width / width;
+		console.log(this.scale);
 	},
 	show: function() {
 		this.handles = {
@@ -96,18 +109,31 @@ MoveManipulator.prototype = {
 		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
 		var pageItem = PB.ModelMap.model(this.itemId);
 		var corners = Manipulator.getBoundingCorners($itemDom, pageItem.item.rotate);
-		this.handles.move.css({
+		this.handle.css({
 			top: (corners.c.y + corners.a.y) / 2,
 			left: (corners.c.x + corners.a.x) / 2
 		});
+		this.scale = Manipulator.scaleFromCorners(corners, pageItem);
+	},
+	show: function() {
+		this.handle = Manipulator.makeIconHandle('move');
+		$(document.body).append(this.handle);
+		var THIS = this;
+		this.handle.hammer()
+			.on('dragstart', {}, function(ev) { THIS.dragstart(ev) })
+			.on('drag', {}, function(ev) { THIS.drag(ev) });
+		this.reposition();
+	},
+	remove: function() {
+		this.handle.remove();
 	},
 	dragstart: function(ev) {
 		this.pageItem = PB.ModelMap.model(this.itemId);
 		this.startPos = { top: this.pageItem.item.top, left: this.pageItem.item.left };
 	},
 	drag: function(ev) {
-		var top = this.startPos.top + ev.gesture.deltaY;
-		var left = this.startPos.left + ev.gesture.deltaX;
+		var top = this.startPos.top + ev.gesture.deltaY * this.scale;
+		var left = this.startPos.left + ev.gesture.deltaX * this.scale;
 		// constrain
 		top = Math.max( -this.pageItem.item.height / 2, top);
 		left = Math.max( -this.pageItem.item.width / 2, left);
@@ -118,27 +144,69 @@ MoveManipulator.prototype = {
 			left: left
 		});
 		ev.gesture.srcEvent.preventDefault();
+	}
+};
+
+PanManipulator = function($pageDom, itemId) {
+	this.pageDom = $pageDom;
+	this.itemId = itemId;
+};
+
+PanManipulator.prototype = {
+	reposition: function() {
+		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
+		var pageItem = PB.ModelMap.model(this.itemId);
+		var corners = Manipulator.getBoundingCorners($itemDom, pageItem.item.rotate);
+		this.handle.css({
+			top: (corners.c.y + corners.a.y) / 2,
+			left: (corners.c.x + corners.a.x) / 2
+		});
+		this.scale = Manipulator.scaleFromCorners(corners, pageItem);
 	},
 	show: function() {
-		this.handles = {
-			move: Manipulator.makeIconHandle('move')
-		};
-		$(document.body).append(this.handles.move);
+		this.handle = Manipulator.makeIconHandle('move');
+		this.handle.find('i').css('color', '#CFC');
+		$(document.body).append(this.handle);
 		var THIS = this;
-		this.handles.move.hammer()
+		this.handle.hammer()
 			.on('dragstart', {}, function(ev) { THIS.dragstart(ev) })
 			.on('drag', {}, function(ev) { THIS.drag(ev) });
 		this.reposition();
 	},
 	remove: function() {
-		this.handles.move.remove();
-	}
-}
+		this.handle.remove();
+	},
+	dragstart: function(ev) {
+		this.pageItem = PB.ModelMap.model(this.itemId);
+		this.startPos = { top: this.pageItem.item.photoRect.top,
+			left: this.pageItem.item.photoRect.left };
+	},
+	dragend: function(ev) {
 
+	},
+	drag: function(ev) {
+		var top = this.startPos.top + ev.gesture.deltaY;
+		var left = this.startPos.left + ev.gesture.deltaX;
+		// constrain
+		// top = Math.max( -this.pageItem.item.height / 2, top);
+		// left = Math.max( -this.pageItem.item.width / 2, left);
+		// top = Math.min( this.pageItem.page.height - this.pageItem.item.height / 2, top);
+		// left = Math.min( this.pageItem.page.width - this.pageItem.item.width / 2, left);
+		this.pageItem.page.updateAssetData( this.itemId, {
+			photoRect: {
+			top: top,
+			left: left
+			}}
+		);
+		ev.gesture.srcEvent.preventDefault();
+	}
+
+};
 scope.Manipulator = Manipulator;
 scope.Manipulators = {
 	Default: DefaultManipulator,
-	Move: MoveManipulator
+	Move: MoveManipulator,
+	Pan: PanManipulator
 }
 
 })(GUI);

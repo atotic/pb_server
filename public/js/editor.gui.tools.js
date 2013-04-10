@@ -67,7 +67,7 @@
 			var photos = book.unusedPhotoList;
 			photos = PB.ServerPhotoCache.sortPhotos(photos, book);
 			var emptyPages = book.pageList.filter(function(pageId) {
-				return book.page(pageId).getAssetData('photo').length == 0;
+				return book.page(pageId).getAssetIds('photo').length == 0;
 			});
 			PB.startChangeBatch();
 			while (photos.length > 0) {
