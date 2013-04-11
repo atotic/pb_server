@@ -174,6 +174,7 @@ PanManipulator.prototype = {
 		this.handle.remove();
 	},
 	dragstart: function(ev) {
+		// TODO normalize focalPoint
 		this.manipulatorOffset = { x:0, y:0};
 		this.pageItem = PB.ModelMap.model(this.itemId);
 		this.focalPoint = this.pageItem.item.focalPoint ?
@@ -182,7 +183,7 @@ PanManipulator.prototype = {
 		this.focalScale = {
 			x: this.pageItem.item.photoRect.width / 100,
 			y: this.pageItem.item.photoRect.height / 100 };
-
+		ev.gesture.srcEvent.preventDefault();
 	},
 	dragend: function(ev) {
 		this.manipulatorOffset = { x:0, y:0 };
@@ -191,23 +192,26 @@ PanManipulator.prototype = {
 	drag: function(ev) {
 		var x = this.focalPoint.x - ev.gesture.deltaX * this.scale / this.focalScale.x;
 		var y = this.focalPoint.y - ev.gesture.deltaY * this.scale / this.focalScale.y;
-		if (x > 0 && x < 100)
+		var range = this.pageItem.page.getFocalPointRange( this.itemId );
+		if (x < range.x.min || x > range.x.max)
+			x = -1;
+		if (y < range.y.min || y > range.y.max)
+			y = -1;
+		var focalPoint = {};
+		if (x != -1) {
+			focalPoint.x = x;
 			this.manipulatorOffset.x = ev.gesture.deltaX;
-		if (y > 0 && y < 100)
+		}
+		if (y != -1) {
+			focalPoint.y = y;
 			this.manipulatorOffset.y = ev.gesture.deltaY;
-		x = Math.max( Math.min( x, 100), 0);
-		y = Math.max( Math.min( y, 100), 0);
+		}
 		// constrain
 		// top = Math.max( -this.pageItem.item.height / 2, top);
 		// left = Math.max( -this.pageItem.item.width / 2, left);
 		// top = Math.min( this.pageItem.page.height - this.pageItem.item.height / 2, top);
 		// left = Math.min( this.pageItem.page.width - this.pageItem.item.width / 2, left);
-		this.pageItem.page.updateAssetData( this.itemId, {
-			focalPoint: {
-				x: x,
-				y: y
-			}}
-		);
+		this.pageItem.page.updateAssetData( this.itemId, {focalPoint: focalPoint } );
 		ev.gesture.srcEvent.preventDefault();
 	}
 

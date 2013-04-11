@@ -372,6 +372,21 @@ asset text {
 			});
 			return canvas;
 		},
+		// focal point range for images
+		getFocalPointRange: function(itemId) {
+			if ( !( itemId in this.p.assetData ))
+				return PB.debugstr("layoutInnerItem on non-existent item");
+			var assetData = this.p.assetData[itemId];
+			if (this.hasLayout = false)
+				return { x: { min:0, max: 100 }, y: {min:0, max:100}};
+			var innerRect = new GUI.Rect(assetData);
+			if (assetData.frameId)
+				innerRect = innerRect.inset(assetData.frameOffset);
+			var xdelta = innerRect.width * 100 / 2 / assetData.photoRect.width;
+			var ydelta = innerRect.height * 100 / 2 / assetData.photoRect.height;
+			return { x: { min: xdelta, max: 100 - xdelta },
+					y: { min: ydelta, max: 100 - ydelta }};
+		},
 		layoutInnerItem: function(itemId) {
 			if ( !( itemId in this.p.assetData ))
 				return PB.debugstr("layoutInnerItem on non-existent item");
