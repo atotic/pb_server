@@ -398,7 +398,7 @@ asset text {
 					if (assetData.frameId)
 						innerRect = innerRect.inset(assetData.frameOffset);
 
-					var zoom = assetData.zoom || 1;
+					var zoom = Math.max( assetData.zoom || 1, 1);
 					var focalPoint = assetData.focalPoint || { x: 50, y: 50 };
 
 					var photo = PB.ServerPhotoCache.get( assetData.photoId );

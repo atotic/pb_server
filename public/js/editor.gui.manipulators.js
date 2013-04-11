@@ -161,7 +161,7 @@ PanManipulator.prototype = {
 	},
 	show: function() {
 		this.handle = Manipulator.makeIconHandle('hand-up');
-		this.handle.find('i').css('color', '#CFC');
+//		this.handle.find('i').css('color', '#CFC');
 		$(document.body).append(this.handle);
 		var THIS = this;
 		this.handle.hammer()
@@ -183,11 +183,15 @@ PanManipulator.prototype = {
 		this.focalScale = {
 			x: this.pageItem.item.photoRect.width / 100,
 			y: this.pageItem.item.photoRect.height / 100 };
-		ev.gesture.srcEvent.preventDefault();
+		PB.stopEvent( ev.gesture.srcEvent );
+		// ev.gesture.srcEvent.stopPropagation();
+		// ev.gesture.srcEvent.preventDefault();
 	},
 	dragend: function(ev) {
 		this.manipulatorOffset = { x:0, y:0 };
 		this.reposition();
+		ev.gesture.srcEvent.stopPropagation();
+		ev.gesture.srcEvent.preventDefault();
 	},
 	drag: function(ev) {
 		var deltaXRot = ev.gesture.deltaX * Math.cos(this.rotateRad) + ev.gesture.deltaY * Math.sin(this.rotateRad);
@@ -206,12 +210,9 @@ PanManipulator.prototype = {
 		this.manipulatorOffset.x = manipulatorRotLoc.x * Math.cos(-this.rotateRad) + manipulatorRotLoc.y * Math.sin(-this.rotateRad);
 		this.manipulatorOffset.y = -manipulatorRotLoc.x * Math.sin(-this.rotateRad) + manipulatorRotLoc.y * Math.cos(-this.rotateRad);
 
-		var focalPoint = {};
-		if (focalX != -1)
-			focalPoint.x = focalX;
-		if (focalY != -1)
-			focalPoint.y = focalY;
+		var focalPoint = { x: focalX, y: focalY };
 		this.pageItem.page.updateAssetData( this.itemId, {focalPoint: focalPoint } );
+		ev.gesture.srcEvent.stopPropagation();
 		ev.gesture.srcEvent.preventDefault();
 	}
 };
@@ -223,22 +224,88 @@ ZoomManipulator = function($pageDom, itemId) {
 
 ZoomManipulator.prototype = {
 	reposition: function() {
-
+		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
+		var pageItem = PB.ModelMap.model(this.itemId);
+		var corners = Manipulator.getBoundingCorners($itemDom, pageItem.item.rotate);
+		var distance = 100;
+		var midpoint = {
+			top: ( corners.c.y + corners.a.y ) / 2,
+			left: ( corners.c.x + corners.a.x ) / 2
+		};
+		this.handles.zoom.css( midpoint );
+		this.handles.left.css( {
+			top: midpoint.top,
+			left: midpoint.left - distance - this.manipulatorOffset
+		});
+		this.handles.right.css( {
+			top: midpoint.top,
+			left: midpoint.left + distance + this.manipulatorOffset
+		});
 	},
 	show: function() {
+		this.pageItem = PB.ModelMap.model( this.itemId );
+		this.handles = {
+			zoom: Manipulator.makeIconHandle('search').addClass('label'),
+			left: Manipulator.makeIconHandle('resize-horizontal'),
+			right: Manipulator.makeIconHandle('resize-horizontal')
+		};
+		for (p in this.handles)
+			$(document.body).append(this.handles[p]);
+		var THIS = this;
+		this.handles.left.hammer()
+			.on('dragstart', {}, function(ev) { THIS.dragstart(ev, 'left') })
+			.on('drag', {}, function(ev) { THIS.drag(ev, 'left') })
+			.on('dragend', {}, function(ev) { THIS.dragend(ev, 'left') })
+			.on('pinch', {}, function(ev) { THIS.pinch(ev, 'right') });
 
+		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
+
+		$itemDom.hammer().on('pinch', {}, function(ev) { THIS.pinch(ev, 'left') });
+
+		this.handles.right.hammer()
+			.on('dragstart', {}, function(ev) { THIS.dragstart(ev, 'right') })
+			.on('drag', {}, function(ev) { THIS.drag(ev, 'right') })
+			.on('dragend', {}, function(ev) { THIS.dragend(ev, 'right') })
+			.on('pinch', {}, function(ev) { THIS.pinch(ev, 'right') });
+		this.manipulatorOffset = 0;
+		this.reposition();
 	},
 	remove: function() {
-
+		for (p in this.handles)
+			this.handles[p].remove();
+		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
+		$itemDom.hammer().off('pinch');
 	},
 	dragstart: function(ev) {
-
+		this.manipulatorOffset = 0;
+		this.zoom = this.pageItem.item.zoom || 1;
+		this.zoomPerPixel = this.zoom / this.pageItem.item.photoRect.width * 2;
+		PB.stopEvent( ev.gesture.srcEvent );
 	},
 	dragend: function(ev) {
-
+		this.manipulatorOffset = 0;
+		PB.stopEvent( ev.gesture );
+		this.reposition();
 	},
-	drag: function(ev) {
-
+	drag: function(ev, side) {
+		var direction = side == 'right' ? 1 : -1;
+		var deltaX = direction * ev.gesture.deltaX;
+		var newZoom = this.zoom + deltaX * this.zoomPerPixel;
+		newZoom = Math.max(1, newZoom);
+		this.manipulatorOffset = ( newZoom - this.zoom ) / this.zoomPerPixel;
+		this.pageItem.page.updateAssetData( this.itemId, {zoom: newZoom } );
+		PB.stopEvent( ev.gesture.srcEvent );
+	},
+	pinch: function(ev) {
+		// Pinch does not work quite right yet
+		this.zoom = this.pageItem.item.zoom || 1;
+		this.zoomPerPixel = this.zoom / this.pageItem.item.photoRect.width * 2;
+		var newZoom = this.zoom * ev.gesture.scale;
+		newZoom = Math.min( Math.max(1, newZoom), 10 );
+		console.log("pinch", newZoom);
+		this.manipulatorOffset = ( newZoom - this.zoom ) / this.zoomPerPixel;
+		this.pageItem.page.updateAssetData( this.itemId, {zoom: newZoom } );
+		PB.stopEvent(ev.gesture);
 	}
 };
 
