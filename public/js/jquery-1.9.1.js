@@ -3374,7 +3374,7 @@ jQuery.Event.prototype = {
 
 		this.isDefaultPrevented = returnTrue;
 		if ( !e ) {
-			console.warn("prevent default, but no event", this);
+//			console.warn("prevent default, but no event", this);
 			return;
 		}
 

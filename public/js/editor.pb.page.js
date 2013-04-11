@@ -767,15 +767,17 @@ asset text {
 			switch(cmdId) {
 				case 'move':
 					manipulator = new GUI.Manipulators.Move( $pageDom, itemId );
-					break;
+				break;
 				case 'pan':
 					manipulator = new GUI.Manipulators.Pan( $pageDom, itemId );
-					break;
+				break;
+				case 'zoom':
+					manipulator =  new GUI.Manipulators.Zoom( $pageDom, itemId );
+				break;
 				default:
 					manipulator = new GUI.Manipulators.Default( $pageDom, itemId );
-					break;
+				break;
 			}
-			console.log(cmdId);
 			PageSelection.findInParent( $pageDom ).setManipulator( manipulator );
 		},
 		editItemCb: function(ev) {

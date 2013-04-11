@@ -157,9 +157,10 @@ PanManipulator.prototype = {
 			left: (corners.c.x + corners.a.x) / 2 + this.manipulatorOffset.x
 		});
 		this.scale = Manipulator.scaleFromCorners(corners, pageItem);
+		this.rotateRad= (pageItem.item.rotate || 0) * Math.PI / 180;
 	},
 	show: function() {
-		this.handle = Manipulator.makeIconHandle('move');
+		this.handle = Manipulator.makeIconHandle('hand-up');
 		this.handle.find('i').css('color', '#CFC');
 		$(document.body).append(this.handle);
 		var THIS = this;
@@ -169,6 +170,7 @@ PanManipulator.prototype = {
 			.on('dragend', {}, function(ev) { THIS.dragend(ev) });
 		this.manipulatorOffset = { x:0, y:0};
 		this.reposition();
+		this.handle.css('transform', 'rotate(' + this.rotateRad+'rad)');
 	},
 	remove: function() {
 		this.handle.remove();
@@ -177,9 +179,7 @@ PanManipulator.prototype = {
 		// TODO normalize focalPoint
 		this.manipulatorOffset = { x:0, y:0};
 		this.pageItem = PB.ModelMap.model(this.itemId);
-		this.focalPoint = this.pageItem.item.focalPoint ?
-			PB.clone( this.pageItem.item.focalPoint )
-			: { x: 50, y: 50};
+		this.focalPoint = $.extend( { x:50, y:50}, this.pageItem.item.focalPoint );
 		this.focalScale = {
 			x: this.pageItem.item.photoRect.width / 100,
 			y: this.pageItem.item.photoRect.height / 100 };
@@ -190,37 +190,64 @@ PanManipulator.prototype = {
 		this.reposition();
 	},
 	drag: function(ev) {
-		var x = this.focalPoint.x - ev.gesture.deltaX * this.scale / this.focalScale.x;
-		var y = this.focalPoint.y - ev.gesture.deltaY * this.scale / this.focalScale.y;
+		var deltaXRot = ev.gesture.deltaX * Math.cos(this.rotateRad) + ev.gesture.deltaY * Math.sin(this.rotateRad);
+		var deltaYRot = -ev.gesture.deltaX * Math.sin(this.rotateRad) + ev.gesture.deltaY * Math.cos(this.rotateRad);
+		var focalX = this.focalPoint.x - deltaXRot * this.scale / this.focalScale.x;
+		var	focalY = this.focalPoint.y - deltaYRot * this.scale / this.focalScale.y;
 		var range = this.pageItem.page.getFocalPointRange( this.itemId );
-		if (x < range.x.min || x > range.x.max)
-			x = -1;
-		if (y < range.y.min || y > range.y.max)
-			y = -1;
+		focalX = GUI.Util.clamp( focalX, range.x.min, range.x.max);
+		focalY = GUI.Util.clamp( focalY, range.y.min, range.y.max);
+
+		var manipulatorRotLoc = {
+			x: -( focalX - this.focalPoint.x ) * this.focalScale.x / this.scale,
+			y: -(focalY - this.focalPoint.y ) * this.focalScale.y / this.scale
+		};
+
+		this.manipulatorOffset.x = manipulatorRotLoc.x * Math.cos(-this.rotateRad) + manipulatorRotLoc.y * Math.sin(-this.rotateRad);
+		this.manipulatorOffset.y = -manipulatorRotLoc.x * Math.sin(-this.rotateRad) + manipulatorRotLoc.y * Math.cos(-this.rotateRad);
+
 		var focalPoint = {};
-		if (x != -1) {
-			focalPoint.x = x;
-			this.manipulatorOffset.x = ev.gesture.deltaX;
-		}
-		if (y != -1) {
-			focalPoint.y = y;
-			this.manipulatorOffset.y = ev.gesture.deltaY;
-		}
-		// constrain
-		// top = Math.max( -this.pageItem.item.height / 2, top);
-		// left = Math.max( -this.pageItem.item.width / 2, left);
-		// top = Math.min( this.pageItem.page.height - this.pageItem.item.height / 2, top);
-		// left = Math.min( this.pageItem.page.width - this.pageItem.item.width / 2, left);
+		if (focalX != -1)
+			focalPoint.x = focalX;
+		if (focalY != -1)
+			focalPoint.y = focalY;
 		this.pageItem.page.updateAssetData( this.itemId, {focalPoint: focalPoint } );
 		ev.gesture.srcEvent.preventDefault();
 	}
-
 };
+
+ZoomManipulator = function($pageDom, itemId) {
+	this.pageDom = $pageDom;
+	this.itemId = itemId;
+};
+
+ZoomManipulator.prototype = {
+	reposition: function() {
+
+	},
+	show: function() {
+
+	},
+	remove: function() {
+
+	},
+	dragstart: function(ev) {
+
+	},
+	dragend: function(ev) {
+
+	},
+	drag: function(ev) {
+
+	}
+};
+
 scope.Manipulator = Manipulator;
 scope.Manipulators = {
 	Default: DefaultManipulator,
 	Move: MoveManipulator,
-	Pan: PanManipulator
+	Pan: PanManipulator,
+	Zoom: ZoomManipulator
 }
 
 })(GUI);
