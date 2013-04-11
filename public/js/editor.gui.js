@@ -737,13 +737,24 @@ show: function() {
 			}
 			return retVal;
 		},
-		centerIn: function(enclosingRect) {
-			return new Rect({
-				left: (enclosingRect.width - this.width) / 2,
-				top: (enclosingRect.height - this.height) / 2,
+		// centers this inside enclosing rect. Focal point is the center of new rect
+		centerIn: function(enclosingRect, focalPoint) {
+			focalPoint = focalPoint || { x: 50, y: 50 };
+			var myFocal = {
+				x: focalPoint.x / 100 * this.width,
+				y: focalPoint.y / 100 * this.height
+			};
+			var myRect = new Rect( {
+				left: enclosingRect.width / 2 - myFocal.x,
+				top: enclosingRect.height / 2 - myFocal.y,
 				width: this.width,
 				height: this.height
 			});
+			myRect.top = Math.min(0, myRect.top);
+			myRect.left = Math.min(0, myRect.left);
+			myRect.top = Math.max(enclosingRect.height - this.height, myRect.top);
+			myRect.left = Math.max(enclosingRect.width - this.width, myRect.left);
+			return myRect;
 		},
 		moveBy: function(x, y) {
 			return new Rect({

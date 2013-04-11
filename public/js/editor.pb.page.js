@@ -28,7 +28,7 @@ all assets {
 asset photo {
 	type: 'photo'
 	photoId
-	center { xy %, default 50}
+	focalPoint { xy %, default 50}
 	zoom { 1.0,}
 	photoRect { tlwh } // automatically generated
 }
@@ -383,10 +383,14 @@ asset text {
 					if (assetData.frameId)
 						innerRect = innerRect.inset(assetData.frameOffset);
 
-					var photo = PB.ServerPhotoCache.get(assetData.photoId);
-					var photoRect = new GUI.Rect(photo);
-					var scale = photoRect.fillInside(innerRect);
-					photoRect = photoRect.scaleBy(scale).centerIn(innerRect).round();
+					var zoom = assetData.zoom || 1;
+					var focalPoint = assetData.focalPoint || { x: 50, y: 50 };
+
+					var photo = PB.ServerPhotoCache.get( assetData.photoId );
+					var photoRect = new GUI.Rect( photo );
+					var scale = photoRect.fillInside( innerRect);
+					photoRect = photoRect.scaleBy( scale ).scaleBy( zoom );
+					photoRect = photoRect.centerIn(innerRect, focalPoint).round();
 					if ((typeof assetData.photoRect) != 'object')
 						assetData.photoRect = {};
 					$.extend(assetData.photoRect, {

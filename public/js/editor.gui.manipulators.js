@@ -73,12 +73,7 @@ DefaultManipulator.prototype = {
 		this.handles.b.css({ top: corners.b.y, left: corners.b.x });
 		this.handles.c.css({ top: corners.c.y, left: corners.c.x });
 		this.handles.d.css({ top: corners.d.y, left: corners.d.x });
-		// figure out the scale
-		var width = Math.sqrt(
-			Math.pow(handles.b.y - handles.a.y, 2) +
-			Math.pow(handles.b.x - handles.b.x, 2));
-
-		this.scale = pageItem.item.width / width;
+		this.scale = Manipulator.scaleFromCorners( corners, pageItem );
 		console.log(this.scale);
 	},
 	show: function() {
@@ -158,8 +153,8 @@ PanManipulator.prototype = {
 		var pageItem = PB.ModelMap.model(this.itemId);
 		var corners = Manipulator.getBoundingCorners($itemDom, pageItem.item.rotate);
 		this.handle.css({
-			top: (corners.c.y + corners.a.y) / 2,
-			left: (corners.c.x + corners.a.x) / 2
+			top: (corners.c.y + corners.a.y) / 2 + this.manipulatorOffset.y,
+			left: (corners.c.x + corners.a.x) / 2 + this.manipulatorOffset.x
 		});
 		this.scale = Manipulator.scaleFromCorners(corners, pageItem);
 	},
@@ -170,32 +165,47 @@ PanManipulator.prototype = {
 		var THIS = this;
 		this.handle.hammer()
 			.on('dragstart', {}, function(ev) { THIS.dragstart(ev) })
-			.on('drag', {}, function(ev) { THIS.drag(ev) });
+			.on('drag', {}, function(ev) { THIS.drag(ev) })
+			.on('dragend', {}, function(ev) { THIS.dragend(ev) });
+		this.manipulatorOffset = { x:0, y:0};
 		this.reposition();
 	},
 	remove: function() {
 		this.handle.remove();
 	},
 	dragstart: function(ev) {
+		this.manipulatorOffset = { x:0, y:0};
 		this.pageItem = PB.ModelMap.model(this.itemId);
-		this.startPos = { top: this.pageItem.item.photoRect.top,
-			left: this.pageItem.item.photoRect.left };
-	},
-	dragend: function(ev) {
+		this.focalPoint = this.pageItem.item.focalPoint ?
+			PB.clone( this.pageItem.item.focalPoint )
+			: { x: 50, y: 50};
+		this.focalScale = {
+			x: this.pageItem.item.photoRect.width / 100,
+			y: this.pageItem.item.photoRect.height / 100 };
 
 	},
+	dragend: function(ev) {
+		this.manipulatorOffset = { x:0, y:0 };
+		this.reposition();
+	},
 	drag: function(ev) {
-		var top = this.startPos.top + ev.gesture.deltaY;
-		var left = this.startPos.left + ev.gesture.deltaX;
+		var x = this.focalPoint.x - ev.gesture.deltaX * this.scale / this.focalScale.x;
+		var y = this.focalPoint.y - ev.gesture.deltaY * this.scale / this.focalScale.y;
+		if (x > 0 && x < 100)
+			this.manipulatorOffset.x = ev.gesture.deltaX;
+		if (y > 0 && y < 100)
+			this.manipulatorOffset.y = ev.gesture.deltaY;
+		x = Math.max( Math.min( x, 100), 0);
+		y = Math.max( Math.min( y, 100), 0);
 		// constrain
 		// top = Math.max( -this.pageItem.item.height / 2, top);
 		// left = Math.max( -this.pageItem.item.width / 2, left);
 		// top = Math.min( this.pageItem.page.height - this.pageItem.item.height / 2, top);
 		// left = Math.min( this.pageItem.page.width - this.pageItem.item.width / 2, left);
 		this.pageItem.page.updateAssetData( this.itemId, {
-			photoRect: {
-			top: top,
-			left: left
+			focalPoint: {
+				x: x,
+				y: y
 			}}
 		);
 		ev.gesture.srcEvent.preventDefault();
