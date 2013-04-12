@@ -764,6 +764,7 @@ asset text {
 			// find item inside page dom
 			// determine item position on the page
 			var manipulator;
+			var constructor;
 			switch(cmdId) {
 				case 'move':
 					manipulator = new GUI.Manipulators.Move( $pageDom, itemId );
@@ -773,6 +774,12 @@ asset text {
 				break;
 				case 'zoom':
 					manipulator =  new GUI.Manipulators.Zoom( $pageDom, itemId );
+				break;
+				case 'rotate':
+					manipulator = new GUI.Manipulators.Rotate( $pageDom, itemId );
+				break;
+				case 'resize':
+					manipulator = new GUI.Manipulators.Resize( $pageDom, itemId );
 				break;
 				default:
 					manipulator = new GUI.Manipulators.Default( $pageDom, itemId );

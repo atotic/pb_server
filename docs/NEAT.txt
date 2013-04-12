@@ -141,6 +141,7 @@ NODE
 Lessons from multiplayer game with node.js http://codeofrob.com/entries/lessons-learned-building-a-multiplayer-game-in-nodejs-and-webgl.html
 
 OTHER
+Ask this guy to commit our chrome extension? http://blog.yoav.ws/2012/05/Responsive-image-format#disqus_thread
 Maps: use for our maps: http://mapbox.com/about/
 Nice drawing program. Might do text here. http://sketchpad.io/sketch/?newfile
 Wild stuff done for $5: http://fiverr.com/

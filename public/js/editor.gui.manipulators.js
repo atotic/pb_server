@@ -2,6 +2,8 @@
 
 (function(scope) {
 
+"use strict";
+
 var Manipulator = {
 
 	// dom location in page coordinates
@@ -95,7 +97,7 @@ DefaultManipulator.prototype = {
 	}
 }
 
-MoveManipulator = function($pageDom, itemId) {
+var MoveManipulator = function($pageDom, itemId) {
 	this.pageDom = $pageDom;
 	this.itemId = itemId;
 }
@@ -142,7 +144,7 @@ MoveManipulator.prototype = {
 	}
 };
 
-PanManipulator = function($pageDom, itemId) {
+var PanManipulator = function($pageDom, itemId) {
 	this.pageDom = $pageDom;
 	this.itemId = itemId;
 };
@@ -161,7 +163,6 @@ PanManipulator.prototype = {
 	},
 	show: function() {
 		this.handle = Manipulator.makeIconHandle('hand-up');
-//		this.handle.find('i').css('color', '#CFC');
 		$(document.body).append(this.handle);
 		var THIS = this;
 		this.handle.hammer()
@@ -217,7 +218,7 @@ PanManipulator.prototype = {
 	}
 };
 
-ZoomManipulator = function($pageDom, itemId) {
+var ZoomManipulator = function($pageDom, itemId) {
 	this.pageDom = $pageDom;
 	this.itemId = itemId;
 };
@@ -249,7 +250,7 @@ ZoomManipulator.prototype = {
 			left: Manipulator.makeIconHandle('resize-horizontal'),
 			right: Manipulator.makeIconHandle('resize-horizontal')
 		};
-		for (p in this.handles)
+		for (var p in this.handles)
 			$(document.body).append(this.handles[p]);
 		var THIS = this;
 		this.handles.left.hammer()
@@ -257,11 +258,6 @@ ZoomManipulator.prototype = {
 			.on('drag', {}, function(ev) { THIS.drag(ev, 'left') })
 			.on('dragend', {}, function(ev) { THIS.dragend(ev, 'left') })
 			.on('pinch', {}, function(ev) { THIS.pinch(ev, 'right') });
-
-		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
-
-		$itemDom.hammer().on('pinch', {}, function(ev) { THIS.pinch(ev, 'left') });
-
 		this.handles.right.hammer()
 			.on('dragstart', {}, function(ev) { THIS.dragstart(ev, 'right') })
 			.on('drag', {}, function(ev) { THIS.drag(ev, 'right') })
@@ -271,10 +267,8 @@ ZoomManipulator.prototype = {
 		this.reposition();
 	},
 	remove: function() {
-		for (p in this.handles)
+		for (var p in this.handles)
 			this.handles[p].remove();
-		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
-		$itemDom.hammer().off('pinch');
 	},
 	dragstart: function(ev) {
 		this.manipulatorOffset = 0;
@@ -297,7 +291,10 @@ ZoomManipulator.prototype = {
 		PB.stopEvent( ev.gesture.srcEvent );
 	},
 	pinch: function(ev) {
-		// Pinch does not work quite right yet
+		// TODO pinch is problematic
+		// I want pinch on entire $itemDom
+		// need to detect pinchstart, pinchend, conflicts with existing $itemDom 'touch' handler
+		// need to temporarily disable that handler
 		this.zoom = this.pageItem.item.zoom || 1;
 		this.zoomPerPixel = this.zoom / this.pageItem.item.photoRect.width * 2;
 		var newZoom = this.zoom * ev.gesture.scale;
@@ -309,12 +306,212 @@ ZoomManipulator.prototype = {
 	}
 };
 
+var RotateManipulator = function($pageDom, itemId) {
+	this.pageDom = $pageDom;
+	this.itemId = itemId;
+};
+
+RotateManipulator.prototype = {
+	reposition: function() {
+		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
+		var pageItem = PB.ModelMap.model(this.itemId);
+		var corners = Manipulator.getBoundingCorners($itemDom, pageItem.item.rotate);
+		this.rotateRad = (pageItem.item.rotate || 0) * Math.PI / 180;
+		this.radius = this.handles.circle.width() / 2;
+		this.center = {
+			top: ( corners.a.y + corners.c.y) / 2,
+			left: ( corners.a.x + corners.c.x) / 2
+		};
+		this.handles.circle.css( this.center );
+		this.handles.left.css({
+			top: this.center.top - Math.sin( this.rotateRad ) * this.radius,
+			left: this.center.left - Math.cos( this.rotateRad) * this.radius
+		});
+		this.handles.right.css({
+			top: this.center.top + Math.sin( this.rotateRad ) * this.radius,
+			left: this.center.left + Math.cos( this.rotateRad ) * this.radius
+		});
+	},
+	show: function() {
+		this.pageItem = PB.ModelMap.model( this.itemId );
+		this.handles = {
+			circle: $("<div>").addClass('manipulator-circle'),
+			left: Manipulator.makeIconHandle('repeat'),
+			right: Manipulator.makeIconHandle('undo')
+		};
+		var THIS = this;
+		for (var p in this.handles)
+			$(document.body).append(this.handles[p]);
+		this.handles.left.hammer()
+			.on('dragstart', {}, function(ev) { THIS.dragstart(ev, 'left') })
+			.on('drag', {}, function(ev) { THIS.drag(ev, 'left') })
+			.on('dragend', {}, function(ev) { THIS.dragend(ev, 'left') });
+		this.handles.right.hammer()
+			.on('dragstart', {}, function(ev) { THIS.dragstart(ev, 'right') })
+			.on('drag', {}, function(ev) { THIS.drag(ev, 'right') })
+			.on('dragend', {}, function(ev) { THIS.dragend(ev, 'right') });
+		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
+		this.handles.circle.hammer()
+			.on('touch', {}, function(ev) { $itemDom.hammer().trigger('touch', ev.gesture)});
+		this.reposition();
+	},
+	remove: function() {
+		for (var p in this.handles)
+			this.handles[p].remove();
+	},
+	dragstart: function(ev) {
+	},
+	dragend: function(ev) {
+
+	},
+	drag: function(ev, side) {
+		var xdiff = ev.gesture.center.pageX - this.center.left;
+		var ydiff = ev.gesture.center.pageY - this.center.top;
+		if (side == 'left') {
+			xdiff = -xdiff;
+			ydiff = -ydiff;
+		}
+		var angleRad;
+		if ( xdiff == 0 )
+			angleRad = ydiff > 0 ? Math.PI / 2 : 3 * Math.PI / 2;
+		else
+			angleRad = Math.atan(ydiff / xdiff);
+		if ( xdiff < 0 )
+			angleRad += Math.PI;
+		if (angleRad < 0)
+			angleRad += Math.PI * 2;
+		this.pageItem.page.updateAssetData( this.itemId, {rotate: 180 * angleRad / Math.PI } );
+		PB.stopEvent(ev.gesture);
+	}
+}
+
+var ResizeManipulator = function($pageDom, itemId) {
+	this.pageDom = $pageDom;
+	this.itemId = itemId;
+};
+
+ResizeManipulator.prototype = {
+	reposition: function() {
+		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
+		var pageItem = PB.ModelMap.model(this.itemId);
+		var corners = Manipulator.getBoundingCorners($itemDom, pageItem.item.rotate);
+
+		this.rotateRad = (pageItem.item.rotate || 0) * Math.PI / 180;
+		this.scale = Manipulator.scaleFromCorners(corners, pageItem);
+		this.handles.top.css({
+			top: (corners.a.y + corners.b.y) / 2,
+			left: (corners.a.x + corners.b.x) / 2,
+			transform: 'rotate(' + this.rotateRad + 'rad)'
+		});
+		this.handles.right.css({
+			top: (corners.b.y + corners.c.y) / 2,
+			left: (corners.b.x + corners.c.x) / 2,
+			transform: 'rotate(' + this.rotateRad + 'rad)'
+		});
+		this.handles.bottom.css({
+			top: (corners.c.y + corners.d.y) / 2,
+			left: (corners.c.x + corners.d.x) / 2,
+			transform: 'rotate(' + this.rotateRad + 'rad)'
+		});
+		this.handles.left.css({
+			top: (corners.d.y + corners.a.y) / 2,
+			left: (corners.d.x + corners.a.x) / 2,
+			transform: 'rotate(' + this.rotateRad + 'rad)'
+		});
+	},
+	show: function() {
+		this.pageItem = PB.ModelMap.model( this.itemId );
+		this.handles = {
+			top: Manipulator.makeIconHandle('arrow-up'),
+			left: Manipulator.makeIconHandle('arrow-left'),
+			bottom: Manipulator.makeIconHandle('arrow-down'),
+			right: Manipulator.makeIconHandle('arrow-right')
+		};
+		var THIS = this;
+		for (var p in this.handles)
+			$(document.body).append(this.handles[p]);
+		this.handles.top.hammer()
+			.on('dragstart', {}, function(ev) { THIS.dragstart(ev, 'top') })
+			.on('drag', {}, function(ev) { THIS.drag(ev, 'top') })
+			.on('dragend', {}, function(ev) { THIS.dragend(ev, 'top') });
+		this.handles.left.hammer()
+			.on('dragstart', {}, function(ev) { THIS.dragstart(ev, 'left') })
+			.on('drag', {}, function(ev) { THIS.drag(ev, 'left') })
+			.on('dragend', {}, function(ev) { THIS.dragend(ev, 'left') });
+		this.handles.bottom.hammer()
+			.on('dragstart', {}, function(ev) { THIS.dragstart(ev, 'bottom') })
+			.on('drag', {}, function(ev) { THIS.drag(ev, 'bottom') })
+			.on('dragend', {}, function(ev) { THIS.dragend(ev, 'bottom') });
+		this.handles.right.hammer()
+			.on('dragstart', {}, function(ev) { THIS.dragstart(ev, 'right') })
+			.on('drag', {}, function(ev) { THIS.drag(ev, 'right') })
+			.on('dragend', {}, function(ev) { THIS.dragend(ev, 'right') });
+		this.reposition();
+	},
+	remove: function() {
+		for (var p in this.handles)
+			this.handles[p].remove();
+	},
+	dragstart: function(ev) {
+		this.pageItem = PB.ModelMap.model(this.itemId);
+		this.itemRect = {
+			top: this.pageItem.item.top,
+			left: this.pageItem.item.left,
+			width: this.pageItem.item.width,
+			height: this.pageItem.item.height
+		};
+	},
+	dragend: function(ev) {
+
+	},
+	drag: function(ev, side) {
+		var deltaXRot = ev.gesture.deltaX * Math.cos(this.rotateRad) + ev.gesture.deltaY * Math.sin(this.rotateRad);
+		var deltaYRot = -ev.gesture.deltaX * Math.sin(this.rotateRad) + ev.gesture.deltaY * Math.cos(this.rotateRad);
+		var newLoc = PB.clone( this.itemRect );
+		var minHeight = 64;
+		var minWidth = 64;
+		switch(side) {
+			case 'top':
+				if (minHeight > (newLoc.height - deltaYRot))
+					deltaYRot = newLoc.height - minHeight;
+				newLoc.top += (Math.cos( this.rotateRad ) + 1) * deltaYRot / 2;
+				newLoc.left -= Math.sin( this.rotateRad ) * deltaYRot / 2;
+				newLoc.height -= deltaYRot;
+			break;
+			case 'bottom':
+				if (minHeight > (newLoc.height + deltaYRot))
+					deltaYRot = minHeight - newLoc.height;
+				newLoc.top += ( Math.cos( this.rotateRad ) - 1) * deltaYRot / 2;
+				newLoc.left -= Math.sin( this.rotateRad ) * deltaYRot / 2;
+				newLoc.height += deltaYRot;
+			break;
+			case 'right':
+				if (minWidth > (newLoc.width + deltaXRot))
+					deltaXRot = -( newLoc.width - minWidth);
+				newLoc.top += Math.sin( this.rotateRad ) * deltaXRot / 2;
+				newLoc.left += (Math.cos( this.rotateRad ) - 1) * deltaXRot / 2;
+				newLoc.width += deltaXRot;
+			break;
+			case 'left':
+				if (minWidth > (newLoc.width - deltaXRot))
+					deltaXRot = newLoc.width - minWidth;
+				newLoc.top += Math.sin( this.rotateRad ) * deltaXRot / 2;
+				newLoc.left += (Math.cos( this.rotateRad ) + 1) * deltaXRot / 2;
+				newLoc.width -= deltaXRot;
+			break;
+		}
+		this.pageItem.page.updateAssetData( this.itemId, newLoc );
+		PB.stopEvent(ev.gesture);
+	}
+}
 scope.Manipulator = Manipulator;
 scope.Manipulators = {
 	Default: DefaultManipulator,
 	Move: MoveManipulator,
 	Pan: PanManipulator,
-	Zoom: ZoomManipulator
+	Zoom: ZoomManipulator,
+	Rotate: RotateManipulator,
+	Resize: ResizeManipulator
 }
 
 })(GUI);
