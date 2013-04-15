@@ -23,7 +23,7 @@ all assets {
 	rotate	// angle in degrees
 	frameId
 	frameData
-	frameOffset { trbl }
+	frameOffset [ t,r,b,l] or offset. Use canonicalFrameOffset to convert to canonical form
 }
 asset photo {
 	type: 'photo'
@@ -517,11 +517,44 @@ asset text {
 			ThemeCache.resource(asset.frameId).fillFrame(frame, asset.frameOffset, asset.frameData, options);
 			return { frame: frame, innerBounds: innerBounds};
 		},
+		getText: function(asset) {
+			if (((typeof asset.content) == 'string') && asset.content != '')
+				return asset.content;
+			else
+				return 'Type your text here';
+		},
 		/* textDom
 			div.design-text tlwh
+				div.design-frame
 				div.design-text-content
 		*/
 		generateTextDom: function(asset, options) {
+			// measure height of the text
+			var textRect = {
+				top: asset.top,
+				left: asset.left,
+				width: asset.width,
+				height: 'auto'
+			};
+
+			var frameOffset = [0,0,0,0];
+
+			if ( asset.frameId )
+				frameOffset = asset.frameOffset;
+
+			textRect.width -= frameOffset[1] + frameOffset[3];
+
+			var text = this.getText( asset );
+
+			var measureText = $(document.createElement('div'))
+				.addClass('design-text-content')
+				.css ( textRect )
+				.text( text );
+			var heights = GUI.Util.getTextHeight(measureText);
+
+			// resize asset to just fit the text
+			asset.height = heights.divheight + frameOffset[0] + frameOffset[2];
+
 			var designText = $(document.createElement('div'))
 				.addClass('design-text')
 				.css ({
@@ -529,14 +562,12 @@ asset text {
 					left: asset.left,
 					width: asset.width,
 					height: asset.height
-				});
+				 });
 			var fr = this.generateFrame(asset, options);
 			var innerFrame = fr.innerBounds;
 			if (fr.frame)
 				designText.append(fr.frame);
-			var t = 'Your text here';
-			if (((typeof asset.content) == 'string') && asset.content != '')
-				t = asset.content;
+
 			var textContent = $(document.createElement('div'))
 				.addClass('design-text-content')
 				.css({
@@ -545,8 +576,8 @@ asset text {
 					width: innerFrame.width,
 					height: innerFrame.height
 				})
-				.text(t);
-			designText.append(textContent);
+				.text( text );
+			designText.append( textContent );
 			return designText;
 		},
 		/*

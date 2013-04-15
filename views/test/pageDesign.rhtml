@@ -75,8 +75,8 @@ var Controller = {
 		currentPage.setLayout('theme://base/layouts/gridLayout');
 		currentPage.setBackground('theme://base/backgrounds/cssBackground');
 		this.addPhoto();
-		this.addPhoto();
-		this.addPhoto();
+		this.addText("little text");
+		this.addText("Very big text\nHas a newline too!")
 		this.setLayout('theme://experimental/layouts/framedLayout');
 		this.showPage();
 		this.initBackPicker();
@@ -149,7 +149,7 @@ var Controller = {
 		var frames = [
 		{ id: 'theme://base/frames/cssFrame',
 			data: {},
-			offset: 0
+			offset: [0, 0, 0, 0]
 		},
 		{ id: 'theme://base/frames/cssFrame',
 			data: {
@@ -157,7 +157,7 @@ var Controller = {
 					backgroundColor: 'blue'
 				}
 			},
-			offset: 10
+			offset: [10, 10, 10, 10]
 		},
 		{ id: 'theme://base/frames/cssFrame',
 			data: {
@@ -174,7 +174,7 @@ var Controller = {
 					boxShadow: '5px 5px 5px rgba(148,0,211,0.3)'
 				}
 			},
-			offset: 2
+			offset: [2, 2, 2, 2]
 		}
 		];
 		var ICON_WIDTH = 50;
@@ -244,9 +244,12 @@ var Controller = {
 		this.updateLayoutPicker();
 	},
 	words: ["one", "two", "and a much longer three, how much longer i am not sure"],
-	addText: function() {
-		var word = this.words.shift();
-		this.words.push(word);
+	addText: function(text) {
+		var word = text;
+		if (word === undefined) {
+			word = this.words.shift();
+			this.words.push(word);
+		}
 		currentPage.addText(word);
 		this.updateLayoutPicker();
 	},

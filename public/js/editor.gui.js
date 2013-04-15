@@ -371,6 +371,17 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				el = parent;
 			}
 			return path;
+		},
+		getTextHeight: function($div) {
+			var $clone = $div.clone();
+			$(document.body).append($clone);
+			$clone.css('height', 'auto');
+			var style = window.getComputedStyle( $clone.get(0) );
+			var height = $clone.outerHeight();
+			$clone.text("A");
+			var lineheight = $clone.innerHeight();
+			$clone.remove();
+			return { divheight: height, lineheight: lineheight };
 		}
 	}
 
