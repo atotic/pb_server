@@ -521,7 +521,7 @@ asset text {
 			if (((typeof asset.content) == 'string') && asset.content != '')
 				return asset.content;
 			else
-				return 'Type your text here';
+				return undefined;
 		},
 		/* textDom
 			div.design-text tlwh
@@ -544,7 +544,7 @@ asset text {
 
 			textRect.width -= frameOffset[1] + frameOffset[3];
 
-			var text = this.getText( asset );
+			var text = this.getText( asset ) || "Type your text here";
 
 			var measureText = $(document.createElement('div'))
 				.addClass('design-text-content')
@@ -751,9 +751,7 @@ asset text {
 					var $popup = $a.parents('.pb-popup-menu');
 					var pageItem = PB.ModelMap.model($popup.data('popupModel'));
 					var $pageDom = $popup.data("popupPageDom");
-					pageItem.page.handlePopupCommand( pageItem.itemId, cmdId || title, $pageDom );
-				//	$popup.data("popupModel", null);
-				//	$popup.data("popupPageDom", null);
+					pageItem.page.handlePopupCommand( pageItem.itemId, cmdId, $pageDom );
 				}
 				catch(ex) {
 					console.error(ex);
@@ -787,10 +785,14 @@ asset text {
 			if ($popup.length != 0)
 				return $popup;
 			var $popup = $('<ul>').addClass('pb-popup-menu').prop('id', 'text-popup');
-			["move","resize","edit"]
-				.forEach( function( title ) {
+			[
+				{ title: "edit", icon: 'edit', cmdId: 'editText' },
+				{ title: 'move', icon: 'move' },
+				{ title: 'resize', icon: 'arrow-up', cmdId: 'resizeText' },
+				{ title: 'rotate', icon: 'repeat' }
+			].forEach( function( action ) {
 					var $li = $( "<li>" );
-					Popups.makeLiAction($li, title);
+					Popups.makeLiAction($li, action.title, action.cmdId, action.icon);
 					$popup.append($li);
 				});
 			$(document.body).append($popup);
@@ -820,38 +822,41 @@ asset text {
 				case 'resize':
 					manipulator = new GUI.Manipulators.Resize( $pageDom, itemId );
 				break;
+				case 'resizeText':
+					manipulator = new GUI.Manipulators.Resize( $pageDom, itemId, true);
+				break;
+				case 'editText':
+					manipulator = new GUI.Manipulators.EditText( $pageDom, itemId );
+				break;
 				default:
 					manipulator = new GUI.Manipulators.Default( $pageDom, itemId );
 				break;
 			}
 			PageSelection.findInParent( $pageDom ).setManipulator( manipulator );
 		},
+		// callback, 'this' points to an HTMLElement, not page
 		editItemCb: function(ev) {
-			function popupOverElement2($popup, $el) {
-				$popup.pbPopup('show');
-				var elRect = $el.get(0).getBoundingClientRect();
-				var popupRect = $popup.get(0).getBoundingClientRect();
-				$popup.css({
-						position: 'absolute',
-						top: Math.max(window.pageYOffset, elRect.top + window.pageYOffset - popupRect.height + 8),
-						left: Math.max(window.pageXOffset, elRect.left + window.pageXOffset + 8)
-					});
-			};
 			var $itemDom = $( ev.currentTarget );
 			var itemId = $itemDom.data( 'model_id' );
 			var itemPage = PB.ModelMap.model(itemId);
 			var $popup;
+			var pageSelection = PageSelection.findInParent( $itemDom );
+			var multiTap = pageSelection.selection.some(function(val) { return val == itemId; });
 			switch(itemPage.item.type) {
 				case 'photo':
 					$popup = Popups.photoPopup();
 				break;
 				case 'text':
 					$popup = Popups.textPopup();
+					if (multiTap)
+						window.setTimeout(function() {
+							itemPage.page.handlePopupCommand(itemId, 'editText', $itemDom.parents('.design-page'))
+						}, 0);
 				break;
 				default:
 					console.warn("No menus available over items of type", itemPage.item.type);
 			}
-			PageSelection.findInParent( $itemDom ).setSelection( itemId, $popup );
+			pageSelection.setSelection( itemId, $popup );
 			PB.stopEvent(ev);
 		},
 		makeEditable: function(item, $itemDom) {

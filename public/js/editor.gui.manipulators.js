@@ -384,9 +384,10 @@ RotateManipulator.prototype = {
 	}
 }
 
-var ResizeManipulator = function($pageDom, itemId) {
+var ResizeManipulator = function($pageDom, itemId, resizeText) {
 	this.pageDom = $pageDom;
 	this.itemId = itemId;
+	this.resizeText = resizeText;
 };
 
 ResizeManipulator.prototype = {
@@ -402,14 +403,14 @@ ResizeManipulator.prototype = {
 			left: (corners.a.x + corners.b.x) / 2,
 			transform: 'rotate(' + this.rotateRad + 'rad)'
 		});
-		this.handles.right.css({
-			top: (corners.b.y + corners.c.y) / 2,
-			left: (corners.b.x + corners.c.x) / 2,
-			transform: 'rotate(' + this.rotateRad + 'rad)'
-		});
 		this.handles.bottom.css({
 			top: (corners.c.y + corners.d.y) / 2,
 			left: (corners.c.x + corners.d.x) / 2,
+			transform: 'rotate(' + this.rotateRad + 'rad)'
+		});
+		this.handles.right.css({
+			top: (corners.b.y + corners.c.y) / 2,
+			left: (corners.b.x + corners.c.x) / 2,
 			transform: 'rotate(' + this.rotateRad + 'rad)'
 		});
 		this.handles.left.css({
@@ -433,18 +434,22 @@ ResizeManipulator.prototype = {
 			.on('dragstart', {}, function(ev) { THIS.dragstart(ev, 'top') })
 			.on('drag', {}, function(ev) { THIS.drag(ev, 'top') })
 			.on('dragend', {}, function(ev) { THIS.dragend(ev, 'top') });
-		this.handles.left.hammer()
-			.on('dragstart', {}, function(ev) { THIS.dragstart(ev, 'left') })
-			.on('drag', {}, function(ev) { THIS.drag(ev, 'left') })
-			.on('dragend', {}, function(ev) { THIS.dragend(ev, 'left') });
 		this.handles.bottom.hammer()
 			.on('dragstart', {}, function(ev) { THIS.dragstart(ev, 'bottom') })
 			.on('drag', {}, function(ev) { THIS.drag(ev, 'bottom') })
 			.on('dragend', {}, function(ev) { THIS.dragend(ev, 'bottom') });
+		this.handles.left.hammer()
+			.on('dragstart', {}, function(ev) { THIS.dragstart(ev, 'left') })
+			.on('drag', {}, function(ev) { THIS.drag(ev, 'left') })
+			.on('dragend', {}, function(ev) { THIS.dragend(ev, 'left') });
 		this.handles.right.hammer()
 			.on('dragstart', {}, function(ev) { THIS.dragstart(ev, 'right') })
 			.on('drag', {}, function(ev) { THIS.drag(ev, 'right') })
 			.on('dragend', {}, function(ev) { THIS.dragend(ev, 'right') });
+		if (this.resizeText) {
+			this.handles.top.hide();
+			this.handles.bottom.hide();
+		}
 		this.reposition();
 	},
 	remove: function() {
@@ -503,6 +508,73 @@ ResizeManipulator.prototype = {
 		PB.stopEvent(ev.gesture);
 	}
 }
+
+var EditTextManipulator = function($pageDom, itemId) {
+	this.pageDom = $pageDom;
+	this.itemId = itemId;
+};
+
+EditTextManipulator.prototype = {
+	reposition: function() {
+		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
+		var $textDom = $itemDom.find('.design-text-content');
+		var corners = Manipulator.getBoundingCorners($textDom, this.pageItem.item.rotate);
+		var center = {
+			x: (corners.a.x + corners.c.x) / 2,
+			y: (corners.a.y + corners.c.y) / 2,
+			width: $textDom.outerWidth(),
+			height: $textDom.outerHeight()
+		};
+		this.handles.textarea.css({
+			left: center.x - center.width / 2,
+			top: center.y - center.height / 2,
+			width: center.width,
+			height: center.height
+		});
+		this.autogrow();
+	},
+	autogrow: function() {
+		var textarea = this.handles.textarea.get(0);
+		if (textarea.scrollHeight > textarea.clientHeight)
+			textarea.style.height = textarea.scrollHeight + "px";
+	},
+	input: function() {
+		this.pageItem.page.updateAssetData( this.itemId, {
+			content: this.handles.textarea.prop('value')
+		});
+		this.autogrow();
+	},
+	show: function() {
+		this.pageItem = PB.ModelMap.model( this.itemId );
+		this.handles = {
+			textarea: $( $.parseHTML('<textarea class="manipulator-textarea"></textarea>')),
+			mirror: $('<pre>')
+		};
+		this.handles.textarea.prop('placeholder', 'Type your text here');
+		var text = this.pageItem.page.getText( this.pageItem.page.getAssetData( this.itemId ));
+		if (text !== undefined)
+			this.handles.textarea.prop('textContent', text);
+
+		var THIS = this;
+		this.handles.textarea.on('input', function() {
+			THIS.input();
+		});
+		$(document.body).append(this.handles.textarea);
+		this.reposition();
+		var THIS = this;
+		window.setTimeout(function() {	// heavens, the timeout cascade!
+			var dom = THIS.handles.textarea.get(0);
+			dom.focus();
+			window.setTimeout( function() {
+				dom.setSelectionRange(36000, 36000);
+			}, 0)
+		}, 0);
+	},
+	remove: function() {
+		this.handles.textarea.remove();
+	}
+}
+
 scope.Manipulator = Manipulator;
 scope.Manipulators = {
 	Default: DefaultManipulator,
@@ -510,7 +582,8 @@ scope.Manipulators = {
 	Pan: PanManipulator,
 	Zoom: ZoomManipulator,
 	Rotate: RotateManipulator,
-	Resize: ResizeManipulator
+	Resize: ResizeManipulator,
+	EditText: EditTextManipulator
 }
 
 })(GUI);
