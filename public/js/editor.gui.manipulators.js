@@ -76,7 +76,6 @@ DefaultManipulator.prototype = {
 		this.handles.c.css({ top: corners.c.y, left: corners.c.x });
 		this.handles.d.css({ top: corners.d.y, left: corners.d.x });
 		this.scale = Manipulator.scaleFromCorners( corners, pageItem );
-		console.log(this.scale);
 	},
 	show: function() {
 		this.handles = {

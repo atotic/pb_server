@@ -739,18 +739,21 @@ asset text {
 	};
 
 	var Popups = {
-		makeLiAction: function ($li, title, cmdId) {
+		makeLiAction: function ($li, title, cmdId, icon) {
+			cmdId = cmdId || title;
 			var $a = $(document.createElement('a'));
 			$a.text(title);
 			$a.prop('href', '/#' + title);
-			$a.on("popupClick", function(ev) {
+			if (icon)
+				$a.prepend( $.parseHTML("<i class='icon-" + icon + "'></i>" ));
+			$a.hammer().on("touch", function(ev) {
 				try {
 					var $popup = $a.parents('.pb-popup-menu');
 					var pageItem = PB.ModelMap.model($popup.data('popupModel'));
 					var $pageDom = $popup.data("popupPageDom");
 					pageItem.page.handlePopupCommand( pageItem.itemId, cmdId || title, $pageDom );
-					$popup.data("popupModel", null);
-					$popup.data("popupPageDom", null);
+				//	$popup.data("popupModel", null);
+				//	$popup.data("popupPageDom", null);
 				}
 				catch(ex) {
 					console.error(ex);
@@ -765,10 +768,15 @@ asset text {
 			if ($popup.length != 0)
 				return $popup;
 			$popup = $('<ul>').addClass('pb-popup-menu').prop('id', 'photo-popup');
-			["move","pan","zoom","resize","rotate","clear"]
-				.forEach( function( title ) {
+			[
+				{ title: "move", icon: "move" },
+				{ title: "pan", icon: 'hand-up'},
+				{ title: 'zoom', icon: 'search'},
+				{ title: 'resize', icon: 'arrow-up'},
+				{ title: 'rotate', icon: 'repeat'}
+			].forEach( function( action ) {
 					var $li = $( "<li>" );
-					Popups.makeLiAction($li, title);
+					Popups.makeLiAction($li, action.title, action.cmdId, action.icon);
 					$popup.append($li);
 				});
 			$(document.body).append($popup);
@@ -819,7 +827,7 @@ asset text {
 			PageSelection.findInParent( $pageDom ).setManipulator( manipulator );
 		},
 		editItemCb: function(ev) {
-			function popupOverElement($popup, $el) {
+			function popupOverElement2($popup, $el) {
 				$popup.pbPopup('show');
 				var elRect = $el.get(0).getBoundingClientRect();
 				var popupRect = $popup.get(0).getBoundingClientRect();
@@ -831,9 +839,6 @@ asset text {
 			};
 			var $itemDom = $( ev.currentTarget );
 			var itemId = $itemDom.data( 'model_id' );
-			PageSelection.findInParent( $itemDom )
-				.setSelection( itemId );
-			// display popup
 			var itemPage = PB.ModelMap.model(itemId);
 			var $popup;
 			switch(itemPage.item.type) {
@@ -846,11 +851,7 @@ asset text {
 				default:
 					console.warn("No menus available over items of type", itemPage.item.type);
 			}
-			if ($popup.length != 0) {
-				$popup.data("popupModel", itemId);
-				$popup.data("popupPageDom", $itemDom.parents('.design-page'));
-				popupOverElement($popup, $itemDom);
-			}
+			PageSelection.findInParent( $itemDom ).setSelection( itemId, $popup );
 			PB.stopEvent(ev);
 		},
 		makeEditable: function(item, $itemDom) {
@@ -898,14 +899,20 @@ asset text {
 		this.dom = dom;
 		this.selection = [];
 		this.manipulator = null;
+		this.popup = null;
 	};
 	PageSelection.prototype = {
-		setSelection: function(itemId) {
+		setSelection: function(itemId, $popup) {
 			this.selection = itemId ? [itemId] : [];
 			this.highlight();
+			// hide manipulator if from another item
 			if (this.manipulator && this.manipulator.itemId != itemId)
 				this.setManipulator(null);
+			if ($popup != null && $popup.length == 0)
+				$popup = null;
+			this.setPopup(itemId, $popup);
 		},
+
 		highlight: function() {
 			this.dom.find('.selected').removeClass('selected');
 			for (var i=0; i<this.selection.length; i++)
@@ -917,6 +924,21 @@ asset text {
 			this.manipulator = manipulator;
 			if (this.manipulator)
 				this.manipulator.show();
+		},
+		setPopup: function(itemId, $popup) {
+			if (this.popup && this.popup != $popup)
+				this.popup.hide();
+			this.popup = $popup;
+			if (this.popup) {
+				$popup.data("popupModel", itemId );
+				$popup.data("popupPageDom", this.dom );
+				$('#pagePopupContainer').append( this.popup );
+				$popup.css({
+					right: 0,
+					left: 'auto'
+				});
+				this.popup.show();
+			}
 		},
 		relayout: function() {
 			if (this.manipulator)
