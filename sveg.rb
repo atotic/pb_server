@@ -329,6 +329,10 @@ class SvegApp < Sinatra::Base
 		render_erb :admin, :layout => :'layout/plain'
 	end
 
+	get '/compatible' do
+		render_erb :compatible
+	end
+
 	get '/logout' do
 		PB::User.logout(env)
 		flash[:notice] = "You've logged out."
