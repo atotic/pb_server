@@ -63,6 +63,13 @@ Next
 - library updates: jquery 1.9, transit
 
 - Map is a great example of a widget
+Apr 17:
+Debugging android:
+cd /Users/atotic/adt-bundle-mac-x86_64-20130219/sdk/platform-tools
+./adb forward tcp:9222 localabstract:chrome_devtools_remote
+open http://localhost:9222/
+
+Stopped the codelog, using git commits insead.
 
 Mar 14:
 Moved book page to new architecture. Lots of old stuff broken:

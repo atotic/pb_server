@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
 	<title>Incompatible, sorry</title>
@@ -6,5 +7,30 @@
 <h1>Oh no,</h1>
 <p>we'd love to have you, but your browser is too old, and you won't be able to see much</p>
 <p>Why don't you try again with a different browser?</p>
-<p>We suggest <a href='http://getfirefox.com/'>Firefox</a> or <a href='https://www.google.com/chrome'>Chrome.</p>
+<p>We suggest <a href='http://getfirefox.com/'>Firefox</a> or <a href='https://www.google.com/chrome'>Chrome.</p> Even IE10 should work.
+<p>Sorry IE9 users, it is too much Javascript work to support you.</p>
+<script>
+var Test = function(txt) {
+	this.txt = txt;
+};
+
+Test.prototype = {
+	print: function() {
+		console.log(this.txt);
+	},
+	get some() {
+		return "some";
+	}
+}
+X = {
+	txt: "x txt"
+}
+Object.defineProperty( Test.prototype, 'propTest', {
+	get: function() { return this.txt },
+	set: function(val) { this.txt = val}
+});
+var a = new Test("yo");
+a.print();
+console.log('propTest:', a.propTest);
+</script>
 </body>

@@ -741,24 +741,22 @@ asset text {
 	var Popups = {
 		makeLiAction: function ($li, title, cmdId, icon) {
 			cmdId = cmdId || title;
-			var $a = $(document.createElement('a'));
+			var $a = $(document.createElement('span'));
 			$a.text(title);
-			$a.prop('href', '/#' + title);
 			if (icon)
 				$a.prepend( $.parseHTML("<i class='icon-" + icon + "'></i>" ));
 			$a.hammer().on("touch", function(ev) {
-				try {
-					var $popup = $a.parents('.pb-popup-menu');
-					var pageItem = PB.ModelMap.model($popup.data('popupModel'));
-					var $pageDom = $popup.data("popupPageDom");
-					pageItem.page.handlePopupCommand( pageItem.itemId, cmdId, $pageDom );
-				}
-				catch(ex) {
-					console.error(ex);
-				}
-				PB.stopEvent(ev);
-			})
-			.on('click', PB.stopEvent);
+					try {
+						var $popup = $a.parents('.pb-popup-menu');
+						var pageItem = PB.ModelMap.model($popup.data('popupModel'));
+						var $pageDom = $popup.data("popupPageDom");
+						pageItem.page.handlePopupCommand( pageItem.itemId, cmdId, $pageDom );
+					}
+					catch(ex) {
+						console.error(ex);
+					}
+					PB.stopEvent(ev);
+				});
 			$li.append($a);
 		},
 		photoPopup: function() {
@@ -857,6 +855,7 @@ asset text {
 					console.warn("No menus available over items of type", itemPage.item.type);
 			}
 			pageSelection.setSelection( itemId, $popup );
+			PB.stopEvent(ev.gesture);
 			PB.stopEvent(ev);
 		},
 		makeEditable: function(item, $itemDom) {

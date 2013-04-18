@@ -544,6 +544,10 @@ EditTextManipulator.prototype = {
 		});
 		this.autogrow();
 	},
+	blur: function() {
+		// only works well outside of touch
+		PB.PageSelection.findInParent( this.pageDom ).setManipulator();
+	},
 	show: function() {
 		this.pageItem = PB.ModelMap.model( this.itemId );
 		this.handles = {
@@ -553,19 +557,20 @@ EditTextManipulator.prototype = {
 		this.handles.textarea.prop('placeholder', 'Type your text here');
 		var text = this.pageItem.page.getText( this.pageItem.page.getAssetData( this.itemId ));
 		if (text !== undefined)
-			this.handles.textarea.prop('textContent', text);
+			this.handles.textarea.prop('value', text);
 
 		var THIS = this;
-		this.handles.textarea.on('input', function() {
-			THIS.input();
-		});
+		this.handles.textarea
+			.on('input', function() { THIS.input() } );
 		$(document.body).append(this.handles.textarea);
 		this.reposition();
 		var THIS = this;
 		window.setTimeout(function() {	// heavens, the timeout cascade!
 			var dom = THIS.handles.textarea.get(0);
+			console.log('focus');
 			dom.focus();
 			window.setTimeout( function() {
+				console.log('setSelectionRange');
 				dom.setSelectionRange(36000, 36000);
 			}, 0)
 		}, 0);

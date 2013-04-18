@@ -39,8 +39,8 @@ var BrowserDetect = { // http://www.quirksmode.org/js/detect.html
 };
 BrowserDetect.init();
 
-if (BrowserDetect.browser == MSIE && BrowserDetect.version < 9)
-	window.location = window.location.protocol + "//" + window.location.hostname + "/compatible"
+if (BrowserDetect.browser == 'MSIE' && BrowserDetect.version < 10)
+	window.location = window.location.protocol + "//" + window.location.hostname + "/compatible";
 
 (function(scope) {
 	var PB = {
@@ -48,7 +48,7 @@ if (BrowserDetect.browser == MSIE && BrowserDetect.version < 9)
 			return 'ontouchstart' in window;
 		},
 		get isSmallScreen() {
-		  return window.matchMedia("(max-width: 650px)").matches;
+		  return false;	//window.matchMedia("(max-width: 650px)").matches;
 		},
 		get isSmallHost() {
 			return window.location.hostname.match(/^touch/) !== null;
