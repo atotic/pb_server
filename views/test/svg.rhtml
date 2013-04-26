@@ -2,11 +2,10 @@
 <html>
 <head>
 	<title>Test: SVG</title>
-	<%= asset_link("jquery.js", "jquery-ui.js", "application.js", "editor.js", "editor.model.js") %>
-	<%= asset_link("jquery-ui.css", "application.css") %>
+	<%= asset_link("jquery.js", "application.js", "editor.js", "editor.model.js") %>
+	<%= asset_link("application.css") %>
 </head>
 <body>
-<%= erb :'layout/header_bar' %>
 <h1>SVG tests</h1>
 <button onclick="vbox()">Change vbox</button>
 <pre id="log"></pre>
@@ -46,6 +45,7 @@ width="100" height="100"
 	</text>
 	<line x1="0" x2='200' y1="15" y2="15" fill="black" stroke="black"/>
 </svg>
+<img style='width:100px; height:100px;' src='/t/admin@sample/soccer_small.svg'>
 <script>
 function vbox()
 {

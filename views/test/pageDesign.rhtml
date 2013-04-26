@@ -21,6 +21,47 @@
 <%= asset_link("newpage.js") %>
 
 <style type="text/css">
+#tools {
+	position: fixed;
+	top: 0;
+	right: 0px;
+	background-color: rgba(255,255,255, 0.7);
+	border-width: 0 0 1px 1px;
+	border-color: #DDD;
+	border-style: solid;
+	padding: 8px;
+}
+.sizePick {
+	position: relative;
+	border: 1px solid black;
+	background-color: #CCC;
+	text-align: center;
+	padding-top: 16px;
+}
+#sizePickerContainer {
+	vertical-align: top;
+	line-height: 80px;
+}
+#sizePicker {
+	display:inline-block;
+}
+#sizePicker li {
+	display: inline-block;
+	list-style-type: none;
+	margin: 8px;
+	vertical-align: bottom;
+}
+#themePicker li {
+	display: inline-block;
+	list-style-type: none;
+
+}
+#themePicker li img {
+	height: 100px;
+}
+#themePicker li p {
+	text-align: center;
+}
 #backgroundPicker {
 	overflow: auto;
 	max-height: 160px;
@@ -84,8 +125,48 @@ var Controller = {
 		this.addText("Very big text\nHas a newline too!")
 		this.setLayout('theme://experimental/layouts/framedLayout');
 		this.showPage();
+		this.initSizePicker();
 		this.initBackPicker();
+		this.initThemePicker();
 		this.updateFramePicker();
+	},
+	initSizePicker: function() {
+		var sizes = [
+			{ width: 8, height: 8 },
+			{ width: 12, height: 12},
+			{ width: 11, height: 8 }
+		];
+		function assignCb(el, size) {
+
+		};
+		var $picker = $('#sizePicker');
+		var inchToPixel = 6;
+		sizes.forEach(function(size) {
+			$li = $('<li>');
+			$div = $('<div>')
+				.addClass('sizePick')
+				.css( { width: size.width * inchToPixel,
+					height: size.height * inchToPixel})
+				.text(size.width + " X " + size.height);
+			$li.append($div);
+			$picker.append($li);
+			assignCb( $li, size );
+		});
+	},
+	initThemePicker: function() {
+		var themeIds = ['sample1'];
+		function assignCb( el, id ) {
+
+		};
+		var $picker = $('#themePicker');
+		themeIds.forEach( function( id) {
+			var theme = ThemeCache.get(id);
+			$li = $('<li>');
+			$li.append( $('<img>').prop('src', theme.screenshots[0]));
+			$li.append( $('<p>').text( theme.title ));
+			$picker.append($li);
+			assignCb( $li, id );
+		});
 	},
 	initBackPicker: function() {
 		var backs = [
@@ -258,6 +339,13 @@ var Controller = {
 		currentPage.addText(word);
 		this.updateLayoutPicker();
 	},
+	addWidget: function() {
+		currentPage.addWidget('theme://base/widgets/photoWidget', {
+			url: '/t/admin@sample/soccer_small.svg',
+			defaultWidth: 397,
+			defaultHeight: 266
+		});
+	},
 	setLayout: function(layoutId, layoutData) {
 		currentPage.setLayout(layoutId, layoutData);
 	},
@@ -272,12 +360,21 @@ $(document).ready(function() {
 
 </script>
 <body>
-	<label for='editable'>Editable <input type='checkbox' id='editable' checked onClick='Controller.showPage()'/></label>
-	<label for='syncable'>syncable <input type='checkbox' id='syncable' checked onClick='Controller.showPage()'/></label>
-	<button onclick="Controller.addPhoto()">Add photo</button>
-	<button onclick="Controller.removePhoto()">Remove photo</button>
-	<button onclick="Controller.addText()">Add text</button>
-	<br>
+	<div id='tools'>
+		<label for='editable'>Editable <input type='checkbox' id='editable' checked onClick='Controller.showPage()'/></label>
+		<label for='syncable'>syncable <input type='checkbox' id='syncable' checked onClick='Controller.showPage()'/></label>
+		<button onclick="Controller.addPhoto()">Add photo</button><br>
+		<button onclick="Controller.removePhoto()">Remove</button><br>
+		<button onclick="Controller.addText()">Add text</button><br>
+		<button onclick="Controller.addWidget()">Add widget</button>
+	</div>
+	<div id='sizePickerContainer'>What size would you like your book to be?
+	<ul id='sizePicker'>
+	</ul>
+	</div>
+	<p>And theme? You can mix in other themes later.</p>
+	<ul id='themePicker'>
+	</ul>
 	<p>Layouts:</p>
 	<ul id='layoutPicker'>
 	</ul>

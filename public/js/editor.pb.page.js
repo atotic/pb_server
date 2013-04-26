@@ -36,6 +36,11 @@ asset text {
 	type: 'text'
 	content: '' // plain text
 }
+asset widget {
+	type: 'widget'
+	widgetId:
+	widgetOptions:
+}
 */
 
 (function(scope){
@@ -256,6 +261,13 @@ asset text {
 				content: content
 			});
 		},
+		addWidget: function(widgetId, widgetOptions) {
+			this.addAsset( this.book.generateId(), {
+				type: 'widget',
+				widgetId: widgetId,
+				widgetOptions: widgetOptions
+			});
+		},
 		setLayout: function(layoutId, layoutData, options) {
 			this.p.layoutId = layoutId;
 			this.p.layoutData = layoutData;
@@ -431,8 +443,18 @@ asset text {
 			var design = resource.getPageDesign(this.p.assetData, this.width, this.height, this.p.layoutData);
 			var layout = design.layout;
 
-			var photoAssetIds = this.p.assets.filter( function(val) { return this.p.assetData[val].type == 'photo' }, this );
-			var textAssetIds = this.p.assets.filter( function(val) { return this.p.assetData[val].type == 'text' }, this );
+			var photoAssetIds = [];
+			var textAssetIds = [];
+			var widgetAssetIds = [];
+			var THIS = this;
+			this.p.assets.forEach( function(id) {
+				switch( THIS.p.assetData[id].type) {
+					case 'photo': photoAssetIds.push( id ); break;
+					case 'text': textAssetIds.push( id ); break;
+					case 'widget': widgetAssetIds.push( id ); break;
+					default: break;
+				};
+			});
 
 			var layoutExhausted = false;
 			while (!layoutExhausted) {
@@ -463,7 +485,7 @@ asset text {
 						console.error("do not know how to handle assets of type", dd.type);
 					}
 				}
-				var assetData = assetData = this.p.assetData[assetId];
+				var assetData = this.p.assetData[assetId];
 				$.extend(assetData, {
 					top: dd.top,
 					left: dd.left,
@@ -484,6 +506,19 @@ asset text {
 				this.layoutInnerItem(assetId);
 
 			};
+			widgetAssetIds.forEach( function(id) {
+				var assetData = THIS.p.assetData[id];
+				if (!('top' in assetData)) {
+					var widget = ThemeCache.resource( assetData.widgetId );
+					var center = { x: THIS.width / 2, y: THIS.height / 2 };
+					$.extend( assetData, {
+						top: center.y - widget.defaultHeight( assetData.widgetOptions ) / 2,
+						left: center.x - widget.defaultWidth( assetData.widgetOptions ) / 2,
+						width: widget.defaultWidth( assetData.widgetOptions ),
+						height: widget.defaultHeight( assetData.widgetOptions )
+					});
+				};
+			});
 			if (photoAssetIds.length > 0 )
 				console.error("layout has ignored photo data");
 			if (textAssetIds.length > 0)
@@ -493,6 +528,7 @@ asset text {
 				this.p.backgroundId = design.background.backgroundId;
 				this.p.backgroundData = design.background.backgroundData;
 			}
+
 			this.p.hasLayout = true;
 
 		},
@@ -516,6 +552,43 @@ asset text {
 				});
 			ThemeCache.resource(asset.frameId).fillFrame(frame, asset.frameOffset, asset.frameData, options);
 			return { frame: frame, innerBounds: innerBounds};
+		},
+		/*
+			widgetDom
+			div.design-widget tlwh	// photo with frame
+				div.design-widget-frame top: 0, left: 0, width: height:
+				div.design-widget-inner top: left: width: height: // widget, no overflow, position absolute
+		*/
+		generateWidgetDom: function( asset, options) {
+			var frameOffset = [0,0,0,0];
+
+			if ( asset.frameId )
+				frameOffset = asset.frameOffset;
+
+			var widgetDom = $(document.createElement('div'))
+				.addClass('design-widget')
+				.css({
+					top: asset.top,
+					left: asset.left,
+					width: asset.width,
+					height: asset.height
+				});
+			var fr = this.generateFrame(asset, options);
+			var innerFrame = fr.innerBounds;
+			if (fr.frame)
+				widgetDom.append( fr.frame );
+
+			var widget = ThemeCache.resource( asset.widgetId );
+			var innerDom = widget.generateDom( innerFrame.width, innerFrame.height, asset.widgetOptions)
+				.addClass( 'design-widget-inner' )
+				.css( {
+					top: innerFrame.top,
+					left: innerFrame.left,
+					width: innerFrame.width,
+					height: innerFrame.height
+				});
+			widgetDom.append( innerDom );
+			return widgetDom;
 		},
 		getText: function(asset) {
 			if (((typeof asset.content) == 'string') && asset.content != '')
@@ -555,7 +628,7 @@ asset text {
 			// resize asset to just fit the text
 			asset.height = heights.divheight + frameOffset[0] + frameOffset[2];
 
-			var designText = $(document.createElement('div'))
+			var textDom = $(document.createElement('div'))
 				.addClass('design-text')
 				.css ({
 					top: asset.top,
@@ -566,9 +639,9 @@ asset text {
 			var fr = this.generateFrame(asset, options);
 			var innerFrame = fr.innerBounds;
 			if (fr.frame)
-				designText.append(fr.frame);
+				textDom.append(fr.frame);
 
-			var textContent = $(document.createElement('div'))
+			var contentDom = $(document.createElement('div'))
 				.addClass('design-text-content')
 				.css({
 					top:innerFrame.top,
@@ -577,8 +650,8 @@ asset text {
 					height: innerFrame.height
 				})
 				.text( text );
-			designText.append( textContent );
-			return designText;
+			textDom.append( contentDom );
+			return textDom;
 		},
 		/*
 			photoDom
@@ -588,7 +661,7 @@ asset text {
 					img.design-photo-img top: left: width: height: // just photo
 		*/
 		generatePhotoDom: function(asset, options) {
-			var designPhoto = $(document.createElement('div'))
+			var photoDom = $(document.createElement('div'))
 				.addClass('design-photo')
 				.css({
 					top: asset.top,
@@ -599,8 +672,8 @@ asset text {
 			var fr = this.generateFrame(asset, options);
 			var innerFrame = fr.innerBounds;
 			if (fr.frame)
-				designPhoto.append( fr.frame );
-			var designPhotoInner = $( document.createElement('div') )
+				photoDom.append( fr.frame );
+			var innerDom = $( document.createElement('div') )
 				.addClass( 'design-photo-inner' )
 				.css( {
 					top: innerFrame.top,
@@ -608,7 +681,7 @@ asset text {
 					width: innerFrame.width,
 					height: innerFrame.height
 				});
-			var img = $( document.createElement('img') )
+			var imgDom = $( document.createElement('img') )
 				.addClass('design-photo-img')
 				.prop('src', PB.ServerPhotoCache.get( asset.photoId).url )
 				.css({
@@ -617,8 +690,8 @@ asset text {
 					width: asset.photoRect.width,
 					height: asset.photoRect.height
 				});
-			designPhoto.append( designPhotoInner.append( img ) );
-			return designPhoto;
+			photoDom.append( innerDom.append( imgDom ) );
+			return photoDom;
 		},
 		/*
 		.design-book-page-left
@@ -671,6 +744,9 @@ asset text {
 							break;
 						case 'text':
 							$itemDom = this.generateTextDom( item, options );
+							break;
+						case 'widget':
+							$itemDom = this.generateWidgetDom( item, options );
 							break;
 						default:
 							debugger;
@@ -821,7 +897,7 @@ asset text {
 					manipulator = new GUI.Manipulators.Resize( $pageDom, itemId );
 				break;
 				case 'resizeText':
-					manipulator = new GUI.Manipulators.Resize( $pageDom, itemId, true);
+					manipulator = new GUI.Manipulators.Resize( $pageDom, itemId, { horizontal: false });
 				break;
 				case 'editText':
 					manipulator = new GUI.Manipulators.EditText( $pageDom, itemId );

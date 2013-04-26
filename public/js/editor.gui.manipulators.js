@@ -384,9 +384,14 @@ RotateManipulator.prototype = {
 	}
 }
 
-var ResizeManipulator = function($pageDom, itemId, resizeText) {
+var ResizeManipulator = function($pageDom, itemId, options) {
 	this.pageDom = $pageDom;
 	this.itemId = itemId;
+	this.options = $.extend( {
+		vertical : true,
+		horizontal: true,
+		fixAspect: false
+	}, options);
 	this.resizeText = resizeText;
 };
 
@@ -446,9 +451,13 @@ ResizeManipulator.prototype = {
 			.on('dragstart', {}, function(ev) { THIS.dragstart(ev, 'right') })
 			.on('drag', {}, function(ev) { THIS.drag(ev, 'right') })
 			.on('dragend', {}, function(ev) { THIS.dragend(ev, 'right') });
-		if (this.resizeText) {
+		if (!this.options.vertical) {
 			this.handles.top.hide();
 			this.handles.bottom.hide();
+		}
+		if (!this.options.horizontal) {
+			this.handles.left.hide();
+			this.handles.right.hide();
 		}
 		this.reposition();
 	},
@@ -565,12 +574,10 @@ EditTextManipulator.prototype = {
 		$(document.body).append(this.handles.textarea);
 		this.reposition();
 		var THIS = this;
-		window.setTimeout(function() {	// heavens, the timeout cascade!
+		window.setTimeout(function() {	// the timeout cascade to make selecting end work
 			var dom = THIS.handles.textarea.get(0);
-			console.log('focus');
 			dom.focus();
 			window.setTimeout( function() {
-				console.log('setSelectionRange');
 				dom.setSelectionRange(36000, 36000);
 			}, 0)
 		}, 0);

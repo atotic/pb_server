@@ -1,4 +1,8 @@
-http://caniuse.com/
+Stream:
+Nice SVG clip art: http://www.clker.com/, reduce with python ~/bin/scour/scour.py -i <fname> -o <fname>
+$1M round milestones., $50K/month https://twitter.com/cesarsalazar/status/326489614774829057/photo/1
+http://blog.eladgil.com/2013/04/who-cares-if-its-been-tried-before.html Who cares if it has been tried before
+https://towtruck.mozillalabs.com/example/ How we will collaborate on the albums
 
 CSS
 Retina images with preprocessor: http://37signals.com/svn/posts/3271-easy-retina-ready-images-using-scss?utm_source=feedburner&utm_medium=twitter&utm_campaign=Feed%3A+hnycombinator+%28HN+-+hnycombinator%29
@@ -29,7 +33,6 @@ Pure CSS drawing library: https://github.com/dnewcome/Donatello
 Excellent CSS effects: bounce, rotate, etc. If I ever need visual candy http://blackberry.github.com/Alice/demos.html
 3D Photo rollover: http://thewebrocks.com/demos/3D-photo-rollover/
 1366 x 768 most popular screen size http://gs.statcounter.com/press/screen-resolution-alert-for-web-developers
-CSS arrow please: http://cssarrowplease.com/
 
 JS
 Google Drive Realtime API: http://googledevelopers.blogspot.com/2013/03/build-collaborative-apps-with-google.html?utm_source=feedburner&utm_medium=feed&utm_campaign=Feed%3A+GDBcode+%28Google+Developers+Blog%29

@@ -226,7 +226,7 @@ class SvegApp < Sinatra::Base
 						"editor.gui.tools.js"
 						)
 				elsif arg.end_with?("js")
-					arg = "jquery-1.9.1.js" if arg.eql? "jquery.js"
+					arg = "jquery-2.0.0.js" if arg.eql? "jquery.js"
 					retVal += "<script src='/js/#{arg}'></script>\n"
 				elsif arg.end_with?("css")
 					if arg.eql? 'bootstrap.css'
@@ -506,6 +506,18 @@ class SvegApp < Sinatra::Base
 		rescue => ex
 			LOGGER.error "Unexpected server error" + ex.message
 			[500, "Unexpected server error" + ex.message]
+		end
+	end
+
+	get '/t/*' do |template_path|
+		filename = File.join(SvegSettings.book_templates_dir, template_path)
+		if ( File.extname( filename ).eql? '.js' ) && params['callback']
+			# jsonp
+			body = params["callback"] << "(" << IO.read(filename) << ")"
+			headers = {'Content-Type' => 'application/javascript' }
+			[200, headers, [body]]
+		else
+			send_file filename
 		end
 	end
 

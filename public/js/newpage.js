@@ -32,9 +32,11 @@ var AbstractLayout = {
 
 var ThemeCache = {
 	cache: {},
-	get: function(id) {
+	get: function( id, url ) {
 		if (id in this.cache)
 			return this.cache[id];
+		if (url)
+			this.load(url);
 		throw "No such theme " + id;
 	},
 	put: function(theme) {
@@ -42,13 +44,34 @@ var ThemeCache = {
 			throw "theme already defined " + theme.id;
 		this.cache[theme.id] = theme;
 	},
+	load: function(url) {
+		var jqXhr = $.ajax( {
+				url: url,
+				dataType: 'jsonp'
+			})
+			.done( function( response, msg, jqXHR ) {
+				console.log('theme loaded');
+				ThemeCache.put( response );
+			})
+			.fail( function( jqXHR, status, msg ) {
+				console.warn("theme loading failed", status, msg, url);
+				switch(jqXHR.status) {
+					case 404:
+					default:
+						console.warn('template failed to load', status, msg);
+						break;
+				}
+			});
+		return jqXhr;
+	},
+
 	themeRegex: new RegExp("^theme\:\/\/([^\/]+)/(.*)$"),
 	// Resource url scheme
 	// theme://theme_id/:res_type/:res_id
 	resource: function(resUrl) {
 		var match = this.themeRegex.exec(resUrl);
 		if (!match) {
-			var err = "Malformed theme resource url " + resUrl; console.error(err); throw err;
+			var err = "Malformed theme resource url " + resUrl; console.error(err); throw new Error(err);
 		}
 		var themeId = match[1],
 			pathStr = match[2];
@@ -254,6 +277,29 @@ var ThemeCache = {
 		}
 	};
 
+	var PhotoWidget = function(options) {
+		this.options = $.extend( {
+			url: 'data:image/svg+xml;utf8,<?xml version="1.0" ?><svg xmlns="http://www.w3.org/2000/svg" height="100px" width="100px" version="1.1" y="0px" x="0px" overflow="visible" viewBox="0 0 100 100" ><rect width="100" height="100" fill="#F6EC43"/><text font-size="14"  transform="matrix(1 0 0 1 25 40)">Photo</text><text font-size="14" transform="matrix(1 0 0 1 25 60)">Widget</text></svg>',
+			defaultWidth: 100,
+			defaultHeight: 100
+		}, options);
+	};
+	PhotoWidget.prototype = {
+		defaultWidth: function( widgetOptions ) {
+			return widgetOptions.defaultWidth || this.options.defaultWidth;
+		},
+		defaultHeight: function( widgetOptions ) {
+			return widgetOptions.defaultHeight || this.options.defaultHeight;
+		},
+		generateDom: function(width, height, widgetOptions, displayOptions) {
+			widgetOptions = $.extend({}, this.options, widgetOptions);
+			var dom = $('<img>')
+				.prop('src', widgetOptions.url);
+			return dom;
+		}
+	}
+
+
 	var BaseTheme = {
 		id: 'base',
 		layouts: {
@@ -265,6 +311,9 @@ var ThemeCache = {
 		},
 		frames: {
 			cssFrame: CssFrame
+		},
+		widgets: {
+			photoWidget: new PhotoWidget()
 		},
 		utilities: Utils
 	 };
@@ -304,6 +353,40 @@ var ThemeCache = {
 		}
 	};
 	themeCache.put(ExperimentalTheme);
+})(ThemeCache);
+
+// ThemeCache.resource('theme://sample1/designs/')
+// ThemeCache.resource('theme://sample1//')
+(function(themeCache) {
+
+
+	var SampleTheme = {
+		id: 'sample1',
+		title: 'Sample Theme',
+		description: "Long description",
+		screenshots: ['/t/_test/family/showcase1.jpg'],
+		designs: {
+		},
+		layouts: {
+		},
+		backgrounds: {
+		},
+		frames: {
+		},
+		widgets: {
+			soccerBall: {},
+			eightBall: {
+
+			}
+		},
+		sized: {
+			s8x8: {
+				sizes: {width: 8, height: 8 }
+			}
+		}
+	}
+
+	themeCache.put(SampleTheme);
 })(ThemeCache);
 
 
