@@ -59,14 +59,21 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		},
 		initGlobalShortcuts: function() {
 			var cs = new GUI.CommandSet("global");
-			cs.add(new GUI.Command('viewMoreImages', '+', false,
-				function() {GUI.Palette.viewMore();}));
-			cs.add(new GUI.Command('viewMoreImages', '=', false,
-				function() {GUI.Palette.viewMore();}));
-			cs.add(new GUI.Command('viewFewerImages', '-', false,
-				function() {GUI.Palette.viewLess();}));
-			cs.add(new GUI.Command("HideTools", GUI.CommandManager.keys.esc, false,
-				GUI.toggleTools));
+			cs.add( new GUI.Command( {
+				id: 'viewMoreImages',
+				key: ['+', '='] ,
+				action: function() {GUI.Palette.viewMore();}
+			}));
+			cs.add( new GUI.Command( {
+				id: 'viewFewerImages',
+				key: '-',
+				action: function() {GUI.Palette.viewLess();}
+			}));
+			cs.add( new GUI.Command( {
+				id: "HideTools",
+				key: GUI.CommandManager.keys.esc,
+				action: GUI.toggleTools
+			}));
 			GUI.CommandManager.addCommandSet(cs);
 		},
 		bindToBook: function(book) {

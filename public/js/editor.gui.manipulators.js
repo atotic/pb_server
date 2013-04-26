@@ -392,7 +392,6 @@ var ResizeManipulator = function($pageDom, itemId, options) {
 		horizontal: true,
 		fixAspect: false
 	}, options);
-	this.resizeText = resizeText;
 };
 
 ResizeManipulator.prototype = {

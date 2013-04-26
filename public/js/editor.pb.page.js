@@ -815,18 +815,88 @@ asset widget {
 	};
 
 	var Popups = {
-		makeLiAction: function ($li, title, cmdId, icon) {
-			cmdId = cmdId || title;
-			var $a = $(document.createElement('span'));
-			$a.text(title);
-			if (icon)
-				$a.prepend( $.parseHTML("<i class='icon-" + icon + "'></i>" ));
+		getManipulatorCommandSet: function() {
+			if ('cmdSet' in this)
+				return this.cmdSet;
+			this.cmdSet = new GUI.CommandSet('manipulators');
+
+			this.cmdSet.add( new GUI.Command ({
+				id: 'move',
+				title: 'move',
+				icon: 'move',
+				action: function( $pageDom, itemId ) {
+					var m = new GUI.Manipulators.Move( $pageDom, itemId );
+					PageSelection.findInParent( $pageDom ).setManipulator( m );
+				}
+			}));
+			this.cmdSet.add( new GUI.Command({
+				id: 'pan',
+				title: 'pan',
+				icon: 'hand-up',
+				action: function( $pageDom, itemId) {
+					var m = new GUI.Manipulators.Pan( $pageDom, itemId );
+					PageSelection.findInParent( $pageDom ).setManipulator( m );
+				}
+			}));
+			this.cmdSet.add( new GUI.Command({
+				id: 'zoom',
+				title: 'zoom',
+				icon: 'search',
+				action: function( $pageDom, itemId) {
+					var m = new GUI.Manipulators.Zoom( $pageDom, itemId );
+					PageSelection.findInParent( $pageDom ).setManipulator( m );
+				}
+			}));
+			this.cmdSet.add( new GUI.Command({
+				id: 'resize',
+				title: 'resize',
+				icon: 'arrow-up',
+				action: function( $pageDom, itemId) {
+					var m = new GUI.Manipulators.Resize( $pageDom, itemId );
+					PageSelection.findInParent( $pageDom ).setManipulator( m );
+				}
+			}));
+			this.cmdSet.add( new GUI.Command({
+				id: 'resizeText',
+				title: 'resize',
+				icon: 'arrow-up',
+				action: function( $pageDom, itemId) {
+					var m = new GUI.Manipulators.Resize( $pageDom, itemId ,{ vertical: false });
+					PageSelection.findInParent( $pageDom ).setManipulator( m );
+				}
+			}));
+			this.cmdSet.add( new GUI.Command({
+				id: 'rotate',
+				title: 'rotate',
+				icon: 'repeat',
+				action: function( $pageDom, itemId) {
+					var m = new GUI.Manipulators.Rotate( $pageDom, itemId );
+					PageSelection.findInParent( $pageDom ).setManipulator( m );
+				}
+			}));
+			this.cmdSet.add( new GUI.Command({
+				id: 'editText',
+				title: 'edit',
+				icon: 'edit',
+				action: function( $pageDom, itemId) {
+					var m = new GUI.Manipulators.EditText( $pageDom, itemId );
+					PageSelection.findInParent( $pageDom ).setManipulator( m );
+				}
+			}));
+			return this.cmdSet;
+		},
+		makeLiAction: function(cmd) {
+			$li = $( document.createElement( 'li' ));
+			var $a = $( document.createElement('span'));
+			$a.text( cmd.title );
+			if ( cmd.icon )
+				$a.prepend( $.parseHTML("<i class='icon-" + cmd.icon + "'></i>" ));
 			$a.hammer().on("touch", function(ev) {
 					try {
 						var $popup = $a.parents('.pb-popup-menu');
 						var pageItem = PB.ModelMap.model($popup.data('popupModel'));
 						var $pageDom = $popup.data("popupPageDom");
-						pageItem.page.handlePopupCommand( pageItem.itemId, cmdId, $pageDom );
+						cmd.action( $pageDom, pageItem.itemId );
 					}
 					catch(ex) {
 						console.error(ex);
@@ -834,80 +904,47 @@ asset widget {
 					PB.stopEvent(ev);
 				});
 			$li.append($a);
+			return $li;
+		},
+		popupShell: function() {
+			return $('<ul>').addClass('pb-popup-menu');
 		},
 		photoPopup: function() {
-			var $popup = $('#photo-popup');
-			if ($popup.length != 0)
-				return $popup;
-			$popup = $('<ul>').addClass('pb-popup-menu').prop('id', 'photo-popup');
-			[
-				{ title: "move", icon: "move" },
-				{ title: "pan", icon: 'hand-up'},
-				{ title: 'zoom', icon: 'search'},
-				{ title: 'resize', icon: 'arrow-up'},
-				{ title: 'rotate', icon: 'repeat'}
-			].forEach( function( action ) {
-					var $li = $( "<li>" );
-					Popups.makeLiAction($li, action.title, action.cmdId, action.icon);
+			var $popup = this.popupShell();
+			var cmdSet = this.getManipulatorCommandSet();
+			['move', 'pan', 'zoom', 'resize', 'rotate']
+				.forEach( function(cmdId) {
+					var cmd = cmdSet.getCommandById( cmdId );
+					var $li = Popups.makeLiAction( cmd );
 					$popup.append($li);
-				});
-			$(document.body).append($popup);
+			});
 			return $popup;
 		},
 		textPopup: function() {
-			var $popup = $('#text-popup');
-			if ($popup.length != 0)
-				return $popup;
-			var $popup = $('<ul>').addClass('pb-popup-menu').prop('id', 'text-popup');
-			[
-				{ title: "edit", icon: 'edit', cmdId: 'editText' },
-				{ title: 'move', icon: 'move' },
-				{ title: 'resize', icon: 'arrow-up', cmdId: 'resizeText' },
-				{ title: 'rotate', icon: 'repeat' }
-			].forEach( function( action ) {
-					var $li = $( "<li>" );
-					Popups.makeLiAction($li, action.title, action.cmdId, action.icon);
+			var $popup = this.popupShell();
+			var cmdSet = this.getManipulatorCommandSet();
+			['editText', 'move', 'resizeText', 'rotate']
+				.forEach( function(cmdId) {
+					var cmd = cmdSet.getCommandById( cmdId );
+					var $li = Popups.makeLiAction( cmd );
 					$popup.append($li);
 				});
-			$(document.body).append($popup);
+			return $popup;
+		},
+		widgetPopup: function(itemPage) {
+			var $popup = this.popupShell();
+			var cmdSet = this.getManipulatorCommandSet();
+			['move', 'resize', 'rotate']
+				.forEach( function(cmdId) {
+					var cmd = cmdSet.getCommandById( cmdId );
+					var $li = Popups.makeLiAction( cmd );
+					$popup.append($li);
+				});
 			return $popup;
 		}
 	}
 
 	var PageProxyEditable = {
-		handlePopupCommand: function(itemId, cmdId, $pageDom) {
-			// find item inside page dom
-			// determine item position on the page
-			var manipulator;
-			var constructor;
-			switch(cmdId) {
-				case 'move':
-					manipulator = new GUI.Manipulators.Move( $pageDom, itemId );
-				break;
-				case 'pan':
-					manipulator = new GUI.Manipulators.Pan( $pageDom, itemId );
-				break;
-				case 'zoom':
-					manipulator =  new GUI.Manipulators.Zoom( $pageDom, itemId );
-				break;
-				case 'rotate':
-					manipulator = new GUI.Manipulators.Rotate( $pageDom, itemId );
-				break;
-				case 'resize':
-					manipulator = new GUI.Manipulators.Resize( $pageDom, itemId );
-				break;
-				case 'resizeText':
-					manipulator = new GUI.Manipulators.Resize( $pageDom, itemId, { horizontal: false });
-				break;
-				case 'editText':
-					manipulator = new GUI.Manipulators.EditText( $pageDom, itemId );
-				break;
-				default:
-					manipulator = new GUI.Manipulators.Default( $pageDom, itemId );
-				break;
-			}
-			PageSelection.findInParent( $pageDom ).setManipulator( manipulator );
-		},
 		// callback, 'this' points to an HTMLElement, not page
 		editItemCb: function(ev) {
 			var $itemDom = $( ev.currentTarget );
@@ -926,6 +963,9 @@ asset widget {
 						window.setTimeout(function() {
 							itemPage.page.handlePopupCommand(itemId, 'editText', $itemDom.parents('.design-page'))
 						}, 0);
+				break;
+				case 'widget':
+					$popup = Popups.widgetPopup(itemPage);
 				break;
 				default:
 					console.warn("No menus available over items of type", itemPage.item.type);
@@ -1007,7 +1047,7 @@ asset widget {
 		},
 		setPopup: function(itemId, $popup) {
 			if (this.popup && this.popup != $popup)
-				this.popup.hide();
+				this.popup.remove();
 			this.popup = $popup;
 			if (this.popup) {
 				$popup.data("popupModel", itemId );

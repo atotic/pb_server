@@ -2,17 +2,25 @@
 
 // CommandManager and Command
 (function(scope) {
-	var Command = function(name, key, meta, callback) {
-		this.name = name;
-		this.key = key;
-		this.meta = meta;
-		this.callback = callback;
+	var Command = function(options) {
+		this.id = options.id;
+		this.meta = options.meta;
+		this.action = options.action;	// callback
+		this.title = options.title;
+		this.icon = options.icon;
+		if ( 'key' in options ) {
+			if ('string' === typeof options.key)
+				this.key = [options.key];
+			else
+				this.key = options.key;
+		}
 	};
 
 	scope.Command = Command;
 
 })(window.GUI);
 
+// CommandManager
 (function(scope) {
 	var CommandManager = {
 		commandSets: [],
@@ -24,9 +32,9 @@
 					return;
 				var s = CommandManager.eventToString(ev);
 				for (var i=CommandManager.commandSets.length-1; i >=0; i--) {
-					var cmd = CommandManager.commandSets[i].getCommand(s);
+					var cmd = CommandManager.commandSets[i].getCommandFromShortcut(s);
 					if (cmd) {
-						cmd.callback();
+						cmd.action();
 						break;
 					}
 				}
@@ -86,8 +94,8 @@
 				return null;
 			var s = ev.altKey ? this.keys.meta : '';
 			s += key.toLowerCase();
-//			console.log("meta", ev.metaKey, "ctrl", ev.ctrlKey, "altKey", ev.altKey);
-//			console.log("shortcut", s);
+			//			console.log("meta", ev.metaKey, "ctrl", ev.ctrlKey, "altKey", ev.altKey);
+			//			console.log("shortcut", s);
 			return s;
 		},
 		asciiToString: function(key, meta) {
@@ -111,30 +119,37 @@
 })(window.GUI);
 
 (function(scope) {
-	var CommandSet = function(name) {
-		this.name = name;
+	var CommandSet = function(id) {
+		this.id = name;
 		this._shortcuts = {};	// hash of shortcuts, key-combo: cmd
-		this._commands = {}; // name: cmd
+		this._commands = {}; // id: cmd
 	}
 
 	CommandSet.prototype = {
 		add: function(cmd) {
 			if (cmd.key)
-				this._shortcuts[GUI.CommandManager.asciiToString(cmd.key, cmd.meta)] = cmd;
-			if (cmd.name)
-				this._commands[cmd.name] = cmd;
+				for (var i=0; i<cmd.key.length; i++) {
+					var shortcut = GUI.CommandManager.asciiToString( cmd.key[i], cmd.meta );
+					this._shortcuts[ shortcut ] =  cmd;
+				}
+			if (cmd.id)
+				this._commands[cmd.id] = cmd;
 		},
 		remove: function(cmd) {
-			if (cmd.key) {
-				var k = GUI.CommandManager.asciiToString(cmd.key, cmd.meta);
-				if (k in this._shortcuts)
-					delete this._shortcuts[k];
-			}
-			if (cmd.name && cmd.name in this._commands)
-				delete this._commands[cmd.name];
+			if (cmd.key)
+				for (var i=0; i<cmd.key.length; i++) {
+					var k = GUI.CommandManager.asciiToString(cmd.key[i], cmd.meta);
+					if (k in this._shortcuts)
+						delete this._shortcuts[k];
+				}
+			if (cmd.id && cmd.id in this._commands)
+				delete this._commands[cmd.id];
 		},
-		getCommand: function(shortcut) {
+		getCommandFromShortcut: function(shortcut) {
 			return this._shortcuts[shortcut];
+		},
+		getCommandById: function(id) {
+			return this._commands[id];
 		}
 	}
 

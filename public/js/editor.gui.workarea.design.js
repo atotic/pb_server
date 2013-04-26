@@ -233,20 +233,16 @@ var DesignWorkArea = {
 	},
 	createCommandSet: function() {
 		this.commandSet = new GUI.CommandSet("design");
-		this.commandSet.add(
-			new GUI.Command(
-				'designBack',
-				GUI.CommandManager.keys.leftArrow,
-				false,
-				function() {GUI.DesignWorkArea.goBack()}
-			));
-		this.commandSet.add(
-			new GUI.Command(
-				'designForward',
-				GUI.CommandManager.keys.rightArrow,
-				false,
-				function() {GUI.DesignWorkArea.goForward()}
-			));
+		this.commandSet.add( new GUI.Command( {
+			id: 'designBack',
+			key: GUI.CommandManager.keys.leftArrow,
+			action: function() { GUI.DesignWorkArea.goBack() }
+		}));
+		this.commandSet.add( new GUI.Command( {
+			id : 'designForward',
+			key: GUI.CommandManager.keys.rightArrow,
+			action: function() { GUI.DesignWorkArea.goForward() }
+		}));
 	},
 	bindToBook: function(book) {
 		$(ID)
