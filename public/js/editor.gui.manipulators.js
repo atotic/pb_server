@@ -552,8 +552,21 @@ EditTextManipulator.prototype = {
 	},
 	autogrow: function() {
 		var textarea = this.handles.textarea.get(0);
-		if (textarea.scrollHeight > textarea.clientHeight)
-			textarea.style.height = textarea.scrollHeight + "px";
+		if (textarea.scrollHeight > textarea.clientHeight) {
+			var s = window.getComputedStyle(textarea);
+			textarea.style.height = textarea.scrollHeight
+				+ parseInt(s.getPropertyValue('border-top-width'))
+				+ parseInt(s.getPropertyValue('border-bottom-width'))
+				+ "px";
+			if (textarea.scrollHeight > textarea.clientHeight) { // Firefox
+				textarea.style.height = textarea.scrollHeight
+					+ parseInt(s.getPropertyValue('padding-top'))
+					+ parseInt(s.getPropertyValue('padding-bottom'))
+					+ parseInt(s.getPropertyValue('border-top-width'))
+					+ parseInt(s.getPropertyValue('border-bottom-width'))
+					+ "px";
+			}
+		}
 	},
 	input: function() {
 		this.pageItem.page.updateAssetData( this.itemId, {
