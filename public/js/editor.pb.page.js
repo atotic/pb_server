@@ -429,6 +429,8 @@ asset widget {
 				break;
 				case 'text':
 				break;
+				case 'widget':
+				break;
 				default:
 				console.warn("not updating item inner of type ", assetData.type);
 				break;
@@ -857,11 +859,20 @@ asset widget {
 				}
 			}));
 			this.cmdSet.add( new GUI.Command({
-				id: 'resizeText',
+				id: 'resizeHorizontal',
 				title: 'resize',
 				icon: 'arrow-up',
 				action: function( $pageDom, itemId) {
 					var m = new GUI.Manipulators.Resize( $pageDom, itemId ,{ vertical: false });
+					PageSelection.findInParent( $pageDom ).setManipulator( m );
+				}
+			}));
+			this.cmdSet.add( new GUI.Command({
+				id: 'resizeFixAspect',
+				title: 'resize',
+				icon: 'arrow-up',
+				action: function( $pageDom, itemId) {
+					var m = new GUI.Manipulators.Resize( $pageDom, itemId ,{ fixAspect: true });
 					PageSelection.findInParent( $pageDom ).setManipulator( m );
 				}
 			}));
@@ -923,7 +934,7 @@ asset widget {
 		textPopup: function() {
 			var $popup = this.popupShell();
 			var cmdSet = this.getManipulatorCommandSet();
-			['editText', 'move', 'resizeText', 'rotate']
+			['editText', 'move', 'resizeHorizontal', 'rotate']
 				.forEach( function(cmdId) {
 					var cmd = cmdSet.getCommandById( cmdId );
 					var $li = Popups.makeLiAction( cmd );
@@ -934,7 +945,7 @@ asset widget {
 		widgetPopup: function(itemPage) {
 			var $popup = this.popupShell();
 			var cmdSet = this.getManipulatorCommandSet();
-			['move', 'resize', 'rotate']
+			['move', 'resizeFixAspect', 'rotate']
 				.forEach( function(cmdId) {
 					var cmd = cmdSet.getCommandById( cmdId );
 					var $li = Popups.makeLiAction( cmd );

@@ -482,6 +482,7 @@ ResizeManipulator.prototype = {
 		var newLoc = PB.clone( this.itemRect );
 		var minHeight = 64;
 		var minWidth = 64;
+		var ratio = newLoc.width / newLoc.height;
 		switch(side) {
 			case 'top':
 				if (minHeight > (newLoc.height - deltaYRot))
@@ -489,6 +490,8 @@ ResizeManipulator.prototype = {
 				newLoc.top += (Math.cos( this.rotateRad ) + 1) * deltaYRot / 2;
 				newLoc.left -= Math.sin( this.rotateRad ) * deltaYRot / 2;
 				newLoc.height -= deltaYRot;
+				if (this.options.fixAspect)
+					newLoc.width -= deltaYRot * ratio;
 			break;
 			case 'bottom':
 				if (minHeight > (newLoc.height + deltaYRot))
@@ -496,6 +499,8 @@ ResizeManipulator.prototype = {
 				newLoc.top += ( Math.cos( this.rotateRad ) - 1) * deltaYRot / 2;
 				newLoc.left -= Math.sin( this.rotateRad ) * deltaYRot / 2;
 				newLoc.height += deltaYRot;
+				if (this.options.fixAspect)
+					newLoc.width += deltaYRot * ratio;
 			break;
 			case 'right':
 				if (minWidth > (newLoc.width + deltaXRot))
@@ -503,6 +508,8 @@ ResizeManipulator.prototype = {
 				newLoc.top += Math.sin( this.rotateRad ) * deltaXRot / 2;
 				newLoc.left += (Math.cos( this.rotateRad ) - 1) * deltaXRot / 2;
 				newLoc.width += deltaXRot;
+				if (this.options.fixAspect)
+					newLoc.height += deltaXRot / ratio;
 			break;
 			case 'left':
 				if (minWidth > (newLoc.width - deltaXRot))
@@ -510,6 +517,8 @@ ResizeManipulator.prototype = {
 				newLoc.top += Math.sin( this.rotateRad ) * deltaXRot / 2;
 				newLoc.left += (Math.cos( this.rotateRad ) + 1) * deltaXRot / 2;
 				newLoc.width -= deltaXRot;
+				if (this.options.fixAspect)
+					newLoc.height -= deltaXRot / ratio;
 			break;
 		}
 		this.pageItem.page.updateAssetData( this.itemId, newLoc );
