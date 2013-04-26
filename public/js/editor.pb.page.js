@@ -972,7 +972,8 @@ asset widget {
 					$popup = Popups.textPopup();
 					if (multiTap)
 						window.setTimeout(function() {
-							itemPage.page.handlePopupCommand(itemId, 'editText', $itemDom.parents('.design-page'))
+							var cmd = Popups.getManipulatorCommandSet().getCommandById('editText');
+							cmd.action( $itemDom.parents('.design-page'), itemId );
 						}, 0);
 				break;
 				case 'widget':
