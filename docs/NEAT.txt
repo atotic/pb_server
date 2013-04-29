@@ -1,4 +1,5 @@
 Stream:
+Printer references http://www.girlswhoprint.blogspot.com/
 JQuery annotated source. I need a better solution for documenting code http://robflaherty.github.io/jquery-annotated-source/. This is not it, but something like it.
 Nice SVG clip art: http://www.clker.com/, reduce with python ~/bin/scour/scour.py -i <fname> -o <fname>
 $1M round milestones., $50K/month https://twitter.com/cesarsalazar/status/326489614774829057/photo/1

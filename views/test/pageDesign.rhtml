@@ -20,6 +20,7 @@
 <script src="/js/editor.gui.popup.js"></script>
 <%= asset_link("editor.gui.manipulators.js") %>
 <%= asset_link("newpage.js") %>
+<scripto src="/t/admin@sample/theme.js"></scripto>
 
 <style type="text/css">
 #tools {
@@ -118,9 +119,18 @@ var currentPage = book.insertRoughPage(-1);
 
 var Controller = {
 	init: function() {
+		try {
+			ThemeCache.get('admin@base', {autoload: true} );
+		}
+		catch(ex) {
+			window.setTimeout( function() {
+				Controller.init();
+			}, 1 );
+			return;
+		}
 
-		currentPage.setLayout('theme://base/layouts/gridLayout');
-		currentPage.setBackground('theme://base/backgrounds/cssBackground');
+		currentPage.setLayout('theme://admin@base/layouts/gridLayout');
+		currentPage.setBackground('theme://admin@base/backgrounds/cssBackground');
 		this.addPhoto();
 		this.addText("little text");
 		this.addText("Very big text\nHas a newline too!")
@@ -155,13 +165,30 @@ var Controller = {
 		});
 	},
 	initThemePicker: function() {
-		var themeIds = ['sample1'];
+		var themeIds = ['admin@sample'];
+		console.log("initThemePicker");
 		function assignCb( el, id ) {
 
 		};
+		var themesLoading = false;
+
+		themeIds.forEach( function( id) {
+			try {
+				ThemeCache.get( id, {autoload: true} );
+			}
+			catch(ex) {
+				themesLoading = true;
+			}
+		});
+
+		if (themesLoading) {
+			window.setTimeout( Controller.initThemePicker, 100);
+			console.log('initThemePicker timeout');
+			return;
+		}
 		var $picker = $('#themePicker');
 		themeIds.forEach( function( id) {
-			var theme = ThemeCache.get(id);
+			var theme = ThemeCache.get(id, '');
 			$li = $('<li>');
 			$li.append( $('<img>').prop('src', theme.screenshots[0]));
 			$li.append( $('<p>').text( theme.title ));
@@ -171,16 +198,16 @@ var Controller = {
 	},
 	initBackPicker: function() {
 		var backs = [
-		{ id: 'theme://base/backgrounds/cssBackground',
+		{ id: 'theme://admin@base/backgrounds/cssBackground',
 			name: 'Default'
 		},
-		{ id: 'theme://base/backgrounds/cssBackground',
+		{ id: 'theme://admin@base/backgrounds/cssBackground',
 			name: 'Yellow',
 			data: {
 				css: {backgroundColor: 'yellow'}
 			}
 		},
-		{ id: 'theme://base/backgrounds/cssBackground',
+		{ id: 'theme://admin@base/backgrounds/cssBackground',
 			name: 'Rainbow',
 			data: {
 				css: {background: 'linear-gradient(red, yellow, orange, green, blue, purple)'}
@@ -206,12 +233,12 @@ var Controller = {
 	updateLayoutPicker: function() {
 		$('#layoutPicker').children().remove();
 		var layouts = [
-		{ id: 'theme://base/layouts/gridLayout',
+		{ id: 'theme://admin@base/layouts/gridLayout',
 		},
-		{ id: 'theme://base/layouts/gridSpacedLayout',
+		{ id: 'theme://admin@base/layouts/gridSpacedLayout',
 			data:  {spaceOffset: 10}
 		},
-		{ id: 'theme://base/layouts/gridSpacedLayout',
+		{ id: 'theme://admin@base/layouts/gridSpacedLayout',
 			data:  {spaceOffset: 20}
 		},
 		{ id: 'theme://experimental/layouts/framedLayout',
@@ -234,11 +261,11 @@ var Controller = {
 	updateFramePicker: function() {
 		$('#framePicker').children().remove();
 		var frames = [
-		{ id: 'theme://base/frames/cssFrame',
+		{ id: 'theme://admin@base/frames/cssFrame',
 			data: {},
 			offset: [0, 0, 0, 0]
 		},
-		{ id: 'theme://base/frames/cssFrame',
+		{ id: 'theme://admin@base/frames/cssFrame',
 			data: {
 				css: {
 					backgroundColor: 'blue'
@@ -246,7 +273,7 @@ var Controller = {
 			},
 			offset: [10, 10, 10, 10]
 		},
-		{ id: 'theme://base/frames/cssFrame',
+		{ id: 'theme://admin@base/frames/cssFrame',
 			data: {
 				css: {
 					background: 'linear-gradient(red, yellow, orange, green, blue, purple)'
@@ -254,7 +281,7 @@ var Controller = {
 			},
 			offset: [5, 3, 10, 20]
 		},
-		{ id: 'theme://base/frames/cssFrame',
+		{ id: 'theme://admin@base/frames/cssFrame',
 			data: {
 				css: {
 					backgroundColor: '#9400d3',
@@ -266,7 +293,7 @@ var Controller = {
 		];
 		var ICON_WIDTH = 50;
 		var ICON_HEIGHT = 50;
-		var ThemeUtils = ThemeCache.resource('theme://base/utilities');
+		var ThemeUtils = ThemeCache.resource('theme://admin@base/utilities');
 
 		function assignCb($el, frameId, frameData, frameOffset) {
 			$el.hammer().on('touch', {}, function() {
@@ -341,7 +368,7 @@ var Controller = {
 		this.updateLayoutPicker();
 	},
 	addWidget: function() {
-		currentPage.addWidget('theme://base/widgets/photoWidget', {
+		currentPage.addWidget('theme://admin@base/widgets/photoWidget', {
 			url: '/t/admin@sample/soccer_small.svg',
 			defaultWidth: 397,
 			defaultHeight: 266

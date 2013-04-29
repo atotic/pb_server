@@ -98,6 +98,10 @@ if (BrowserDetect.browser == 'MSIE' && BrowserDetect.version < 10)
 			console.error.apply(console, arguments);
 			debugger;
 		},
+		debugthrow: function() {
+			console.error.apply(console, arguments);
+			throw new Error(arguments);
+		},
 		// shows flash messages from xhr headers
 		showXhrFlash: function(event, jqXHR, ajaxOptions) {
 			var msg = jqXHR.getResponseHeader('X-FlashError');
