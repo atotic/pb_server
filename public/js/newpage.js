@@ -93,7 +93,7 @@ var ThemeCache = {
 
 		var oldResourceFn = ThemeCache.resource;
 		ThemeCache.resource = logger;
-		window[ callbackName ] = function(x) { console.log('dependency parse done') };
+		window[ callbackName ] = $.noop;// function() { console.log('dependency parse done') };
 
 		try {
 			eval(js);

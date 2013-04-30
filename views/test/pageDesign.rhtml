@@ -119,27 +119,24 @@ var currentPage = book.insertRoughPage(-1);
 
 var Controller = {
 	init: function() {
-		try {
-			ThemeCache.get('admin@base', {autoload: true} );
-		}
-		catch(ex) {
-			window.setTimeout( function() {
-				Controller.init();
-			}, 1 );
-			return;
-		}
-
-		currentPage.setLayout('theme://admin@base/layouts/gridLayout');
-		currentPage.setBackground('theme://admin@base/backgrounds/cssBackground');
-		this.addPhoto();
-		this.addText("little text");
-		this.addText("Very big text\nHas a newline too!")
-		this.setLayout('theme://experimental/layouts/framedLayout');
-		this.showPage();
-		this.initSizePicker();
-		this.initBackPicker();
-		this.initThemePicker();
-		this.updateFramePicker();
+		var THIS = this;
+		ThemeCache.load('/t/admin@base/theme.js')
+			.done( function() {
+				currentPage.setLayout('theme://admin@base/layouts/gridLayout');
+				currentPage.setBackground('theme://admin@base/backgrounds/cssBackground');
+				THIS.initThemePicker();
+				THIS.initSizePicker();
+				THIS.initBackPicker();
+				THIS.addPhoto();
+				THIS.addText("little text");
+				THIS.addText("Very big text\nHas a newline too!")
+				THIS.setLayout('theme://experimental/layouts/framedLayout');
+				THIS.showPage();
+				THIS.updateFramePicker();
+			})
+			.fail( function() {
+				console.error("Theme failed to load");
+			});
 	},
 	initSizePicker: function() {
 		var sizes = [
@@ -166,7 +163,6 @@ var Controller = {
 	},
 	initThemePicker: function() {
 		var themeIds = ['admin@sample'];
-		console.log("initThemePicker");
 		function assignCb( el, id ) {
 
 		};
@@ -182,8 +178,7 @@ var Controller = {
 		});
 
 		if (themesLoading) {
-			window.setTimeout( Controller.initThemePicker, 100);
-			console.log('initThemePicker timeout');
+			window.setTimeout( Controller.initThemePicker, 0);
 			return;
 		}
 		var $picker = $('#themePicker');
