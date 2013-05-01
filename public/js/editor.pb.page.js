@@ -21,6 +21,7 @@ all assets {
 	width
 	height
 	rotate	// angle in degrees
+	zindex // default 0
 	frameId
 	frameData
 	frameOffset [ t,r,b,l] or offset. Use canonicalFrameOffset to convert to canonical form
@@ -500,6 +501,9 @@ asset widget {
 					assetData.frameOffset = dd.frameOffset;
 					assetData.frameData = dd.frameData;
 				}
+				if (dd.zindex) {
+					assetData.zindex = dd.zindex;
+				}
 				else {
 					delete assetData.frameId;
 					delete assetData.frameOffset;
@@ -755,7 +759,8 @@ asset widget {
 					}
 					if (item.rotate)
 						$itemDom.css('transform', 'rotate(' + item.rotate + 'deg)');
-
+					if (item.zindex)
+						$itemDom.css('zIndex', item.zindex);
 					insertAfterHelper( $encloseDom, $nextDomSlot, $itemDom );
 					$nextDomSlot = $itemDom;
 
