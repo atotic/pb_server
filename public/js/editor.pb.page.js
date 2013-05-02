@@ -3,15 +3,16 @@
 /* DATA DICTIONARY
 
 BookPage JSON {
+	needReflow: false
 	width: 768,
 	height: 512,
 	assets: [ asset_id*],
 	assetData: { asset_id : {asset}},
-	backgroundId: null,
-	backgroundData: null,
+	designId: null,
 	layoutId: null,
 	layoutData: null,
-	hasLayout: false
+	backgroundId: null,
+	backgroundData: null,
 }
 }
 all assets {
@@ -179,7 +180,7 @@ asset widget {
 		addAsset: function(id, assetData, options) {
 			this.p.assets.push(id);
 			this.p.assetData[id] = assetData;
-			this.p.hasLayout = false;
+			this.p.needReflow = true;
 			registerPageAssetResolver(this, id);
 			if (assetData.type == 'photo')
 				this.book._pagePhotosChanged(this, options);
@@ -192,7 +193,7 @@ asset widget {
 			this.p.assets.splice(idx, 1);
 			var assetData = this.p.assetData[id];
 			delete this.p.assetData[id];
-			this.p.hasLayout =false;
+			this.p.needReflow = true;
 			PB.ModelMap.unsetResolver(id);
 			if (assetData.type == 'photo')
 				this.book._pagePhotosChanged(this, options);
@@ -272,7 +273,7 @@ asset widget {
 		setLayout: function(layoutId, layoutData, options) {
 			this.p.layoutId = layoutId;
 			this.p.layoutData = layoutData;
-			this.p.hasLayout = false;
+			this.p.needReflow = true;
 			PB.broadcastChange(this, 'layoutId', options);
 		},
 		setBackground: function(backgroundId, backgroundData, options) {
@@ -291,8 +292,7 @@ asset widget {
 		// page + layout => canvas icon. Used to draw layout icons
 		layoutIcon: function(layoutId, layoutData, maxSize) {
 			var l = ThemeCache.resource(layoutId);
-			var design = l.getPageDesign(this.p.assetData, this.width, this.height, layoutData);
-			var layout = design.layout;
+			var layout = l.getPageLayout(this.p.assetData, this.width, this.height, layoutData);
 
 			var enclosure = new GUI.Rect({width: maxSize, height: maxSize});
 			var pageRect = new GUI.Rect(this);
@@ -315,73 +315,66 @@ asset widget {
 			var imageDeferreds = [];
 			var textDeferred;
 			var textPattern;
-			for (var i=0; i<layout.length; i++) {
-				switch(layout[i].type) {
-					case 'photo': {
-						var loadDef = LoadImageDeferred(PB.FillerPhotos.random(i).url);
-						loadDef.done(storeResolvedImage(layout[i]));
-						imageDeferreds.push(loadDef);
+			var i = 0;
+			layout.photos.forEach( function( asset ) {
+				var loadDef = LoadImageDeferred(PB.FillerPhotos.random(i++).url);
+				loadDef.done(storeResolvedImage( asset ) );
+				imageDeferreds.push(loadDef);
+			});
+			if (layout.texts.length > 0) {
+				var loadDef = LoadImageDeferred('/img/abstract-text-pattern.jpg');
+				loadDef.done( function(img) {
+					if (img) {
+						img.width = 10;
+						img.height = 10;
+						textPattern = context.createPattern(img, 'repeat');
 					}
-					break;
-					case 'text':
-						if (!textDeferred) {
-							textDeferred = LoadImageDeferred('/img/abstract-text-pattern.jpg');
-							textDeferred.done( function(img) {
-								if (img) {
-									img.width = 10;
-									img.height = 10;
-									textPattern = context.createPattern(img,'repeat');
-								}
-							});
-						}
-					break;
-					default:
-					debugger;
-				}
-			}
-			if (textDeferred)
-				imageDeferreds.push(textDeferred);
+				});
+				imageDeferreds.push( loadDef );
+			};
+
 			var allLoadedDef = $.when.apply($, imageDeferreds);
 
 			// When all images load, draw all items
 			var FRAME_FILL = '#888';
 			var ERROR_FILL = 'red';
 
-			allLoadedDef.always(function() {
-				for (var i=0; i<layout.length; i++) {
-					var r = new GUI.Rect(layout[i]);
-					r = r.scaleBy(scale, true).round();
-					var rotatedContext = new GUI.Rotated2DContext(context, layout[i].rotate * Math.PI / 180);
-					context.fillStyle = FRAME_FILL;
-					rotatedContext.fillRect(r.left, r.top, r.width, r.height);
-					if (layout[i].frameId && $.isArray(layout[i].frameOffset)) {
-						var frameOffset = layout[i].frameOffset.map(function(v) { return v * scale; });
-						r = r.inset(frameOffset);
-					}
-					switch(layout[i].type) {
-						case 'photo': {
-							if (layout[i].image) {
-								rotatedContext.drawImage(layout[i].image, r.left, r.top, r.width, r.height);
-							}
-							else {
-								context.fillStyle = ERROR_FILL;
-								rotatedContext.fillRect(r.left, r.top, r.width, r.height);
-								rotatedContext.strokeRect(r.left, r.top, r.width, r.height);
-							};
+			var drawAsset = function( asset ) {
+				var r = new GUI.Rect( asset );
+				r = r.scaleBy( scale, true ).round();
+				var rotatedContext = new GUI.Rotated2DContext( context, asset.rotate * Math.PI / 180 );
+				context.fillStyle = FRAME_FILL;
+				rotatedContext.fillRect(r.left, r.top, r.width, r.height);
+				if ( asset.frameId && $.isArray( asset.frameOffset)) {
+					var frameOffset = asset.frameOffset.map(function(v) { return v * scale; });
+					r = r.inset(frameOffset);
+				};
+				switch( asset.type) {
+					case 'photo':
+						if (asset.image) {
+							rotatedContext.drawImage( asset.image, r.left, r.top, r.width, r.height);
 						}
-						break;
-						case 'text': {
-							if (textPattern)
-								context.fillStyle = textPattern;
-							else
-								context.fillStyle = 'yellow';
+						else {
+							context.fillStyle = ERROR_FILL;
 							rotatedContext.fillRect(r.left, r.top, r.width, r.height);
-						}
-						break;
-						default:
-						debugger;
-					}
-				} // for
+							rotatedContext.strokeRect(r.left, r.top, r.width, r.height);
+						};
+					break;
+					case 'text':
+						if (textPattern)
+							context.fillStyle = textPattern;
+						else
+							context.fillStyle = 'yellow';
+						rotatedContext.fillRect(r.left, r.top, r.width, r.height);
+					break;
+					default:
+						console.error("unknown asset type");
+				}
+			};
+
+			allLoadedDef.always( function() {
+				layout.photos.forEach( drawAsset );
+				layout.texts.forEach( drawAsset );
 			});
 			return canvas;
 		},
@@ -390,7 +383,7 @@ asset widget {
 			if ( !( itemId in this.p.assetData ))
 				return PB.debugstr("layoutInnerItem on non-existent item");
 			var assetData = this.p.assetData[itemId];
-			if (this.hasLayout = false)
+			if (this.needReflow)
 				return { x: { min:0, max: 100 }, y: {min:0, max:100}};
 			var innerRect = new GUI.Rect(assetData);
 			if (assetData.frameId)
@@ -439,103 +432,69 @@ asset widget {
 		},
 		layoutFromDesign: function() {
 			// reconcile existing layout with layout from design
-			this.hasLayout = false;
+			this.needReflow = true;
 			if (!this.p.layoutId)
 				return;
-			var resource = ThemeCache.resource(this.p.layoutId);
-			var design = resource.getPageDesign(this.p.assetData, this.width, this.height, this.p.layoutData);
-			var layout = design.layout;
+			var resource = ThemeCache.resource( this.p.layoutId );
+			var layout = resource.getPageLayout( this.p.assetData, this.width, this.height, this.p.layoutData);
 
-			var photoAssetIds = [];
-			var textAssetIds = [];
-			var widgetAssetIds = [];
 			var THIS = this;
-			this.p.assets.forEach( function(id) {
-				switch( THIS.p.assetData[id].type) {
-					case 'photo': photoAssetIds.push( id ); break;
-					case 'text': textAssetIds.push( id ); break;
-					case 'widget': widgetAssetIds.push( id ); break;
-					default: break;
-				};
-			});
 
-			var layoutExhausted = false;
-			while (!layoutExhausted) {
-				var dd = layout.shift();
-				layoutExhausted = (dd == null);
-				if (layoutExhausted)
-					break;
+			this.p.assets.forEach( function( assetId ) {
+				var assetData = THIS.p.assetData[ assetId ];
 
-				var assetId;
-				switch(dd.type) {
-					case 'photo': {
-						var assetId = photoAssetIds.shift();
-						if (assetId == null) {
-							PB.debugstr("Should add more photos dynamically");
-							break;
+				var assetDesign;
+				switch ( assetData.type ) {
+					case 'photo':
+						assetDesign = layout.photos.length > 0 ? layout.photos.shift() : null;
+						break;
+					case 'text':
+						assetDesign = layout.texts.length > 0 ? layout.texts.shift() : null;
+						break;
+					case 'widget': // widgets go to center by default
+						if (!('top' in assetData)) {
+							var widget = ThemeCache.resource( assetData.widgetId );
+							var center = { x: THIS.width / 2, y: THIS.height / 2 };
+							assetDesign = {
+								top: center.y - widget.defaultHeight( assetData.widgetOptions ) / 2,
+								left: center.x - widget.defaultWidth( assetData.widgetOptions ) / 2,
+								width: widget.defaultWidth( assetData.widgetOptions ),
+								height: widget.defaultHeight( assetData.widgetOptions )
+							};
 						}
-					}
-					break;
-					case 'text': {
-						var assetId = textAssetIds.shift();
-						if (assetId == null) {
-							console.error("Should add more text dynamically");
-							break;
-						}
-					}
-					break;
-					default: {
-						console.error("do not know how to handle assets of type", dd.type);
-					}
+						break;
+					default:
+						console.error('unknown assetData type', assetData.type );
 				}
-				var assetData = this.p.assetData[assetId];
+				if ( assetDesign == null )
+					return;
 				$.extend(assetData, {
-					top: dd.top,
-					left: dd.left,
-					width: dd.width,
-					height: dd.height,
-					rotate: dd.rotate || 0
+					top: assetDesign.top,
+					left: assetDesign.left,
+					width: assetDesign.width,
+					height: assetDesign.height,
+					rotate: assetDesign.rotate || 0
 				});
-				if (dd.frameId) {
-					assetData.frameId = dd.frameId;
-					assetData.frameOffset = dd.frameOffset;
-					assetData.frameData = dd.frameData;
-				}
-				if (dd.zindex) {
-					assetData.zindex = dd.zindex;
+				if (assetDesign.frameId) {
+					assetData.frameId = assetDesign.frameId;
+					assetData.frameOffset = assetDesign.frameOffset;
+					assetData.frameData = assetDesign.frameData;
 				}
 				else {
 					delete assetData.frameId;
 					delete assetData.frameOffset;
 					delete assetData.frameData;
 				}
-				this.layoutInnerItem(assetId);
-
-			};
-			widgetAssetIds.forEach( function(id) {
-				var assetData = THIS.p.assetData[id];
-				if (!('top' in assetData)) {
-					var widget = ThemeCache.resource( assetData.widgetId );
-					var center = { x: THIS.width / 2, y: THIS.height / 2 };
-					$.extend( assetData, {
-						top: center.y - widget.defaultHeight( assetData.widgetOptions ) / 2,
-						left: center.x - widget.defaultWidth( assetData.widgetOptions ) / 2,
-						width: widget.defaultWidth( assetData.widgetOptions ),
-						height: widget.defaultHeight( assetData.widgetOptions )
-					});
-				};
+				assetData.zindex = assetDesign.zindex;
+				THIS.layoutInnerItem( assetId );
 			});
-			if (photoAssetIds.length > 0 )
-				console.error("layout has ignored photo data");
-			if (textAssetIds.length > 0)
-				console.error("layout has ignored text data");
 
-			if (design.background) {
-				this.p.backgroundId = design.background.backgroundId;
-				this.p.backgroundData = design.background.backgroundData;
-			}
+			// if (design.background) {
+			// 	this.p.backgroundId = design.background.backgroundId;
+			// 	this.p.backgroundData = design.background.backgroundData;
+			// }
 
-			this.p.hasLayout = true;
+			this.p.needReflow = false;
 
 		},
 		generateBackgroundDom: function(options) {
@@ -720,10 +679,10 @@ asset widget {
 				else
 					$element.insertAfter($target);
 			};
-			if (!this.p.hasLayout)
+			if (this.p.needReflow)
 				this.layoutFromDesign();
 
-			if (this.p.hasLayout)
+			if (!this.p.needReflow)
 			{
 				// generate all parts of the page
 				// this routine is also used to refresh parts of the page
@@ -817,7 +776,7 @@ asset widget {
 			backgroundData: null,
 			layoutId: null,
 			layoutData: null,
-			hasLayout: false
+			needReflow: true
 		}
 	};
 

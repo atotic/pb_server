@@ -1,34 +1,5 @@
+// editor.pb.themecache.js
 "use strict"
-
-
-// AbstractLayout documents minimal layout class looks like. not functional
-var AbstractLayout = {
-	id: '',
-	// assetData from book-page, read-only
-	// page width/height
-	// options are layout-dependent (ex inset....)
-	getPageDesign: function(assetData, width, height, layoutData) {
-		return {
-			layout: [ {
-				type: 'photo',
-				top: 0,
-				left: 0,
-				width: 0,
-				height: 0,
-				frameId: '', // optional
-				frameOffset: [0,0,0,0], // TRBL, optional
-				frameData: {} // frameId specific
-			}],
-			background: {
-				id: '',
-				data: {
-					// background-specific data
-				}
-			}
-		}
-	}
-};
-
 
 var ThemeCache = {
 	themes: {}, // theme_id -> {theme}, theme_id to theme map
@@ -198,24 +169,26 @@ var ThemeCache = {
 	var FramedLayout = {
 		id: 'framedLayout',
 
-		getPageDesign: function(assetData, width, height, options) {
+		getPageLayout: function(assetData, width, height, options) {
 			options = $.extend({
 				frameWidth: 10,	// syntax same as border-image-width https://developer.mozilla.org/en-US/docs/CSS/border-image-width
 				spaceOffset: 10
 			}, options);
 			var Utils = ThemeCache.resource('theme://admin@base/utilities');
-			var design = ThemeCache.resource('theme://admin@base/layouts/gridSpacedLayout').getPageDesign(assetData, width, height, options );
-			var layout = design.layout;
+			var layout = ThemeCache.resource('theme://admin@base/layouts/gridSpacedLayout').getPageLayout(assetData, width, height, options );
 			var rotate = 5;
 			var frameOffset = Utils.canonicalFrameWidth(options.frameWidth);
-			for (var i=0; i < layout.length; i++) {
-				layout[i].rotate = rotate;
-				rotate += 25;
-				layout[i].frameId = 'theme://admin@base/frames/cssFrame';
-				layout[i].frameOffset = frameOffset;
-				layout[i].frameData = { backgroundColor: 'red'}
+			var applyFrame = function(asset) {
+				asset.rotate = rotate;
+				rotate += 20;
+				asset.frameId =
+				asset.frameId = 'theme://admin@base/frames/cssFrame';
+				asset.frameOffset = frameOffset;
+				asset.frameData = { backgroundColor: 'red'}
 			}
-			return design;
+			layout.photos.forEach( applyFrame );
+			layout.texts.forEach( applyFrame );
+			return layout;
 		}
 	};
 
