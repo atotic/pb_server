@@ -184,7 +184,8 @@ asset widget {
 			registerPageAssetResolver(this, id);
 			if (assetData.type == 'photo')
 				this.book._pagePhotosChanged(this, options);
-			PB.broadcastChange(this, 'assets', options);
+			PB.broadcastChange(this, 'assets',
+				$.extend( {assetId: id}, options ));
 		},
 		removeAsset: function(id, options) {
 			var idx = this.p.assets.indexOf(id);
@@ -453,23 +454,39 @@ asset widget {
 					case 'text':
 						assetDesign = layout.texts.length > 0 ? layout.texts.shift() : null;
 						break;
-					case 'widget': // widgets go to center by default
-						if (!('top' in assetData)) {
-							var widget = PB.ThemeCache.resource( assetData.widgetId );
-							var center = { x: THIS.width / 2, y: THIS.height / 2 };
-							assetDesign = {
-								top: center.y - widget.defaultHeight( assetData.widgetOptions ) / 2,
-								left: center.x - widget.defaultWidth( assetData.widgetOptions ) / 2,
-								width: widget.defaultWidth( assetData.widgetOptions ),
-								height: widget.defaultHeight( assetData.widgetOptions )
-							};
-						}
+					case 'widget':
 						break;
 					default:
 						console.error('unknown assetData type', assetData.type );
 				}
-				if ( assetDesign == null )
-					return;
+				if ( assetDesign == null ) {
+					if ('top' in assetData)
+						assetDesign = assetData;
+					else {
+						var center = { x: THIS.width / 2, y: THIS.height / 2 };
+						var defaultWidth, defaultHeight;
+						switch( assetData.type ) {
+							case 'text':
+								defaultWidth = THIS.width / 3;
+								defaultHeight = 30;
+							break;
+							case 'widget':
+								var widget = PB.ThemeCache.resource( assetData.widgetId );
+								defaultHeight = widget.defaultHeight( assetData.widgetOptions );
+								defaultWidth = widget.defaultWidth( assetData.widgetOptions );
+							break;
+							default:
+								console.error("no assetDesing for ", assetData.type);
+							return;
+						}
+						assetDesign = {
+							top: center.y - defaultHeight / 2,
+							left: center.x - defaultWidth / 2,
+							width: defaultWidth,
+							height: defaultHeight
+						};
+					}
+				}
 				$.extend(assetData, {
 					top: assetDesign.top,
 					left: assetDesign.left,
@@ -490,7 +507,9 @@ asset widget {
 				if ('zindex' in assetDesign)
 					assetData.zindex = assetDesign.zindex;
 				else
-					assetData.zindex = assetData.type == 'text' ? 1 : 0;
+					assetData.zindex =
+						assetData.type == 'text' ? 2 :
+						assetData.type == 'widget' ? 1 : 0;
 				THIS.layoutInnerItem( assetId );
 			});
 
@@ -587,7 +606,8 @@ asset widget {
 
 			textRect.width -= frameOffset[1] + frameOffset[3];
 
-			var text = this.getText( asset ) || "Type your text here";
+			var originalText = this.getText( asset );
+			var text = originalText || "Type your text here";
 
 			var measureText = $(document.createElement('div'))
 				.addClass('design-text-content')
@@ -620,6 +640,8 @@ asset widget {
 					height: innerFrame.height
 				})
 				.text( text );
+			if (originalText == null)
+				contentDom.css('color', '#999');
 			textDom.append( contentDom );
 			return textDom;
 		},
@@ -740,7 +762,6 @@ asset widget {
 				$encloseDom.text("Design not available." + this.p.assets.length + " items on this page");
 			if ( options.editable && !options.enclosingDom) {
 				$encloseDom.hammer().on( 'touch', {}, function(ev) {
-					console.log("body touch");
 					PageSelection.findInParent($encloseDom).setSelection();
 				});
 				PageSelection.bindToDom( this, $encloseDom )
@@ -773,7 +794,7 @@ asset widget {
 	PageProxy.blank = function(book) {
 		return {
 			id: book.generateId(),
-			width: 768,
+			width: 512,
 			height: 512,
 			assets: [],
 			assetData: {},
@@ -953,13 +974,10 @@ asset widget {
 
 	var PageProxyEditable = {
 		// callback, 'this' points to an HTMLElement, not page
-		makeEditableCb: function(ev) {
-			var $itemDom = $( ev.currentTarget );
-			var itemId = $itemDom.data( 'model_id' );
+		selectItem: function(pageSelection, itemId, $itemDom) {
 			var itemPage = PB.ModelMap.model(itemId);
-			var $popup;
-			var pageSelection = PageSelection.findInParent( $itemDom );
 			var multiTap = pageSelection.selection.some(function(val) { return val == itemId; });
+			var $popup;
 			switch(itemPage.item.type) {
 				case 'photo':
 					$popup = Popups.photoPopup();
@@ -979,11 +997,18 @@ asset widget {
 					console.warn("No menus available over items of type", itemPage.item.type);
 			}
 			pageSelection.setSelection( itemId, $popup );
+		},
+		touchCb: function(ev) {
+			var $itemDom = $( ev.currentTarget );
+			var itemId = $itemDom.data( 'model_id' );
+			var pageSelection = PageSelection.findInParent( $itemDom );
+			this.selectItem( pageSelection, itemId, $itemDom );
 			PB.stopEvent(ev.gesture);
 			PB.stopEvent(ev);
 		},
 		makeEditable: function(item, $itemDom) {
-			$itemDom.hammer().on('touch', {}, this.makeEditableCb);
+			var THIS = this;
+			$itemDom.hammer().on('touch', {}, function(ev) { THIS.touchCb(ev) });
 		},
 		makeItemSyncable: function(page, $itemDom, options) {
 			$itemDom.on( PB.MODEL_CHANGED, function( ev, model, prop, eventOptions ) {
@@ -1008,9 +1033,14 @@ asset widget {
 						break;
 					case 'assets':
 					case 'layoutId':
+						var pageSelection = PageSelection.findInParent($pageDom);
+						pageSelection.setSelection();
 						$pageDom.children().remove();
 						THIS.generateDom(
 							$.extend( {}, eventOptions, options, {enclosingDom: $pageDom} ));
+						if (eventOptions && eventOptions.assetId) {
+							THIS.selectItem( pageSelection, eventOptions.assetId );
+						}
 						break;
 					default:
 						console.warn("how should I sync ", prop);
@@ -1124,6 +1154,12 @@ asset widget {
 			});
 	};
 
+	$(document).on('click', function(ev) {
+		if (ev.target.nodeName == 'BODY')
+			PageSelection.getActiveSelections().forEach( function( sel ) {
+				sel.setSelection();
+			});
+	});
 
 	scope.PageProxy = PageProxy;
 	scope.PageSelection = PageSelection;

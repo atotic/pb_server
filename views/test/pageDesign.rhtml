@@ -19,8 +19,7 @@
 <%= asset_link("editor.gui.commands.js") %>
 <script src="/js/editor.gui.popup.js"></script>
 <%= asset_link("editor.gui.manipulators.js") %>
-<%= asset_link("newpage.js") %>
-<scripto src="/t/admin@sample/theme.js"></scripto>
+<%= asset_link("editor.pb.themecache.js") %>
 
 <style type="text/css">
 #tools {
@@ -103,7 +102,7 @@
 <script type="text/javascript">
 
 var BlankPage = {
-	width: 768,
+	width: 512,
 	height: 512,
 	assets: [],
 	assetData: {},
@@ -122,7 +121,8 @@ var Controller = {
 		var THIS = this;
 		$.when(
 			PB.ThemeCache.load('/t/admin@core/theme.js'),
-			PB.ThemeCache.load('/t/admin@sample/theme.js')
+			PB.ThemeCache.load('/t/admin@sample/theme.js'),
+			PB.ThemeCache.load('/t/admin@modern_full/theme.js')
 			)
 			.done( function() {
 				currentPage.setLayout('theme://admin@core/layouts/gridLayout');
@@ -131,7 +131,6 @@ var Controller = {
 				THIS.initSizePicker();
 				THIS.initBackPicker();
 				THIS.addPhoto();
-				THIS.addText("little text");
 				THIS.addText("Very big text\nHas a newline too!")
 				THIS.setLayout('theme://admin@sample/layouts/framedLayout');
 				THIS.showPage();
@@ -165,7 +164,7 @@ var Controller = {
 		});
 	},
 	initThemePicker: function() {
-		var themeIds = ['admin@sample'];
+		var themeIds = ['admin@modern_full'];
 		function assignCb( el, id ) {
 
 		};
@@ -242,7 +241,7 @@ var Controller = {
 		{ id: 'theme://admin@sample/layouts/framedLayout',
 			data:  {frameWidth: 10}
 		},
-		{ id: 'theme://admin@sample/layouts/uniformLayout'
+		{ id: 'theme://admin@modern_full/layouts/uniformLayout'
 		}
 
 		];
@@ -364,7 +363,7 @@ var Controller = {
 			word = this.words.shift();
 			this.words.push(word);
 		}
-		currentPage.addText(word);
+		currentPage.addText();
 		this.updateLayoutPicker();
 	},
 	addWidget: function() {

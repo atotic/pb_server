@@ -69,7 +69,7 @@ var ThemeCache = {
 		window[ callbackName ] = $.noop;// function() { console.log('dependency parse done') };
 
 		try {
-			eval(js);
+			eval(js + "//@ sourceURL=dummy");
 		}
 		catch(ex) {
 			ThemeCache.resource = oldResourceFn;
@@ -94,7 +94,7 @@ var ThemeCache = {
 			.done( function() {
 				window[callbackName] = success;
 				try {
-					eval(js);	// calls success and sets theme
+					eval(js + "//@ sourceURL=" + url);	// calls success and sets theme
 				}
 				catch(ex) {
 					fail('theme parse failed ' + ex.message + ' ' + url );
@@ -269,15 +269,3 @@ scope.ThemeCache = ThemeCache;
 
 	scope.ThemeUtils = ThemeUtils;
 })(PB);
-
-// ExperimentalTheme
-(function(themeCache) {
-
-
-
-
-	var ExperimentalTheme = {
-		id: 'experimental',
-	};
-	themeCache.put(ExperimentalTheme);
-})(PB.ThemeCache);

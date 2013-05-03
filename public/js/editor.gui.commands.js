@@ -55,8 +55,19 @@
 			if (ev.repeat)
 				return null;
 			var key = null;	// key as string
+
+			function handleDelete() {
+				if (ev.target.nodeName == 'BODY') {
+						// otherwise textarea edits trigger deletes
+						key = CommandManager.keys.backspace;
+						ev.preventDefault();
+					}
+			}
 			if ('keyIdentifier' in ev) {
 				switch(ev.keyIdentifier) {
+					case "U+0008":
+						handleDelete();
+						break;
 					case "U+001B":
 						key = this.keys.esc; break;
 					case "Left":
@@ -73,11 +84,7 @@
 			else if ('keyCode' in ev) {
 				switch (ev.keyCode) {
 					case 8:
-						if (ev.target.nodeName == 'BODY') {
-							// otherwise textarea edits trigger deletes
-							key = this.keys.backspace;
-							ev.preventDefault();
-						}
+						handleDelete();
 						break;
 					case 27:
 						key = this.keys.esc; break;
