@@ -26,7 +26,7 @@
 		commandSets: [],
 		init: function() {
 
-			$(document).keydown( function(ev) {
+			$(document).on('keydown', function(ev) {
 				ev = ev.originalEvent;
 				if (ev.repeat)
 					return;
@@ -46,7 +46,8 @@
 			minus: "-",
 			meta: "meta-",
 			leftArrow: '←',
-			rightArrow: '→'
+			rightArrow: '→',
+			backspace: 'back'
 		},
 		// see http://unixpapa.com/js/key.html for the madness that is js key handling
 		// 2012: most browsers not supporting html5 keyboard event specs
@@ -71,6 +72,13 @@
 			}
 			else if ('keyCode' in ev) {
 				switch (ev.keyCode) {
+					case 8:
+						if (ev.target.nodeName == 'BODY') {
+							// otherwise textarea edits trigger deletes
+							key = this.keys.backspace;
+							ev.preventDefault();
+						}
+						break;
 					case 27:
 						key = this.keys.esc; break;
 					case 109: // Chrome
@@ -144,6 +152,12 @@
 				}
 			if (cmd.id && cmd.id in this._commands)
 				delete this._commands[cmd.id];
+		},
+		activate: function() {
+			GUI.CommandManager.addCommandSet( this );
+		},
+		deactivate: function() {
+			GUI.CommandManager.removeCommandSet( this );
 		},
 		getCommandFromShortcut: function(shortcut) {
 			return this._shortcuts[shortcut];

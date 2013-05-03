@@ -291,7 +291,7 @@ asset widget {
 		},
 		// page + layout => canvas icon. Used to draw layout icons
 		layoutIcon: function(layoutId, layoutData, maxSize) {
-			var l = ThemeCache.resource(layoutId);
+			var l = PB.ThemeCache.resource(layoutId);
 			var layout = l.getPageLayout(this.p.assetData, this.width, this.height, layoutData);
 
 			var enclosure = new GUI.Rect({width: maxSize, height: maxSize});
@@ -339,7 +339,7 @@ asset widget {
 			var FRAME_FILL = '#888';
 			var ERROR_FILL = 'red';
 
-			var drawAsset = function( asset ) {
+			var drawAsset = function( asset, assetType ) {
 				var r = new GUI.Rect( asset );
 				r = r.scaleBy( scale, true ).round();
 				var rotatedContext = new GUI.Rotated2DContext( context, asset.rotate * Math.PI / 180 );
@@ -349,7 +349,7 @@ asset widget {
 					var frameOffset = asset.frameOffset.map(function(v) { return v * scale; });
 					r = r.inset(frameOffset);
 				};
-				switch( asset.type) {
+				switch( assetType) {
 					case 'photo':
 						if (asset.image) {
 							rotatedContext.drawImage( asset.image, r.left, r.top, r.width, r.height);
@@ -373,8 +373,8 @@ asset widget {
 			};
 
 			allLoadedDef.always( function() {
-				layout.photos.forEach( drawAsset );
-				layout.texts.forEach( drawAsset );
+				layout.photos.forEach( function(asset) { drawAsset(asset, 'photo') } );
+				layout.texts.forEach( function(asset) { drawAsset(asset, 'text') } );
 			});
 			return canvas;
 		},
@@ -435,11 +435,13 @@ asset widget {
 			this.needReflow = true;
 			if (!this.p.layoutId)
 				return;
-			var resource = ThemeCache.resource( this.p.layoutId );
+			var resource = PB.ThemeCache.resource( this.p.layoutId );
 			var layout = resource.getPageLayout( this.p.assetData, this.width, this.height, this.p.layoutData);
 
 			var THIS = this;
-
+			console.log( PB.ThemeUtils
+					.generateLayoutId(resource, 'test', this.width, this.height, this.p.assetData)
+				);
 			this.p.assets.forEach( function( assetId ) {
 				var assetData = THIS.p.assetData[ assetId ];
 
@@ -453,7 +455,7 @@ asset widget {
 						break;
 					case 'widget': // widgets go to center by default
 						if (!('top' in assetData)) {
-							var widget = ThemeCache.resource( assetData.widgetId );
+							var widget = PB.ThemeCache.resource( assetData.widgetId );
 							var center = { x: THIS.width / 2, y: THIS.height / 2 };
 							assetDesign = {
 								top: center.y - widget.defaultHeight( assetData.widgetOptions ) / 2,
@@ -485,7 +487,10 @@ asset widget {
 					delete assetData.frameOffset;
 					delete assetData.frameData;
 				}
-				assetData.zindex = assetDesign.zindex;
+				if ('zindex' in assetDesign)
+					assetData.zindex = assetDesign.zindex;
+				else
+					assetData.zindex = assetData.type == 'text' ? 1 : 0;
 				THIS.layoutInnerItem( assetId );
 			});
 
@@ -500,7 +505,7 @@ asset widget {
 		generateBackgroundDom: function(options) {
 			var $div = $( document.createElement('div') )
 				.addClass('design-background');
-			ThemeCache.resource( this.p.backgroundId ).fillBackground( $div, this.p.backgroundData, options );
+			PB.ThemeCache.resource( this.p.backgroundId ).fillBackground( $div, this.p.backgroundData, options );
 			return $div;
 		},
 		generateFrame: function(asset, options) {
@@ -515,7 +520,7 @@ asset widget {
 					width: asset.width,
 					height: asset.height
 				});
-			ThemeCache.resource(asset.frameId).fillFrame(frame, asset.frameOffset, asset.frameData, options);
+			PB.ThemeCache.resource(asset.frameId).fillFrame(frame, asset.frameOffset, asset.frameData, options);
 			return { frame: frame, innerBounds: innerBounds};
 		},
 		/*
@@ -543,7 +548,7 @@ asset widget {
 			if (fr.frame)
 				widgetDom.append( fr.frame );
 
-			var widget = ThemeCache.resource( asset.widgetId );
+			var widget = PB.ThemeCache.resource( asset.widgetId );
 			var innerDom = widget.generateDom( innerFrame.width, innerFrame.height, asset.widgetOptions)
 				.addClass( 'design-widget-inner' )
 				.css( {
@@ -858,6 +863,21 @@ asset widget {
 					PageSelection.findInParent( $pageDom ).setManipulator( m );
 				}
 			}));
+			this.cmdSet.add( new GUI.Command({
+				id: 'remove',
+				title: 'remove',
+				icon: 'remove',
+				key: GUI.CommandManager.keys.backspace,
+				action: function($pageDom, itId) {
+					// when deletekey is pressed, $pageDom and itId are null
+					PageSelection.forEach(function( page, itemId, pageSelection) {
+						if ($pageDom != null || pageSelection.manipulator == null) {
+							pageSelection.setSelection();
+							page.removeAsset( itemId );
+						}
+					});
+				}
+			}));
 			return this.cmdSet;
 		},
 		makeLiAction: function(cmd) {
@@ -887,41 +907,53 @@ asset widget {
 		photoPopup: function() {
 			var $popup = this.popupShell();
 			var cmdSet = this.getManipulatorCommandSet();
-			['move', 'pan', 'zoom', 'resize', 'rotate']
+			var localCmdSet = new GUI.CommandSet('photoPopup');
+			['move', 'pan', 'zoom', 'resize', 'rotate', 'remove']
 				.forEach( function(cmdId) {
 					var cmd = cmdSet.getCommandById( cmdId );
+					localCmdSet.add( cmd );
 					var $li = Popups.makeLiAction( cmd );
 					$popup.append($li);
 			});
+			localCmdSet.add( cmdSet.getCommandById( 'remove'));
+			$popup.data('commandSet', localCmdSet);
 			return $popup;
 		},
 		textPopup: function() {
 			var $popup = this.popupShell();
 			var cmdSet = this.getManipulatorCommandSet();
-			['editText', 'move', 'resizeHorizontal', 'rotate']
+			var localCmdSet = new GUI.CommandSet('textPopup');
+			['editText', 'move', 'resizeHorizontal', 'rotate', 'remove']
 				.forEach( function(cmdId) {
 					var cmd = cmdSet.getCommandById( cmdId );
+					localCmdSet.add( cmd );
 					var $li = Popups.makeLiAction( cmd );
 					$popup.append($li);
 				});
+			localCmdSet.add( cmdSet.getCommandById( 'remove'));
+			$popup.data('commandSet', localCmdSet);
 			return $popup;
 		},
 		widgetPopup: function(itemPage) {
 			var $popup = this.popupShell();
 			var cmdSet = this.getManipulatorCommandSet();
-			['move', 'resizeFixAspect', 'rotate']
+			var localCmdSet = new GUI.CommandSet('widgetPopup');
+			['move', 'resizeFixAspect', 'rotate', 'remove']
 				.forEach( function(cmdId) {
 					var cmd = cmdSet.getCommandById( cmdId );
+					localCmdSet.add( cmd );
 					var $li = Popups.makeLiAction( cmd );
 					$popup.append($li);
 				});
+			localCmdSet.add( cmdSet.getCommandById( 'remove'));
+			$popup.data('commandSet', localCmdSet);
 			return $popup;
 		}
 	}
 
 	var PageProxyEditable = {
 		// callback, 'this' points to an HTMLElement, not page
-		editItemCb: function(ev) {
+		makeEditableCb: function(ev) {
 			var $itemDom = $( ev.currentTarget );
 			var itemId = $itemDom.data( 'model_id' );
 			var itemPage = PB.ModelMap.model(itemId);
@@ -951,7 +983,7 @@ asset widget {
 			PB.stopEvent(ev);
 		},
 		makeEditable: function(item, $itemDom) {
-			$itemDom.hammer().on('touch', {}, this.editItemCb);
+			$itemDom.hammer().on('touch', {}, this.makeEditableCb);
 		},
 		makeItemSyncable: function(page, $itemDom, options) {
 			$itemDom.on( PB.MODEL_CHANGED, function( ev, model, prop, eventOptions ) {
@@ -1022,17 +1054,22 @@ asset widget {
 				this.manipulator.show();
 		},
 		setPopup: function(itemId, $popup) {
-			if (this.popup && this.popup != $popup)
+			if (this.popup && this.popup != $popup) {
+				var cmdSet = this.popup.data('commandSet');
+				if (cmdSet) cmdSet.deactivate();
 				this.popup.remove();
+			}
 			this.popup = $popup;
 			if (this.popup) {
-				$popup.data("popupModel", itemId );
-				$popup.data("popupPageDom", this.dom );
+				this.popup.data("popupModel", itemId );
+				this.popup.data("popupPageDom", this.dom );
 				$('#pagePopupContainer').append( this.popup );
-				$popup.css({
+				this.popup.css({
 					right: 0,
 					left: 'auto'
 				});
+				var cmdSet = this.popup.data('commandSet');
+				if (cmdSet) cmdSet.activate();
 				this.popup.show();
 			}
 		},
@@ -1082,7 +1119,7 @@ asset widget {
 		this.getActiveSelections()
 			.forEach( function( pageSel ) {
 				pageSel.selection.forEach( function( itemId ) {
-					callback(pageSel.bookPage, itemId);
+					callback(pageSel.bookPage, itemId, pageSel);
 				});
 			});
 	};

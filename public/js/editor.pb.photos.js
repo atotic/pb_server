@@ -646,16 +646,16 @@
 		}
 	}
 
-	new FillerPhoto('h1', '/t/admin@base/h1.png', 723, 541);
-	new FillerPhoto('h2', '/t/admin@base/h2.png', 717, 538);
-	new FillerPhoto('h3', '/t/admin@base/h3.png', 751, 561);
-	new FillerPhoto('h4', '/t/admin@base/h4.png', 718, 538);
-	new FillerPhoto('h5', '/t/admin@base/h5.png', 710, 533);
-	new FillerPhoto('h6', '/t/admin@base/h6.png', 719, 534);
-	new FillerPhoto('v1', '/t/admin@base/v1.png', 785, 1127);
-	new FillerPhoto('v2', '/t/admin@base/v2.png', 483, 646);
-	new FillerPhoto('v3', '/t/admin@base/v3.png', 484, 650);
-	new FillerPhoto('v4', '/t/admin@base/v4.png', 482, 644);
+	new FillerPhoto('h1', '/t/admin@core/h1.png', 723, 541);
+	new FillerPhoto('h2', '/t/admin@core/h2.png', 717, 538);
+	new FillerPhoto('h3', '/t/admin@core/h3.png', 751, 561);
+	new FillerPhoto('h4', '/t/admin@core/h4.png', 718, 538);
+	new FillerPhoto('h5', '/t/admin@core/h5.png', 710, 533);
+	new FillerPhoto('h6', '/t/admin@core/h6.png', 719, 534);
+	new FillerPhoto('v1', '/t/admin@core/v1.png', 785, 1127);
+	new FillerPhoto('v2', '/t/admin@core/v2.png', 483, 646);
+	new FillerPhoto('v3', '/t/admin@core/v3.png', 484, 650);
+	new FillerPhoto('v4', '/t/admin@core/v4.png', 482, 644);
 
 	scope.FillerPhotos = FillerPhotos;
 })(PB);

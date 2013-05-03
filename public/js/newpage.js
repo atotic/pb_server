@@ -1,4 +1,6 @@
 // editor.pb.themecache.js
+
+(function(scope) {
 "use strict"
 
 var ThemeCache = {
@@ -71,7 +73,12 @@ var ThemeCache = {
 		}
 		catch(ex) {
 			ThemeCache.resource = oldResourceFn;
-			fail( 'theme dependency parse failed ' + ex.message + ' ' + url );
+			var lineNo = "";
+			if ( ex.lineNumber) {
+				var e2 = ex.constructor();
+				lineNo = " line " + (ex.lineNumber - e2.lineNumber + 7);
+			}
+			fail( 'theme dependency parse failed ' + ex.message  + lineNo  + ' ' + url );
 			return;
 		}
 		ThemeCache.resource = oldResourceFn;
@@ -163,40 +170,114 @@ var ThemeCache = {
 		return res;
 	}
 };
+scope.ThemeCache = ThemeCache;
+})(PB);
+
+(function(scope) {
+
+	var ThemeUtils = {
+		// frameWidth can be undefined, number, or [number]
+		canonicalFrameWidth: function(frameWidth) {
+			if (frameWidth === undefined)
+				return 0;
+			if (typeof frameWidth == 'number')
+				return [frameWidth, frameWidth, frameWidth, frameWidth];
+			switch(frameWidth.length) {
+				case 1:
+					return [frameWidth[0], frameWidth[0], frameWidth[0], frameWidth[0]];
+					break;
+				case 2:
+					return [frameWidth[0], frameWidth[1], frameWidth[0], frameWidth[1]];
+					break;
+				case 3:
+					return [frameWidth[0], frameWidth[1], frameWidth[2], frameWidth[1]];
+					break;
+				case 4:
+					return frameWidth;
+					break;
+				default:
+					console.error('illegal frame width ', frameWidth);
+					return [0,0,0,0];
+			}
+		},
+		// line gets divided into segmentCount,
+		// segments are forced to integer length
+		// return: [segmentCount + 1] of segment terminating points
+		segmentLine: function(line, segmentCount) {
+			if (isNaN(segmentCount) || segmentCount == 0)
+				return [];
+			var rem = line % segmentCount;
+			var segLength = Math.round((line - rem) / segmentCount);
+			var segments = new Array(segmentCount + 1);
+			segments[0] = 0;
+			for (var i=1; i<= segmentCount; i++) {
+				var padding = 0;
+				if (rem > 0) { // pad each segment by 1 until no more extra pixels
+					padding += 1;
+					rem -=1;
+				}
+				segments[i] = segments[i-1] + segLength + padding;
+			}
+			return segments;
+		},
+		generateLayoutId: function(layoutGen, name, width, height, assetData, layoutOptions) {
+			// Utility routine that generates suggested layout id
+			// id is:
+			// [name]-[sizeStr]-[photoStr]-[textStr]
+			var DPI = 96;
+			var sizeStr = Math.round( width / 96 ) + "x" + Math.round(height / 96);
+
+			var photoStr = "";
+			var layout = layoutGen.getPageLayout( assetData, width, height, layoutOptions );
+			if (layout.photos.length > 6) {
+				photoStr = "photo" + layout.photos.length;
+			}
+			else {
+				for (var i=0; i<layout.photos.length; i++) {
+					var smallDim = 2 * DPI;
+					var ratio = layout.photos[i].width / layout.photos[i].height;
+					var imgStr = ratio > 1.1 ? 'H' : ratio < 0.9 ? 'V' : 'S';
+					if ( Math.min( layout.photos[i].width, layout.photos[i].height ) < smallDim )
+						imgStr = imgStr.toLowerCase();
+					photoStr += imgStr;
+				}
+			}
+			var textStr = "";
+			if (layout.texts.length > 0)
+				for (var i=0; i<layout.texts.length; i++)
+				{
+					if (i == 0) textStr += '_';
+					textStr += "T";
+				}
+			return name + "_" + sizeStr + "_" + photoStr + textStr;
+		},
+		assetGenericCount: function(assetData, type) {
+			var c = 0;
+			for (var p in assetData)
+				if (assetData[p].type === type)
+					c++;
+			return c;
+		},
+		assetPhotoCount: function(assetData) {
+			return this.assetGenericCount(assetData, 'photo');
+		},
+		assetTextCount: function(assetData) {
+			return this.assetGenericCount(assetData, 'text');
+		},
+		gutter: 10
+	};
+
+	scope.ThemeUtils = ThemeUtils;
+})(PB);
 
 // ExperimentalTheme
 (function(themeCache) {
-	var FramedLayout = {
-		id: 'framedLayout',
 
-		getPageLayout: function(assetData, width, height, options) {
-			options = $.extend({
-				frameWidth: 10,	// syntax same as border-image-width https://developer.mozilla.org/en-US/docs/CSS/border-image-width
-				spaceOffset: 10
-			}, options);
-			var Utils = ThemeCache.resource('theme://admin@base/utilities');
-			var layout = ThemeCache.resource('theme://admin@base/layouts/gridSpacedLayout').getPageLayout(assetData, width, height, options );
-			var rotate = 5;
-			var frameOffset = Utils.canonicalFrameWidth(options.frameWidth);
-			var applyFrame = function(asset) {
-				asset.rotate = rotate;
-				rotate += 20;
-				asset.frameId =
-				asset.frameId = 'theme://admin@base/frames/cssFrame';
-				asset.frameOffset = frameOffset;
-				asset.frameData = { backgroundColor: 'red'}
-			}
-			layout.photos.forEach( applyFrame );
-			layout.texts.forEach( applyFrame );
-			return layout;
-		}
-	};
+
+
 
 	var ExperimentalTheme = {
 		id: 'experimental',
-		layouts: {
-			framedLayout: FramedLayout
-		}
 	};
 	themeCache.put(ExperimentalTheme);
-})(ThemeCache);
+})(PB.ThemeCache);
