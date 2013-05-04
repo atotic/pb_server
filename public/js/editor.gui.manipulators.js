@@ -133,8 +133,9 @@ MoveManipulator.prototype = {
 		// constrain
 		top = Math.max( -this.pageItem.item.height / 2, top);
 		left = Math.max( -this.pageItem.item.width / 2, left);
-		top = Math.min( this.pageItem.page.height - this.pageItem.item.height / 2, top);
-		left = Math.min( this.pageItem.page.width - this.pageItem.item.width / 2, left);
+		var pageDim = this.pageItem.page.dimensions;
+		top = Math.min( pageDim.height - this.pageItem.item.height / 2, top);
+		left = Math.min( pageDim.width - this.pageItem.item.width / 2, left);
 		this.pageItem.page.updateAssetData( this.itemId, {
 			top: top,
 			left: left

@@ -169,12 +169,17 @@ asset widget {
 			return retVal;
 		},
 		// NEW FUNCTIONS
-
+		get width() {
+			debugger;
+		},
+		get height() {
+			debugger;
+		},
 		get dimensions() {
 			return this.book.getPageDimensions(this.id, this.pageClass);
 		},
 		dimensionsChanged: function(width, height) {
-			this.needReflow = true;
+			this.p.needReflow = true;
 			PB.broadcastChange(this, 'dimensions');
 		},
 		addAsset: function(id, assetData, options) {
@@ -382,7 +387,7 @@ asset widget {
 			if ( !( itemId in this.p.assetData ))
 				return PB.debugstr("layoutInnerItem on non-existent item");
 			var assetData = this.p.assetData[itemId];
-			if (this.needReflow)
+			if (this.p.needReflow)
 				return { x: { min:0, max: 100 }, y: {min:0, max:100}};
 			var innerRect = new GUI.Rect(assetData);
 			if (assetData.frameId)
@@ -431,7 +436,7 @@ asset widget {
 		},
 		layoutFromDesign: function() {
 			// reconcile existing layout with layout from design
-			this.needReflow = true;
+			this.p.needReflow = true;
 			if (!this.p.layoutId)
 				return;
 			var resource = PB.ThemeCache.resource( this.p.layoutId );
@@ -710,7 +715,7 @@ asset widget {
 				else
 					$element.insertAfter($target);
 			};
-			if (this.needReflow)
+			if (this.p.needReflow)
 				this.layoutFromDesign();
 
 			if (!this.p.needReflow)
