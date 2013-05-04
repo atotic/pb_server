@@ -4,8 +4,6 @@
 
 BookPage JSON {
 	needReflow: false
-	width: 768,
-	height: 512,
 	assets: [ asset_id*],
 	assetData: { asset_id : {asset}},
 	designId: null,
@@ -118,6 +116,7 @@ asset widget {
 			}
 		},
 		type: function() {
+			debugger; // should use getPageClass
 			if ( this.id.match(coverRegex))
 				return 'cover';
 			else
@@ -170,13 +169,14 @@ asset widget {
 			return retVal;
 		},
 		// NEW FUNCTIONS
-		get width() {
-			return this.p.width;
-		},
-		get height() {
-			return this.p.height;
-		},
 
+		get dimensions() {
+			return this.book.getPageDimensions(this.id, this.pageClass);
+		},
+		dimensionsChanged: function(width, height) {
+			this.needReflow = true;
+			PB.broadcastChange(this, 'dimensions');
+		},
 		addAsset: function(id, assetData, options) {
 			this.p.assets.push(id);
 			this.p.assetData[id] = assetData;
@@ -283,22 +283,20 @@ asset widget {
 			PB.broadcastChange(this, 'backgroundId', options);
 		},
 		enclosingDom: function(options) {
+			var d = this.dimensions;
 			return $(document.createElement('div'))
-					.addClass('design-page')
-					.css({
-						width: this.width,
-						height: this.height
-					});
+					.addClass('design-page');
 		},
 		// page + layout => canvas icon. Used to draw layout icons
 		layoutIcon: function(layoutId, layoutData, maxSize) {
 			var l = PB.ThemeCache.resource(layoutId);
-			var layout = l.getPageLayout(this.p.assetData, this.width, this.height, layoutData);
+			var d = this.dimensions;
+			var layout = l.getPageLayout(this.p.assetData, d.width, d.height, layoutData);
 
-			var enclosure = new GUI.Rect({width: maxSize, height: maxSize});
-			var pageRect = new GUI.Rect(this);
-			var scale = pageRect.fitInside(enclosure);
-			pageRect = pageRect.scaleBy(scale).round();
+			var enclosure = new GUI.Rect( {width: maxSize, height: maxSize} );
+			var pageRect = new GUI.Rect( d );
+			var scale = pageRect.fitInside( enclosure );
+			pageRect = pageRect.scaleBy( scale ).round();
 			var canvas = document.createElement('canvas');
 			canvas.width = pageRect.width;
 			canvas.height = pageRect.height;
@@ -437,11 +435,12 @@ asset widget {
 			if (!this.p.layoutId)
 				return;
 			var resource = PB.ThemeCache.resource( this.p.layoutId );
-			var layout = resource.getPageLayout( this.p.assetData, this.width, this.height, this.p.layoutData);
+			var d = this.dimensions;
+			var layout = resource.getPageLayout( this.p.assetData, d.width, d.height, this.p.layoutData);
 
 			var THIS = this;
 			console.log( PB.ThemeUtils
-					.generateLayoutId(resource, 'test', this.width, this.height, this.p.assetData)
+					.generateLayoutId(resource, 'test', d.width, d.height, this.p.assetData)
 				);
 			this.p.assets.forEach( function( assetId ) {
 				var assetData = THIS.p.assetData[ assetId ];
@@ -463,11 +462,12 @@ asset widget {
 					if ('top' in assetData)
 						assetDesign = assetData;
 					else {
-						var center = { x: THIS.width / 2, y: THIS.height / 2 };
+						var d = THIS.dimensions;
+						var center = { x: d.width / 2, y: d.height / 2 };
 						var defaultWidth, defaultHeight;
 						switch( assetData.type ) {
 							case 'text':
-								defaultWidth = THIS.width / 3;
+								defaultWidth = d.width / 3;
 								defaultHeight = 30;
 							break;
 							case 'widget':
@@ -699,14 +699,18 @@ asset widget {
 				enclosingDom: null	// old dom to
 			}, options);
 			var $encloseDom = options.enclosingDom || this.enclosingDom( options );
-
+			var d = this.dimensions;
+			$encloseDom.css({
+				width: d.width,
+				height: d.height
+			});
 			function insertAfterHelper($parent, $target,  $element) {
 				if ($target == null)
 					$parent.prepend($element);
 				else
 					$element.insertAfter($target);
 			};
-			if (this.p.needReflow)
+			if (this.needReflow)
 				this.layoutFromDesign();
 
 			if (!this.p.needReflow)
@@ -794,8 +798,6 @@ asset widget {
 	PageProxy.blank = function(book) {
 		return {
 			id: book.generateId(),
-			width: 512,
-			height: 512,
 			assets: [],
 			assetData: {},
 			backgroundId: null,
@@ -1041,6 +1043,11 @@ asset widget {
 						if (eventOptions && eventOptions.assetId) {
 							THIS.selectItem( pageSelection, eventOptions.assetId );
 						}
+						break;
+					case 'dimensions':
+						$pageDom.children().remove();
+						THIS.generateDom(
+							$.extend( {}, eventOptions, options, {enclosingDom: $pageDom} ));
 						break;
 					default:
 						console.warn("how should I sync ", prop);

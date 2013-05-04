@@ -98,6 +98,41 @@
 		get bookTemplateId() {
 			return this.localData.document.bookTemplateId;
 		},
+		setDimensions: function(width, height) {
+			if (this.localData.document.width == width
+				&& this.localData.document.height == height)
+				return;
+			this.localData.document.width = width;
+			this.localData.document.height = height;
+			var pageList = this.pageList;
+			for (var i=0; i<pageList.length; i++) {
+				this.page(pageList[i]).dimensionsChanged(width, height);
+			}
+			PB.broadcastChange( this, 'dimensions');
+		},
+		get dimensions() {
+			return {
+				width: this.localData.document.width,
+				height: this.localData.document.height
+			}
+		},
+		getPageDimensions: function(pageId, pageType) {
+			pageType = pageType || this.page(pageId).pageClass;
+			var w = this.localData.document.width || 0;
+			var h = this.localData.document.height || 0;
+			if (w == 0)
+				console.error('getPageDimensions called, no dimensions available');
+			switch (pageType) {
+				case 'cover':
+				case 'back':
+				case 'page':
+					return { width: w, height: h};
+				case 'cover-flap':
+				case 'back-flap':
+					return { width: w / 3, height: h}
+			}
+			console.error("invalid page type in getPageDimensions", pageType);
+		},
 		serverPhotoId: function(photoId) {
 			return this.localData.document.photoMap[photoId];
 		},

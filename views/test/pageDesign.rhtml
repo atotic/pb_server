@@ -130,6 +130,7 @@ var Controller = {
 				THIS.initThemePicker();
 				THIS.initSizePicker();
 				THIS.initBackPicker();
+				THIS.setDimensions(768, 512);
 				THIS.addPhoto();
 				THIS.addText("Very big text\nHas a newline too!")
 				THIS.setLayout('theme://admin@sample/layouts/framedLayout');
@@ -142,13 +143,18 @@ var Controller = {
 	},
 	initSizePicker: function() {
 		var sizes = [
+			{ width: 7, height: 5},
 			{ width: 8, height: 8 },
 			{ width: 12, height: 12},
 			{ width: 11, height: 8 }
 		];
-		function assignCb(el, size) {
-
+		function assignCb($el, size) {
+			$el.hammer().on('touch', {}, function() {
+				Controller.setDimensions(size.width * 96, size.height * 96);
+				Controller.updateLayoutPicker();
+			});
 		};
+
 		var $picker = $('#sizePicker');
 		var inchToPixel = 6;
 		sizes.forEach(function(size) {
@@ -248,6 +254,7 @@ var Controller = {
 		function assignCb($el, id, data) {
 			$el.hammer().on('touch', {}, function() {
 				Controller.setLayout(id, data);
+				Controller.showPage();
 			});
 		};
 		for (var i=0; i<layouts.length; i++) {
@@ -378,6 +385,9 @@ var Controller = {
 	},
 	setBackground: function(backgroundId, backgroundData) {
 		currentPage.setBackground(backgroundId, backgroundData);
+	},
+	setDimensions: function(width, height) {
+		book.setDimensions( width, height );
 	}
 }
 $(document).ready(function() {

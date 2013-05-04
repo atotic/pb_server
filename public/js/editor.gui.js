@@ -631,9 +631,9 @@ show: function() {
 	var Rect = function(r) {
 		this.top = this.left = this.width = this.height = 0;
 		if (!('bottom' in r || 'height' in r))
-			throw "rect must have bottom or height";
+			throw new Error("rect must have bottom or height");
 		if (!('right' in r || 'width' in r))
-			throw "rect must have right or height";
+			throw new Error("rect must have right or height");
 		if ('top' in r)
 			this.top = r.top;
 		if ('left' in r)

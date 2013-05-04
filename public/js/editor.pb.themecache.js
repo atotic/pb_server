@@ -97,7 +97,12 @@ var ThemeCache = {
 					eval(js + "//@ sourceURL=" + url);	// calls success and sets theme
 				}
 				catch(ex) {
-					fail('theme parse failed ' + ex.message + ' ' + url );
+					var lineNo = "";
+					if ( ex.lineNumber ) {
+						var e2 = ex.constructor();
+						lineNo = " line " + (ex.lineNumber - e2.lineNumber + 5);
+					}
+					fail('theme parse failed ' + ex.message + lineNo + ' ' + url );
 				}
 			})
 			.fail( function() {
@@ -264,7 +269,17 @@ scope.ThemeCache = ThemeCache;
 		assetTextCount: function(assetData) {
 			return this.assetGenericCount(assetData, 'text');
 		},
-		gutter: 10
+		gutter: 10,
+		// dispatches based upon layout aspect
+		layoutByAspect: function( assetData, width, height, layoutOptions, aspects) {
+			var ratio = width / height;
+			if (ratio > 1.1)
+				return (aspects.wide || aspects.square)(assetData, width, height, layoutOptions);
+			else if (ratio < 0.9)
+				return (aspects.tall || aspects.square)(assetData, width, height, layoutOptions);
+			else
+				return (aspects.square || aspects.wide)(assetData, width, height, layoutOptions);
+		}
 	};
 
 	scope.ThemeUtils = ThemeUtils;
