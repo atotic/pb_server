@@ -15,6 +15,7 @@
 <script src="/js/editor.pb.page.js"></script>
 <script src="/js/editor.pb.photos.js"></script>
 <script src="/js/editor.gui.js"></script>
+<%= asset_link("editor.gui.rect.js") %>
 <script src="/js/editor.gui.events.js"></script>
 <%= asset_link("editor.gui.commands.js") %>
 <script src="/js/editor.gui.popup.js"></script>
@@ -122,6 +123,7 @@ var Controller = {
 		$.when(
 			PB.ThemeCache.load('/t/admin@core/theme.js'),
 			PB.ThemeCache.load('/t/admin@sample/theme.js'),
+			PB.ThemeCache.load('/t/admin@rotate/theme.js'),
 			PB.ThemeCache.load('/t/admin@modern_full/theme.js')
 			)
 			.done( function() {
@@ -132,18 +134,20 @@ var Controller = {
 				THIS.initBackPicker();
 				THIS.setDimensions(768, 512);
 				THIS.addPhoto();
-				THIS.addText("Very big text\nHas a newline too!")
-				THIS.setLayout('theme://admin@sample/layouts/framedLayout');
+				// THIS.addText("Very big text\nHas a newline too!")
+				// THIS.setLayout('theme://admin@core/layouts/gridLayout');
+				THIS.setLayout('theme://admin@rotate/layouts/horizontalLayout');
 				THIS.showPage();
 				THIS.updateFramePicker();
 			})
 			.fail( function() {
-				console.error("Theme failed to load");
+				console.error("Themes failed to load");
 			});
 	},
 	initSizePicker: function() {
 		var sizes = [
 			{ width: 7, height: 5},
+			{ width: 4, height: 4 },
 			{ width: 8, height: 8 },
 			{ width: 12, height: 12},
 			{ width: 11, height: 8 }
@@ -241,14 +245,13 @@ var Controller = {
 		{ id: 'theme://admin@core/layouts/gridSpacedLayout',
 			data:  {spaceOffset: 10}
 		},
-		{ id: 'theme://admin@core/layouts/gridSpacedLayout',
-			data:  {spaceOffset: 20}
-		},
 		{ id: 'theme://admin@sample/layouts/framedLayout',
 			data:  {frameWidth: 10}
 		},
-		{ id: 'theme://admin@modern_full/layouts/uniformLayout'
-		}
+		{ id: 'theme://admin@modern_full/layouts/horizontalLayout' },
+		{ id: 'theme://admin@modern_full/layouts/verticalLayout' },
+		{ id: 'theme://admin@rotate/layouts/horizontalLayout' }
+
 
 		];
 		function assignCb($el, id, data) {
@@ -258,7 +261,13 @@ var Controller = {
 			});
 		};
 		for (var i=0; i<layouts.length; i++) {
-			var icon = currentPage.layoutIcon(layouts[i].id, layouts[i].data, 192);
+
+			var icon = PB.ThemeUtils.getLayoutIcon(
+				currentPage.p.assetData,
+				currentPage.dimensions,
+				layouts[i].id,
+				layouts[i].data,
+				192);
 			var $li = $(document.createElement('li'));
 			$li.append(icon);
 			$('#layoutPicker').append($li);
@@ -390,6 +399,7 @@ var Controller = {
 		book.setDimensions( width, height );
 	}
 }
+
 $(document).ready(function() {
 	Controller.init();
 	GUI.CommandManager.init();

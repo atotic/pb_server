@@ -1,4 +1,5 @@
 Stream:
+This will be my marketing strategy https://hacks.mozilla.org/2013/05/how-to-spread-the-word-about-your-code/
 Printer references http://www.girlswhoprint.blogspot.com/
 JQuery annotated source. I need a better solution for documenting code http://robflaherty.github.io/jquery-annotated-source/. This is not it, but something like it.
 Nice SVG clip art: http://www.clker.com/, reduce with python ~/bin/scour/scour.py -i <fname> -o <fname>
@@ -23,9 +24,6 @@ WebGL clouds, our something went wrong page: http://www.clicktorelease.com/code/
 Pure CSS page turn: http://www.romancortes.com/ficheros/page-flip.html
 Get value of rotation from transform matrix: http://css-tricks.com/get-value-of-css-rotation-through-javascript/
 Free web app developer resources: http://www.webappers.com/category/design/icons/
-Border image: http://www.css3.info/preview/border-image/
-Border image in depth: http://www.useragentman.com/blog/2011/03/29/pixel-perfect-css3-border-image-in-depth/
-Best border image overview: http://css-tricks.com/understanding-border-image/
 Nice way to do captions, HTML5 style http://css-tricks.com/slide-in-image-captions/
 http://www.trymyui.com/ great UI testing place
 Experiment with font sizes: http://lamb.cc/typograph/ --
@@ -38,40 +36,28 @@ Excellent CSS effects: bounce, rotate, etc. If I ever need visual candy http://b
 
 JS
 Google Drive Realtime API: http://googledevelopers.blogspot.com/2013/03/build-collaborative-apps-with-google.html?utm_source=feedburner&utm_medium=feed&utm_campaign=Feed%3A+GDBcode+%28Google+Developers+Blog%29
-Javascript head tracker
 Secrets of layout: how does DOM access interracts with layout: http://kellegous.com/j/2013/01/26/layout-performance/
-
 WebDriver: testing framework that's a W3 standard (can be used on selenium too)
 Detect node insertion/removal with JS/CSS (animation complete callback)
 http://blog.streak.com/2012/11/how-to-detect-dom-changes-in-css.htmlhttp://davidwalsh.name/detect-node-insertion
 pdf.js: http://people.mozilla.com/~ydelendik/pdfjs-ttf-2012.pdf
 Vjeux blogs about different image layout algorithms http://blog.vjeux.com/2012/javascript/image-layout-algorithm-lightbox-android.html
-JavaScript macros http://sweetjs.org/
 MatchMedia for JS: http://wickynilliams.github.com/enquire.js/
 Handling keyboard events in browsers: http://dev.opera.com/articles/view/keyboard-accessible-web-applications-3/
 Offline, FT Style: http://labs.ft.com/2012/08/basic-offline-html5-web-app/
 Speeding up JS, some nice tricks, should try for iPad: https://developers.google.com/speed/articles/javascript-dom
 Face detection in JS https://github.com/liuliu/ccv/tree/unstable/js
 HTMLK Media Capture: upload photos from your phone! http://www.w3.org/TR/html-media-capture/
-window.matchMedia media queries through js
-Zero comparasance table for JS: http://zero.milosz.ca/
-JPEG parsing is javascript: http://code.google.com/p/jsjpegmeta/downloads/detail?name=jpegmeta.js
-RequireJS: when I get serious about performance, this is a js include framework
-http://requirejs.org/docs/optimization.html
-JQuery knobs: http://anthonyterrien.com/knob/
 JSPerf: faster js performance
 Offline application cache: http://www.alistapart.com/articles/application-cache-is-a-douchebag/
-Stop paying jquery tax, loading jquery at the bottom: http://samsaffron.com/archive/2012/02/17/stop-paying-your-jquery-tax
 Touch gestures: https://github.com/eightmedia/hammer.js#readme
 HTML5 flipping pages animation: http://studio.html5rocks.com/#Flip
 How to resume a file upload http://hacks.mozilla.org/2011/04/resumeupload/
 Javascript crypto: http://code.google.com/p/crypto-js/
 File upload with js, the nitty gritty details: http://igstan.ro/posts/2009-01-11-ajax-file-upload-with-pure-javascript.html
-jQuery HTML5 upload: http://code.google.com/p/jquery-html5-upload/
-The entire FileAPI: http://www.html5rocks.com/tutorials/file/filesystem/
 http://wiki.commonjs.org/wiki/CommonJS -- stdlib for server js
 Photo editing API: http://developers.aviary.com/effects-api
-JSFiddle, nice easing animations: http://jsfiddle.net/marcofucci/rRtAq/
+Nice easing animations: http://jsfiddle.net/marcofucci/rRtAq/
 XPath for JSON http://jsonselect.org/#overview
 Ajax history design: http://tumbledry.org/2011/05/12/screw_hashbangs_building
 Javascript PDF renderer: http://andreasgal.com/2011/06/15/pdf-js/
@@ -80,10 +66,7 @@ javascript serializations: http://blog.maxaller.name/2011/01/javascript-serializ
 JS streaming http://code.google.com/p/jquery-stream/
 Canvas graphics effects in js: http://evanw.github.com/glfx.js/demo/
 Taking apps offline walkthrogh by Sencha: http://www.sencha.com/learn/taking-sencha-touch-apps-offline
-Firefox JS tools http://hacks.mozilla.org/2011/11/firefox-tons-of-tools-for-web-developers/
 Custom font metrics in JS http://badassjs.com/post/16355968400/font-js-a-powerful-font-toolkit-for-javascript
-FileAPI resumable uploads https://github.com/23/resumable.js
-Fullscreen: http://hacks.mozilla.org/2012/01/using-the-fullscreen-api-in-web-browsers/
 Image to canvas: http://hacks.mozilla.org/2012/02/creating-thumbnails-with-drag-and-drop-and-html5-canvas/
 Operational Transformation is an official name for type of editor I am building  http://sharejs.org/
 Visualizing Operational Transformation http://ot.substance.io/visualization/
@@ -128,7 +111,6 @@ nginx internals http://www.aosabook.org/en/nginx.html
 HTML
 Like these guys toolkit: http://www.googleventures.com/humans.txt
 Context menus in firefox, HTML5 menu markup: http://hacks.mozilla.org/2011/11/html5-context-menus-in-firefox-screencast-and-code/
-PDF converter: https://github.com/ento/wkpdf/network
 Use Chromium for PDF generation: http://www.chromium.org/developers/design-documents/print-preview
 http://chromestory.com/2010/10/learn-how-chromes-print-preview-will-work-the-pdf-deal-and-location-aware-printing/
 Chrome based javascript browser, has PDF generation capability: http://code.google.com/p/phantomjs/
@@ -136,7 +118,6 @@ http://www.exiv2.org/?utm_source=dlvr.it&utm_medium=twitter
 
 MOBILE
 Mobile debugger: https://itunes.apple.com/us/app/mihtool/id584739126?ls=1&mt=8
-Webkit mobile guide http://developer.apple.com/library/ios/#documentation/AppleApplications/Reference/SafariWebContent/HandlingEvents/HandlingEvents.html
 Viewport scoller https://github.com/zynga/scroller
 Developing a nice mobile site: http://davidbcalhoun.com/2011/mobile-performance-manifesto
 Touch event history and future: http://blog.jquery.com/2012/04/10/getting-touchy-about-patents/
@@ -166,7 +147,6 @@ Open source freelancers, where to register non-seizable domain: http://gun.io/
 PlentyOfFish website run by one guy, 10M page views a month. http://highscalability.com/blog/2011/12/27/plentyoffish-update-6-billion-pageviews-and-32-billion-image.html
 ssh tips, useful for Amazon: http://shebang.brandonmintern.com/tips-for-remote-unix-work-ssh-screen-and-vnc
 https://www.crowdspring.com/post-a-project/, UI design referred from Michael LaGuardia
-Survey of offline: http://www.html5rocks.com/tutorials/offline/whats-offline/#toc-compatibility
 Unicode geometric shapes: http://www.unicodemap.org/range/54/Geometric_Shapes/
 Branching strategy with git: http://betterexplained.com/articles/aha-moments-when-learning-git/
 WebIntents: case study is image editor http://paul.kinlan.me/web-intents-a-fresh-look
@@ -174,7 +154,6 @@ Simple, cheap scalable site: http://highscalability.com/blog/2011/8/1/peecho-arc
 ]BrowserID authentication: https://github.com/mozilla/browserid/wiki/How-to-Use-BrowserID-on-Your-Site
 Stripe payments system: cheap way to accept credit cards
 Graphic designers: http://www.artisantalent.com/find-talent/print-talent/graphic-designers/
-OS X shell tips http://hayne.net/MacDev/Notes/unixFAQ.html#shellStartup
 
 TOUCH INTERFACES
 Sweet & short take on ipad html development http://mir.aculo.us/2010/06/04/making-an-ipad-html5-app-making-it-really-fast/
@@ -252,7 +231,3 @@ However, I encountered some glitches with Blurb's Bookify.
 The other options don't seem to be ONLINE.
 In other words, the book would be saved to someone's personal computer - which would make it hard for everyone to do their own page.
 "
-
-UBUNTU
-apt-file list package_name # lists file in a package
-dpkg --get-selectionslis

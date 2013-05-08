@@ -90,8 +90,10 @@ var ThemeCache = {
 					ThemeCache.load( ThemeCache.themeUrlFromId( depId ))
 				);
 		}
+		// console.log('waiting', url);
 		$.when.apply($, dependentDeferreds)
 			.done( function() {
+				// console.log('complete', url);
 				window[callbackName] = success;
 				try {
 					eval(js + "//@ sourceURL=" + url);	// calls success and sets theme
@@ -111,6 +113,7 @@ var ThemeCache = {
 	},
 
 	load: function(url) {
+		// console.log("loading", url);
 		if (url in this.loading)
 			return this.loading[url];
 		if( !url.length > 0)
@@ -132,6 +135,7 @@ var ThemeCache = {
 				context: this
 			})
 			.done( function( response, msg, jqXHR ) {
+			// console.log("loading done", url);
 				this.processLoadedTheme( deferred, callbackName, response, url );
 			})
 			.fail( function( jqXHR, status, msg ) {
@@ -179,6 +183,22 @@ scope.ThemeCache = ThemeCache;
 })(PB);
 
 (function(scope) {
+
+	function LoadImageDeferred(src) {
+		var retval = $.Deferred();
+		var img = new Image();
+		img.onload = function() {
+			retval.resolve(img);
+		};
+		img.onerror = function(a,b,c) {
+			debugger;
+			// we report error by resolving as null
+			// This allows us to chain deferreds with $.when without aborting on first failure
+			retval.resolve(null);
+		};
+		img.src = src;
+		return retval;
+	};
 
 	var ThemeUtils = {
 		// frameWidth can be undefined, number, or [number]
@@ -255,6 +275,94 @@ scope.ThemeCache = ThemeCache;
 					textStr += "T";
 				}
 			return name + "_" + sizeStr + "_" + photoStr + textStr;
+		},
+		getLayoutIcon: function(assetData, dimensions, layoutId, layoutData, maxHeight) {
+			var layout =  PB.ThemeCache.resource(layoutId)
+				.getPageLayout(assetData, dimensions.width, dimensions.height, layoutData);
+
+			var enclosure = new GUI.Rect( {width: maxHeight * 4 / 3, height: maxHeight} );
+			var pageRect = new GUI.Rect( dimensions );
+			var scale = pageRect.fitInside( enclosure );
+			pageRect = pageRect.scaleBy( scale ).round();
+			var canvas = document.createElement('canvas');
+			canvas.width = pageRect.width;
+			canvas.height = pageRect.height;
+			var context = canvas.getContext('2d');
+			// fill background
+			context.fillStyle = '#AAA';
+			context.fillRect(0,0, pageRect.width, pageRect.height);
+
+			// Load all images as deferred, draw once loadedfgenerate
+			function storeResolvedImage(layoutRecord) {
+				return function(image) {
+					layoutRecord.image = image;
+				}
+			};
+			var imageDeferreds = [];
+			var textDeferred;
+			var textPattern;
+			var i = 0;
+			layout.photos.forEach( function( asset ) {
+				var loadDef = LoadImageDeferred(PB.FillerPhotos.random(i++).url);
+				loadDef.done(storeResolvedImage( asset ) );
+				imageDeferreds.push(loadDef);
+			});
+			if (layout.texts.length > 0) {
+				var loadDef = LoadImageDeferred('/img/abstract-text-pattern.jpg');
+				loadDef.done( function(img) {
+					if (img) {
+						img.width = 10;
+						img.height = 10;
+						textPattern = context.createPattern(img, 'repeat');
+					}
+				});
+				imageDeferreds.push( loadDef );
+			};
+
+			var allLoadedDef = $.when.apply($, imageDeferreds);
+
+			// When all images load, draw all items
+			var FRAME_FILL = '#888';
+			var ERROR_FILL = 'red';
+
+			var drawAsset = function( asset, assetType ) {
+				var r = new GUI.Rect( asset );
+				r = r.scaleBy( scale, true ).round();
+				var rotatedContext = new GUI.Rotated2DContext( context, asset.rotate * Math.PI / 180 );
+				context.fillStyle = FRAME_FILL;
+				rotatedContext.fillRect(r.left, r.top, r.width, r.height);
+				if ( asset.frameId && $.isArray( asset.frameOffset)) {
+					var frameOffset = asset.frameOffset.map(function(v) { return v * scale; });
+					r = r.inset(frameOffset);
+				};
+				switch( assetType) {
+					case 'photo':
+						if (asset.image) {
+							rotatedContext.drawImage( asset.image, r.left, r.top, r.width, r.height);
+						}
+						else {
+							context.fillStyle = ERROR_FILL;
+							rotatedContext.fillRect(r.left, r.top, r.width, r.height);
+							rotatedContext.strokeRect(r.left, r.top, r.width, r.height);
+						};
+					break;
+					case 'text':
+						if (textPattern)
+							context.fillStyle = textPattern;
+						else
+							context.fillStyle = 'yellow';
+						rotatedContext.fillRect(r.left, r.top, r.width, r.height);
+					break;
+					default:
+						console.error("unknown asset type");
+				}
+			};
+
+			allLoadedDef.always( function() {
+				layout.photos.forEach( function(asset) { drawAsset(asset, 'photo') } );
+				layout.texts.forEach( function(asset) { drawAsset(asset, 'text') } );
+			});
+			return canvas;
 		},
 		assetGenericCount: function(assetData, type) {
 			var c = 0;

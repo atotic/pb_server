@@ -215,6 +215,7 @@ class SvegApp < Sinatra::Base
 						"editor.pb.templates.js",
 						"editor.pb.jpegFile.js",
 						"editor.gui.js",
+						"editor.gui.rect.js",
 						"editor.gui.commands.js",
 						"editor.gui.events.js",
 						"editor.gui.buttons.js",

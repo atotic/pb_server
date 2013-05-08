@@ -47,23 +47,6 @@ asset widget {
 
 "use strict";
 
-	function LoadImageDeferred(src) {
-		var retval = $.Deferred();
-		var img = new Image();
-		img.onload = function() {
-			retval.resolve(img);
-		};
-		img.onerror = function(a,b,c) {
-			debugger;
-			// we report error by resolving as null
-			// This allows us to chain deferreds with $.when without aborting on first failure
-			retval.resolve(null);
-		};
-		img.src = src;
-		return retval;
-	};
-
-
 	function registerPageAssetResolver(pageProxy, assetId) {
 		var book = pageProxy.book;
 		PB.ModelMap.setResolver( assetId, function() {
@@ -292,96 +275,6 @@ asset widget {
 			return $(document.createElement('div'))
 					.addClass('design-page');
 		},
-		// page + layout => canvas icon. Used to draw layout icons
-		layoutIcon: function(layoutId, layoutData, maxSize) {
-			var l = PB.ThemeCache.resource(layoutId);
-			var d = this.dimensions;
-			var layout = l.getPageLayout(this.p.assetData, d.width, d.height, layoutData);
-
-			var enclosure = new GUI.Rect( {width: maxSize, height: maxSize} );
-			var pageRect = new GUI.Rect( d );
-			var scale = pageRect.fitInside( enclosure );
-			pageRect = pageRect.scaleBy( scale ).round();
-			var canvas = document.createElement('canvas');
-			canvas.width = pageRect.width;
-			canvas.height = pageRect.height;
-			var context = canvas.getContext('2d');
-			// fill background
-			context.fillStyle = '#AAA';
-			context.fillRect(0,0, pageRect.width, pageRect.height);
-
-			// Load all images as deferred, draw once loadedfgenerate
-			function storeResolvedImage(layoutRecord) {
-				return function(image) {
-					layoutRecord.image = image;
-				}
-			};
-			var imageDeferreds = [];
-			var textDeferred;
-			var textPattern;
-			var i = 0;
-			layout.photos.forEach( function( asset ) {
-				var loadDef = LoadImageDeferred(PB.FillerPhotos.random(i++).url);
-				loadDef.done(storeResolvedImage( asset ) );
-				imageDeferreds.push(loadDef);
-			});
-			if (layout.texts.length > 0) {
-				var loadDef = LoadImageDeferred('/img/abstract-text-pattern.jpg');
-				loadDef.done( function(img) {
-					if (img) {
-						img.width = 10;
-						img.height = 10;
-						textPattern = context.createPattern(img, 'repeat');
-					}
-				});
-				imageDeferreds.push( loadDef );
-			};
-
-			var allLoadedDef = $.when.apply($, imageDeferreds);
-
-			// When all images load, draw all items
-			var FRAME_FILL = '#888';
-			var ERROR_FILL = 'red';
-
-			var drawAsset = function( asset, assetType ) {
-				var r = new GUI.Rect( asset );
-				r = r.scaleBy( scale, true ).round();
-				var rotatedContext = new GUI.Rotated2DContext( context, asset.rotate * Math.PI / 180 );
-				context.fillStyle = FRAME_FILL;
-				rotatedContext.fillRect(r.left, r.top, r.width, r.height);
-				if ( asset.frameId && $.isArray( asset.frameOffset)) {
-					var frameOffset = asset.frameOffset.map(function(v) { return v * scale; });
-					r = r.inset(frameOffset);
-				};
-				switch( assetType) {
-					case 'photo':
-						if (asset.image) {
-							rotatedContext.drawImage( asset.image, r.left, r.top, r.width, r.height);
-						}
-						else {
-							context.fillStyle = ERROR_FILL;
-							rotatedContext.fillRect(r.left, r.top, r.width, r.height);
-							rotatedContext.strokeRect(r.left, r.top, r.width, r.height);
-						};
-					break;
-					case 'text':
-						if (textPattern)
-							context.fillStyle = textPattern;
-						else
-							context.fillStyle = 'yellow';
-						rotatedContext.fillRect(r.left, r.top, r.width, r.height);
-					break;
-					default:
-						console.error("unknown asset type");
-				}
-			};
-
-			allLoadedDef.always( function() {
-				layout.photos.forEach( function(asset) { drawAsset(asset, 'photo') } );
-				layout.texts.forEach( function(asset) { drawAsset(asset, 'text') } );
-			});
-			return canvas;
-		},
 		// focal point range for images
 		getFocalPointRange: function(itemId) {
 			if ( !( itemId in this.p.assetData ))
@@ -415,7 +308,9 @@ asset widget {
 					var photoRect = new GUI.Rect( photo );
 					var scale = photoRect.fillInside( innerRect);
 					photoRect = photoRect.scaleBy( scale ).scaleBy( zoom );
-					photoRect = photoRect.centerIn(innerRect, focalPoint).round();
+					photoRect = photoRect.centerIn(innerRect,
+						{focalPoint: focalPoint,
+							forceInside: true }).round();
 					if ((typeof assetData.photoRect) != 'object')
 						assetData.photoRect = {};
 					$.extend(assetData.photoRect, {
@@ -444,9 +339,9 @@ asset widget {
 			var layout = resource.getPageLayout( this.p.assetData, d.width, d.height, this.p.layoutData);
 
 			var THIS = this;
-			console.log( PB.ThemeUtils
-					.generateLayoutId(resource, 'test', d.width, d.height, this.p.assetData)
-				);
+			// console.log( PB.ThemeUtils
+			// 		.generateLayoutId(resource, 'test', d.width, d.height, this.p.assetData)
+			// 	);
 			this.p.assets.forEach( function( assetId ) {
 				var assetData = THIS.p.assetData[ assetId ];
 
@@ -1167,7 +1062,7 @@ asset widget {
 	};
 
 	$(document).on('click', function(ev) {
-		if (ev.target.nodeName == 'BODY')
+		if (ev.target.nodeName == 'BODY' || ev.target.nodeName == 'HTML')
 			PageSelection.getActiveSelections().forEach( function( sel ) {
 				sel.setSelection();
 			});
