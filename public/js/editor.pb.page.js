@@ -606,9 +606,9 @@ asset widget {
 			});
 			function insertAfterHelper($parent, $target,  $element) {
 				if ($target == null)
-					$parent.prepend($element);
+					$parent.prepend( $element );
 				else
-					$element.insertAfter($target);
+					$element.insertAfter( $target );
 			};
 			if (this.p.needReflow)
 				this.layoutFromDesign();

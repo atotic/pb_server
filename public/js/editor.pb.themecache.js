@@ -135,11 +135,11 @@ var ThemeCache = {
 				context: this
 			})
 			.done( function( response, msg, jqXHR ) {
-			// console.log("loading done", url);
+			// console.log("ajax loading done", url);
 				this.processLoadedTheme( deferred, callbackName, response, url );
 			})
 			.fail( function( jqXHR, status, msg ) {
-				console.warn( "theme loading failed", status, msg, url );
+				console.error( "ajax theme loading failed", status, msg, url );
 				delete this.loading[url];
 				ThemeCache.failed[url] = 'http error' + status;
 				deferred.rejectWith( url );

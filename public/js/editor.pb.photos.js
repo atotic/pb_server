@@ -659,3 +659,40 @@
 
 	scope.FillerPhotos = FillerPhotos;
 })(PB);
+
+(function(scope) {
+	var TemplatePhoto = function(options) {
+		this.id = options.id;
+		this.iconUrl = options.iconUrl;
+		this.displayUrl = options.displayUrl;
+		this.originalUrl = options.originalUrl || options.displayUrl || options.iconUrl;
+		TemplatePhoto.put( this );
+	}
+
+	var cache = {};
+
+	TemplatePhoto.put = function( templatePhoto ) {
+		if ( templatePhoto.id in cache
+			&& cache[ templatePhoto.id].originalUrl != templatePhoto.originalUrl )
+			throw new Error('TemplatePhoto with same id already exists:' + templatePhoto.id );
+		cache[ templatePhoto.id ] = templatePhoto;
+	}
+
+	TemplatePhoto.get = function( id ) {
+		if ( !(id in cache))
+			throw new Error('TemplatePhoto.get photo does not exist:' + id);
+		return cache[ id ];
+	}
+
+	TemplatePhoto.prototype = {
+		getUrl: function(size) {
+			if (size <= PB.PhotoProxy.SMALL)
+				return this.iconUrl || this.displayUrl || this.originalUrl;
+			else if (size <= PB.PhotoProxy.MEDIUM)
+				return this.displayUrl ||  this.originalUrl;
+			else
+				return this.originalUrl;
+		}
+	}
+	scope.TemplatePhoto = TemplatePhoto;
+}(PB));

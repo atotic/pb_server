@@ -124,7 +124,8 @@ var Controller = {
 			PB.ThemeCache.load('/t/admin@core/theme.js'),
 			PB.ThemeCache.load('/t/admin@sample/theme.js'),
 			PB.ThemeCache.load('/t/admin@rotate/theme.js'),
-			PB.ThemeCache.load('/t/admin@modern_full/theme.js')
+			PB.ThemeCache.load('/t/admin@modern_full/theme.js'),
+			PB.ThemeCache.load('/t/admin@sports/theme.js')
 			)
 			.done( function() {
 				currentPage.setLayout('theme://admin@core/layouts/gridLayout');
@@ -137,6 +138,7 @@ var Controller = {
 				// THIS.addText("Very big text\nHas a newline too!")
 				// THIS.setLayout('theme://admin@core/layouts/gridLayout');
 				THIS.setLayout('theme://admin@rotate/layouts/horizontalLayout');
+				THIS.setBackground('theme://admin@sports/backgrounds/soccerField');
 				THIS.showPage();
 				THIS.updateFramePicker();
 			})
@@ -219,7 +221,10 @@ var Controller = {
 			data: {
 				css: {background: 'linear-gradient(red, yellow, orange, green, blue, purple)'}
 			}
-		}
+		},
+		{ id: 'theme://admin@sports/backgrounds/soccerField' },
+		{ id: 'theme://admin@sports/backgrounds/soccerStadium' }
+
 		];
 		function assignCb($el, id, data) {
 			$el.hammer().on('touch', {}, function() {
@@ -232,7 +237,7 @@ var Controller = {
 				width: 100,
 				height: 100
 			});
-			b.fillBackground($li, backs[i].data, {});
+			b.fillBackground($li, backs[i].data, {resolution: PB.PhotoProxy.SMALL});
 			$('#backgroundPicker').append($li);
 			assignCb($li, backs[i].id, backs[i].data);
 		};
