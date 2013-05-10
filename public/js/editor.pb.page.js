@@ -372,8 +372,8 @@ asset widget {
 							break;
 							case 'widget':
 								var widget = PB.ThemeCache.resource( assetData.widgetId );
-								defaultHeight = widget.defaultHeight( assetData.widgetOptions );
-								defaultWidth = widget.defaultWidth( assetData.widgetOptions );
+								defaultHeight = widget.width( assetData.widgetOptions );
+								defaultWidth = widget.height( assetData.widgetOptions );
 							break;
 							default:
 								console.error("no assetDesing for ", assetData.type);

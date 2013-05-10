@@ -666,6 +666,8 @@
 		this.iconUrl = options.iconUrl;
 		this.displayUrl = options.displayUrl;
 		this.originalUrl = options.originalUrl || options.displayUrl || options.iconUrl;
+		this._width = options.width;	// width/height of original url
+		this._height = options.height;
 		TemplatePhoto.put( this );
 	}
 
@@ -684,14 +686,31 @@
 		return cache[ id ];
 	}
 
+	TemplatePhoto.create = function( options ) {
+		var photo = new PB.TemplatePhoto(options);
+		PB.TemplatePhoto.put( photo );
+		return photo;
+	}
+
 	TemplatePhoto.prototype = {
 		getUrl: function(size) {
+			size = size || PB.PhotoProxy.LARGE;
 			if (size <= PB.PhotoProxy.SMALL)
 				return this.iconUrl || this.displayUrl || this.originalUrl;
 			else if (size <= PB.PhotoProxy.MEDIUM)
 				return this.displayUrl ||  this.originalUrl;
 			else
 				return this.originalUrl;
+		},
+		get width() {
+			if (! this._width)
+				throw new Error('no width ' + this.id);
+			return this._width;
+		},
+		get height() {
+			if (! this._height)
+				 throw new Error('no height ' + this.id);
+			return this._height;
 		}
 	}
 	scope.TemplatePhoto = TemplatePhoto;

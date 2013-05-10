@@ -128,6 +128,13 @@ var Controller = {
 			PB.ThemeCache.load('/t/admin@sports/theme.js')
 			)
 			.done( function() {
+
+				new PB.TemplatePhoto.create( {
+					id: 'admin@sample/small_soccer',
+					originalUrl:  '/t/admin@sample/soccer_small.svg',
+					width: 397,
+					height: 266
+				});
 				currentPage.setLayout('theme://admin@core/layouts/gridLayout');
 				currentPage.setBackground('theme://admin@core/backgrounds/cssBackground');
 				THIS.initThemePicker();
@@ -388,11 +395,9 @@ var Controller = {
 		this.updateLayoutPicker();
 	},
 	addWidget: function() {
-		currentPage.addWidget('theme://admin@core/widgets/photoWidget', {
-			url: '/t/admin@sample/soccer_small.svg',
-			defaultWidth: 397,
-			defaultHeight: 266
-		});
+		currentPage.addWidget('theme://admin@sports/widgets/soccerBallWidget');
+		// currentPage.addWidget('theme://admin@core/widgets/photoWidget',
+		// 	{ photoId: 'admin@sample/small_soccer'});
 	},
 	setLayout: function(layoutId, layoutData) {
 		currentPage.setLayout(layoutId, layoutData);
@@ -406,6 +411,7 @@ var Controller = {
 }
 
 $(document).ready(function() {
+
 	Controller.init();
 	GUI.CommandManager.init();
 //	$(document.body).css('background', 'linear-gradient(45deg, red, blue)');

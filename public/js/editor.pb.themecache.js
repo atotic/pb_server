@@ -159,7 +159,7 @@ var ThemeCache = {
 	resource: function(resUrl) {
 		var match = this.themeRegex.exec(resUrl);
 		if (!match)
-			PB.debugthrow("Malformed theme resource url ", resUrl);
+			throw new Error("Malformed theme resource url " + resUrl);
 
 		var themeId = match[1],
 			pathStr = match[2];

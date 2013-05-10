@@ -1,4 +1,5 @@
 Stream:
+SVG images positioning: http://whereswalden.com/2011/10/21/properly-resizing-vector-image-backgrounds/
 This will be my marketing strategy https://hacks.mozilla.org/2013/05/how-to-spread-the-word-about-your-code/
 Printer references http://www.girlswhoprint.blogspot.com/
 JQuery annotated source. I need a better solution for documenting code http://robflaherty.github.io/jquery-annotated-source/. This is not it, but something like it.
