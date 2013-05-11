@@ -55,6 +55,7 @@ var ThemeCache = {
 
 		var dependencyIds = {}; // theme_id of all dependencies
 		var Noop = new function NoopF() {};
+		Noop.create = $.noop;
 		var logger = function( resUrl ) {
 			var match = ThemeCache.themeRegex.exec( resUrl );
 			if (!match) {

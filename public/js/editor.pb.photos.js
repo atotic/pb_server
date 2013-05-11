@@ -662,13 +662,17 @@
 
 (function(scope) {
 	var TemplatePhoto = function(options) {
-		this.id = options.id;
 		this.iconUrl = options.iconUrl;
 		this.displayUrl = options.displayUrl;
 		this.originalUrl = options.originalUrl || options.displayUrl || options.iconUrl;
+		if ( !this.originalUrl )
+			throw new Error("TemplatePhoto must point to a photo file");
 		this._width = options.width;	// width/height of original url
 		this._height = options.height;
-		TemplatePhoto.put( this );
+		if (options.id )
+			this.id = options.id;
+		else
+			this.id = this.originalUrl;
 	}
 
 	var cache = {};
