@@ -4,8 +4,11 @@
 
 BookPage JSON {
 	needReflow: false
-	assets: [ asset_id*],
-	assetData: { asset_id : {asset}},
+	assets: {	// Hash of all the assets, + sorted
+		ids: [ list of all asset ids in order ]
+		asset_id : { assetData }
+		asset_id2: { assetData2 }
+	},
 	designId: null,
 	layoutId: null,
 	layoutData: null,
@@ -13,9 +16,9 @@ BookPage JSON {
 	backgroundData: null,
 }
 }
-all assets {
+assetData {
 	type: 'photo', 'text'
-	top
+	top     // undefined means widget has not been positioned
 	left
 	width
 	height
@@ -40,6 +43,7 @@ asset widget {
 	type: 'widget'
 	widgetId:
 	widgetOptions:
+	widgetCreator: user | designId
 }
 */
 
@@ -51,7 +55,7 @@ asset widget {
 		var book = pageProxy.book;
 		PB.ModelMap.setResolver( assetId, function() {
 			var page = book.page(pageProxy.id);
-			var item = page.p.assetData[assetId];
+			var item = page.p.assets[assetId];
 			if (!item)
 				PB.debugstr("Resolving item not there");
 			return { page: page, item: item, itemId: assetId };
@@ -60,9 +64,9 @@ asset widget {
 	var PageProxy = function(id, book) {
 		this.id = id;
 		this.book = book;
-		PB.ModelMap.setResolver(id, book.pageResolver());
-		this.p.assets.forEach(function(assetId) {
-			registerPageAssetResolver(this, assetId );
+		PB.ModelMap.setResolver( id, book.pageResolver() );
+		this.p.assets.ids.forEach( function( assetId ) {
+			registerPageAssetResolver( this, assetId );
 		}, this);
 	};
 
@@ -127,7 +131,7 @@ asset widget {
 			}
 		},
 		swapPhoto: function(oldId, newId) {
-			this.p.assetData.forEach(function(assetData) {
+			this.p.assets.forEach(function(assetData) {
 				if (assetData.type === 'photo' && assetData.photoId == oldId)
 					assetData.photoId = newId;
 			});
@@ -139,24 +143,20 @@ asset widget {
 		remove: function(options) {
 			this.book.deleteRoughPage(this, options);
 		},
+		getAssets: function() {
+			return this.p.assets;
+		},
 		getAssetData: function(assetId) {
-			return this.p.assetData[ assetId];
+			return this.p.assets[ assetId];
 		},
 		getAssetIds: function(itemType) {
 			var retVal = [];
-			for (var i=0; i<this.p.assets.length; i++) {
-				var itemId = this.p.assets[i];
-				if (!itemType || this.p.assetData[itemId].type == itemType)
+			for (var i=0; i<this.p.assets.ids.length; i++) {
+				var itemId = this.p.assetIds[i];
+				if (!itemType || this.p.assets[itemId].type == itemType)
 					retVal.push(itemId);
 			}
 			return retVal;
-		},
-		// NEW FUNCTIONS
-		get width() {
-			debugger;
-		},
-		get height() {
-			debugger;
 		},
 		get dimensions() {
 			return this.book.getPageDimensions(this.id, this.pageClass);
@@ -166,27 +166,31 @@ asset widget {
 			PB.broadcastChange(this, 'dimensions');
 		},
 		addAsset: function(id, assetData, options) {
-			this.p.assets.push(id);
-			this.p.assetData[id] = assetData;
+			options = $.extend( { broadcast: true }, options);
+			this.p.assets.ids.push( id );
+			this.p.assets[ id ] = assetData;
+			if ( !assetData.top )
 			this.p.needReflow = true;
 			registerPageAssetResolver(this, id);
-			if (assetData.type == 'photo')
-				this.book._pagePhotosChanged(this, options);
-			PB.broadcastChange(this, 'assets',
-				$.extend( {assetId: id}, options ));
+			if ( assetData.type == 'photo' )
+				this.book._pagePhotosChanged( this, options );
+			if ( options.broadcast )
+				PB.broadcastChange( this, 'assetIds',
+					$.extend( {assetId: id}, options ));
 		},
 		removeAsset: function(id, options) {
-			var idx = this.p.assets.indexOf(id);
+			var idx = this.p.assets.ids.indexOf( id );
 			if (idx == -1)
 				return PB.debugstr("removing non-exhistent asset");
-			this.p.assets.splice(idx, 1);
-			var assetData = this.p.assetData[id];
-			delete this.p.assetData[id];
-			this.p.needReflow = true;
-			PB.ModelMap.unsetResolver(id);
-			if (assetData.type == 'photo')
-				this.book._pagePhotosChanged(this, options);
-			PB.broadcastChange(this, 'assets', options);
+			this.p.assets.ids.splice( idx, 1 );
+			var assetType = this.p.assets[ id ].type;
+			delete this.p.assets[id];
+			if (assetType != 'widget')
+				this.p.needReflow = true;
+			PB.ModelMap.unsetResolver( id );
+			if ( assetType == 'photo' )
+				this.book._pagePhotosChanged( this, options );
+			PB.broadcastChange( this, 'assetIds', options );
 		},
 		updateAssetData: function(id, newData, options) {
 			function myExtend(src, dest) {
@@ -219,17 +223,17 @@ asset widget {
 				clobber: false	// clobbers all existing data
 			}, options);
 
-			if (!(id in this.p.assetData))
+			if (!(id in this.p.assets))
 				return PB.debugstr("Updating non-existent asset data");
 
 			var dirty = false;
 
 			if (options.clobber) {
 				dirty = true;
-				this.p.assetData[id] = PB.clone(newData);
+				this.p.assets[id] = PB.clone(newData);
 			}
 			else
-				dirty = myExtend( newData, this.p.assetData[id] );
+				dirty = myExtend( newData, this.p.assets[id] );
 
 			// optimize: if data does not change, do not broadcast changes. Useful for manipulators
 			if (dirty) {
@@ -252,12 +256,39 @@ asset widget {
 				content: content
 			});
 		},
-		addWidget: function(widgetId, widgetOptions) {
-			this.addAsset( this.book.generateId(), {
+		addWidget: function(widgetId, widgetOptions, options) {
+			options = $.extend( {
+				broadcast: true,
+				widgetCreator: 'user'
+			}, options);
+
+			var assetData = {
 				type: 'widget',
 				widgetId: widgetId,
-				widgetOptions: widgetOptions
-			});
+				widgetOptions: widgetOptions,
+				widgetCreator: options.widgetCreator
+			};
+			// User-created widgets are placed in the center of the page by default
+			if (options.widgetCreator == 'user' && !assetData.top) {
+				var widget = PB.ThemeCache.resource( assetData.widgetId );
+				var d = this.dimensions;
+				assetData.height = widget.height( widgetOptions );
+				assetData.width = widget.width( widgetOptions );
+				assetData.top = Math.max(0, (d.height - assetData.height) / 2);
+				assetData.left = Math.max(0, (d.width - assetData.width) / 2);
+			}
+			this.addAsset( this.book.generateId(), assetData,
+				{ 	broadcast: options.broadcast }
+			);
+		},
+		setDesign: function( designId, options ) {
+			this.p.designId = designId;
+			this.p.layoutId = null;
+			this.p.layoutData = null;
+			this.p.backgroundId = null;
+			this.p.backgroundData = null;
+			this.p.needReflow = true;
+			PB.broadcastChange( this, 'designId', options );
 		},
 		setLayout: function(layoutId, layoutData, options) {
 			this.p.layoutId = layoutId;
@@ -277,9 +308,9 @@ asset widget {
 		},
 		// focal point range for images
 		getFocalPointRange: function(itemId) {
-			if ( !( itemId in this.p.assetData ))
+			if ( !( itemId in this.p.assets ))
 				return PB.debugstr("layoutInnerItem on non-existent item");
-			var assetData = this.p.assetData[itemId];
+			var assetData = this.p.assets[itemId];
 			if (this.p.needReflow)
 				return { x: { min:0, max: 100 }, y: {min:0, max:100}};
 			var innerRect = new GUI.Rect(assetData);
@@ -291,10 +322,10 @@ asset widget {
 					y: { min: ydelta, max: 100 - ydelta }};
 		},
 		layoutInnerItem: function(itemId) {
-			if ( !( itemId in this.p.assetData ))
+			if ( !( itemId in this.p.assets ))
 				return PB.debugstr("layoutInnerItem on non-existent item");
 
-			var assetData = this.p.assetData[itemId];
+			var assetData = this.p.assets[itemId];
 			switch(assetData.type) {
 				case 'photo':
 					var innerRect = new GUI.Rect(assetData);
@@ -329,21 +360,57 @@ asset widget {
 				break;
 			}
 		},
-		layoutFromDesign: function() {
-			// reconcile existing layout with layout from design
+		reflow: function() {
 			this.p.needReflow = true;
-			if (!this.p.layoutId)
+			if ( !this.p.designId )
 				return;
-			var resource = PB.ThemeCache.resource( this.p.layoutId );
-			var d = this.dimensions;
-			var layout = resource.getPageLayout( this.p.assetData, d.width, d.height, this.p.layoutData);
 
 			var THIS = this;
-			// console.log( PB.ThemeUtils
-			// 		.generateLayoutId(resource, 'test', d.width, d.height, this.p.assetData)
-			// 	);
-			this.p.assets.forEach( function( assetId ) {
-				var assetData = THIS.p.assetData[ assetId ];
+			var d = this.dimensions;
+			var designRes = PB.ThemeCache.resource( this.p.designId );
+
+			// Delete old widgets
+
+			var widgetsRemoved = false;
+			this.p.assets.ids = this.p.assets.ids.filter( function( assetId ) {
+				var assetData = THIS.p.assets[ assetId ];
+				var isForeignWidget = (assetData.type == 'widget') &&
+					( assetData.widgetCreator != 'user');
+				if ( isForeignWidget ) {
+					widgetsRemoved = true;
+					delete THIS.p.assets[ assetId ];
+					return false;
+				}
+				else
+					return true;
+			});
+
+
+			// Compute layout
+			var layoutRes = designRes;
+			if ( this.p.layoutId != null)
+				layoutRes = PB.ThemeCache.resource( this.p.layoutId );
+			else {
+				// Insert new widgets for design layout
+				var newWidgets = ('getWidgets' in designRes) ?
+					designRes.getWidgets( this )
+					: [];
+				for (var i=0; i<newWidgets.length; i++) {
+					this.addWidget( newWidgets[i].id, newWidgets[i].options,
+						{
+							widgetCreator: this.p.designId,
+							broadcast: false
+						});
+				}
+			}
+
+			var layout = layoutRes.getPageLayout( this, this.p.layoutData );
+
+			if (layout.widgets == undefined)
+				layout.widgets = [];
+			// Position all assets
+			this.p.assets.ids.forEach( function( assetId ) {
+				var assetData = THIS.p.assets[ assetId ];
 
 				var assetDesign;
 				switch ( assetData.type ) {
@@ -354,6 +421,8 @@ asset widget {
 						assetDesign = layout.texts.length > 0 ? layout.texts.shift() : null;
 						break;
 					case 'widget':
+						if ( assetData.widgetCreator == THIS.p.designId )
+							assetDesign = layout.widgets.length > 0 ? layout.widgets.shift() : null;
 						break;
 					default:
 						console.error('unknown assetData type', assetData.type );
@@ -362,7 +431,6 @@ asset widget {
 					if ('top' in assetData)
 						assetDesign = assetData;
 					else {
-						var d = THIS.dimensions;
 						var center = { x: d.width / 2, y: d.height / 2 };
 						var defaultWidth, defaultHeight;
 						switch( assetData.type ) {
@@ -413,10 +481,10 @@ asset widget {
 				THIS.layoutInnerItem( assetId );
 			});
 
-			// if (design.background) {
-			// 	this.p.backgroundId = design.background.backgroundId;
-			// 	this.p.backgroundData = design.background.backgroundData;
-			// }
+			if (! this.p.backgroundId ) {
+				this.p.backgroundId = designRes.getBackgroundId( d.width, d.height );
+				this.p.backgroundData = null;
+			}
 
 			this.p.needReflow = false;
 
@@ -611,7 +679,7 @@ asset widget {
 					$element.insertAfter( $target );
 			};
 			if (this.p.needReflow)
-				this.layoutFromDesign();
+				this.reflow();
 
 			if (!this.p.needReflow)
 			{
@@ -627,43 +695,44 @@ asset widget {
 					}
 					$nextDomSlot = $background;
 				}
-				for (var i=0; i < this.p.assets.length; i++) {
-					var item = this.p.assetData[ this.p.assets[i] ];
-					var $itemDom = $encloseDom.find('*:data("model_id=' + this.p.assets[i] + '")');
+				for (var i=0; i < this.p.assets.ids.length; i++) {
+					var assetId = this.p.assets.ids[i];
+					var asset = this.p.assets[ assetId ];
+					var $itemDom = $encloseDom.find('*:data("model_id=' + assetId + '")');
 					if ( $itemDom.length != 0 ) {
 						$nextDomSlot = $itemDom;
 						continue;
 					}
-					switch(item.type) {
+					switch( asset.type ) {
 						case 'photo':
-							$itemDom = this.generatePhotoDom( item, options );
+							$itemDom = this.generatePhotoDom( asset, options );
 							break;
 						case 'text':
-							$itemDom = this.generateTextDom( item, options );
+							$itemDom = this.generateTextDom( asset, options );
 							break;
 						case 'widget':
-							$itemDom = this.generateWidgetDom( item, options );
+							$itemDom = this.generateWidgetDom( asset, options );
 							break;
 						default:
 							debugger;
 					}
-					if (item.rotate)
-						$itemDom.css('transform', 'rotate(' + item.rotate + 'deg)');
-					if (item.zindex)
-						$itemDom.css('zIndex', item.zindex);
+					if (asset.rotate)
+						$itemDom.css('transform', 'rotate(' + asset.rotate + 'deg)');
+					if (asset.zindex)
+						$itemDom.css('zIndex', asset.zindex);
 					insertAfterHelper( $encloseDom, $nextDomSlot, $itemDom );
 					$nextDomSlot = $itemDom;
 
 					if (options.editable || options.syncable)
-						$itemDom.data( 'model_id', this.p.assets[i] );
+						$itemDom.data( 'model_id', assetId );
 					if (options.editable)
-						this.makeEditable( item, $itemDom );
+						this.makeEditable( asset, $itemDom );
 					if (options.syncable)
 						this.makeItemSyncable( this, $itemDom, options );
 				}
 			}
 			else
-				$encloseDom.text("Design not available." + this.p.assets.length + " items on this page");
+				$encloseDom.text("Design not available." + this.p.assets.ids.length + " items on this page");
 			if ( options.editable && !options.enclosingDom) {
 				$encloseDom.hammer().on( 'touch', {}, function(ev) {
 					PageSelection.findInParent($encloseDom).setSelection();
@@ -698,8 +767,9 @@ asset widget {
 	PageProxy.blank = function(book) {
 		return {
 			id: book.generateId(),
-			assets: [],
-			assetData: {},
+			assets: {
+				ids: []
+			},
 			backgroundId: null,
 			backgroundData: null,
 			layoutId: null,
@@ -933,7 +1003,7 @@ asset widget {
 						THIS.generateDom(
 							$.extend( {}, eventOptions, options, {enclosingDom: $pageDom} ));
 						break;
-					case 'assets':
+					case 'assetIds':
 					case 'layoutId':
 						var pageSelection = PageSelection.findInParent($pageDom);
 						pageSelection.setSelection();
@@ -943,6 +1013,13 @@ asset widget {
 						if (eventOptions && eventOptions.assetId) {
 							THIS.selectItem( pageSelection, eventOptions.assetId );
 						}
+						break;
+					case 'designId':
+						var pageSelection = PageSelection.findInParent($pageDom);
+						pageSelection.setSelection();
+						$pageDom.children().remove();
+						THIS.generateDom(
+							$.extend( {}, eventOptions, options, {enclosingDom: $pageDom} ));
 						break;
 					case 'dimensions':
 						$pageDom.children().remove();

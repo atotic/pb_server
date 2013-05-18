@@ -81,6 +81,7 @@
 	margin-left: 10px;
 }
 #framePicker {
+	display:none;
 }
 #framePicker li {
 	position: relative;
@@ -135,17 +136,17 @@ var Controller = {
 					width: 397,
 					height: 266
 				});
-				currentPage.setLayout('theme://admin@core/layouts/gridLayout');
-				currentPage.setBackground('theme://admin@core/backgrounds/cssBackground');
+				// currentPage.setLayout('theme://admin@core/layouts/gridLayout');
+				// currentPage.setBackground('theme://admin@core/backgrounds/cssBackground');
 				THIS.initThemePicker();
 				THIS.initSizePicker();
 				THIS.initBackPicker();
 				THIS.setDimensions(768, 512);
+				THIS.setDesign('theme://admin@sports/designs/soccerDesign1');
 				THIS.addPhoto();
 				// THIS.addText("Very big text\nHas a newline too!")
 				// THIS.setLayout('theme://admin@core/layouts/gridLayout');
-				THIS.setLayout('theme://admin@rotate/layouts/horizontalLayout');
-				THIS.setBackground('theme://admin@sports/backgrounds/soccerField');
+				// THIS.setBackground('theme://admin@sports/backgrounds/soccerField');
 				THIS.showPage();
 				THIS.updateFramePicker();
 			})
@@ -275,11 +276,10 @@ var Controller = {
 		for (var i=0; i<layouts.length; i++) {
 
 			var icon = PB.ThemeUtils.getLayoutIcon(
-				currentPage.p.assetData,
-				currentPage.dimensions,
+				currentPage,
 				layouts[i].id,
 				layouts[i].data,
-				192);
+				96);
 			var $li = $(document.createElement('li'));
 			$li.append(icon);
 			$('#layoutPicker').append($li);
@@ -395,7 +395,7 @@ var Controller = {
 		this.updateLayoutPicker();
 	},
 	addWidget: function() {
-		currentPage.addWidget('theme://admin@sports/widgets/soccerBallWidget');
+		currentPage.addWidget('theme://admin@sports/widgets/soccerSilhouetteWidget');
 		// currentPage.addWidget('theme://admin@core/widgets/photoWidget',
 		// 	{ photoId: 'admin@sample/small_soccer'});
 	},
@@ -404,6 +404,9 @@ var Controller = {
 	},
 	setBackground: function(backgroundId, backgroundData) {
 		currentPage.setBackground(backgroundId, backgroundData);
+	},
+	setDesign: function(designId) {
+		currentPage.setDesign( designId );
 	},
 	setDimensions: function(width, height) {
 		book.setDimensions( width, height );

@@ -78,6 +78,7 @@ var ThemeCache = {
 			if ( ex.lineNumber) {
 				var e2 = ex.constructor();
 				lineNo = " line " + (ex.lineNumber - e2.lineNumber + 7);
+				console.log(ex.stack);
 			}
 			fail( 'theme dependency parse failed ' + ex.message  + lineNo  + ' ' + url );
 			return;
@@ -104,6 +105,7 @@ var ThemeCache = {
 					if ( ex.lineNumber ) {
 						var e2 = ex.constructor();
 						lineNo = " line " + (ex.lineNumber - e2.lineNumber + 5);
+						console.log(ex.stack);
 					}
 					fail('theme parse failed ' + ex.message + lineNo + ' ' + url );
 				}
@@ -246,15 +248,16 @@ scope.ThemeCache = ThemeCache;
 			}
 			return segments;
 		},
-		generateLayoutId: function(layoutGen, name, width, height, assetData, layoutOptions) {
+		generateLayoutId: function(layoutGen, name, page, layoutOptions) {
 			// Utility routine that generates suggested layout id
 			// id is:
 			// [name]-[sizeStr]-[photoStr]-[textStr]
 			var DPI = 96;
-			var sizeStr = Math.round( width / 96 ) + "x" + Math.round(height / 96);
+			var d = page.dimensions;
+			var sizeStr = Math.round( d.width / 96 ) + "x" + Math.round(d.height / 96);
 
 			var photoStr = "";
-			var layout = layoutGen.getPageLayout( assetData, width, height, layoutOptions );
+			var layout = layoutGen.getPageLayout( page, layoutOptions );
 			if (layout.photos.length > 6) {
 				photoStr = "photo" + layout.photos.length;
 			}
@@ -277,12 +280,12 @@ scope.ThemeCache = ThemeCache;
 				}
 			return name + "_" + sizeStr + "_" + photoStr + textStr;
 		},
-		getLayoutIcon: function(assetData, dimensions, layoutId, layoutData, maxHeight) {
+		getLayoutIcon: function(page, layoutId, layoutData, maxHeight) {
 			var layout =  PB.ThemeCache.resource(layoutId)
-				.getPageLayout(assetData, dimensions.width, dimensions.height, layoutData);
+				.getPageLayout(page, layoutData);
 
 			var enclosure = new GUI.Rect( {width: maxHeight * 4 / 3, height: maxHeight} );
-			var pageRect = new GUI.Rect( dimensions );
+			var pageRect = new GUI.Rect( page.dimensions );
 			var scale = pageRect.fitInside( enclosure );
 			pageRect = pageRect.scaleBy( scale ).round();
 			var canvas = document.createElement('canvas');
@@ -365,29 +368,53 @@ scope.ThemeCache = ThemeCache;
 			});
 			return canvas;
 		},
-		assetGenericCount: function(assetData, type) {
+		assetGenericCount: function(assets, type) {
 			var c = 0;
-			for (var p in assetData)
-				if (assetData[p].type === type)
+			for (var p in assets)
+				if (assets[p].type === type)
 					c++;
 			return c;
 		},
-		assetPhotoCount: function(assetData) {
-			return this.assetGenericCount(assetData, 'photo');
+		assetPhotoCount: function(assets) {
+			return this.assetGenericCount(assets, 'photo');
 		},
-		assetTextCount: function(assetData) {
-			return this.assetGenericCount(assetData, 'text');
+		assetTextCount: function(assets) {
+			return this.assetGenericCount(assets, 'text');
+		},
+		assetWidgetIdByCreator: function(assets, creator) {
+			var retVal = [];
+			for (var i=0; i<assets.ids.length; i++) {
+				var asset = assets[ assets.ids[i]];
+				if (asset.type == 'widget' && asset.widgetCreator == creator)
+					retVal.push(assets.ids[i]);
+			}
+			return retVal;
+		},
+		// Create fake page for getPageLayout
+		layoutMockupPage: function(assets, dimensions) {
+			if (! assets.ids) {	// mock the id list
+				var ids = [];
+				for (p in assets)
+					ids.push(p);
+				assets.ids = ids;
+			};
+			return {
+				dimensions: dimensions,
+				getAssets: function() {
+					return assets;
+				}
+			}
 		},
 		gutter: 10,
 		// dispatches based upon layout aspect
-		layoutByAspect: function( assetData, width, height, layoutOptions, aspects) {
+		layoutByAspect: function( page, layoutOptions, aspects) {
 			var ratio = width / height;
 			if (ratio > 1.1)
-				return (aspects.wide || aspects.square)(assetData, width, height, layoutOptions);
+				return (aspects.wide || aspects.square)(page, layoutOptions);
 			else if (ratio < 0.9)
-				return (aspects.tall || aspects.square)(assetData, width, height, layoutOptions);
+				return (aspects.tall || aspects.square)(page, layoutOptions);
 			else
-				return (aspects.square || aspects.wide)(assetData, width, height, layoutOptions);
+				return (aspects.square || aspects.wide)(page, layoutOptions);
 		}
 	};
 
