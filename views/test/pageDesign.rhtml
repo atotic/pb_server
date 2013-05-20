@@ -136,8 +136,6 @@ var Controller = {
 					width: 397,
 					height: 266
 				});
-				// currentPage.setLayout('theme://admin@core/layouts/gridLayout');
-				// currentPage.setBackground('theme://admin@core/backgrounds/cssBackground');
 				THIS.initThemePicker();
 				THIS.initSizePicker();
 				THIS.initBackPicker();
@@ -145,7 +143,6 @@ var Controller = {
 				THIS.setDesign('theme://admin@sports/designs/soccerDesign1');
 				THIS.addPhoto();
 				// THIS.addText("Very big text\nHas a newline too!")
-				// THIS.setLayout('theme://admin@core/layouts/gridLayout');
 				// THIS.setBackground('theme://admin@sports/backgrounds/soccerField');
 				THIS.showPage();
 				THIS.updateFramePicker();
@@ -396,8 +393,6 @@ var Controller = {
 	},
 	addWidget: function() {
 		currentPage.addWidget('theme://admin@sports/widgets/soccerSilhouetteWidget');
-		// currentPage.addWidget('theme://admin@core/widgets/photoWidget',
-		// 	{ photoId: 'admin@sample/small_soccer'});
 	},
 	setLayout: function(layoutId, layoutData) {
 		currentPage.setLayout(layoutId, layoutData);

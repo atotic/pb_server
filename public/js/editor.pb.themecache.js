@@ -408,7 +408,8 @@ scope.ThemeCache = ThemeCache;
 		gutter: 10,
 		// dispatches based upon layout aspect
 		layoutByAspect: function( page, layoutOptions, aspects) {
-			var ratio = width / height;
+			var d = page.dimensions;
+			var ratio = d.width / d.height;
 			if (ratio > 1.1)
 				return (aspects.wide || aspects.square)(page, layoutOptions);
 			else if (ratio < 0.9)
