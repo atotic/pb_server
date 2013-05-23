@@ -17,7 +17,7 @@ BookPage JSON {
 }
 }
 assetData {
-	type: 'photo', 'text'
+	type: 'photo' | 'text' | 'widget'
 	top     // undefined means widget has not been positioned
 	left
 	width
@@ -289,6 +289,9 @@ asset widget {
 			this.p.backgroundData = null;
 			this.p.needReflow = true;
 			PB.broadcastChange( this, 'designId', options );
+		},
+		get designId() {
+			return this.p.designId;
 		},
 		setLayout: function(layoutId, layoutData, options) {
 			this.p.layoutId = layoutId;

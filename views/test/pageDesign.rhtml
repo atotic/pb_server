@@ -21,6 +21,7 @@
 <script src="/js/editor.gui.popup.js"></script>
 <%= asset_link("editor.gui.manipulators.js") %>
 <%= asset_link("editor.pb.themecache.js") %>
+<%= asset_link("editor.pb.themeutils.js") %>
 
 <style type="text/css">
 #tools {
@@ -71,6 +72,14 @@
 #backgroundPicker li {
 	display: inline-block;
 	list-style-type: none;
+}
+#designPicker {
+	overflow: auto;
+}
+#designPicker li {
+	display: inline-block;
+	list-style-type: none;
+	margin-left: 10px;
 }
 #layoutPicker {
 	overflow: auto;
@@ -181,9 +190,11 @@ var Controller = {
 		});
 	},
 	initThemePicker: function() {
-		var themeIds = ['admin@modern_full'];
-		function assignCb( el, id ) {
-
+		var themeIds = ['admin@sports'];
+		function assignCb( $el, themeId ) {
+			$el.hammer().on('touch', {}, function() {
+				Controller.updateDesignPicker( themeId );
+			});
 		};
 		var themesLoading = false;
 
@@ -192,14 +203,16 @@ var Controller = {
 				PB.ThemeCache.get( id, {autoload: true} );
 			}
 			catch(ex) {
-				themesLoading = true;
+				if (!themesLoading) {
+					window.setTimeout( Controller.initThemePicker, 0);
+					themesLoading = true;
+				}
 			}
 		});
 
-		if (themesLoading) {
-			window.setTimeout( Controller.initThemePicker, 0);
+		if (themesLoading)
 			return;
-		}
+
 		var $picker = $('#themePicker');
 		themeIds.forEach( function( id) {
 			var theme = PB.ThemeCache.get(id, '');
@@ -209,6 +222,25 @@ var Controller = {
 			$picker.append($li);
 			assignCb( $li, id );
 		});
+	},
+	updateDesignPicker: function( themeId ) {
+		var theme = PB.ThemeCache.get(themeId);
+
+		function assignCb($el, designId) {
+			$el.hammer().on('touch', {}, function() {
+				Controller.setDesign(designId);
+			});
+		};
+		$('#designPicker').children().remove();
+		for (design in theme.designs) {
+			var designId = 'theme://' + themeId + "/designs/" + design;
+			var icon = PB.ThemeUtils.getDesignIcon( currentPage, 128, {designId: designId }
+			);
+			var $li = $(document.createElement('li'));
+			$li.append(icon);
+			$('#designPicker').append($li);
+			assignCb($li, designId)
+		}
 	},
 	initBackPicker: function() {
 		var backs = [
@@ -251,11 +283,11 @@ var Controller = {
 		$('#layoutPicker').children().remove();
 		var layouts = [
 		{ id: 'theme://admin@core/layouts/gridLayout',
-		},
-		{ id: 'theme://admin@core/layouts/gridSpacedLayout',
+		}
+		,{ id: 'theme://admin@core/layouts/gridSpacedLayout',
 			data:  {spaceOffset: 10}
-		},
-		{ id: 'theme://admin@sample/layouts/framedLayout',
+		}
+		,{ id: 'theme://admin@sample/layouts/framedLayout',
 			data:  {frameWidth: 10}
 		},
 		{ id: 'theme://admin@modern_full/layouts/horizontalLayout' },
@@ -271,17 +303,18 @@ var Controller = {
 			});
 		};
 		for (var i=0; i<layouts.length; i++) {
-
-			var icon = PB.ThemeUtils.getLayoutIcon(
-				currentPage,
-				layouts[i].id,
-				layouts[i].data,
-				96);
+			var icon = PB.ThemeUtils.getDesignIcon( currentPage, 96,
+				{
+					layoutId: layouts[i].id,
+					layoutData: layouts[i].data
+				});
 			var $li = $(document.createElement('li'));
 			$li.append(icon);
 			$('#layoutPicker').append($li);
 			assignCb($li, layouts[i].id, layouts[i].data);
 		}
+		Controller.updateDesignPicker(
+			PB.ThemeCache.themeIdFromUrl( currentPage.designId ));
 	},
 	updateFramePicker: function() {
 		$('#framePicker').children().remove();
@@ -394,6 +427,9 @@ var Controller = {
 	addWidget: function() {
 		currentPage.addWidget('theme://admin@sports/widgets/soccerSilhouetteWidget');
 	},
+	setDesign: function( designId ) {
+		currentPage.setDesign( designId );
+	},
 	setLayout: function(layoutId, layoutData) {
 		currentPage.setLayout(layoutId, layoutData);
 	},
@@ -429,6 +465,9 @@ $(document).ready(function() {
 	</div>
 	<p>And theme? You can mix in other themes later.</p>
 	<ul id='themePicker'>
+	</ul>
+	<p>Designs:</p>
+	<ul id='designPicker'>
 	</ul>
 	<p>Layouts:</p>
 	<ul id='layoutPicker'>

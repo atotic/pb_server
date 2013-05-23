@@ -66,6 +66,9 @@
 	var cache = {};
 	var tempPrefix = 'temp-';
 
+/*
+
+*/
 	var ServerPhotoCache = {
 		get: function(id) {
 			if (id in cache)
@@ -98,7 +101,7 @@
 			cache[json.id].loadFromJson(json, true);
 			return cache[json.id];
 		},
-		createFiller: function(filler) {
+		createFiller: function( filler) {
 			cache[filler.id] = filler;
 			return filler;
 		},
@@ -661,6 +664,7 @@
 })(PB);
 
 (function(scope) {
+	// TemplatePhotos are used in templates
 	var TemplatePhoto = function(options) {
 		this.iconUrl = options.iconUrl;
 		this.displayUrl = options.displayUrl;
@@ -682,6 +686,7 @@
 			&& cache[ templatePhoto.id].originalUrl != templatePhoto.originalUrl )
 			throw new Error('TemplatePhoto with same id already exists:' + templatePhoto.id );
 		cache[ templatePhoto.id ] = templatePhoto;
+		PB.ServerPhotoCache.createFiller( templatePhoto );
 	}
 
 	TemplatePhoto.get = function( id ) {

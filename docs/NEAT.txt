@@ -1,4 +1,5 @@
 Stream:
+Simple, cheap deployment: https://www.digitalocean.com/features
 ColurLover: graphic designer community. Owner doing a pivot. Way to bootstrap our community? http://www.colourlovers.com/about
 JavaScript mapper: our map tile? http://leafletjs.com/index.html
 SVG images positioning: http://whereswalden.com/2011/10/21/properly-resizing-vector-image-backgrounds/

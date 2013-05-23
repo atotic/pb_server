@@ -213,6 +213,8 @@ class SvegApp < Sinatra::Base
 						"editor.pb.upload.js",
 						"editor.pb.photos.js",
 						"editor.pb.templates.js",
+						"editor.pb.themecache.js",
+						"editor.pb.themeutils.js",
 						"editor.pb.jpegFile.js",
 						"editor.gui.js",
 						"editor.gui.rect.js",
