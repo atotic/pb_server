@@ -239,7 +239,13 @@
 				case 'photo':
 				case 'widget':
 					if (asset.image) {
-						rotatedContext.drawImage( asset.image, r.left, r.top, r.width, r.height);
+						try {
+							rotatedContext.drawImage( asset.image, r.left, r.top, r.width, r.height);
+						}
+						catch(ex) {
+							console.error(ex.message);
+							debugger;
+						}
 					}
 					else {
 						this.context.fillStyle = ERROR_FILL;
