@@ -82,6 +82,12 @@
 	list-style-type: none;
 	margin-left: 10px;
 }
+#componentPicker {
+
+}
+#componentPicker > div {
+	display: inline-block;
+}
 #layoutPicker {
 	overflow: auto;
 }
@@ -91,7 +97,7 @@
 	margin-left: 10px;
 }
 #framePicker {
-	display:none;
+	/*display:none;*/
 }
 #framePicker li {
 	position: relative;
@@ -242,6 +248,7 @@ var Controller = {
 			$('#designPicker').append($li);
 			assignCb($li, designId)
 		}
+		Controller.updateComponentPicker( themeId, currentPage);
 	},
 	initBackPicker: function() {
 		var backs = [
@@ -320,46 +327,59 @@ var Controller = {
 	updateFramePicker: function() {
 		$('#framePicker').children().remove();
 		var frames = [
-		{ id: 'theme://admin@core/frames/cssFrame',
-			data: {},
-			offset: [0, 0, 0, 0]
-		},
-		{ id: 'theme://admin@core/frames/cssFrame',
+		{ 	id: 'theme://admin@core/frames/cssFrame',
 			data: {
 				css: {
-					backgroundColor: 'blue'
-				}
-			},
-			offset: [10, 10, 10, 10]
+					boxShadow: '5px 5px 5px rgba(0,0,0,0.3)'
+				},
+				inset: [10, 10, 10, 10]
+			}
 		},
-		{ id: 'theme://admin@core/frames/cssFrame',
+		{ 	id: 'theme://admin@core/frames/cssFrame',
+			data: {
+				css: {
+					backgroundColor: 'blue',
+					borderRadius: 10,
+					overflow: 'hidden'
+				},
+				inset: [10, 10, 10, 10]
+			}
+		},
+		{ 	id: 'theme://admin@core/frames/cssFrame',
+			data: {
+				css: {
+					backgroundColor: 'blue',
+				},
+				inset: [10, 10, 10, 10]
+			}
+		},
+		{ 	id: 'theme://admin@core/frames/cssFrame',
 			data: {
 				css: {
 					background: 'linear-gradient(red, yellow, orange, green, blue, purple)'
-				}
-			},
-			offset: [5, 3, 10, 20]
+				},
+				inset: [5, 3, 10, 20]
+			}
 		},
-		{ id: 'theme://admin@core/frames/cssFrame',
+		{ 	id: 'theme://admin@core/frames/cssFrame',
 			data: {
 				css: {
 					backgroundColor: '#9400d3',
 					boxShadow: '5px 5px 5px rgba(148,0,211,0.3)'
-				}
-			},
-			offset: [2, 2, 2, 2]
+				},
+				inset: [2, 2, 2, 2]
+			}
 		}
 		];
 		var ICON_WIDTH = 50;
 		var ICON_HEIGHT = 50;
 
-		function assignCb($el, frameId, frameData, frameOffset) {
+		function assignCb($el, frameId, frameData) {
 			$el.hammer().on('touch', {}, function() {
 				PB.PageSelection.forEach(function(page, itemId) {
 					var assetData = page.getAssetData(itemId);
 					assetData.frameId = frameId;
 					assetData.frameData = frameData;
-					assetData.frameOffset = frameOffset;
 					page.updateAssetData(itemId, assetData, {clobber: true});
 				});
 			});
@@ -373,11 +393,11 @@ var Controller = {
 				width: ICON_WIDTH,
 				height: ICON_HEIGHT
 			});
-			f.fillFrame($frameDiv, frames[i].offset, frames[i].data, {});
+			f.fillFrame($frameDiv, frames[i].data, {} );
 
-			var offset = PB.ThemeUtils.canonicalFrameWidth(frames[i].offset);
+			var inset = frames[i].data.inset;
 			var imgRect = new GUI.Rect({width: ICON_WIDTH, height: ICON_HEIGHT});
-			imgRect = imgRect.inset(offset);
+			imgRect = imgRect.inset(inset);
 			$img = $('<img>');
 			$img.attr('src', PB.FillerPhotos.randomH(0).url)
 				.css({
@@ -389,8 +409,119 @@ var Controller = {
 			$li.append($frameDiv);
 			$li.append($img);
 			$('#framePicker').append($li);
-			assignCb($li, frames[i].id, frames[i].data, frames[i].offset);
+			assignCb($li, frames[i].id, frames[i].data);
 		}
+	},
+	updateComponentPicker: function(themeId, page) {
+		var theme = PB.ThemeCache.get(themeId);
+		var dimensions = page.dimensions;
+		var whRatio = dimensions.width / dimensions.height;
+		var tileHeight = 96;
+		function getBackgroundTiles() {
+			var retVal = [];
+			for (var x in theme.backgrounds) {
+				var $div = $('<div>').css({
+					width: tileHeight * whRatio,
+					height: tileHeight
+				});
+				theme.backgrounds[x].fillBackground($div, null, {resolution: PB.PhotoProxy.SMALL})
+				retVal.push($div);
+			}
+			return retVal;
+		};
+		function getLayoutTiles() {
+			// TODO eliminate duplicates
+			var retVal = [];
+			for (var x in theme.designs) {
+				var icon = PB.ThemeUtils.getDesignIcon( page, tileHeight,
+					{
+						designId: 'theme://' + themeId + '/designs/' + x,
+						layoutOnly: true
+					});
+				retVal.push( $('<div>').append(icon) );
+			};
+			return retVal;
+		};
+		function getWidgetTiles() {
+			var retVal = [];
+			for (var x in theme.widgets) {
+				var maxWidth = tileHeight * 2;
+				var width = theme.widgets[x].width();
+				var height = theme.widgets[x].height();
+				var r = tileHeight / height;
+				var r2 = maxWidth / width;
+				r = Math.min( r, r2);
+				if (r < 1 ) {
+					width *= r; height *=r;
+				}
+				var tile = theme.widgets[x].generateDom(
+					width, height, {}, {resolution: PB.PhotoProxy.ICON });
+				tile.css({
+				 	verticalAlign: 'baseline'
+				 });
+				retVal.push($('<div>').append(tile));
+			}
+			return retVal;
+		};
+		function getFrameTiles() {
+			var retVal = [];
+			for (var x in theme.frames) {
+				var tileWidth = tileHeight * 3 / 4;
+				var $frameDiv = $('<div>').css({
+					width: tileWidth,
+					height: tileHeight,
+					position: 'relative'
+				});
+				theme.frames[x].fillFrame( $frameDiv,
+					{},
+					{ resolution: PB.PhotoProxy.ICON }
+				);
+				var imgRect = GUI.Rect.create(
+					{ width: tileWidth, height: tileHeight })
+					.inset( theme.frames[x].getInset() );
+				$frameDiv.append( $('<div>').css(
+					{
+						top: imgRect.top,
+						left: imgRect.left,
+						width: imgRect.width,
+						height: imgRect.height,
+						position: 'relative',
+						backgroundColor: 'white'
+					}
+					));
+				retVal.push($frameDiv);
+			}
+			return retVal;
+		};
+		var picker = $('#componentPicker');
+		picker.children().remove();
+		var tiles = [].concat(
+			getBackgroundTiles(),
+			getLayoutTiles(),
+			getWidgetTiles(),
+			getFrameTiles()
+			);
+		tiles.forEach( function( tile ) {
+			picker.append(tile);
+		});
+	},
+	setDesignMode: function(mode) {
+		switch(mode) {
+			case 'design':
+				$('#designModeButton').addClass('active');
+				$('#partModeButton').removeClass('active');
+				$('#componentPicker').hide();
+				$('#designPicker').show();
+			break;
+			case 'parts':
+				$('#designModeButton').removeClass('active');
+				$('#partModeButton').addClass('active');
+				$('#componentPicker').show();
+				$('#designPicker').hide();
+			break;
+			default:
+				console.error('unknown mode', mode);
+		};
 	},
 	showPage: function() {
 		var options = {
@@ -448,6 +579,13 @@ var Controller = {
 $(document).ready(function() {
 	Controller.init();
 	GUI.CommandManager.init();
+	Controller.setDesignMode('design');
+	$('#designModeButton').hammer().on('touch', {}, function() {
+		Controller.setDesignMode('design');
+	});
+	$('#partModeButton').hammer().on('touch', {}, function() {
+		Controller.setDesignMode('parts');
+	});
 //	$(document.body).css('background', 'linear-gradient(45deg, red, blue)');
 });
 </script>
@@ -467,8 +605,14 @@ $(document).ready(function() {
 	<p>And theme? You can mix in other themes later.</p>
 	<ul id='themePicker'>
 	</ul>
-	<p>Designs:</p>
+	<p></p>
+		<div class="btn-group">
+		  <button id='designModeButton' class="btn">Designs</button>
+		  <button id='partModeButton' class="btn">Parts</button>
+		</div>
 	<ul id='designPicker'>
+	</ul>
+	<ul id='componentPicker'>
 	</ul>
 	<p>Layouts:</p>
 	<ul id='layoutPicker'>

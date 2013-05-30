@@ -26,7 +26,6 @@ assetData {
 	zindex // default 0
 	frameId
 	frameData
-	frameOffset [ t,r,b,l] or offset. Use canonicalFrameOffset to convert to canonical form
 }
 asset photo {
 	type: 'photo'
@@ -313,14 +312,17 @@ asset widget {
 		getFocalPointRange: function(itemId) {
 			if ( !( itemId in this.p.assets ))
 				return PB.debugstr("layoutInnerItem on non-existent item");
-			var assetData = this.p.assets[itemId];
+			var asset = this.p.assets[itemId];
 			if (this.p.needReflow)
 				return { x: { min:0, max: 100 }, y: {min:0, max:100}};
-			var innerRect = new GUI.Rect(assetData);
-			if (assetData.frameId)
-				innerRect = innerRect.inset(assetData.frameOffset);
-			var xdelta = innerRect.width * 100 / 2 / assetData.photoRect.width;
-			var ydelta = innerRect.height * 100 / 2 / assetData.photoRect.height;
+			var innerRect = new GUI.Rect(asset);
+			if (asset.frameId) {
+				innerRect = innerRect.inset(
+					PB.ThemeCache.resource( asset.frameId).getInset( asset.frameData )
+				);
+			}
+			var xdelta = innerRect.width * 100 / 2 / asset.photoRect.width;
+			var ydelta = innerRect.height * 100 / 2 / asset.photoRect.height;
 			return { x: { min: xdelta, max: 100 - xdelta },
 					y: { min: ydelta, max: 100 - ydelta }};
 		},
@@ -328,26 +330,29 @@ asset widget {
 			if ( !( itemId in this.p.assets ))
 				return PB.debugstr("layoutInnerItem on non-existent item");
 
-			var assetData = this.p.assets[itemId];
-			switch(assetData.type) {
+			var asset = this.p.assets[itemId];
+			switch(asset.type) {
 				case 'photo':
-					var innerRect = new GUI.Rect(assetData);
-					if (assetData.frameId)
-						innerRect = innerRect.inset(assetData.frameOffset);
+					var innerRect = new GUI.Rect(asset);
+					if (asset.frameId) {
+						innerRect = innerRect.inset(
+							PB.ThemeCache.resource( asset.frameId).getInset( asset.frameData )
+						);
+					}
 
-					var zoom = Math.max( assetData.zoom || 1, 1);
-					var focalPoint = assetData.focalPoint || { x: 50, y: 50 };
+					var zoom = Math.max( asset.zoom || 1, 1);
+					var focalPoint = asset.focalPoint || { x: 50, y: 50 };
 
-					var photo = PB.ServerPhotoCache.get( assetData.photoId );
+					var photo = PB.ServerPhotoCache.get( asset.photoId );
 					var photoRect = new GUI.Rect( photo );
 					var scale = photoRect.fillInside( innerRect);
 					photoRect = photoRect.scaleBy( scale ).scaleBy( zoom );
 					photoRect = photoRect.centerIn(innerRect,
 						{focalPoint: focalPoint,
 							forceInside: true }).round();
-					if ((typeof assetData.photoRect) != 'object')
-						assetData.photoRect = {};
-					$.extend(assetData.photoRect, {
+					if ((typeof asset.photoRect) != 'object')
+						asset.photoRect = {};
+					$.extend(asset.photoRect, {
 						top: photoRect.top,
 						left: photoRect.left,
 						width: photoRect.width,
@@ -467,12 +472,10 @@ asset widget {
 				});
 				if (assetDesign.frameId) {
 					assetData.frameId = assetDesign.frameId;
-					assetData.frameOffset = assetDesign.frameOffset;
 					assetData.frameData = assetDesign.frameData;
 				}
 				else {
 					delete assetData.frameId;
-					delete assetData.frameOffset;
 					delete assetData.frameData;
 				}
 				if ('zindex' in assetDesign)
@@ -500,17 +503,19 @@ asset widget {
 		},
 		generateFrame: function(asset, options) {
 			var innerBounds = new GUI.Rect({width: asset.width, height: asset.height});
-			if (!asset.frameId)
-				return { frame: null, innerBounds: innerBounds};
-			innerBounds = innerBounds.inset(asset.frameOffset);
-
 			var frame = $(document.createElement('div'))
 				.addClass('design-frame')
 				.css({
 					width: asset.width,
 					height: asset.height
 				});
-			PB.ThemeCache.resource(asset.frameId).fillFrame(frame, asset.frameOffset, asset.frameData, options);
+
+			if (!asset.frameId) {
+				return { frame: frame, innerBounds: innerBounds};
+			}
+			var frameRes = PB.ThemeCache.resource( asset.frameId );
+			innerBounds = innerBounds.inset( frameRes.getInset( asset.frameData ) );
+			frameRes.fillFrame( frame, asset.frameData, options );
 			return { frame: frame, innerBounds: innerBounds};
 		},
 		/*
@@ -520,10 +525,6 @@ asset widget {
 				div.design-widget-inner top: left: width: height: // widget, no overflow, position absolute
 		*/
 		generateWidgetDom: function( asset, options) {
-			var frameOffset = [0,0,0,0];
-
-			if ( asset.frameId )
-				frameOffset = asset.frameOffset;
 
 			var widgetDom = $(document.createElement('div'))
 				.addClass('design-widget')
@@ -570,12 +571,12 @@ asset widget {
 				height: 'auto'
 			};
 
-			var frameOffset = [0,0,0,0];
+			var inset = [0,0,0,0];
 
 			if ( asset.frameId )
-				frameOffset = asset.frameOffset;
+				inset = PB.ThemeCache.resource( asset.frameId ).getInset( asset.frameData );
 
-			textRect.width -= frameOffset[1] + frameOffset[3];
+			textRect.width -= inset[1] + inset[3];
 
 			var originalText = this.getText( asset );
 			var text = originalText || "Type your text here";
@@ -587,7 +588,7 @@ asset widget {
 			var heights = GUI.Util.getTextHeight(measureText);
 
 			// resize asset to just fit the text
-			asset.height = heights.divheight + frameOffset[0] + frameOffset[2];
+			asset.height = heights.divheight + inset[0] + inset[2];
 
 			var textDom = $(document.createElement('div'))
 				.addClass('design-text')

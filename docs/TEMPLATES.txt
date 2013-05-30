@@ -1,5 +1,17 @@
 TEMPLATES.txt
 
+May 2013 thinking
+
+I can faintly see the outline of what templates will look like.
+The major goals: multi-sizing, remixing, html native are there.
+
+My programatic templates do not look very pretty, and are hard to make.
+I will need to collaborate with a designer on a template foundation.
+Missing pieces:
+- frames are weak: no round frames, no frames partially covering the photos, no sample svg programatic frames. CSS guru needed.
+- text: text styles are a rathole: font|size|bolditalic|colorback|colorfwd. Maybe not?
+
+OLD STUFF
 
 # TODO
 How do I start?
@@ -59,45 +71,3 @@ braindump:
 Inspirational pages are frozen, cannot be edited once someone uses them
 Inspirational pages are public access
 Layouts that span multiple pages
-
-# Implementation #
-
-Standards collection
-Basic
-Travel
-Family
-Wedding
-
-All derive from the master suite. All other styles inherit from standards. This allows us to switch between book templates.
-
-# Data structures #
-
-Templates can belong to users, and system.
-What is my template:
-
-Book:
- layouts: [layout-id]
- backgrounds: [background-id]
- gadgets: [gadget-id]
- pageSize:
- icon:
-
-Layout:
- author:
- kind:
- parent:
- layers: [
- 	background:
-
- ]
-
-It would be convenient if layout ids were meaningful, more like urls
-layout id: layout-<username>-15x6-
-
-how do we store these:
-/template/book/<user-id>/
-/template/layout/<user-id>/
-/template/gadget/<user-id>/
-/template/assets/<user-id>/
-
-

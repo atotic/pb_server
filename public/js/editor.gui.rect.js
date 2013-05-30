@@ -29,6 +29,10 @@
 		}
 	}
 
+	Rect.create = function(r) {
+		return new Rect(r);
+	}
+
 	Rect.prototype = {
 		toString: function() {
 			return "t:" + this.top + ' l:' + this.left + ' w:' + this.width + ' h:' + this.height;

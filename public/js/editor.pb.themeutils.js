@@ -26,8 +26,10 @@
 		create: function() {
 
 			// Compute icon dimensions
-			var enclosure = new GUI.Rect( { width: this.maxHeight * 4 / 3, height: this.maxHeight });
-			this.pageRect = new GUI.Rect( this.page.dimensions );
+			var dimensions = this.page.dimensions;
+			var enclosure = new GUI.Rect( { width: this.maxHeight * dimensions.width / dimensions.height,
+				 height: this.maxHeight });
+			this.pageRect = new GUI.Rect( dimensions );
 			this.scale = this.pageRect.fitInside( enclosure );
 			this.pageRect = this.pageRect.scaleBy( this.scale ).round();
 
@@ -219,21 +221,23 @@
 			r = r.scaleBy( this.scale, true ).round();
 			var rotatedContext = new GUI.Rotated2DContext( this.context, asset.rotate * Math.PI / 180 );
 			var THIS = this;
-			if ( asset.frameId && $.isArray( asset.frameOffset)) {
+			if ( asset.frameId ) {
+				var inset = PB.ThemeCache.resource( asset.frameId )
+					.getInset( asset.frameData )
+					.map(function(v) { return v * THIS.scale; });
 				// Draw frame
-				var frameOffset = asset.frameOffset.map(function(v) { return v * THIS.scale; });
 				this.context.strokeStyle = FRAME_FILL;
 				rotatedContext.strokeRect(r.left, r.top, r.width, r.height);
 				this.context.moveTo(r.left, r.top);
-				this.context.lineWidth = frameOffset[0];
+				this.context.lineWidth = inset[0];
 				this.context.lineTo(r.right, r.top);
-				this.context.lineWidth = frameOffset[1];
+				this.context.lineWidth = inset[1];
 				this.context.lineTo(r.right, r.bottom);
-				this.context.lineWidth = frameOffset[2];
+				this.context.lineWidth = inset[2];
 				this.context.lineTo(r.left, r.bottom);
-				this.context.lineWidth = frameOffset[3];
+				this.context.lineWidth = inset[3];
 				this.context.lineTo(r.left, r.top);
-				r = r.inset(frameOffset);
+				r = r.inset( inset );
 			};
 			switch( asset.type) {
 				case 'photo':
@@ -243,8 +247,7 @@
 							rotatedContext.drawImage( asset.image, r.left, r.top, r.width, r.height);
 						}
 						catch(ex) {
-							console.error(ex.message);
-							debugger;
+							console.error("Problem loading, often caused by SVG missing width/height properties", asset.widgetId);
 						}
 					}
 					else {
