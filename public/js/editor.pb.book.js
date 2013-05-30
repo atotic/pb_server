@@ -215,7 +215,7 @@
 				var page = this.page( pageList[i] );
 				var assetIds = page.getAssetIds('photo');
 				for (var j=0; j < assetIds.length; j++)
-					retVal[ page.getAssetData( assetIds[j] ).photoId ]  = true;
+					retVal[ page.getAsset( assetIds[j] ).photoId ]  = true;
 			}
 			return retVal;
 		},

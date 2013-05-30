@@ -409,7 +409,7 @@
 			var oldPhotos = oldChildren.map(function(i, el) { return PB.ModelMap.domToModel(el)}).get();
 			var newPhotos = pageModel.getAssetIds('photo')
 				.map(function(assetId) {
-					return pageModel.getAssetData( assetId ).photoId
+					return pageModel.getAsset( assetId ).photoId
 				});
 			var toId = function(el) { return el.id};
 			var diff = JsonDiff.diff(

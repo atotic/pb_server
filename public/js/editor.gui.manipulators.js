@@ -136,7 +136,7 @@ MoveManipulator.prototype = {
 		var pageDim = this.pageItem.page.dimensions;
 		top = Math.min( pageDim.height - this.pageItem.item.height / 2, top);
 		left = Math.min( pageDim.width - this.pageItem.item.width / 2, left);
-		this.pageItem.page.updateAssetData( this.itemId, {
+		this.pageItem.page.updateAsset( this.itemId, {
 			top: top,
 			left: left
 		});
@@ -212,7 +212,7 @@ PanManipulator.prototype = {
 		this.manipulatorOffset.y = -manipulatorRotLoc.x * Math.sin(-this.rotateRad) + manipulatorRotLoc.y * Math.cos(-this.rotateRad);
 
 		var focalPoint = { x: focalX, y: focalY };
-		this.pageItem.page.updateAssetData( this.itemId, {focalPoint: focalPoint } );
+		this.pageItem.page.updateAsset( this.itemId, {focalPoint: focalPoint } );
 		ev.gesture.srcEvent.stopPropagation();
 		ev.gesture.srcEvent.preventDefault();
 	}
@@ -287,7 +287,7 @@ ZoomManipulator.prototype = {
 		var newZoom = this.zoom + deltaX * this.zoomPerPixel;
 		newZoom = Math.max(1, newZoom);
 		this.manipulatorOffset = ( newZoom - this.zoom ) / this.zoomPerPixel;
-		this.pageItem.page.updateAssetData( this.itemId, {zoom: newZoom } );
+		this.pageItem.page.updateAsset( this.itemId, {zoom: newZoom } );
 		PB.stopEvent( ev.gesture.srcEvent );
 	},
 	pinch: function(ev) {
@@ -301,7 +301,7 @@ ZoomManipulator.prototype = {
 		newZoom = Math.min( Math.max(1, newZoom), 10 );
 		console.log("pinch", newZoom);
 		this.manipulatorOffset = ( newZoom - this.zoom ) / this.zoomPerPixel;
-		this.pageItem.page.updateAssetData( this.itemId, {zoom: newZoom } );
+		this.pageItem.page.updateAsset( this.itemId, {zoom: newZoom } );
 		PB.stopEvent(ev.gesture);
 	}
 };
@@ -380,7 +380,7 @@ RotateManipulator.prototype = {
 			angleRad += Math.PI;
 		if (angleRad < 0)
 			angleRad += Math.PI * 2;
-		this.pageItem.page.updateAssetData( this.itemId, {rotate: 180 * angleRad / Math.PI } );
+		this.pageItem.page.updateAsset( this.itemId, {rotate: 180 * angleRad / Math.PI } );
 		PB.stopEvent(ev.gesture);
 	}
 }
@@ -522,7 +522,7 @@ ResizeManipulator.prototype = {
 					newLoc.height -= deltaXRot / ratio;
 			break;
 		}
-		this.pageItem.page.updateAssetData( this.itemId, newLoc );
+		this.pageItem.page.updateAsset( this.itemId, newLoc );
 		PB.stopEvent(ev.gesture);
 	}
 }
@@ -570,7 +570,7 @@ EditTextManipulator.prototype = {
 		}
 	},
 	input: function() {
-		this.pageItem.page.updateAssetData( this.itemId, {
+		this.pageItem.page.updateAsset( this.itemId, {
 			content: this.handles.textarea.prop('value')
 		});
 		this.autogrow();
@@ -586,7 +586,7 @@ EditTextManipulator.prototype = {
 			mirror: $('<pre>')
 		};
 		this.handles.textarea.prop('placeholder', 'Type your text here');
-		var text = this.pageItem.page.getText( this.pageItem.page.getAssetData( this.itemId ));
+		var text = this.pageItem.page.getText( this.pageItem.page.getAsset( this.itemId ));
 		if (text !== undefined)
 			this.handles.textarea.prop('value', text);
 

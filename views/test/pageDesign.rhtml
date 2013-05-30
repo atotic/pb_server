@@ -377,10 +377,10 @@ var Controller = {
 		function assignCb($el, frameId, frameData) {
 			$el.hammer().on('touch', {}, function() {
 				PB.PageSelection.forEach(function(page, itemId) {
-					var assetData = page.getAssetData(itemId);
-					assetData.frameId = frameId;
-					assetData.frameData = frameData;
-					page.updateAssetData(itemId, assetData, {clobber: true});
+					var asset = page.getAsset(itemId);
+					asset.frameId = frameId;
+					asset.frameData = frameData;
+					page.updateAsset(itemId, asset, {clobber: true});
 				});
 			});
 		};
