@@ -53,29 +53,29 @@ var Manipulator = {
 			.addClass('manipulator-btn')
 			.append( $.parseHTML("<i class='icon-" + iconName + "'></i>") );
 	},
-	scaleFromCorners: function(corners, pageItem) {
+	scaleFromCorners: function(corners, pageAsset) {
 		var width = Math.sqrt(
 			Math.pow(corners.b.y - corners.a.y, 2) +
 			Math.pow(corners.b.x - corners.a.x, 2));
-		return pageItem.item.width / width;
+		return pageAsset.asset.css.width / width;
 	}
 }
 
-var DefaultManipulator = function($pageDom, itemId) {
+var DefaultManipulator = function($pageDom, assetId) {
 	this.pageDom = $pageDom;
-	this.itemId = itemId;
+	this.assetId = assetId;
 }
 
 DefaultManipulator.prototype = {
 	reposition: function() {
-		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
-		var pageItem = PB.ModelMap.model(this.itemId);
-		var corners = Manipulator.getBoundingCorners($itemDom, pageItem.item.rotate);
+		var $itemDom = this.pageDom.find('*:data("model_id=' + this.assetId + '")');
+		var pageAsset = PB.ModelMap.model(this.assetId);
+		var corners = Manipulator.getBoundingCorners($itemDom, pageAsset.asset.rotate);
 		this.handles.a.css({ top: corners.a.y, left: corners.a.x });
 		this.handles.b.css({ top: corners.b.y, left: corners.b.x });
 		this.handles.c.css({ top: corners.c.y, left: corners.c.x });
 		this.handles.d.css({ top: corners.d.y, left: corners.d.x });
-		this.scale = Manipulator.scaleFromCorners( corners, pageItem );
+		this.scale = Manipulator.scaleFromCorners( corners, pageAsset );
 	},
 	show: function() {
 		this.handles = {
@@ -96,20 +96,20 @@ DefaultManipulator.prototype = {
 	}
 }
 
-var MoveManipulator = function($pageDom, itemId) {
+var MoveManipulator = function($pageDom, assetId) {
 	this.pageDom = $pageDom;
-	this.itemId = itemId;
+	this.assetId = assetId;
 }
 MoveManipulator.prototype = {
 	reposition: function() {
-		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
-		var pageItem = PB.ModelMap.model(this.itemId);
-		var corners = Manipulator.getBoundingCorners($itemDom, pageItem.item.rotate);
+		var $itemDom = this.pageDom.find('*:data("model_id=' + this.assetId + '")');
+		var pageAsset = PB.ModelMap.model(this.assetId);
+		var corners = Manipulator.getBoundingCorners($itemDom, pageAsset.asset.rotate);
 		this.handle.css({
 			top: (corners.c.y + corners.a.y) / 2,
 			left: (corners.c.x + corners.a.x) / 2
 		});
-		this.scale = Manipulator.scaleFromCorners(corners, pageItem);
+		this.scale = Manipulator.scaleFromCorners(corners, pageAsset);
 	},
 	show: function() {
 		this.handle = Manipulator.makeIconHandle('move');
@@ -124,42 +124,42 @@ MoveManipulator.prototype = {
 		this.handle.remove();
 	},
 	dragstart: function(ev) {
-		this.pageItem = PB.ModelMap.model(this.itemId);
-		this.startPos = { top: this.pageItem.item.top, left: this.pageItem.item.left };
+		this.pageAsset = PB.ModelMap.model(this.assetId);
+		this.startPos = { top: this.pageAsset.asset.css.top, left: this.pageAsset.asset.css.left };
 	},
 	drag: function(ev) {
 		var top = this.startPos.top + ev.gesture.deltaY * this.scale;
 		var left = this.startPos.left + ev.gesture.deltaX * this.scale;
 		// constrain
-		top = Math.max( -this.pageItem.item.height / 2, top);
-		left = Math.max( -this.pageItem.item.width / 2, left);
-		var pageDim = this.pageItem.page.dimensions;
-		top = Math.min( pageDim.height - this.pageItem.item.height / 2, top);
-		left = Math.min( pageDim.width - this.pageItem.item.width / 2, left);
-		this.pageItem.page.updateAsset( this.itemId, {
+		top = Math.max( -this.pageAsset.asset.css.height / 2, top);
+		left = Math.max( -this.pageAsset.asset.css.width / 2, left);
+		var pageDim = this.pageAsset.page.dimensions;
+		top = Math.min( pageDim.height - this.pageAsset.asset.css.height / 2, top);
+		left = Math.min( pageDim.width - this.pageAsset.asset.css.width / 2, left);
+		this.pageAsset.page.updateAsset( this.assetId, { css: {
 			top: top,
 			left: left
-		});
+		}});
 		ev.gesture.srcEvent.preventDefault();
 	}
 };
 
-var PanManipulator = function($pageDom, itemId) {
+var PanManipulator = function($pageDom, assetId) {
 	this.pageDom = $pageDom;
-	this.itemId = itemId;
+	this.assetId = assetId;
 };
 
 PanManipulator.prototype = {
 	reposition: function() {
-		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
-		var pageItem = PB.ModelMap.model(this.itemId);
-		var corners = Manipulator.getBoundingCorners($itemDom, pageItem.item.rotate);
+		var $itemDom = this.pageDom.find('*:data("model_id=' + this.assetId + '")');
+		var pageAsset = PB.ModelMap.model(this.assetId);
+		var corners = Manipulator.getBoundingCorners($itemDom, pageAsset.asset.rotate);
 		this.handle.css({
 			top: (corners.c.y + corners.a.y) / 2 + this.manipulatorOffset.y,
 			left: (corners.c.x + corners.a.x) / 2 + this.manipulatorOffset.x
 		});
-		this.scale = Manipulator.scaleFromCorners(corners, pageItem);
-		this.rotateRad= (pageItem.item.rotate || 0) * Math.PI / 180;
+		this.scale = Manipulator.scaleFromCorners(corners, pageAsset);
+		this.rotateRad= (pageAsset.asset.rotate || 0) * Math.PI / 180;
 	},
 	show: function() {
 		this.handle = Manipulator.makeIconHandle('hand-up');
@@ -179,11 +179,11 @@ PanManipulator.prototype = {
 	dragstart: function(ev) {
 		// TODO normalize focalPoint
 		this.manipulatorOffset = { x:0, y:0};
-		this.pageItem = PB.ModelMap.model(this.itemId);
-		this.focalPoint = $.extend( { x:50, y:50}, this.pageItem.item.focalPoint );
+		this.pageAsset = PB.ModelMap.model(this.assetId);
+		this.focalPoint = $.extend( { x:50, y:50}, this.pageAsset.asset.focalPoint );
 		this.focalScale = {
-			x: this.pageItem.item.photoRect.width / 100,
-			y: this.pageItem.item.photoRect.height / 100 };
+			x: this.pageAsset.asset.photoRect.width / 100,
+			y: this.pageAsset.asset.photoRect.height / 100 };
 		PB.stopEvent( ev.gesture.srcEvent );
 		// ev.gesture.srcEvent.stopPropagation();
 		// ev.gesture.srcEvent.preventDefault();
@@ -199,7 +199,7 @@ PanManipulator.prototype = {
 		var deltaYRot = -ev.gesture.deltaX * Math.sin(this.rotateRad) + ev.gesture.deltaY * Math.cos(this.rotateRad);
 		var focalX = this.focalPoint.x - deltaXRot * this.scale / this.focalScale.x;
 		var	focalY = this.focalPoint.y - deltaYRot * this.scale / this.focalScale.y;
-		var range = this.pageItem.page.getFocalPointRange( this.itemId );
+		var range = this.pageAsset.page.getFocalPointRange( this.assetId );
 		focalX = GUI.Util.clamp( focalX, range.x.min, range.x.max);
 		focalY = GUI.Util.clamp( focalY, range.y.min, range.y.max);
 
@@ -212,22 +212,22 @@ PanManipulator.prototype = {
 		this.manipulatorOffset.y = -manipulatorRotLoc.x * Math.sin(-this.rotateRad) + manipulatorRotLoc.y * Math.cos(-this.rotateRad);
 
 		var focalPoint = { x: focalX, y: focalY };
-		this.pageItem.page.updateAsset( this.itemId, {focalPoint: focalPoint } );
+		this.pageAsset.page.updateAsset( this.assetId, {focalPoint: focalPoint } );
 		ev.gesture.srcEvent.stopPropagation();
 		ev.gesture.srcEvent.preventDefault();
 	}
 };
 
-var ZoomManipulator = function($pageDom, itemId) {
+var ZoomManipulator = function($pageDom, assetId) {
 	this.pageDom = $pageDom;
-	this.itemId = itemId;
+	this.assetId = assetId;
 };
 
 ZoomManipulator.prototype = {
 	reposition: function() {
-		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
-		var pageItem = PB.ModelMap.model(this.itemId);
-		var corners = Manipulator.getBoundingCorners($itemDom, pageItem.item.rotate);
+		var $itemDom = this.pageDom.find('*:data("model_id=' + this.assetId + '")');
+		var pageAsset = PB.ModelMap.model(this.assetId);
+		var corners = Manipulator.getBoundingCorners($itemDom, pageAsset.asset.rotate);
 		var distance = 100;
 		var midpoint = {
 			top: ( corners.c.y + corners.a.y ) / 2,
@@ -244,7 +244,7 @@ ZoomManipulator.prototype = {
 		});
 	},
 	show: function() {
-		this.pageItem = PB.ModelMap.model( this.itemId );
+		this.pageAsset = PB.ModelMap.model( this.assetId );
 		this.handles = {
 			zoom: Manipulator.makeIconHandle('search').addClass('label'),
 			left: Manipulator.makeIconHandle('resize-horizontal'),
@@ -272,8 +272,8 @@ ZoomManipulator.prototype = {
 	},
 	dragstart: function(ev) {
 		this.manipulatorOffset = 0;
-		this.zoom = this.pageItem.item.zoom || 1;
-		this.zoomPerPixel = this.zoom / this.pageItem.item.photoRect.width * 2;
+		this.zoom = this.pageAsset.asset.zoom || 1;
+		this.zoomPerPixel = this.zoom / this.pageAsset.asset.photoRect.width * 2;
 		PB.stopEvent( ev.gesture.srcEvent );
 	},
 	dragend: function(ev) {
@@ -287,7 +287,7 @@ ZoomManipulator.prototype = {
 		var newZoom = this.zoom + deltaX * this.zoomPerPixel;
 		newZoom = Math.max(1, newZoom);
 		this.manipulatorOffset = ( newZoom - this.zoom ) / this.zoomPerPixel;
-		this.pageItem.page.updateAsset( this.itemId, {zoom: newZoom } );
+		this.pageAsset.page.updateAsset( this.assetId, {zoom: newZoom } );
 		PB.stopEvent( ev.gesture.srcEvent );
 	},
 	pinch: function(ev) {
@@ -295,28 +295,28 @@ ZoomManipulator.prototype = {
 		// I want pinch on entire $itemDom
 		// need to detect pinchstart, pinchend, conflicts with existing $itemDom 'touch' handler
 		// need to temporarily disable that handler
-		this.zoom = this.pageItem.item.zoom || 1;
-		this.zoomPerPixel = this.zoom / this.pageItem.item.photoRect.width * 2;
+		this.zoom = this.pageAsset.asset.zoom || 1;
+		this.zoomPerPixel = this.zoom / this.pageAsset.asset.photoRect.width * 2;
 		var newZoom = this.zoom * ev.gesture.scale;
 		newZoom = Math.min( Math.max(1, newZoom), 10 );
 		console.log("pinch", newZoom);
 		this.manipulatorOffset = ( newZoom - this.zoom ) / this.zoomPerPixel;
-		this.pageItem.page.updateAsset( this.itemId, {zoom: newZoom } );
+		this.pageAsset.page.updateAsset( this.assetId, {zoom: newZoom } );
 		PB.stopEvent(ev.gesture);
 	}
 };
 
-var RotateManipulator = function($pageDom, itemId) {
+var RotateManipulator = function($pageDom, assetId) {
 	this.pageDom = $pageDom;
-	this.itemId = itemId;
+	this.assetId = assetId;
 };
 
 RotateManipulator.prototype = {
 	reposition: function() {
-		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
-		var pageItem = PB.ModelMap.model(this.itemId);
-		var corners = Manipulator.getBoundingCorners($itemDom, pageItem.item.rotate);
-		this.rotateRad = (pageItem.item.rotate || 0) * Math.PI / 180;
+		var $itemDom = this.pageDom.find('*:data("model_id=' + this.assetId + '")');
+		var pageAsset = PB.ModelMap.model(this.assetId);
+		var corners = Manipulator.getBoundingCorners($itemDom, pageAsset.asset.rotate);
+		this.rotateRad = (pageAsset.asset.rotate || 0) * Math.PI / 180;
 		this.radius = this.handles.circle.width() / 2;
 		this.center = {
 			top: ( corners.a.y + corners.c.y) / 2,
@@ -333,7 +333,7 @@ RotateManipulator.prototype = {
 		});
 	},
 	show: function() {
-		this.pageItem = PB.ModelMap.model( this.itemId );
+		this.pageAsset = PB.ModelMap.model( this.assetId );
 		this.handles = {
 			circle: $("<div>").addClass('manipulator-circle'),
 			left: Manipulator.makeIconHandle('repeat'),
@@ -350,7 +350,7 @@ RotateManipulator.prototype = {
 			.on('dragstart', {}, function(ev) { THIS.dragstart(ev, 'right') })
 			.on('drag', {}, function(ev) { THIS.drag(ev, 'right') })
 			.on('dragend', {}, function(ev) { THIS.dragend(ev, 'right') });
-		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
+		var $itemDom = this.pageDom.find('*:data("model_id=' + this.assetId + '")');
 		this.handles.circle.hammer()
 			.on('touch', {}, function(ev) { $itemDom.hammer().trigger('touch', ev.gesture)});
 		this.reposition();
@@ -380,14 +380,14 @@ RotateManipulator.prototype = {
 			angleRad += Math.PI;
 		if (angleRad < 0)
 			angleRad += Math.PI * 2;
-		this.pageItem.page.updateAsset( this.itemId, {rotate: 180 * angleRad / Math.PI } );
+		this.pageAsset.page.updateAsset( this.assetId, {rotate: 180 * angleRad / Math.PI } );
 		PB.stopEvent(ev.gesture);
 	}
 }
 
-var ResizeManipulator = function($pageDom, itemId, options) {
+var ResizeManipulator = function($pageDom, assetId, options) {
 	this.pageDom = $pageDom;
-	this.itemId = itemId;
+	this.assetId = assetId;
 	this.options = $.extend( {
 		vertical : true,
 		horizontal: true,
@@ -397,12 +397,12 @@ var ResizeManipulator = function($pageDom, itemId, options) {
 
 ResizeManipulator.prototype = {
 	reposition: function() {
-		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
-		var pageItem = PB.ModelMap.model(this.itemId);
-		var corners = Manipulator.getBoundingCorners($itemDom, pageItem.item.rotate);
+		var $itemDom = this.pageDom.find('*:data("model_id=' + this.assetId + '")');
+		var pageAsset = PB.ModelMap.model(this.assetId);
+		var corners = Manipulator.getBoundingCorners($itemDom, pageAsset.asset.rotate);
 
-		this.rotateRad = (pageItem.item.rotate || 0) * Math.PI / 180;
-		this.scale = Manipulator.scaleFromCorners(corners, pageItem);
+		this.rotateRad = (pageAsset.asset.rotate || 0) * Math.PI / 180;
+		this.scale = Manipulator.scaleFromCorners(corners, pageAsset);
 		this.handles.top.css({
 			top: (corners.a.y + corners.b.y) / 2,
 			left: (corners.a.x + corners.b.x) / 2,
@@ -425,7 +425,7 @@ ResizeManipulator.prototype = {
 		});
 	},
 	show: function() {
-		this.pageItem = PB.ModelMap.model( this.itemId );
+		this.pageAsset = PB.ModelMap.model( this.assetId );
 		this.handles = {
 			top: Manipulator.makeIconHandle('arrow-up'),
 			left: Manipulator.makeIconHandle('arrow-left'),
@@ -466,12 +466,12 @@ ResizeManipulator.prototype = {
 			this.handles[p].remove();
 	},
 	dragstart: function(ev) {
-		this.pageItem = PB.ModelMap.model(this.itemId);
+		this.pageAsset = PB.ModelMap.model(this.assetId);
 		this.itemRect = {
-			top: this.pageItem.item.top,
-			left: this.pageItem.item.left,
-			width: this.pageItem.item.width,
-			height: this.pageItem.item.height
+			top: this.pageAsset.asset.css.top,
+			left: this.pageAsset.asset.css.left,
+			width: this.pageAsset.asset.css.width,
+			height: this.pageAsset.asset.css.height
 		};
 	},
 	dragend: function(ev) {
@@ -522,21 +522,21 @@ ResizeManipulator.prototype = {
 					newLoc.height -= deltaXRot / ratio;
 			break;
 		}
-		this.pageItem.page.updateAsset( this.itemId, newLoc );
+		this.pageAsset.page.updateAsset( this.assetId, { css: newLoc } );
 		PB.stopEvent(ev.gesture);
 	}
 }
 
-var EditTextManipulator = function($pageDom, itemId) {
+var EditTextManipulator = function($pageDom, assetId) {
 	this.pageDom = $pageDom;
-	this.itemId = itemId;
+	this.assetId = assetId;
 };
 
 EditTextManipulator.prototype = {
 	reposition: function() {
-		var $itemDom = this.pageDom.find('*:data("model_id=' + this.itemId + '")');
+		var $itemDom = this.pageDom.find('*:data("model_id=' + this.assetId + '")');
 		var $textDom = $itemDom.find('.design-text-content');
-		var corners = Manipulator.getBoundingCorners($textDom, this.pageItem.item.rotate);
+		var corners = Manipulator.getBoundingCorners($textDom, this.pageAsset.asset.rotate);
 		var center = {
 			x: (corners.a.x + corners.c.x) / 2,
 			y: (corners.a.y + corners.c.y) / 2,
@@ -570,7 +570,7 @@ EditTextManipulator.prototype = {
 		}
 	},
 	input: function() {
-		this.pageItem.page.updateAsset( this.itemId, {
+		this.pageAsset.page.updateAsset( this.assetId, {
 			content: this.handles.textarea.prop('value')
 		});
 		this.autogrow();
@@ -580,13 +580,13 @@ EditTextManipulator.prototype = {
 		PB.PageSelection.findInParent( this.pageDom ).setManipulator();
 	},
 	show: function() {
-		this.pageItem = PB.ModelMap.model( this.itemId );
+		this.pageAsset = PB.ModelMap.model( this.assetId );
 		this.handles = {
 			textarea: $( $.parseHTML('<textarea class="manipulator-textarea"></textarea>')),
 			mirror: $('<pre>')
 		};
 		this.handles.textarea.prop('placeholder', 'Type your text here');
-		var text = this.pageItem.page.getText( this.pageItem.page.getAsset( this.itemId ));
+		var text = this.pageAsset.page.getText( this.pageAsset.page.getAsset( this.assetId ));
 		if (text !== undefined)
 			this.handles.textarea.prop('value', text);
 

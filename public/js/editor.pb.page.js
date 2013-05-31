@@ -18,16 +18,19 @@ BookPage JSON {
 }
 asset {
 	type: 'photo' | 'text' | 'widget'
-	top     // undefined means widget has not been positioned
-	left
-	width
-	height
+	css {	// css always exists
+		top     // undefined means widget has not been positioned
+		left
+		width
+		height
+		zindex // default text 2, widget 1
+	}
 	rotate	// angle in degrees
-	zindex // default 0
 	frameId
 	frameData
-	relative: {
-
+	childOf: {
+		assetId:
+		assetPositionerId:
 	}
 }
 asset photo {
@@ -57,10 +60,10 @@ asset widget {
 		var book = pageProxy.book;
 		PB.ModelMap.setResolver( assetId, function() {
 			var page = book.page(pageProxy.id);
-			var item = page.p.assets[assetId];
-			if (!item)
-				PB.debugstr("Resolving item not there");
-			return { page: page, item: item, itemId: assetId };
+			var asset = page.p.assets[assetId];
+			if (!asset)
+				PB.debugstr("Resolving asset not there");
+			return { page: page, asset: asset, assetId: assetId };
 		});
 	};
 	var PageProxy = function(id, book) {
@@ -89,7 +92,7 @@ asset widget {
 		set layoutId(val) {
 			debugger;
 		},
-		getEditMenu: function(layoutItemId) {
+		getEditMenu: function(layoutassetId) {
 			debugger;
 		},
 		isDraggable: function() {
@@ -151,12 +154,12 @@ asset widget {
 		getAsset: function(assetId) {
 			return this.p.assets[ assetId];
 		},
-		getAssetIds: function(itemType) {
+		getAssetIds: function(assetType) {
 			var retVal = [];
 			for (var i=0; i<this.p.assets.ids.length; i++) {
-				var itemId = this.p.assetIds[i];
-				if (!itemType || this.p.assets[itemId].type == itemType)
-					retVal.push(itemId);
+				var assetId = this.p.assetIds[i];
+				if (!assetType || this.p.assets[assetId].type == assetType)
+					retVal.push(assetId);
 			}
 			return retVal;
 		},
@@ -167,32 +170,62 @@ asset widget {
 			this.p.needReflow = true;
 			PB.broadcastChange(this, 'dimensions');
 		},
-		addAsset: function(id, asset, options) {
-			options = $.extend( { broadcast: true }, options);
+		addAsset: function(asset, broadcastOptions) {
+			broadcastOptions = $.extend( { broadcast: true }, broadcastOptions);
+
+			asset = PB.clone(asset);
+			if ( !asset.css )
+				asset.css = {};
+			if ( !asset.css.top )
+				this.p.needReflow = true;
+
+			// Add the asset to the list
+			var id = this.book.generateId();
 			this.p.assets.ids.push( id );
 			this.p.assets[ id ] = asset;
-			if ( !asset.top )
-				this.p.needReflow = true;
 			registerPageAssetResolver(this, id);
+
+
+			// Post processing
+			if (asset.type == 'widget') {
+				if (!asset.widgetCreator)
+					asset.widgetCreator = 'user';
+				// User-created widgets are placed in the center of the page by default
+				if ( asset.widgetCreator == 'user' && !asset.css.top ) {
+					var widget = PB.ThemeCache.resource( asset.widgetId );
+					var d = this.dimensions;
+					var width = widget.width( asset.widgetOptions );
+					var height =  widget.height( asset.widgetOptions );
+					asset.css = {
+						width: width,
+						height: height,
+						top: Math.max(0, (d.height - height) / 2),
+						left:  Math.max(0, (d.width - width) / 2)
+					}
+
+				}
+			}
+
+			// Broadcast changes
 			if ( asset.type == 'photo' )
-				this.book._pagePhotosChanged( this, options );
-			if ( options.broadcast )
+				this.book._pagePhotosChanged( this, broadcastOptions );
+			if ( broadcastOptions.broadcast )
 				PB.broadcastChange( this, 'assetIds',
-					$.extend( {assetId: id}, options ));
+					$.extend( {assetId: id}, broadcastOptions ));
 		},
-		removeAsset: function(id, options) {
+		removeAsset: function(id, broadcastOptions) {
 			var idx = this.p.assets.ids.indexOf( id );
 			if (idx == -1)
 				return PB.debugstr("removing non-exhistent asset");
 			this.p.assets.ids.splice( idx, 1 );
 			var assetType = this.p.assets[ id ].type;
 			delete this.p.assets[id];
-			if (assetType != 'widget')
+			if ( assetType != 'widget')
 				this.p.needReflow = true;
 			PB.ModelMap.unsetResolver( id );
 			if ( assetType == 'photo' )
-				this.book._pagePhotosChanged( this, options );
-			PB.broadcastChange( this, 'assetIds', options );
+				this.book._pagePhotosChanged( this, broadcastOptions );
+			PB.broadcastChange( this, 'assetIds', broadcastOptions );
 		},
 		updateAsset: function(id, newAsset, options) {
 			function myExtend(src, dest) {
@@ -243,46 +276,6 @@ asset widget {
 				PB.broadcastChange({id: id}, 'alldata', options);
 			}
 		},
-		addPhoto: function(id, options) {
-			if ((typeof id) != 'string')
-				return PB.debugstr("illegal argument to addPhoto");
-			var data = {
-				type: 'photo',
-				photoId: id
-			};
-			this.addAsset(this.book.generateId(), data);
-		},
-		addText: function(content) {
-			this.addAsset(this.book.generateId(), {
-				type: 'text',
-				content: content
-			});
-		},
-		addWidget: function(widgetId, widgetOptions, options) {
-			options = $.extend( {
-				broadcast: true,
-				widgetCreator: 'user'
-			}, options);
-
-			var asset = {
-				type: 'widget',
-				widgetId: widgetId,
-				widgetOptions: widgetOptions,
-				widgetCreator: options.widgetCreator
-			};
-			// User-created widgets are placed in the center of the page by default
-			if (options.widgetCreator == 'user' && !asset.top) {
-				var widget = PB.ThemeCache.resource( asset.widgetId );
-				var d = this.dimensions;
-				asset.height = widget.height( widgetOptions );
-				asset.width = widget.width( widgetOptions );
-				asset.top = Math.max(0, (d.height - asset.height) / 2);
-				asset.left = Math.max(0, (d.width - asset.width) / 2);
-			}
-			this.addAsset( this.book.generateId(), asset,
-				{ 	broadcast: options.broadcast }
-			);
-		},
 		setDesign: function( designId, options ) {
 			this.p.designId = designId;
 			this.p.layoutId = null;
@@ -312,13 +305,13 @@ asset widget {
 					.addClass('design-page');
 		},
 		// focal point range for images
-		getFocalPointRange: function(itemId) {
-			if ( !( itemId in this.p.assets ))
+		getFocalPointRange: function(assetId) {
+			if ( !( assetId in this.p.assets ))
 				return PB.debugstr("layoutInnerItem on non-existent item");
-			var asset = this.p.assets[itemId];
+			var asset = this.p.assets[assetId];
 			if (this.p.needReflow)
 				return { x: { min:0, max: 100 }, y: {min:0, max:100}};
-			var innerRect = new GUI.Rect(asset);
+			var innerRect = new GUI.Rect(asset.css);
 			if (asset.frameId) {
 				innerRect = innerRect.inset(
 					PB.ThemeCache.resource( asset.frameId).getInset( asset.frameData )
@@ -329,14 +322,14 @@ asset widget {
 			return { x: { min: xdelta, max: 100 - xdelta },
 					y: { min: ydelta, max: 100 - ydelta }};
 		},
-		layoutInnerItem: function(itemId) {
-			if ( !( itemId in this.p.assets ))
+		layoutInnerItem: function(assetId) {
+			if ( !( assetId in this.p.assets ))
 				return PB.debugstr("layoutInnerItem on non-existent item");
 
-			var asset = this.p.assets[itemId];
+			var asset = this.p.assets[assetId];
 			switch(asset.type) {
 				case 'photo':
-					var innerRect = new GUI.Rect(asset);
+					var innerRect = new GUI.Rect(asset.css);
 					if (asset.frameId) {
 						innerRect = innerRect.inset(
 							PB.ThemeCache.resource( asset.frameId).getInset( asset.frameData )
@@ -396,7 +389,6 @@ asset widget {
 					return true;
 			});
 
-
 			// Compute layout
 			var layoutRes = designRes;
 			if ( this.p.layoutId != null)
@@ -407,11 +399,14 @@ asset widget {
 					designRes.getWidgets( this )
 					: [];
 				for (var i=0; i<newWidgets.length; i++) {
-					this.addWidget( newWidgets[i].id, newWidgets[i].options,
-						{
+					this.addAsset({
+							type: 'widget',
+							widgetId: newWidgets[i].id,
 							widgetCreator: this.p.designId,
-							broadcast: false
-						});
+							widgetOptions: newWidgets[i].options
+						},
+						{broadcast: false}
+					);
 				}
 			}
 
@@ -419,7 +414,7 @@ asset widget {
 
 			if (layout.widgets == undefined)
 				layout.widgets = [];
-			// Position all assets
+			// Position all assets that are not children
 			this.p.assets.ids.forEach( function( assetId ) {
 				var asset = THIS.p.assets[ assetId ];
 
@@ -466,13 +461,14 @@ asset widget {
 						};
 					}
 				}
-				$.extend(asset, {
+				// assign assetDesign to asset
+				asset.css = {
 					top: assetDesign.top,
 					left: assetDesign.left,
 					width: assetDesign.width,
 					height: assetDesign.height,
-					rotate: assetDesign.rotate || 0
-				});
+				};
+				asset.rotate = assetDesign.rotate || 0;
 				if (assetDesign.frameId) {
 					asset.frameId = assetDesign.frameId;
 					asset.frameData = assetDesign.frameData;
@@ -482,9 +478,9 @@ asset widget {
 					delete asset.frameData;
 				}
 				if ('zindex' in assetDesign)
-					asset.zindex = assetDesign.zindex;
+					asset.css.zindex = assetDesign.zindex;
 				else
-					asset.zindex =
+					asset.css.zindex =
 						asset.type == 'text' ? 2 :
 						asset.type == 'widget' ? 1 : 0;
 				THIS.layoutInnerItem( assetId );
@@ -505,12 +501,12 @@ asset widget {
 			return $div;
 		},
 		generateFrame: function(asset, options) {
-			var innerBounds = new GUI.Rect({width: asset.width, height: asset.height});
+			var innerBounds = new GUI.Rect({width: asset.css.width, height: asset.css.height});
 			var frame = $(document.createElement('div'))
 				.addClass('design-frame')
 				.css({
-					width: asset.width,
-					height: asset.height
+					width: asset.css.width,
+					height: asset.css.height
 				});
 
 			if (!asset.frameId) {
@@ -531,12 +527,7 @@ asset widget {
 
 			var widgetDom = $(document.createElement('div'))
 				.addClass('design-widget')
-				.css({
-					top: asset.top,
-					left: asset.left,
-					width: asset.width,
-					height: asset.height
-				});
+				.css( asset.css );
 			var fr = this.generateFrame(asset, options);
 			var innerFrame = fr.innerBounds;
 			if (fr.frame)
@@ -568,9 +559,9 @@ asset widget {
 		generateTextDom: function(asset, options) {
 			// measure height of the text
 			var textRect = {
-				top: asset.top,
-				left: asset.left,
-				width: asset.width,
+				top: asset.css.top,
+				left: asset.css.left,
+				width: asset.css.width,
 				height: 'auto'
 			};
 
@@ -591,16 +582,11 @@ asset widget {
 			var heights = GUI.Util.getTextHeight(measureText);
 
 			// resize asset to just fit the text
-			asset.height = heights.divheight + inset[0] + inset[2];
+			asset.css.height = heights.divheight + inset[0] + inset[2];
 
 			var textDom = $(document.createElement('div'))
 				.addClass('design-text')
-				.css ({
-					top: asset.top,
-					left: asset.left,
-					width: asset.width,
-					height: asset.height
-				 });
+				.css ( asset.css );
 			var fr = this.generateFrame(asset, options);
 			var innerFrame = fr.innerBounds;
 			if (fr.frame)
@@ -630,12 +616,7 @@ asset widget {
 		generatePhotoDom: function(asset, options) {
 			var photoDom = $(document.createElement('div'))
 				.addClass('design-photo')
-				.css({
-					top: asset.top,
-					left: asset.left,
-					width: asset.width,
-					height: asset.height
-				});
+				.css( asset.css );
 			var fr = this.generateFrame(asset, options);
 			var innerFrame = fr.innerBounds;
 			if (fr.frame)
@@ -725,8 +706,7 @@ asset widget {
 					}
 					if (asset.rotate)
 						$itemDom.css('transform', 'rotate(' + asset.rotate + 'deg)');
-					if (asset.zindex)
-						$itemDom.css('zIndex', asset.zindex);
+
 					insertAfterHelper( $encloseDom, $nextDomSlot, $itemDom );
 					$nextDomSlot = $itemDom;
 
@@ -795,8 +775,8 @@ asset widget {
 				id: 'move',
 				title: 'move',
 				icon: 'move',
-				action: function( $pageDom, itemId ) {
-					var m = new GUI.Manipulators.Move( $pageDom, itemId );
+				action: function( $pageDom, assetId ) {
+					var m = new GUI.Manipulators.Move( $pageDom, assetId );
 					PageSelection.findInParent( $pageDom ).setManipulator( m );
 				}
 			}));
@@ -804,8 +784,8 @@ asset widget {
 				id: 'pan',
 				title: 'pan',
 				icon: 'hand-up',
-				action: function( $pageDom, itemId) {
-					var m = new GUI.Manipulators.Pan( $pageDom, itemId );
+				action: function( $pageDom, assetId) {
+					var m = new GUI.Manipulators.Pan( $pageDom, assetId );
 					PageSelection.findInParent( $pageDom ).setManipulator( m );
 				}
 			}));
@@ -813,8 +793,8 @@ asset widget {
 				id: 'zoom',
 				title: 'zoom',
 				icon: 'search',
-				action: function( $pageDom, itemId) {
-					var m = new GUI.Manipulators.Zoom( $pageDom, itemId );
+				action: function( $pageDom, assetId) {
+					var m = new GUI.Manipulators.Zoom( $pageDom, assetId );
 					PageSelection.findInParent( $pageDom ).setManipulator( m );
 				}
 			}));
@@ -822,8 +802,8 @@ asset widget {
 				id: 'resize',
 				title: 'resize',
 				icon: 'arrow-up',
-				action: function( $pageDom, itemId) {
-					var m = new GUI.Manipulators.Resize( $pageDom, itemId );
+				action: function( $pageDom, assetId) {
+					var m = new GUI.Manipulators.Resize( $pageDom, assetId );
 					PageSelection.findInParent( $pageDom ).setManipulator( m );
 				}
 			}));
@@ -831,8 +811,8 @@ asset widget {
 				id: 'resizeHorizontal',
 				title: 'resize',
 				icon: 'arrow-up',
-				action: function( $pageDom, itemId) {
-					var m = new GUI.Manipulators.Resize( $pageDom, itemId ,{ vertical: false });
+				action: function( $pageDom, assetId) {
+					var m = new GUI.Manipulators.Resize( $pageDom, assetId ,{ vertical: false });
 					PageSelection.findInParent( $pageDom ).setManipulator( m );
 				}
 			}));
@@ -840,8 +820,8 @@ asset widget {
 				id: 'resizeFixAspect',
 				title: 'resize',
 				icon: 'arrow-up',
-				action: function( $pageDom, itemId) {
-					var m = new GUI.Manipulators.Resize( $pageDom, itemId ,{ fixAspect: true });
+				action: function( $pageDom, assetId) {
+					var m = new GUI.Manipulators.Resize( $pageDom, assetId ,{ fixAspect: true });
 					PageSelection.findInParent( $pageDom ).setManipulator( m );
 				}
 			}));
@@ -849,8 +829,8 @@ asset widget {
 				id: 'rotate',
 				title: 'rotate',
 				icon: 'repeat',
-				action: function( $pageDom, itemId) {
-					var m = new GUI.Manipulators.Rotate( $pageDom, itemId );
+				action: function( $pageDom, assetId) {
+					var m = new GUI.Manipulators.Rotate( $pageDom, assetId );
 					PageSelection.findInParent( $pageDom ).setManipulator( m );
 				}
 			}));
@@ -858,8 +838,8 @@ asset widget {
 				id: 'editText',
 				title: 'edit',
 				icon: 'edit',
-				action: function( $pageDom, itemId) {
-					var m = new GUI.Manipulators.EditText( $pageDom, itemId );
+				action: function( $pageDom, assetId) {
+					var m = new GUI.Manipulators.EditText( $pageDom, assetId );
 					PageSelection.findInParent( $pageDom ).setManipulator( m );
 				}
 			}));
@@ -868,12 +848,28 @@ asset widget {
 				title: 'remove',
 				icon: 'remove',
 				key: GUI.CommandManager.keys.backspace,
-				action: function($pageDom, itId) {
+				action: function($pageDom, assetId) {
 					// when deletekey is pressed, $pageDom and itId are null
-					PageSelection.forEach(function( page, itemId, pageSelection) {
+					PageSelection.forEach(function( page, assetId, pageSelection) {
 						if ($pageDom != null || pageSelection.manipulator == null) {
 							pageSelection.setSelection();
-							page.removeAsset( itemId );
+							page.removeAsset( assetId );
+						}
+					});
+				}
+			}));
+			this.cmdSet.add( new GUI.Command( {
+				id: 'caption',
+				title: 'caption',
+				icon: 'comment-alt',
+				action: function($pageDom, assetId) {
+					debugger;
+					var pageAsset = PB.ModelMap.model( assetId );
+					pageAsset.page.addAsset({
+						type: 'text',
+						content: 'caption',
+						childOf: {
+							assetId: assetId
 						}
 					});
 				}
@@ -889,9 +885,9 @@ asset widget {
 			$a.hammer().on("touch", function(ev) {
 					try {
 						var $popup = $a.parents('.pb-popup-menu');
-						var pageItem = PB.ModelMap.model($popup.data('popupModel'));
+						var pageAsset = PB.ModelMap.model($popup.data('popupModel'));
 						var $pageDom = $popup.data("popupPageDom");
-						cmd.action( $pageDom, pageItem.itemId );
+						cmd.action( $pageDom, pageAsset.assetId );
 					}
 					catch(ex) {
 						console.error(ex);
@@ -908,7 +904,7 @@ asset widget {
 			var $popup = this.popupShell();
 			var cmdSet = this.getManipulatorCommandSet();
 			var localCmdSet = new GUI.CommandSet('photoPopup');
-			['move', 'pan', 'zoom', 'resize', 'rotate', 'remove']
+			['move', 'pan', 'zoom', 'resize', 'rotate', 'remove','caption']
 				.forEach( function(cmdId) {
 					var cmd = cmdSet.getCommandById( cmdId );
 					localCmdSet.add( cmd );
@@ -934,7 +930,7 @@ asset widget {
 			$popup.data('commandSet', localCmdSet);
 			return $popup;
 		},
-		widgetPopup: function(itemPage) {
+		widgetPopup: function(pageAsset) {
 			var $popup = this.popupShell();
 			var cmdSet = this.getManipulatorCommandSet();
 			var localCmdSet = new GUI.CommandSet('widgetPopup');
@@ -953,11 +949,11 @@ asset widget {
 
 	var PageProxyEditable = {
 		// callback, 'this' points to an HTMLElement, not page
-		selectItem: function(pageSelection, itemId, $itemDom) {
-			var itemPage = PB.ModelMap.model(itemId);
-			var multiTap = pageSelection.selection.some(function(val) { return val == itemId; });
+		selectItem: function(pageSelection, assetId, $itemDom) {
+			var pageAsset = PB.ModelMap.model(assetId);
+			var multiTap = pageSelection.selection.some(function(val) { return val == assetId; });
 			var $popup;
-			switch(itemPage.item.type) {
+			switch(pageAsset.asset.type) {
 				case 'photo':
 					$popup = Popups.photoPopup();
 				break;
@@ -966,22 +962,22 @@ asset widget {
 					if (multiTap)
 						window.setTimeout(function() {
 							var cmd = Popups.getManipulatorCommandSet().getCommandById('editText');
-							cmd.action( $itemDom.parents('.design-page'), itemId );
+							cmd.action( $itemDom.parents('.design-page'), assetId );
 						}, 0);
 				break;
 				case 'widget':
-					$popup = Popups.widgetPopup(itemPage);
+					$popup = Popups.widgetPopup(pageAsset);
 				break;
 				default:
-					console.warn("No menus available over items of type", itemPage.item.type);
+					console.warn("No menus available over items of type", pageAsset.asset.type);
 			}
-			pageSelection.setSelection( itemId, $popup );
+			pageSelection.setSelection( assetId, $popup );
 		},
 		touchCb: function(ev) {
 			var $itemDom = $( ev.currentTarget );
-			var itemId = $itemDom.data( 'model_id' );
+			var assetId = $itemDom.data( 'model_id' );
 			var pageSelection = PageSelection.findInParent( $itemDom );
-			this.selectItem( pageSelection, itemId, $itemDom );
+			this.selectItem( pageSelection, assetId, $itemDom );
 			PB.stopEvent(ev.gesture);
 			PB.stopEvent(ev);
 		},
@@ -1051,15 +1047,15 @@ asset widget {
 		this.popup = null;
 	};
 	PageSelection.prototype = {
-		setSelection: function(itemId, $popup) {
-			this.selection = itemId ? [itemId] : [];
+		setSelection: function(assetId, $popup) {
+			this.selection = assetId ? [assetId] : [];
 			this.highlight();
 			// hide manipulator if from another item
-			if (this.manipulator && this.manipulator.itemId != itemId)
+			if (this.manipulator && this.manipulator.assetId != assetId)
 				this.setManipulator(null);
 			if ($popup != null && $popup.length == 0)
 				$popup = null;
-			this.setPopup(itemId, $popup);
+			this.setPopup(assetId, $popup);
 		},
 
 		highlight: function() {
@@ -1074,7 +1070,7 @@ asset widget {
 			if (this.manipulator)
 				this.manipulator.show();
 		},
-		setPopup: function(itemId, $popup) {
+		setPopup: function(assetId, $popup) {
 			if (this.popup && this.popup != $popup) {
 				var cmdSet = this.popup.data('commandSet');
 				if (cmdSet) cmdSet.deactivate();
@@ -1082,7 +1078,7 @@ asset widget {
 			}
 			this.popup = $popup;
 			if (this.popup) {
-				this.popup.data("popupModel", itemId );
+				this.popup.data("popupModel", assetId );
 				this.popup.data("popupPageDom", this.dom );
 				$('#pagePopupContainer').append( this.popup );
 				this.popup.css({
@@ -1135,12 +1131,12 @@ asset widget {
 		return retVal;
 	};
 
-	// callback(PB.PageProxy, itemId)
+	// callback(PB.PageProxy, assetId)
 	PageSelection.forEach = function(callback) {
 		this.getActiveSelections()
 			.forEach( function( pageSel ) {
-				pageSel.selection.forEach( function( itemId ) {
-					callback(pageSel.bookPage, itemId, pageSel);
+				pageSel.selection.forEach( function( assetId ) {
+					callback(pageSel.bookPage, assetId, pageSel);
 				});
 			});
 	};
@@ -1241,8 +1237,8 @@ text_id => Points to an object in page: page.texts[text_id]. Page unique, not gl
 				PB.broadcastChange(this, 'layoutId');
 			}
 		},
-		getEditMenu: function(layoutItemId) {
-			return this.layout.getEditMenu(this, layoutItemId);
+		getEditMenu: function(layoutassetId) {
+			return this.layout.getEditMenu(this, layoutassetId);
 		},
 		isDraggable: function() {
 			return this.id.match(coverRegex) === null;

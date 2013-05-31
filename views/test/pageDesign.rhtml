@@ -534,7 +534,10 @@ var Controller = {
 		this.updateLayoutPicker();
 	},
 	addPhoto: function() {
-		currentPage.addPhoto(PB.FillerPhotos.random().id);
+		currentPage.addAsset( {
+			type: 'photo',
+			photoId: PB.FillerPhotos.random().id
+		});
 		this.updateLayoutPicker();
 	},
 	removePhoto: function() {
@@ -553,11 +556,17 @@ var Controller = {
 			word = this.words.shift();
 			this.words.push(word);
 		}
-		currentPage.addText();
+		currentPage.addAsset( {
+			type:'text',
+			content: text
+		});
 		this.updateLayoutPicker();
 	},
 	addWidget: function() {
-		currentPage.addWidget('theme://admin@sports/widgets/soccerSilhouetteWidget');
+		currentPage.addAsset( {
+			type: 'widget',
+			widgetId: 'theme://admin@sports/widgets/soccerSilhouetteWidget'
+		});
 	},
 	setDesign: function( designId ) {
 		currentPage.setDesign( designId );
