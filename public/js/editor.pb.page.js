@@ -364,6 +364,7 @@ asset widget {
 				break;
 			}
 		},
+
 		reflow: function() {
 			this.p.needReflow = true;
 			if ( !this.p.designId )
@@ -373,36 +374,31 @@ asset widget {
 			var d = this.dimensions;
 			var designRes = PB.ThemeCache.resource( this.p.designId );
 
-			// Delete old widgets
-
-			var widgetsRemoved = false;
-			this.p.assets.ids = this.p.assets.ids.filter( function( assetId ) {
-				var asset = THIS.p.assets[ assetId ];
-				var isForeignWidget = (asset.type == 'widget') &&
-					( asset.widgetCreator != 'user');
-				if ( isForeignWidget ) {
-					widgetsRemoved = true;
-					delete THIS.p.assets[ assetId ];
-					return false;
-				}
-				else
-					return true;
-			});
-
-			// Compute layout
-			var layoutRes = designRes;
-			if ( this.p.layoutId != null)
-				layoutRes = PB.ThemeCache.resource( this.p.layoutId );
-			else {
+			function syncWidgets() {
+				// Delete widgets not created by user
+				THIS.p.assets.ids = THIS.p.assets.ids.filter( function( assetId ) {
+					var asset = THIS.p.assets[ assetId ];
+					var isForeignWidget = (asset.type == 'widget') &&
+						( asset.widgetCreator != 'user');
+					if ( isForeignWidget ) {
+						delete THIS.p.assets[ assetId ];
+						return false;
+					}
+					else
+						return true;
+				});
+				// If we are using a layout, no widgets are added
+				if (THIS.p.layoutId)
+					return;
 				// Insert new widgets for design layout
 				var newWidgets = ('getWidgets' in designRes) ?
-					designRes.getWidgets( this )
+					designRes.getWidgets( THIS )
 					: [];
 				for (var i=0; i<newWidgets.length; i++) {
-					this.addAsset({
+					THIS.addAsset({
 							type: 'widget',
 							widgetId: newWidgets[i].id,
-							widgetCreator: this.p.designId,
+							widgetCreator: THIS.p.designId,
 							widgetOptions: newWidgets[i].options
 						},
 						{broadcast: false}
@@ -410,15 +406,85 @@ asset widget {
 				}
 			}
 
+			function assetDesignToAsset( assetDesign, asset ) {
+				asset.css = {
+					top: assetDesign.top,
+					left: assetDesign.left,
+					width: assetDesign.width,
+					height: assetDesign.height,
+				};
+				if ('zindex' in assetDesign)
+					asset.css.zindex = assetDesign.zindex;
+				else {
+					asset.css.zindex =
+						asset.type == 'text' ? 2 :
+						asset.type == 'widget' ? 1 : 0;
+				}
+				asset.rotate = assetDesign.rotate || 0;
+				if (assetDesign.frameId) {
+					asset.frameId = assetDesign.frameId;
+					asset.frameData = assetDesign.frameData;
+				}
+				else {
+					delete asset.frameId;
+					delete asset.frameData;
+				}
+			}
+
+			function generateDefaultAssetDesign(asset) {
+				var defaultDesign;
+				if ('top' in asset)
+					defaultDesign = asset;
+				else {
+					var center = { x: d.width / 2, y: d.height / 2 };
+					var defaultWidth, defaultHeight;
+					switch( asset.type ) {
+						case 'text':
+							defaultWidth = d.width / 3;
+							defaultHeight = 30;
+						break;
+						case 'widget':
+							var widget = PB.ThemeCache.resource( asset.widgetId );
+							defaultHeight = widget.height( asset.widgetOptions );
+							defaultWidth = widget.width( asset.widgetOptions );
+						break;
+						default:
+							console.error("no assetDesing for ", asset.type);
+						return;
+					}
+					defaultDesign = {
+						top: center.y - defaultHeight / 2,
+						left: center.x - defaultWidth / 2,
+						width: defaultWidth,
+						height: defaultHeight
+					};
+				}
+			}
+
+			// Compute layout
+			var layoutRes = designRes;
+			if ( this.p.layoutId != null)
+				layoutRes = PB.ThemeCache.resource( this.p.layoutId );
+			else
+				layoutRes = designRes;
+
+			syncWidgets();
+
 			var layout = layoutRes.getPageLayout( this, this.p.layoutData );
 
 			if (layout.widgets == undefined)
 				layout.widgets = [];
+
 			// Position all assets that are not children
+			var captionPositioners = {}; // assetId => childPositionerId
+			var defaultPositioner = 'theme://admin@core/positioners/default';
+
 			this.p.assets.ids.forEach( function( assetId ) {
 				var asset = THIS.p.assets[ assetId ];
 
 				var assetDesign;
+				if ( asset.childOf ) // children are positioned after parents
+					return;
 				switch ( asset.type ) {
 					case 'photo':
 						assetDesign = layout.photos.length > 0 ? layout.photos.shift() : null;
@@ -433,57 +499,26 @@ asset widget {
 					default:
 						console.error('unknown asset type', asset.type );
 				}
-				if ( assetDesign == null ) {
-					if ('top' in asset)
-						assetDesign = asset;
-					else {
-						var center = { x: d.width / 2, y: d.height / 2 };
-						var defaultWidth, defaultHeight;
-						switch( asset.type ) {
-							case 'text':
-								defaultWidth = d.width / 3;
-								defaultHeight = 30;
-							break;
-							case 'widget':
-								var widget = PB.ThemeCache.resource( asset.widgetId );
-								defaultHeight = widget.height( asset.widgetOptions );
-								defaultWidth = widget.width( asset.widgetOptions );
-							break;
-							default:
-								console.error("no assetDesing for ", asset.type);
-							return;
-						}
-						assetDesign = {
-							top: center.y - defaultHeight / 2,
-							left: center.x - defaultWidth / 2,
-							width: defaultWidth,
-							height: defaultHeight
-						};
-					}
-				}
-				// assign assetDesign to asset
-				asset.css = {
-					top: assetDesign.top,
-					left: assetDesign.left,
-					width: assetDesign.width,
-					height: assetDesign.height,
-				};
-				asset.rotate = assetDesign.rotate || 0;
-				if (assetDesign.frameId) {
-					asset.frameId = assetDesign.frameId;
-					asset.frameData = assetDesign.frameData;
-				}
-				else {
-					delete asset.frameId;
-					delete asset.frameData;
-				}
-				if ('zindex' in assetDesign)
-					asset.css.zindex = assetDesign.zindex;
-				else
-					asset.css.zindex =
-						asset.type == 'text' ? 2 :
-						asset.type == 'widget' ? 1 : 0;
+				if ( assetDesign == null )
+					assetDesign = generateDefaultAssetDesign(asset);
+
+				assetDesignToAsset( assetDesign, asset);
+
+				captionPositioners[ assetId ] = 'captionPosition' in assetDesign ?
+					assetDesign.captionPosition : defaultPositioner;
+
 				THIS.layoutInnerItem( assetId );
+			});
+
+			// Position children
+			this.p.assets.ids.forEach( function( assetId ) {
+				var asset = THIS.p.assets[ assetId ];
+				if ( !asset.childOf )
+					return;
+				var positioner = PB.ThemeCache.resource(
+					captionPositioners[ asset.childOf.assetId ]);
+				var assetDesign = positioner.getPosition( THIS, assetId );
+				assetDesignToAsset( assetDesign, asset );
 			});
 
 			if (! this.p.backgroundId ) {
@@ -556,6 +591,12 @@ asset widget {
 				div.design-frame
 				div.design-text-content
 		*/
+		getDummyText: function(asset) {
+			if (asset.childOf)
+				return "Type your caption here";
+			else
+				return "Type your text here";
+		},
 		generateTextDom: function(asset, options) {
 			// measure height of the text
 			var textRect = {
@@ -573,7 +614,7 @@ asset widget {
 			textRect.width -= inset[1] + inset[3];
 
 			var originalText = this.getText( asset );
-			var text = originalText || "Type your text here";
+			var text = originalText || this.getDummyText( asset );
 
 			var measureText = $(document.createElement('div'))
 				.addClass('design-text-content')
@@ -867,7 +908,6 @@ asset widget {
 					var pageAsset = PB.ModelMap.model( assetId );
 					pageAsset.page.addAsset({
 						type: 'text',
-						content: 'caption',
 						childOf: {
 							assetId: assetId
 						}
