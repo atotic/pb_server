@@ -386,6 +386,17 @@
 					retVal += 1;
 			return retVal;
 		},
+		// returns array of children
+		findAssetChildren: function(assets, parentId) {
+			var retVal = [];
+			assets.ids.forEach( function(assetId) {
+				var asset = assets[ assetId ];
+				if (('childOf' in assets[ assetId ])
+					&& ( assets[ assetId].childOf.assetId == parentId ))
+					retVal.push( assetId );
+			});
+			return retVal;
+		},
 		assetWidgetIdByCreator: function(assets, creator) {
 			var retVal = [];
 			for (var i=0; i<assets.ids.length; i++) {

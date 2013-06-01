@@ -170,6 +170,7 @@ asset widget {
 			this.p.needReflow = true;
 			PB.broadcastChange(this, 'dimensions');
 		},
+		// return asset id
 		addAsset: function(asset, broadcastOptions) {
 			broadcastOptions = $.extend( { broadcast: true }, broadcastOptions);
 
@@ -212,6 +213,7 @@ asset widget {
 			if ( broadcastOptions.broadcast )
 				PB.broadcastChange( this, 'assetIds',
 					$.extend( {assetId: id}, broadcastOptions ));
+			return id;
 		},
 		removeAsset: function(id, broadcastOptions) {
 			var idx = this.p.assets.ids.indexOf( id );
@@ -903,15 +905,26 @@ asset widget {
 				id: 'caption',
 				title: 'caption',
 				icon: 'comment-alt',
-				action: function($pageDom, assetId) {
-					debugger;
-					var pageAsset = PB.ModelMap.model( assetId );
-					pageAsset.page.addAsset({
-						type: 'text',
-						childOf: {
-							assetId: assetId
-						}
-					});
+				action: function($pageDom, photoAssetId) {
+					var pageAsset = PB.ModelMap.model( photoAssetId );
+					var assets = pageAsset.page.getAssets();
+					var captionIds = PB.ThemeUtils.findAssetChildren(assets, photoAssetId)
+						.filter( function( id ) { return assets[id].type == 'text'});
+					// if caption already exist, go in edit mode
+					var editId;
+					if (captionIds.length > 0)
+						editId = captionIds[0];
+					else {
+						editId = pageAsset.page.addAsset({
+							type: 'text',
+							childOf: {
+								assetId: photoAssetId
+							}
+						});
+					}
+					if (editId)
+						Popups.cmdSet.getCommandById( 'editText' )
+							.action( $pageDom, editId);
 				}
 			}));
 			return this.cmdSet;
