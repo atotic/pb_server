@@ -289,6 +289,9 @@ var Controller = {
 		};
 	},
 	updateLayoutPicker: function() {
+		Controller.updateDesignPicker(
+			PB.ThemeCache.themeIdFromUrl( currentPage.designId ));
+
 		$('#layoutPicker').children().remove();
 		var layouts = [
 		{ id: 'theme://admin@core/layouts/gridLayout',
@@ -322,8 +325,6 @@ var Controller = {
 			$('#layoutPicker').append($li);
 			assignCb($li, layouts[i].id, layouts[i].data);
 		}
-		Controller.updateDesignPicker(
-			PB.ThemeCache.themeIdFromUrl( currentPage.designId ));
 	},
 	updateFramePicker: function() {
 		$('#framePicker').children().remove();

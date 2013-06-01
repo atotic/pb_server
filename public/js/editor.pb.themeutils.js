@@ -83,24 +83,35 @@
 			var newAssets = { ids: [] };
 			for (var i=0; i< assets.ids.length; i++) {
 				var id = assets.ids[i];
-				switch(assets[id].type) {
+				var newAsset;
+				newAsset = null;
+				switch( assets[id].type ) {
 					case 'photo':
-						newAssets.ids.push( id );
-						newAssets[id] = {
+						newAsset = {
 							type: 'photo',
 							photoId: assets[id].photoId
-						}
+						};
 					break;
 					case 'text':
-						newAssets.ids.push( id );
-						newAssets[id] = {
+						newAsset = {
 							type: 'text'
 						}
 					break;
 					default:
 					break;
 				}
+				if (newAsset) {
+					if ( assets[id].childOf ) {
+						newAsset.childOf = {
+							assetId: assets[id].childOf.assetId,
+							assetPositionerId: assets[id].childOf.assetPositionerId
+						}
+					}
+					newAssets.ids.push( id );
+					newAssets[id] = newAsset;
+				}
 			}
+
 			if ( ! ( this.options.layoutOnly || this.options.layoutId )) {
 				var THIS = this;
 				PB.ThemeCache.resource( this.options.designId )
@@ -351,18 +362,29 @@
 			var builder = new DesignIconBuilder( currentPage, maxHeight, options);
 			return builder.create();
 		},
-		assetGenericCount: function(assets, type) {
-			var c = 0;
-			for (var p in assets)
-				if (assets[p].type === type)
-					c++;
-			return c;
-		},
-		assetPhotoCount: function(assets) {
-			return this.assetGenericCount(assets, 'photo');
-		},
-		assetTextCount: function(assets) {
-			return this.assetGenericCount(assets, 'text');
+		// count by type. Do not count children by default
+		// if you want all, prefix type with 'all'
+		countAssets: function(assets, type) {
+			var testFn;
+			switch(type) {
+				case 'text':
+				case 'photo':
+				case 'widget':
+					testFn = function(a) { return !a.childOf && a.type == type };
+					break;
+				case 'allText':
+				case 'allPhoto':
+				case 'allWidget':
+					testFn = function(a) { return a.type == type }
+					break;
+				default:
+					throw new Error("Unknown asset type " + type);
+			}
+			var retVal = 0;
+			for (var i=0; i<assets.ids.length; i++)
+				if ( testFn( assets[ assets.ids[i] ]))
+					retVal += 1;
+			return retVal;
 		},
 		assetWidgetIdByCreator: function(assets, creator) {
 			var retVal = [];
@@ -373,7 +395,7 @@
 			}
 			return retVal;
 		},
-		// Create fake page for getPageLayout
+		// Create fake page for getPageLayout, populates assets.ids if needed
 		layoutMockupPage: function(assets, dimensions) {
 			if (! assets.ids) {	// mock the id list
 				var ids = [];

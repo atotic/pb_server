@@ -23,7 +23,7 @@ asset {
 		left
 		width
 		height
-		zindex // default text 2, widget 1
+		zIndex // default text 2, widget 1
 	}
 	rotate	// angle in degrees
 	frameId
@@ -413,10 +413,10 @@ asset widget {
 					width: assetDesign.width,
 					height: assetDesign.height,
 				};
-				if ('zindex' in assetDesign)
-					asset.css.zindex = assetDesign.zindex;
+				if ('zIndex' in assetDesign)
+					asset.css.zIndex = assetDesign.zIndex;
 				else {
-					asset.css.zindex =
+					asset.css.zIndex =
 						asset.type == 'text' ? 2 :
 						asset.type == 'widget' ? 1 : 0;
 				}
