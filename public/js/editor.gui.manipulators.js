@@ -544,8 +544,8 @@ EditTextManipulator.prototype = {
 			height: $textDom.outerHeight()
 		};
 		this.handles.textarea.css({
-			left: Math.max(0, center.x - center.width / 2),
-			top: Math.max(0, center.y - center.height / 2),
+			left: Math.max(0, ( center.x - center.width / 2) - 2 ),
+			top: Math.max(0, ( center.y - center.height / 2) - 1 ),
 			width: center.width,
 			height: center.height
 		});
