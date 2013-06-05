@@ -100,15 +100,15 @@ asset widget {
 		},
 		isDroppable: function(flavor) {
 			switch(flavor) {
-			case 'roughPage':
-			case 'addRoughPage':
-				return this.type() != 'cover';
-			default:
-				return true;
+				case 'roughPage':
+				case 'addRoughPage':
+					return this.pageClass == 'page';
+				default:
+					return true;
 			}
 		},
 		type: function() {
-			debugger; // should use getPageClass
+			debugger; // should use get pageClass()
 			if ( this.id.match(coverRegex))
 				return 'cover';
 			else
@@ -136,10 +136,12 @@ asset widget {
 			}
 		},
 		swapPhoto: function(oldId, newId) {
-			this.p.assets.forEach( function(asset) {
-				if (asset.type === 'photo' && asset.photoId == oldId)
+			var assets = this.getAssets();
+			for (var i=0; i<assets.ids.length; i++) {
+				var asset = assets[ assets.ids[i] ];
+				if (asset.photoId == oldId)
 					asset.photoId = newId;
-			});
+			}
 		},
 
 		get photoList() {
@@ -152,12 +154,19 @@ asset widget {
 			return this.p.assets;
 		},
 		getAsset: function(assetId) {
-			return this.p.assets[ assetId];
+			return this.p.assets[ assetId ];
 		},
-		getAssetIds: function(assetType) {
+		findAssetIdByPhotoId: function( photoId ) {
+			var assets = this.p.assets;
+			for ( var i=0; i<assets.ids.length; i++ )
+				if ( assets[ assets.ids[i] ].photoId == photoId )
+					return assets.ids[i];
+			return null;
+		},
+		filterAssetIds: function(assetType) {
 			var retVal = [];
 			for (var i=0; i<this.p.assets.ids.length; i++) {
-				var assetId = this.p.assetIds[i];
+				var assetId = this.p.assets.ids[i];
 				if (!assetType || this.p.assets[assetId].type == assetType)
 					retVal.push(assetId);
 			}
@@ -211,7 +220,7 @@ asset widget {
 			if ( asset.type == 'photo' )
 				this.book._pagePhotosChanged( this, broadcastOptions );
 			if ( broadcastOptions.broadcast )
-				PB.broadcastChange( this, 'assetIds',
+				PB.broadcastChange( this, 'assetList',
 					$.extend( {assetId: id}, broadcastOptions ));
 			return id;
 		},
@@ -227,7 +236,7 @@ asset widget {
 			PB.ModelMap.unsetResolver( id );
 			if ( assetType == 'photo' )
 				this.book._pagePhotosChanged( this, broadcastOptions );
-			PB.broadcastChange( this, 'assetIds', broadcastOptions );
+			PB.broadcastChange( this, 'assetList', broadcastOptions );
 		},
 		updateAsset: function(id, newAsset, options) {
 			function myExtend(src, dest) {
@@ -1059,7 +1068,7 @@ asset widget {
 						THIS.generateDom(
 							$.extend( {}, eventOptions, options, {enclosingDom: $pageDom} ));
 						break;
-					case 'assetIds':
+					case 'assetList':
 					case 'layoutId':
 						var pageSelection = PageSelection.findInParent($pageDom);
 						pageSelection.setSelection();

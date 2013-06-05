@@ -81,10 +81,20 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				.data('model_id', book.id)
 				.attr('dropzone', true)
 				.on(PB.MODEL_CHANGED, function(ev, model, prop, options) {
-					if (prop === 'locked' && book.locked) {
-						GUI.Template.append(null, 'error-locked');
-						$('#error-locked').slideDown();
-						$('#lockedMessage').text(book.locked);
+					switch(prop) {
+						case 'locked':
+							if (book.locked) {
+								GUI.Template.append($('#alert-container'), 'error-locked');
+								$('#error-locked').slideDown();
+								$('#lockedMessage').text(book.locked);
+							}
+						break;
+						case 'pleaseLoginError':
+							GUI.Template.append($('#alert-container'), 'please-relogin');
+							$('#please-relogin').slideDown();
+						break;
+						default:
+						break;
 					}
 				});
 			var bodyDropHandler = {
@@ -345,6 +355,29 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			canvas.getContext('2d')
 				.drawImage(img, 0,0, img.width, img.height);
 			return canvas;
+		},
+		// clones DOM, then copies any canvases
+		cloneDomWithCanvas: function(el) {
+			var $el = $(el);
+			var $clone = $el.clone();
+			var $srcCanvas = $el.find('canvas');
+			var $destCanvas = $clone.find('canvas');
+			if (($el).prop('nodeName') == 'CANVAS') {
+				$srcCanvas = $srcCanvas.add($el);
+				$destCanvas = $destCanvas.add($clone);
+			}
+			for (var i=0; i<$srcCanvas.length; i++) {
+				var src = $srcCanvas.get(i);
+				var dest = $destCanvas.get(i);
+				var srcContext = src.getContext('2d');
+				var destContext = dest.getContext('2d');
+				var w = $(src).width();
+				var h = $(src).height();
+				destContext.drawImage(src, 0,0,w,h);
+				// destContext.drawImage(src, 0, 0);
+				// destContext.fillRect(0,0,100,100);
+			}
+			return $clone;
 		},
 		// returns css path, parent
 		getPath: function (el, parent_id) {

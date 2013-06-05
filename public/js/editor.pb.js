@@ -56,6 +56,10 @@ window.PB // Generic utilities
 				this._changeBatch.push({model:model, propName:propName, options:options});
 			else {
 				try {
+					if (!model.id) {
+						console.error("can't broadcastChange on model without id", model);
+						return;
+					}
 					if (dataMapper) {
 						if (model.id in dataMapper)
 							for (var i=0; i<dataMapper[model.id].length; i++)

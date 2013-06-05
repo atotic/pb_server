@@ -199,7 +199,11 @@
 			var src = $(GUI.DragStore.dom);
 			var roughModel = PB.ModelMap.domToModel(t.target);
 			var photoModel = PB.ModelMap.domToModel(GUI.DragStore.dom);
-			roughModel.addPhoto(photoModel.id, {animate: true});
+			roughModel.addAsset( {
+				type: 'photo',
+				photoId: photoModel.id
+			},
+			{animate: true});
 		},
 		dropOsFile: function(ev, t) {
 			var files = ev.dataTransfer.files;
@@ -218,12 +222,15 @@
 		dropRoughImage: function(ev, t) {
 			// move image from one rough to another
 			var oldParent = $(GUI.DragStore.dom).parent();
-			var photo = PB.ModelMap.domToModel(GUI.DragStore.dom);
-			var oldModel = PB.ModelMap.domToModel(oldParent);
-			var newModel = PB.ModelMap.domToModel(t.target);
+			var photo = PB.ModelMap.domToModel( GUI.DragStore.dom );
+			var oldModel = PB.ModelMap.domToModel( oldParent );
+			var newModel = PB.ModelMap.domToModel( t.target );
 			PB.startChangeBatch();
-			oldModel.removeAsset(photo.id, {animate:true});
-			newModel.addPhoto(photo.id, {animate:true});
+			oldModel.removeAsset( oldModel.findAssetIdByPhotoId( photo.id ) , {animate:true});
+			newModel.addAsset( {
+				type: 'photo',
+				photoId: photo.id
+			}, {animate:true});
 			PB.broadcastChangeBatch();
 
 		},
@@ -256,7 +263,7 @@
 		},
 		createRoughPage: function(pageModel) {
 			var domPage = $("<div class='rough-page'><p>" + pageModel.pageTitle() + "</p></div>");
-			if (pageModel.type() === 'pages')
+			if (pageModel.pageClass === 'page')
 				domPage.attr('draggable', true);
 			if (pageModel.pageClass !== 'page')
 				domPage.addClass('rough-page-' + pageModel.pageClass);
@@ -407,7 +414,7 @@
 
 			var oldChildren = containerDom.children( sel );
 			var oldPhotos = oldChildren.map(function(i, el) { return PB.ModelMap.domToModel(el)}).get();
-			var newPhotos = pageModel.getAssetIds('photo')
+			var newPhotos = pageModel.filterAssetIds('photo')
 				.map(function(assetId) {
 					return pageModel.getAsset( assetId ).photoId
 				});
@@ -456,7 +463,7 @@
 		pageChanged: function(ev, model, prop, options) {
 			options = $.extend( { animate: false }, options);
 			var roughDom = $(this);
-			if (prop === 'assetData')
+			if (prop === 'assetList')
 				RoughWorkArea.synchronizeRoughPhotoList(roughDom, options);
 		}
 	};

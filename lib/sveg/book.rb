@@ -27,14 +27,14 @@ class Book < Sequel::Model(:books)
 	"photoMap": {},
 	"pageList": ["cover", "cover-flap", "back-flap", "back","P1","P2","P3","P4"],
 	"pages": {
-		"cover": { "id": "cover", "assets": [], "assetData": {} },
-		"cover-flap": { "id": "cover-flap", "assets": [], "assetData": {} },
-		"back-flap": { "id": "back-flap", "assets": [], "assetData": {} },
-		"back": {"id": "back", "assets": [], "assetData": {} },
-		"P1": {"id": "P1", "assets": [], "assetData": {} },
-		"P2": {"id": "P2", "assets": [], "assetData": {} },
-		"P3": {"id": "P3", "assets": [], "assetData": {} },
-		"P4": {"id": "P4", "assets": [], "assetData": {} }
+		"cover": { "id": "cover", "assets": { "ids":[] } },
+		"cover-flap": { "id": "cover-flap", "assets": { "ids":[] } },
+		"back-flap": { "id": "back-flap", "assets": { "ids":[] } },
+		"back": {"id": "back", "assets": { "ids":[] } },
+		"P1": {"id": "P1", "assets": { "ids":[] } },
+		"P2": {"id": "P2", "assets": { "ids":[] } },
+		"P3": {"id": "P3", "assets": { "ids":[] } },
+		"P4": {"id": "P4", "assets": { "ids":[] } }
 	}
 }
 eos

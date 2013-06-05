@@ -213,7 +213,7 @@
 			var pageList = this.pageList;
 			for (var i=0; i < pageList.length; i++) {
 				var page = this.page( pageList[i] );
-				var assetIds = page.getAssetIds('photo');
+				var assetIds = page.filterAssetIds('photo');
 				for (var j=0; j < assetIds.length; j++)
 					retVal[ page.getAsset( assetIds[j] ).photoId ]  = true;
 			}
@@ -312,9 +312,9 @@
 				if (objectPath.length > 3) {
 					var roughPage = member(objectPath, 2);
 					var rough_page_var = member(objectPath, 3);
-					if (rough_page_var == roughPage.itemList) {
+					if (rough_page_var == roughPage.assets) {
 						return [
-						{model: roughPage, prop: 'itemList'},
+						{model: roughPage, prop: 'assetList'},
 						{model: this, prop:'photoList'}
 						]
 					}
@@ -412,6 +412,11 @@
 			});
 			ajax.fail(function(jqXHR, textStatus, message) {
 				switch(jqXHR.status) {
+					case 401:
+						// TODO implement alert box, please log in again
+						console.error("Unauthorized, need to log in again");
+						PB.broadcastChange(THIS, 'pleaseLoginError');
+						break;
 					case 404:
 					case 410:
 						THIS.lockUp("The book was deleted.");

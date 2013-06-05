@@ -174,6 +174,7 @@
 			// load the photo here
 			var url = PB.ServerPhotoCache.get( assetData.photoId).getUrl( PB.PhotoProxy.ICON );
 			var img = new Image();
+			img.crossOrigin = "anonymous";
 			img.onload = function() {
 				assetData.image = img;
 				defOp.resolve();
@@ -191,6 +192,7 @@
 				var THIS = this;
 				this.textPattern = null;
 				var img = new Image();
+				img.crossOrigin = "anonymous";
 				img.onload = function() {
 					img.width = 10;
 					img.height = 10;
@@ -213,6 +215,7 @@
 			if ($img.length > 0) {
 				var url = $img.attr('src');
 				var img = new Image();
+				img.crossOrigin = "anonymous";
 				img.onload = function() {
 					asset.image = img;
 					defOp.resolve();

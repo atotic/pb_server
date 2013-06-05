@@ -7,6 +7,7 @@
 <%= asset_link("gradients.js") %>
 <%= asset_link("jquery.hammer.js") %>
 <%= asset_link("jquery.dataSelector.js") %>
+<%= asset_link("jquery.transit.js") %>
 <%= asset_link("bootstrap") %>
 <%= asset_link("application.css") %>
 <link href='/css/editor.css' rel='stylesheet' type='text/css' />
@@ -22,6 +23,8 @@
 <%= asset_link("editor.gui.manipulators.js") %>
 <%= asset_link("editor.pb.themecache.js") %>
 <%= asset_link("editor.pb.themeutils.js") %>
+<%= asset_link("editor.gui.dnd.js") %>
+
 
 <style type="text/css">
 #tools {
@@ -163,6 +166,7 @@ var Controller = {
 				// THIS.setBackground('theme://admin@sports/backgrounds/soccerField');
 				THIS.showPage();
 				THIS.updateFramePicker();
+				testCanvas();
 			})
 			.fail( function() {
 				console.error("Themes failed to load");
@@ -244,10 +248,10 @@ var Controller = {
 			var designId = 'theme://' + themeId + "/designs/" + design;
 			var icon = PB.ThemeUtils.getDesignIcon( currentPage, 128, {designId: designId }
 			);
-			var $li = $(document.createElement('li'));
+			var $li = $(document.createElement('li')).addClass('draggable');
 			$li.append(icon);
 			$('#designPicker').append($li);
-			assignCb($li, designId)
+//			assignCb($li, designId)
 		}
 		Controller.updateComponentPicker( themeId, currentPage);
 	},
@@ -587,6 +591,29 @@ var Controller = {
 	}
 }
 
+function testCanvas() {
+	// 	<img id='i1' src='/t/admin@sports/basketball_ball.svg' width='96px' height='114px'>
+	// <img id='i2' src='/t/admin@core/h6.png' width='130px' height='100px'>
+	// <canvas id='testCanvas' width='200px' height='200px' style='background-image:url("/t/admin@sports/basketball_court_back.jpg");background-size: 100% 100%'></canvas>
+
+	// window.setTimeout(testCanvas2, 1000);
+}
+function testCanvas2() {
+	var canvas = document.getElementById('testCanvas');
+	var context = canvas.getContext('2d');
+	context.drawImage(document.getElementById('i2'), 50,50,130, 100);
+	context.drawImage(document.getElementById('i1'), 0,0,96, 114);
+	var c2 = document.createElement('canvas');
+	c2.width = 200;
+	c2.height = 200;
+//	var c2 = document.getElementById('test2');
+	var context2 = c2.getContext('2d');
+	context2.drawImage(canvas, 0,0,200,200);
+	context2.drawImage($('canvas').get(3),0,0,200,200);
+	$(canvas).after(c2);
+	var x = GUI.Util.cloneDomWithCanvas(canvas);
+	$(canvas).after(c2);
+};
 $(document).ready(function() {
 	Controller.init();
 	GUI.CommandManager.init();
@@ -597,6 +624,7 @@ $(document).ready(function() {
 	$('#partModeButton').hammer().on('touch', {}, function() {
 		Controller.setDesignMode('parts');
 	});
+
 //	$(document.body).css('background', 'linear-gradient(45deg, red, blue)');
 });
 </script>
