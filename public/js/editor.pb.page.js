@@ -732,6 +732,8 @@ asset widget {
 					if ( $background.length == 0 ) {
 						$background = this.generateBackgroundDom( options );
 						insertAfterHelper( $encloseDom, $nextDomSlot, $background );
+						if ( options.editable )
+							$background.addClass('pb-droppable');
 					}
 					$nextDomSlot = $background;
 				}
@@ -778,8 +780,9 @@ asset widget {
 				});
 				PageSelection.bindToDom( this, $encloseDom )
 			}
-			if (options.editable)
+			if (options.editable) {
 				PageSelection.findInParent($encloseDom).relayout();
+			}
 			if ( options.syncable && !options.enclosingDom )
 				this.makePageSyncable( $encloseDom, options );
 			return $encloseDom;

@@ -248,7 +248,7 @@ var Controller = {
 			var designId = 'theme://' + themeId + "/designs/" + design;
 			var icon = PB.ThemeUtils.getDesignIcon( currentPage, 128, {designId: designId }
 			);
-			var $li = $(document.createElement('li')).addClass('draggable');
+			var $li = $(document.createElement('li')).addClass('pb-draggable');
 			$li.append(icon);
 			$('#designPicker').append($li);
 //			assignCb($li, designId)
@@ -508,6 +508,7 @@ var Controller = {
 			getFrameTiles()
 			);
 		tiles.forEach( function( tile ) {
+			tile.addClass('pb-draggable');
 			picker.append(tile);
 		});
 	},
