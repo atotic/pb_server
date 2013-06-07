@@ -577,7 +577,7 @@ EditTextManipulator.prototype = {
 	},
 	blur: function() {
 		// only works well outside of touch
-		PB.PageSelection.findInParent( this.pageDom ).setManipulator();
+		PB.Page.Selection.findClosest( this.pageDom ).setManipulator();
 	},
 	show: function() {
 		this.pageAsset = PB.ModelMap.model( this.assetId );

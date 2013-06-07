@@ -24,7 +24,7 @@
 <%= asset_link("editor.pb.themecache.js") %>
 <%= asset_link("editor.pb.themeutils.js") %>
 <%= asset_link("editor.gui.dnd.js") %>
-
+<%= asset_link("editor.gui.page.editable.js") %>
 
 <style type="text/css">
 #tools {
@@ -248,7 +248,8 @@ var Controller = {
 			var designId = 'theme://' + themeId + "/designs/" + design;
 			var icon = PB.ThemeUtils.getDesignIcon( currentPage, 128, {designId: designId }
 			);
-			var $li = $(document.createElement('li')).addClass('pb-draggable');
+			var $li = $(document.createElement('li'))
+				.addClass('pb-draggable');
 			$li.append(icon);
 			$('#designPicker').append($li);
 //			assignCb($li, designId)
@@ -382,7 +383,7 @@ var Controller = {
 
 		function assignCb($el, frameId, frameData) {
 			$el.hammer().on('touch', {}, function() {
-				PB.PageSelection.forEach(function(page, itemId) {
+				PB.Page.Selection.forEach(function(page, itemId) {
 					var asset = page.getAsset(itemId);
 					asset.frameId = frameId;
 					asset.frameData = frameData;
@@ -430,8 +431,14 @@ var Controller = {
 					width: tileHeight * whRatio,
 					height: tileHeight
 				});
-				theme.backgrounds[x].fillBackground($div, null, {resolution: PB.PhotoProxy.SMALL})
-				retVal.push($div);
+				theme.backgrounds[x].fillBackground($div, null, {resolution: PB.PhotoProxy.SMALL});
+				var dragOptions = $.extend( {},
+					PB.Page.Editor.DraggableOptions.Background,
+					{ backgroundId: 'theme://' + themeId + '/backgrounds/' + x
+					});
+				$div.addClass('pb-draggable')
+					.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions ));
+					retVal.push($div);
 			}
 			return retVal;
 		};
@@ -444,7 +451,14 @@ var Controller = {
 						designId: 'theme://' + themeId + '/designs/' + x,
 						layoutOnly: true
 					});
-				retVal.push( $('<div>').append(icon) );
+				var dragOptions = $.extend( {},
+					PB.Page.Editor.DraggableOptions.Layout,
+					{ layoutId: 'theme://' + themeId + '/designs/' + x }
+				);
+				var $div = $('<div>').append(icon);
+				$div.addClass('pb-draggable')
+					.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions));
+				retVal.push( $div );
 			};
 			return retVal;
 		};
@@ -465,7 +479,14 @@ var Controller = {
 				tile.css({
 				 	verticalAlign: 'baseline'
 				 });
-				retVal.push($('<div>').append(tile));
+				var dragOptions = $.extend( {},
+					PB.Page.Editor.DraggableOptions.Widget,
+					{ widgetId: 'theme://' + themeId + '/widgets/' + x }
+					);
+				var $div = $('<div>').append(tile)
+				$div.addClass('pb-draggable')
+					.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions ));
+				retVal.push($div);
 			}
 			return retVal;
 		};
@@ -508,7 +529,6 @@ var Controller = {
 			getFrameTiles()
 			);
 		tiles.forEach( function( tile ) {
-			tile.addClass('pb-draggable');
 			picker.append(tile);
 		});
 	},
@@ -548,7 +568,7 @@ var Controller = {
 		this.updateLayoutPicker();
 	},
 	removePhoto: function() {
-		PB.PageSelection.getActiveSelections().forEach(function(pageSel) {
+		PB.Page.Selection.getActiveSelections().forEach(function(pageSel) {
 			pageSel.selection.forEach(function(itemId) {
 				pageSel.bookPage.removeAsset(itemId);
 			});
@@ -618,7 +638,7 @@ function testCanvas2() {
 $(document).ready(function() {
 	Controller.init();
 	GUI.CommandManager.init();
-	Controller.setDesignMode('design');
+	Controller.setDesignMode('parts');
 	$('#designModeButton').hammer().on('touch', {}, function() {
 		Controller.setDesignMode('design');
 	});

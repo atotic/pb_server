@@ -1,72 +1,81 @@
 // editor.gui.dnd.js
 
+/*
+	Dnd module implements drag'n'drop framework
+
+	Draggable elements:
+	- class: pb-draggable
+	- implement Draggable interface in object stored in data('pb-draggable')
+
+	Droppable elements:
+	- class: pb-droppable
+	- implement Droppable inteface in object stored in data('pb-droppable')
+
+	Draggable and Droppable interfaces have default implementations that delegate
+	to options.
+
+*/
 (function(scope) {
-
 "use strict"
-	var Draggable = function(el) {
-		this.src = el;
-	}
-
-
-
-	var Events = {
-		pageLocation: function($ev) {
-			var ev = $ev.originalEvent;
-			var retVal;
-			if ('targetTouches' in ev)
-				retVal = { x: ev.targetTouches[0].pageX,
-					y: ev.targetTouches[0].pageY};
-			else
-				retVal = { x: ev.pageX, y: ev.pageY };
-			if (retVal.x == undefined)
-				debugger;
-//			console.log(retVal.x, retVal.y);
-			return retVal;
-		}
-	}
 
 	var Draggable = function(options) {
 		this.options = $.extend( {
 			flavors:['test'],
 			start: null,
-			end: null
+			end: null,
+			getTransferData: null
 		}, options);
 	}
 
+	// Draggable is a delegate-style class that gets assigned to data('pb-draggable')
 	Draggable.prototype = {
 		get flavors() {
 			return this.options.flavors;
 		},
 		// Returns drag image
 		start: function( $el, ev, startLoc ) {
+			var $dom;
 			if ( this.options.start )
-				return this.options.start($el, ev, startLoc);
-			else {
-				var bounds = $el.get(0).getBoundingClientRect();
-				var $dom = GUI.Util.cloneDomWithCanvas($el)
-					.addClass('touch-drag-src')
-					.removeClass('draggable')
-					.css( {
-						top: startLoc.y,
-						left: startLoc.x,
-						marginLeft: bounds.left + window.scrollX - startLoc.x,
-						marginTop: bounds.top + window.scrollY - startLoc.y
-					});
-				$dom.children().css('verticalAlign', 'top'); // eliminate LI whitespace
+				$dom = this.options.start($el, ev, startLoc);
+			if ($dom)
 				return $dom;
-			}
+			var bounds = $el[0].getBoundingClientRect();
+			var $dom = GUI.Util.cloneDomWithCanvas($el)
+				.addClass('touch-drag-src')
+				.removeClass('draggable')
+				.css( {
+					top: startLoc.y,
+					left: startLoc.x,
+					marginLeft: bounds.left + window.scrollX - startLoc.x,
+					marginTop: bounds.top + window.scrollY - startLoc.y
+				});
+			$dom.children().css('verticalAlign', 'top'); // eliminate LI whitespace
+			return $dom;
 		},
 		end: function() {
 
+		},
+		getTransferData: function($src, flavor) {
+			if (this.options.getTransferData)
+				return this.options.getTransferData($src, flavor);
+
+			switch(flavor) {
+				case 'test':
+					return 'test';
+				default:
+					console.error("getTransferData not implemented", flavor);
+					return null;
+			}
 		}
 	}
 
-
+	// Droppable is a delegate-style class that gets assigned to data('pb-droppable')
 	var Droppable = function(options) {
 		this.options = $.extend( {
 			flavors: ['test'],
 			enter: null,
-			leave: null
+			leave: null,
+			putTransferData: null
 		}, options);
 	}
 
@@ -74,28 +83,40 @@
 		get flavors() {
 			return this.options.flavors;
 		},
-		enter: function($el) {
-			console.log('dropEnter');
+		enter: function($dom, flavor, transferData) {
+			// console.log('dropEnter');
 			if (this.options.enter) {
-				return this.options.enter($el);
+				return this.options.enter($dom, flavor, transferData);
 			}
 			else {
-				$el.addClass('drop-target');
+				this.dropEl = $dom;
+				this.dropEl.addClass('drop-target');
 			}
 		},
-		leave: function($el) {
-			console.log('dropLeave');
+		leave: function() {
+			// console.log('dropLeave');
 			if (this.options.leave) {
-				return this.options.leave($el);
+				return this.options.leave();
 			}
 			else {
-				$el.removeClass('drop-target');
+				this.dropEl.removeClass('drop-target');
+			}
+		},
+		putTransferData: function(ev, flavor, data) {
+			if (this.options.putTransferData)
+				return this.options.putTransferData(ev, flavor, data);
+			switch(flavor) {
+				case 'test':
+					console.warn(data);
+				break;
+				default:
+					console.error("putTransferData not implemented", flavor);
 			}
 		}
 	}
 
-	var defaultDroppable = new Droppable();
-	var defaultDrag = new Draggable();
+	var testDroppable = new Droppable();
+	var testDraggable = new Draggable();
 
 	var $src;	// Dom drag source
 	var $dest = $();	// Dom drag destination
@@ -103,6 +124,7 @@
 	var droppable;	// Dnd.Droppable object
 	var $dragImage;	// DOM being dragged
 	var startLoc;	// start location of the drag
+	var transferFlavor;
 
 	var dragBounds = {
 		top: 0,
@@ -124,13 +146,18 @@
 			if ($dest[0] == $newDest[0])
 				return;
 			if ($dest.length > 0) {
-				droppable.leave($dest);
+				droppable.leave();
 			}
 			$dest = $newDest;
 			if ($dest.length > 0) {
 				// console.log('dest set');
-				droppable = $dest.data('droppable') || defaultDroppable;
-				droppable.enter($dest);
+				droppable = $dest.data('pb-droppable');
+				if (droppable == null) {
+					console.warn('droppable without data');
+					$dest = $();
+					return;
+				}
+				droppable.enter($dest, transferFlavor, draggable.getTransferData($src, transferFlavor) );
 			}
 			else {
 				// console.log('dest removed');
@@ -142,8 +169,8 @@
 			$src = $(ev.currentTarget);
 
 			// create a clone
-			startLoc = Events.pageLocation(ev);
-			draggable = $src.data('pb-draggable') || defaultDrag;
+			startLoc = GUI.Util.getPageLocation(ev);
+			draggable = $src.data('pb-draggable') || testDraggable;
 			$dragImage = draggable.start( $src, ev, startLoc );
 			$(document.body).append($dragImage);
 
@@ -178,7 +205,7 @@
 				while (hidden.length)
 					hidden.pop().style.visibility = 'visible';
 			}
-			var loc = Events.pageLocation($ev);
+			var loc = GUI.Util.getPageLocation($ev);
 			var scrollTop = window.scrollY;
 			var scrollLeft = window.scrollX;
 			var el = document.elementFromPoint( loc.x - scrollLeft,
@@ -186,14 +213,17 @@
 			while (el && el.nodeName != 'BODY' && el.nodeName != 'HTML') {
 				var $el = $(el);
 				if ($el.hasClass('pb-droppable')) {
-					var droppable = $el.data('droppable');
+					var droppable = $el.data('pb-droppable');
 					if (droppable == null) {
-				// 		// console.warn('.pb-droppable must have data(droppable)');
-				 		droppable = defaultDroppable;
+				 		console.warn('.pb-droppable must have data(droppable)');
+				 		droppable = testDroppable;
 				 	}
-				 	if ( this.matchFlavors(draggable.flavors, droppable.flavors) ) {
+				 	var flavor = this.matchFlavors(draggable.flavors, droppable.flavors);
+				 	if ( flavor ) {
 				 		restoreHidden();
-				 		return $el;
+				 		if (el.parentNode == null)
+				 			debugger;
+				 		return {droppable: $el, flavor: flavor};
 				 	}
 				}
 				hide(el);
@@ -201,29 +231,40 @@
 												loc.y - scrollTop );
 			}
 			restoreHidden();
-			return $();
+			return { droppable: $(), flavor: null};
 		},
 		dragMove: function($ev) {
 			// console.log('dragMove enter');
 			$ev.preventDefault(); // stop touch scrolling
-			var loc = Events.pageLocation($ev);
+			var loc = GUI.Util.getPageLocation($ev);
 			loc.x = Math.max( Math.min( loc.x, dragBounds.right ), dragBounds.left);
 			loc.y = Math.max( Math.min( loc.y, dragBounds.bottom), dragBounds.top);
 			$dragImage.css( {
 				top: loc.y,
 				left: loc.x
 			});
-			var $newDest = Dnd.findDroppable($ev);
-			Dnd.setDest($newDest);
+			var d = Dnd.findDroppable($ev);
+			transferFlavor = d.flavor;
+			Dnd.setDest( d.droppable );
 			// console.log('dragMove leave');
 		},
 		// return true if transfer successful
 		doTransfer: function(ev) {
-
-			return true;
+			try {
+				var data = draggable.getTransferData($src, transferFlavor);
+				droppable.putTransferData(ev, transferFlavor, data);
+				droppable.leave();
+				$dest = $();
+				droppable = null;
+				return true;
+			}
+			catch(ex) {
+				console.warn('drag data transfer aborted', transferFlavor);
+				return false;
+			}
 		},
 		dragEnd: function(ev) {
-			console.log('dragEnd');
+			// console.log('dragEnd');
 
 			var transferDone = false;
 			if ($dest.length > 0)
@@ -240,7 +281,7 @@
 					complete: function() { $di.remove();}
 				});
 			}
-			draggable.end(!springBack);
+			draggable.end(transferDone);
 			Dnd.reset();
 		}
 	}

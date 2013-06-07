@@ -422,6 +422,18 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			var lineheight = $clone.innerHeight();
 			$clone.remove();
 			return { divheight: height, lineheight: lineheight };
+		},
+		getPageLocation: function($ev) {
+			var ev = $ev.originalEvent;
+			var retVal;
+			if ('targetTouches' in ev)
+				retVal = { x: ev.targetTouches[0].pageX,
+					y: ev.targetTouches[0].pageY};
+			else
+				retVal = { x: ev.pageX, y: ev.pageY };
+			if (retVal.x == undefined)
+				console.error("bad getPageLocation", $ev);
+			return retVal;
 		}
 	}
 

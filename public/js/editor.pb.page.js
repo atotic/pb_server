@@ -470,6 +470,7 @@ asset widget {
 						height: defaultHeight
 					};
 				}
+				return defaultDesign;
 			}
 
 			// Compute layout
@@ -723,6 +724,10 @@ asset widget {
 
 			if (!this.p.needReflow)
 			{
+				if ( options.editable && !$encloseDom.data('pb-droppable')) {
+					$encloseDom.addClass('pb-droppable')
+						.data('pb-droppable', PB.Page.Editor.Droppable.Page);
+				}
 				// generate all parts of the page
 				// this routine is also used to refresh parts of the page
 				// if old enclosing dom is passed in with parts removed, only the missing parts are regenerated
@@ -732,8 +737,6 @@ asset widget {
 					if ( $background.length == 0 ) {
 						$background = this.generateBackgroundDom( options );
 						insertAfterHelper( $encloseDom, $nextDomSlot, $background );
-						if ( options.editable )
-							$background.addClass('pb-droppable');
 					}
 					$nextDomSlot = $background;
 				}
@@ -776,12 +779,12 @@ asset widget {
 				$encloseDom.text("Design not available." + this.p.assets.ids.length + " items on this page");
 			if ( options.editable && !options.enclosingDom) {
 				$encloseDom.hammer().on( 'touch', {}, function(ev) {
-					PageSelection.findInParent($encloseDom).setSelection();
+					PageSelection.findClosest($encloseDom).setSelection();
 				});
 				PageSelection.bindToDom( this, $encloseDom )
 			}
 			if (options.editable) {
-				PageSelection.findInParent($encloseDom).relayout();
+				PageSelection.findClosest($encloseDom).relayout();
 			}
 			if ( options.syncable && !options.enclosingDom )
 				this.makePageSyncable( $encloseDom, options );
@@ -832,7 +835,7 @@ asset widget {
 				icon: 'move',
 				action: function( $pageDom, assetId ) {
 					var m = new GUI.Manipulators.Move( $pageDom, assetId );
-					PageSelection.findInParent( $pageDom ).setManipulator( m );
+					PageSelection.findClosest( $pageDom ).setManipulator( m );
 				}
 			}));
 			this.cmdSet.add( new GUI.Command({
@@ -841,7 +844,7 @@ asset widget {
 				icon: 'hand-up',
 				action: function( $pageDom, assetId) {
 					var m = new GUI.Manipulators.Pan( $pageDom, assetId );
-					PageSelection.findInParent( $pageDom ).setManipulator( m );
+					PageSelection.findClosest( $pageDom ).setManipulator( m );
 				}
 			}));
 			this.cmdSet.add( new GUI.Command({
@@ -850,7 +853,7 @@ asset widget {
 				icon: 'search',
 				action: function( $pageDom, assetId) {
 					var m = new GUI.Manipulators.Zoom( $pageDom, assetId );
-					PageSelection.findInParent( $pageDom ).setManipulator( m );
+					PageSelection.findClosest( $pageDom ).setManipulator( m );
 				}
 			}));
 			this.cmdSet.add( new GUI.Command({
@@ -859,7 +862,7 @@ asset widget {
 				icon: 'arrow-up',
 				action: function( $pageDom, assetId) {
 					var m = new GUI.Manipulators.Resize( $pageDom, assetId );
-					PageSelection.findInParent( $pageDom ).setManipulator( m );
+					PageSelection.findClosest( $pageDom ).setManipulator( m );
 				}
 			}));
 			this.cmdSet.add( new GUI.Command({
@@ -868,7 +871,7 @@ asset widget {
 				icon: 'arrow-up',
 				action: function( $pageDom, assetId) {
 					var m = new GUI.Manipulators.Resize( $pageDom, assetId ,{ vertical: false });
-					PageSelection.findInParent( $pageDom ).setManipulator( m );
+					PageSelection.findClosest( $pageDom ).setManipulator( m );
 				}
 			}));
 			this.cmdSet.add( new GUI.Command({
@@ -877,7 +880,7 @@ asset widget {
 				icon: 'arrow-up',
 				action: function( $pageDom, assetId) {
 					var m = new GUI.Manipulators.Resize( $pageDom, assetId ,{ fixAspect: true });
-					PageSelection.findInParent( $pageDom ).setManipulator( m );
+					PageSelection.findClosest( $pageDom ).setManipulator( m );
 				}
 			}));
 			this.cmdSet.add( new GUI.Command({
@@ -886,7 +889,7 @@ asset widget {
 				icon: 'repeat',
 				action: function( $pageDom, assetId) {
 					var m = new GUI.Manipulators.Rotate( $pageDom, assetId );
-					PageSelection.findInParent( $pageDom ).setManipulator( m );
+					PageSelection.findClosest( $pageDom ).setManipulator( m );
 				}
 			}));
 			this.cmdSet.add( new GUI.Command({
@@ -895,7 +898,7 @@ asset widget {
 				icon: 'edit',
 				action: function( $pageDom, assetId) {
 					var m = new GUI.Manipulators.EditText( $pageDom, assetId );
-					PageSelection.findInParent( $pageDom ).setManipulator( m );
+					PageSelection.findClosest( $pageDom ).setManipulator( m );
 				}
 			}));
 			this.cmdSet.add( new GUI.Command({
@@ -1041,7 +1044,7 @@ asset widget {
 		touchCb: function(ev) {
 			var $itemDom = $( ev.currentTarget );
 			var assetId = $itemDom.data( 'model_id' );
-			var pageSelection = PageSelection.findInParent( $itemDom );
+			var pageSelection = PageSelection.findClosest( $itemDom );
 			this.selectItem( pageSelection, assetId, $itemDom );
 			PB.stopEvent(ev.gesture);
 			PB.stopEvent(ev);
@@ -1057,7 +1060,7 @@ asset widget {
 				page.generateDom($.extend( {}, eventOptions, options,
 						{enclosingDom: $pageDom }
 						));
-				PageSelection.findInParent($pageDom).highlight();
+				PageSelection.findClosest($pageDom).highlight();
 				ev.stopPropagation();
 			});
 		},
@@ -1073,7 +1076,7 @@ asset widget {
 						break;
 					case 'assetList':
 					case 'layoutId':
-						var pageSelection = PageSelection.findInParent($pageDom);
+						var pageSelection = PageSelection.findClosest($pageDom);
 						pageSelection.setSelection();
 						$pageDom.children().remove();
 						THIS.generateDom(
@@ -1083,7 +1086,7 @@ asset widget {
 						}
 						break;
 					case 'designId':
-						var pageSelection = PageSelection.findInParent($pageDom);
+						var pageSelection = PageSelection.findClosest($pageDom);
 						pageSelection.setSelection();
 						$pageDom.children().remove();
 						THIS.generateDom(
@@ -1163,9 +1166,10 @@ asset widget {
 
 
 	PageSelection.DATA_ID = 'pageSelection';
-	PageSelection.findInParent = function($dom) {
-		var ps = $dom.parents( '*:data("pageSelection")' ).data(PageSelection.DATA_ID);
-		ps = ps || $dom.data(PageSelection.DATA_ID);
+	PageSelection.findClosest = function($dom) {
+
+		var ps = $dom.data(PageSelection.DATA_ID) ||
+			$dom.parents( '*:data("pageSelection")' ).data(PageSelection.DATA_ID);
 		if (ps == null) {
 			console.error("could not find pageselection in ", $dom);
 			throw "Could not find pageselection";
@@ -1189,7 +1193,7 @@ asset widget {
 	PageSelection.getActiveSelections = function() {
 		var retVal = [];
 		$('.selected').each(function() {
-			var s = PageSelection.findInParent($(this));
+			var s = PageSelection.findClosest($(this));
 			if (s)
 				retVal.push(s);
 		});
@@ -1213,9 +1217,10 @@ asset widget {
 			});
 	});
 
-	scope.PageProxy = PageProxy;
-	scope.PageSelection = PageSelection;
-
+	scope.Page = {
+		Proxy: PageProxy,
+		Selection: PageSelection
+	}
 })(PB);
 /*
 // PB.OldPageProxy

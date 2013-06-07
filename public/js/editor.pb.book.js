@@ -143,7 +143,7 @@
 				return this._proxies[id];
 			else
 				if (id in this.localData.document.pages)
-					this._proxies[id] = new PB.PageProxy(id, this);
+					this._proxies[id] = new PB.Page.Proxy(id, this);
 				else
 					throw "No such page";
 			return this._proxies[id];
@@ -476,7 +476,7 @@
 		insertRoughPage: function(index, options) {
 			if (index == undefined)
 				index = -1;
-			var page = PB.PageProxy.blank(this);
+			var page = PB.Page.Proxy.blank(this);
 			var pageList = this.pageList;
 			if (pageList.indexOf(page.id) != -1)
 				throw "page already in book";
