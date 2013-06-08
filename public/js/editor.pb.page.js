@@ -179,6 +179,16 @@ asset widget {
 			this.p.needReflow = true;
 			PB.broadcastChange(this, 'dimensions');
 		},
+		get canSave() {
+			return !this.hasTemporaryChanges;
+		},
+		startTemporaryChanges: function(saveState) {
+			this.hasTemporaryChanges = true;
+			// TODO save state
+		},
+		endTemporaryChanges: function() {
+			// TODO restore state
+		},
 		// return asset id
 		addAsset: function(asset, broadcastOptions) {
 			broadcastOptions = $.extend( { broadcast: true }, broadcastOptions);

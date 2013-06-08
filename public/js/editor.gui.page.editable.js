@@ -105,7 +105,8 @@
 					top: startLoc.y,
 					left: startLoc.x,
 					marginLeft: -width / 2,
-					marginTop: -height / 2
+					marginTop: -height / 2,
+					background: 'transparent'
 				});
 			$dom.find('img').on('dragstart', function(ev) { ev.preventDefault(); return false;});
 			return $dom;

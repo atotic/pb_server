@@ -485,7 +485,8 @@ var Controller = {
 					);
 				var $div = $('<div>').append(tile)
 				$div.addClass('pb-draggable')
-					.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions ));
+					.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions ))
+					.css('background', 'transparent');
 				retVal.push($div);
 			}
 			return retVal;

@@ -82,12 +82,10 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				.attr('dropzone', true)
 				.on(PB.MODEL_CHANGED, function(ev, model, prop, options) {
 					switch(prop) {
-						case 'locked':
-							if (book.locked) {
-								GUI.Template.append($('#alert-container'), 'error-locked');
-								$('#error-locked').slideDown();
-								$('#lockedMessage').text(book.locked);
-							}
+						case 'corrupted':
+							GUI.Template.append($('#alert-container'), 'error-locked');
+							$('#error-locked').slideDown();
+							$('#lockedMessage').text(book.corrupted);
 						break;
 						case 'pleaseLoginError':
 							GUI.Template.append($('#alert-container'), 'please-relogin');
@@ -426,9 +424,9 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		getPageLocation: function($ev) {
 			var ev = $ev.originalEvent;
 			var retVal;
-			if ('targetTouches' in ev)
-				retVal = { x: ev.targetTouches[0].pageX,
-					y: ev.targetTouches[0].pageY};
+			if ('changedTouches' in ev)
+				retVal = { x: ev.changedTouches[0].pageX,
+					y: ev.changedTouches[0].pageY};
 			else
 				retVal = { x: ev.pageX, y: ev.pageY };
 			if (retVal.x == undefined)

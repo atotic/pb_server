@@ -4,7 +4,7 @@
 	Book => {
 		_dirty:
 		_localId: each browser session has a unique id, used to avoid duplicate patches
-		_locked: no save, true if book is corrupted
+		_corrupted: no save, true if book is corrupted
 		_proxies: {id => proxy } mapping. There are proxies for pages/photos
 		_stream: stream to server
 		serverData: book as stored on the server
@@ -32,7 +32,7 @@
 
 	var Book = function(serverJson) {
 		this._dirty = false;
-		this._locked = false;
+		this._corrupted = false;
 		this._proxies = {};
 		if ('photos' in serverJson) {
 			for (var i=0; i<serverJson.photos.length; i++)
@@ -78,8 +78,8 @@
 		get title() {
 			return this.localData.document.title || "Untitled";
 		},
-		get locked() {
-			return this._locked;
+		get corrupted() {
+			return this._corrupted;
 		},
 		get unusedPhotoList() {
 			var usedHash = this._collectUsedImages();
@@ -174,9 +174,9 @@
 		photo: function(id) {
 			return this._getPhotoProxy(id);
 		},
-		lockUp: function(reason) { // Called when book is corrupted.
-			this._locked = reason;
-			PB.broadcastChange(this, 'locked')
+		setCorrupted: function(reason) { // Called when book is corrupted.
+			this._corrupted = reason;
+			PB.broadcastChange(this, 'corrupted')
 		},
 		connectStream: function() {
 			if (this.db_id == 0)
@@ -329,9 +329,9 @@
 			return [];
 		},
 		applyBroadcastPatches: function(patchArray) {
-			if (this._locked) {
-				console.warn("Ignored patch, book is locked");
-				throw "Patch ignored, book is locked";
+			if (this._corrupted) {
+				console.warn("Ignored patch, book is corrupted");
+				throw "Patch ignored, book is corrupted";
 			}
 			var t = new PB.Timer("applyBroadcastPatches");
 			var changes = [];
@@ -361,7 +361,7 @@
 //				t.print("broadcast");
 			}
 			catch(e) {
-				this.lockUp("Remote book edits were incompatible with your local changes.");
+				this.setCorrupted("Remote book edits were incompatible with your local changes.");
 				console.log(e.message, patchArray[i]);
 			}
 		},
@@ -375,6 +375,11 @@
 			return diff;
 		},
 		getSaveDeferred: function() {
+
+		// Preflight checks
+
+			if (this._corrupted)
+				return null;
 			// safeguard, do not save book with temporary photo ids
 			// wait until all images have been saved
 			for (var p in this.localData.document.photoMap) {
@@ -383,12 +388,22 @@
 					return null;
 				}
 			}
+			var pageList = this.pageList;
+			var canSave = true;
+			for (var i=0; i<pageList.length; i++) {
+				canSave = canSave && this.page(pageList[i]).canSave;
+			}
+			if (!canSave)
+				return;
+
+		// compute diffs
 			var diff = this.getDiff();
 			if (diff.length === 0) {
 				this._dirty = false;
 				return null;
 			}
 
+		// create ajax
 			var ajax = $.ajax('/books/' + this.db_id, {
 				data: JSON.stringify(diff),
 				type: "PATCH",
@@ -419,7 +434,7 @@
 						break;
 					case 404:
 					case 410:
-						THIS.lockUp("The book was deleted.");
+						THIS.setCorrupted("The book was deleted.");
 						break;
 					case 412:
 						console.error("We did not send the right header, should never see this");
