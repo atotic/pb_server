@@ -108,6 +108,9 @@
 					marginTop: bounds.top + window.scrollY - startLoc.y,
 					position: 'absolute'
 				});
+			if ($dom.prop('nodeName') == 'IMG')
+				$dom.on('dragstart', function(ev) { ev.preventDefault(); });
+			$dom.find('img').on('dragstart', function(ev) { ev.preventDefault(); });
 			$dom.children().css('verticalAlign', 'top'); // eliminate LI whitespace
 			return $dom;
 		},

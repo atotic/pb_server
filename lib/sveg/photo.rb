@@ -51,7 +51,8 @@ class Photo < Sequel::Model(:photos)
 	end
 
 	def file_path(*size_arg) # call with no args for full size, or specify size as 'icon'|'display'
-		size = size_arg.length > 0 ? size_arg[0] : :original;
+		size = size_arg[0]
+		size = :original unless size
 		size = size.to_sym
 		path = case size
 			when :icon then self.icon_file

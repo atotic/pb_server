@@ -1,7 +1,6 @@
 // editor.gui.page.editable.js
 
 (function(scope) {
-
 	var PageDroppable = new GUI.Dnd.Droppable({
 		flavors: ['background', 'layout', 'widget', 'design'],
 		enter: function($dom, flavor, transferData) {
@@ -94,6 +93,98 @@
 		}
 	});
 
+	var PhotoDroppable = new GUI.Dnd.Droppable( {
+		flavors: ['frame', 'photo'],
+		enter: function($dom, flavor, transferData, handoff) {
+			this.page = PB.Page.Selection.findClosest($dom).bookPage;
+			this.page.startTemporaryChanges();
+			this.assetId = $dom.data('model_id');
+			this.dom = $dom;
+			this.dropFlavor = flavor;
+			var asset = this.page.getAsset( this.assetId );
+			switch( this.dropFlavor ) {
+				case 'frame':
+					if (handoff) {
+						this.oldFrameId = handoff.oldFrameId,
+						this.oldFrameData = handoff.oldFrameData
+					}
+					else {
+						this.oldFrameId = asset.frameId;
+						this.oldFrameData = asset.frameData;
+						this.page.updateAsset( this.assetId, {
+							frameId: transferData
+						});
+					}
+				break;
+				case 'photo': {
+					if (handoff) {
+						$.extend(this, handoff);
+					}
+					else {
+						this.oldPhotoId = asset.photoId;
+						this.oldZoom = asset.zoom;
+						this.oldPhotoRect = asset.photoRect;
+						this.oldFocalPoint = asset.focalPoint;
+						this.page.updateAsset(this.assetId, {
+							photoId: transferData,
+							zoom: 1.0,
+							focalPoint: null
+						});
+					}
+				}
+			}
+		},
+		leave: function(handoffAssetId) {
+			switch( this.dropFlavor ) {
+				case 'frame':
+					if (handoffAssetId == this.assetId) {
+						return {
+							oldFrameId: this.oldFrameId,
+							oldFrameData: this.oldFrameData
+						}
+					}
+				 	if ('oldFrameId' in this) {
+						this.page.updateAsset( this.assetId, {
+							frameId: this.oldFrameId,
+							frameData: this.oldFrameData
+						});
+					}
+				break;
+				case 'photo':
+					if (handoffAssetId == this.assetId) {
+						return {
+							oldPhotoId: this.oldPhotoId,
+							oldZoom: this.oldZoom,
+							oldPhotoRect: this.oldPhotoRect,
+							oldFocalPoint: this.oldFocalPoint
+						}
+					}
+					if ('oldPhotoId' in this) {
+						this.page.updateAsset( this.assetId, {
+							photoId: this.oldPhotoId,
+							zoom: this.oldZoom,
+							photoRect: this.oldPhotoRect,
+							focalPoint: this.oldFocalPoint
+						});
+					}
+			}
+			this.page.endTemporaryChanges();
+		},
+		putTransferData: function( $ev, flavor, transferData ) {
+			switch( this.dropFlavor ) {
+				case 'frame':
+					this.page.updateAsset( this.assetId, {
+						frameId: transferData
+					});
+					delete this.oldFrameId;
+				break;
+				case 'photo':
+					delete this.oldPhotoId;
+				break;
+			}
+		}
+	});
+
 	var DesignDraggableOptions = {
 		flavors: ['design'],
 		designId: 'your id here',
@@ -118,6 +209,13 @@
 		}
 	}
 
+	var PhotoDraggableOptions = {
+		flavors: ['photo'],
+		photoId: 'your id here',
+		getTransferData: function(ev, $src, flavor) {
+			return this.photoId;
+		}
+	}
 	var WidgetDraggableOptions = {
 		flavors: ['widget'],
 		widgetId: 'your id here',
@@ -131,7 +229,7 @@
 				width *= scale;
 				height *= scale;
 			}
-			var $widgetDom = widget.generateDom( width, height, {}, {resolution: PB.PhotoProxy.DISPLAY });
+			var $widgetDom = widget.generateDom( width, height, {}, {resolution: PB.PhotoProxy.MEDIUM });
 			var $dom = $('<div>').append($widgetDom);
 			$dom.addClass('touch-drag-src')
 				.css( {
@@ -157,61 +255,7 @@
 		}
 	}
 
-	var PhotoDroppable = new GUI.Dnd.Droppable( {
-		flavors: ['frame'],
-		enter: function($dom, flavor, transferData, handoff) {
-			this.page = PB.Page.Selection.findClosest($dom).bookPage;
-			this.page.startTemporaryChanges();
-			this.assetId = $dom.data('model_id');
-			this.dom = $dom;
-			this.dropFlavor = flavor;
-			var asset = this.page.getAsset( this.assetId );
-			switch( this.dropFlavor ) {
-				case 'frame':
-					if (handoff) {
-						this.oldFrameId = handoff.oldFrameId,
-						this.oldFrameData = handoff.oldFrameData
-					}
-					else {
-						this.oldFrameId = asset.frameId;
-						this.oldFrameData = asset.frameData;
-						this.page.updateAsset( this.assetId, {
-							frameId: transferData
-						});
-					}
-				break;
-			}
-		},
-		leave: function(handoffAssetId) {
-			switch( this.dropFlavor ) {
-				case 'frame':
-					if (handoffAssetId == this.assetId) {
-						return {
-							oldFrameId: this.oldFrameId,
-							oldFrameData: this.oldFrameData
-						}
-					}
-				 	if ('oldFrameId' in this) {
-						this.page.updateAsset( this.assetId, {
-							frameId: this.oldFrameId,
-							frameData: this.oldFrameData
-						});
-						this.page.endTemporaryChanges();
-					}
-				break;
-			}
-		},
-		putTransferData: function( $ev, flavor, transferData ) {
-			switch( this.dropFlavor ) {
-				case 'frame':
-					this.page.updateAsset( this.assetId, {
-						frameId: transferData
-					});
-					delete this.oldFrameId;
-				break;
-			}
-		}
-	});
+
 
 	scope.Page.Editor = {
 		Droppable: {
@@ -223,7 +267,8 @@
 			Background: BackgroundDraggableOptions,
 			Layout: LayoutDraggableOptions,
 			Widget: WidgetDraggableOptions,
-			Frame: FrameDraggableOptions
+			Frame: FrameDraggableOptions,
+			Photo: PhotoDraggableOptions
 		}
 	}
 

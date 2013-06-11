@@ -27,12 +27,7 @@
 			return this._serverPhoto;
 		},
 		getUrl: function(size) {
-			if (size <= PhotoProxy.SMALL)
-				return this.p.iconUrl;
-			else if (size <= PhotoProxy.MEDIUM)
-				return this.p.displayUrl;
-			else
-				return this.p.originalUrl;
+			return this.p.getUrl(size);
 		},
 		get dimensions() {
 			return this.p.dimensions;
@@ -238,6 +233,9 @@
 		set doNotSave(val) {
 			this._doNotSave = val;
 		},
+		get isLoaded() {
+			return 'icon_url' in this;
+		},
 		_localFileUrl: function() {
 			if ('_fileUrl' in this)
 				return this._fileUrl;
@@ -280,6 +278,15 @@
 				return { width: this._data_natural_w, height: this._data_natural_h};
 			else
 				return { width: 1936, height: 1936};
+		},
+		// Just the url
+		getUrl: function(size) {
+			if (size <= PB.PhotoProxy.SMALL)
+				return this.iconUrl.url;
+			else if (size <= PB.PhotoProxy.MEDIUM)
+				return this.displayUrl.url;
+			else
+				return this.originalUrl.url;
 		},
 		displayName: function() {
 			if ('display_name' in this)

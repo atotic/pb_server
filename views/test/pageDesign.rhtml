@@ -19,7 +19,7 @@
 <%= asset_link("editor.gui.rect.js") %>
 <script src="/js/editor.gui.events.js"></script>
 <%= asset_link("editor.gui.commands.js") %>
-<script src="/js/editor.gui.popup.js"></script>
+<%= asset_link("editor.gui.popup.js") %>
 <%= asset_link("editor.gui.manipulators.js") %>
 <%= asset_link("editor.pb.themecache.js") %>
 <%= asset_link("editor.pb.themeutils.js") %>
@@ -86,9 +86,14 @@
 	margin-left: 10px;
 }
 #componentPicker {
-
 }
 #componentPicker > div {
+	display: inline-block;
+}
+#photoPicker {
+
+}
+#photoPicker > div {
 	display: inline-block;
 }
 #layoutPicker {
@@ -141,6 +146,7 @@ var currentPage = book.insertRoughPage(-1);
 var Controller = {
 	init: function() {
 		var THIS = this;
+		PB.ServerPhotoCache.get(600);
 		$.when(
 			PB.ThemeCache.load('/t/admin@core/theme.js'),
 			PB.ThemeCache.load('/t/admin@sample/theme.js'),
@@ -149,7 +155,6 @@ var Controller = {
 			PB.ThemeCache.load('/t/admin@sports/theme.js')
 			)
 			.done( function() {
-
 				new PB.TemplatePhoto.create( {
 					id: 'admin@sample/small_soccer',
 					originalUrl:  '/t/admin@sample/soccer_small.svg',
@@ -161,11 +166,16 @@ var Controller = {
 				THIS.initBackPicker();
 				THIS.setDimensions(768, 512);
 				THIS.setDesign('theme://admin@sports/designs/basketballDesign1');
-				THIS.addPhoto();
+				currentPage.addAsset( {
+					type:'photo',
+					photoId: 600
+				});
+				// THIS.addPhoto();
 				// THIS.addText("Very big text\nHas a newline too!")
 				// THIS.setBackground('theme://admin@sports/backgrounds/soccerField');
 				THIS.showPage();
 				THIS.updateFramePicker();
+				THIS.initPhotoPicker();
 				testCanvas();
 			})
 			.fail( function() {
@@ -419,6 +429,28 @@ var Controller = {
 			assignCb($li, frames[i].id, frames[i].data);
 		}
 	},
+	initPhotoPicker: function() {
+		var photoIds = [590,591,592,593,594,595,600, 601, 602];
+		function makePhoto(id) {
+			var photo = PB.ServerPhotoCache.get( id);
+			var iconRec = photo.iconUrl;
+			var $img = $('<img>').prop('src', iconRec.url).css('height', 96);
+			photo.addListener( function(prop) {
+				if (prop == 'icon_url') {
+					$img.prop('src', photo.iconUrl.url);
+				}
+			});
+			var dragOptions = $.extend( {},
+				PB.Page.Editor.DraggableOptions.Photo,
+				{ photoId: id}
+			);
+			$img.addClass('pb-draggable')
+				.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions ));
+			$img.on('dragstart', function(ev) { ev.preventDefault(); });
+			$('#photoPicker').append($img);
+		}
+		photoIds.forEach( makePhoto );
+	},
 	updateComponentPicker: function(themeId, page) {
 		var theme = PB.ThemeCache.get(themeId);
 		var dimensions = page.dimensions;
@@ -428,7 +460,7 @@ var Controller = {
 			var retVal = [];
 			for (x in theme.designs) {
 				var designId = 'theme://' + themeId + "/designs/" + x;
-				var $icon = $(PB.ThemeUtils.getDesignIcon( currentPage, 112, {designId: designId }
+				var $icon = $(PB.ThemeUtils.getDesignIcon( currentPage, 96, {designId: designId }
 				));
 				var designOptions = $.extend( {},
 					PB.Page.Editor.DraggableOptions.Design,
@@ -491,7 +523,7 @@ var Controller = {
 					width *= r; height *=r;
 				}
 				var tile = theme.widgets[x].generateDom(
-					width, height, {}, {resolution: PB.PhotoProxy.ICON });
+					width, height, {}, {resolution: PB.PhotoProxy.SMALL });
 				tile.css({
 				 	verticalAlign: 'baseline'
 				 });
@@ -519,7 +551,7 @@ var Controller = {
 				});
 				theme.frames[x].fillFrame( $frameDiv,
 					{},
-					{ resolution: PB.PhotoProxy.ICON }
+					{ resolution: PB.PhotoProxy.SMALL }
 				);
 				var imgRect = GUI.Rect.create(
 					{ width: tileWidth, height: tileHeight })
@@ -698,6 +730,9 @@ $(document).ready(function() {
 	</ul>
 	<ul id='componentPicker'>
 	</ul>
+	<ul id='photoPicker'>
+	</ul>
+	<!--
 	<p>Layouts:</p>
 	<ul id='layoutPicker'>
 	</ul>
@@ -707,6 +742,7 @@ $(document).ready(function() {
 	<p>Frames</p>
 	<ul id='framePicker'>
 	</ul>
+	-->
 	<div id='pagePopupContainer'></div>
 	<div class='design-book-page-left' ></div>
 </body>

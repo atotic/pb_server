@@ -384,7 +384,8 @@ asset widget {
 					var focalPoint = asset.focalPoint || { x: 50, y: 50 };
 
 					var photo = PB.ServerPhotoCache.get( asset.photoId );
-					var photoRect = new GUI.Rect( photo );
+
+					var photoRect = new GUI.Rect( photo.dimensions );
 					var scale = photoRect.fillInside( innerRect);
 					photoRect = photoRect.scaleBy( scale ).scaleBy( zoom );
 					photoRect = photoRect.centerIn(innerRect,
@@ -717,7 +718,7 @@ asset widget {
 				});
 			var imgDom = $( document.createElement('img') )
 				.addClass('design-photo-img')
-				.prop('src', PB.ServerPhotoCache.get( asset.photoId).url )
+				.prop('src', PB.ServerPhotoCache.get( asset.photoId).getUrl(options.resolution) )
 				.css({
 					top: asset.photoRect.top,
 					left: asset.photoRect.left,
@@ -738,7 +739,8 @@ asset widget {
 			options = $.extend({
 				syncable: false,	// sync dom to changes
 				editable: false,	// expose edit ui
-				enclosingDom: null	// old dom to
+				enclosingDom: null,	// old dom to
+				resolution: PB.PhotoProxy.MEDIUM
 			}, options);
 			var $encloseDom = options.enclosingDom || this.enclosingDom( options );
 			var d = this.dimensions;
