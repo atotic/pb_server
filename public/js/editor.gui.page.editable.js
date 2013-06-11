@@ -3,24 +3,32 @@
 (function(scope) {
 
 	var PageDroppable = new GUI.Dnd.Droppable({
-		flavors: ['background', 'layout', 'widget'],
+		flavors: ['background', 'layout', 'widget', 'design'],
 		enter: function($dom, flavor, transferData) {
 			this.page = PB.Page.Selection.findClosest($dom).bookPage;
 			this.dom = $dom;
 			this.dropFlavor = flavor;
 			switch( this.dropFlavor ) {
 				case 'background':
+					this.page.startTemporaryChanges();
 					this.oldBackground = this.page.p.backgroundId;
 					this.oldBackgroundData = this.page.p.backgroundData;
 					this.page.setBackground(transferData);
 				break;
 				case 'layout':
+					this.page.startTemporaryChanges();
 					this.oldLayout = this.page.p.layoutId;
 					this.oldLayoutData = this.page.p.layoutData;
 					this.page.setLayout( transferData);
 				break;
 				case 'widget':
+					this.page.startTemporaryChanges();
 					this.dom.addClass('drop-target');
+				break;
+				case 'design':
+					this.page.startTemporaryChanges(true);
+					this.oldDesignId = this.page.p.designId;
+					this.page.setDesign( transferData );
 				break;
 				default:
 					console.error('unknown drop flavor', this.dropFlavor );
@@ -30,29 +38,42 @@
 		leave: function() {
 			switch( this.dropFlavor ) {
 				case 'background':
-				 	if ('oldBackground' in this)
+				 	if ('oldBackground' in this) {
 						this.page.setBackground( this.oldBackground, this.oldBackgroundData );
+						this.page.endTemporaryChanges();
+				 	}
 				break;
 				case 'layout':
-					if ('oldLayout' in this)
-						this.page.setLayout(this.oldLayout, this.oldLayoutData);
+					if ('oldLayout' in this) {
+ 						this.page.setLayout(this.oldLayout, this.oldLayoutData);
+						this.page.endTemporaryChanges();
+					}
 				break;
 				case 'widget':
 					this.dom.removeClass('drop-target');
+					this.page.endTemporaryChanges();
+				break;
+				case 'design':
+					if ('oldDesignId' in this) {
+						this.page.endTemporaryChanges(true);
+					}
 				break;
 			}
 		},
 		putTransferData: function( $ev, flavor, transferData ) {
 			switch( this.dropFlavor ) {
 				case 'background':
+					this.page.endTemporaryChanges();
 					this.page.setBackground( transferData );
 					delete this.oldBackground;
 				break;
 				case 'layout':
+					this.page.endTemporaryChanges();
 					this.page.setLayout( transferData );
 					delete this.oldLayout;
 				break;
 				case 'widget':
+					this.page.endTemporaryChanges();
 					var loc = GUI.Util.getPageLocation($ev);
 					var pageBounds = this.dom[0].getBoundingClientRect();
 					var widget = PB.ThemeCache.resource(transferData);
@@ -65,9 +86,21 @@
 						height: widget.height()
 					});
 				break;
+				case 'design':
+					this.page.endTemporaryChanges(false);
+					delete this.oldDesignId;
+				break;
 			}
 		}
 	});
+
+	var DesignDraggableOptions = {
+		flavors: ['design'],
+		designId: 'your id here',
+		getTransferData: function(ev, $src, flavor) {
+			return this.designId;
+		}
+	}
 
 	var BackgroundDraggableOptions = {
 		flavors: ['background'],
@@ -115,14 +148,82 @@
 			return this.widgetId;
 		}
 	}
+
+	var FrameDraggableOptions = {
+		flavors: ['frame'],
+		frameId: 'your id here',
+		getTransferData: function(ev, $src, flavor) {
+			return this.frameId;
+		}
+	}
+
+	var PhotoDroppable = new GUI.Dnd.Droppable( {
+		flavors: ['frame'],
+		enter: function($dom, flavor, transferData, handoff) {
+			this.page = PB.Page.Selection.findClosest($dom).bookPage;
+			this.page.startTemporaryChanges();
+			this.assetId = $dom.data('model_id');
+			this.dom = $dom;
+			this.dropFlavor = flavor;
+			var asset = this.page.getAsset( this.assetId );
+			switch( this.dropFlavor ) {
+				case 'frame':
+					if (handoff) {
+						this.oldFrameId = handoff.oldFrameId,
+						this.oldFrameData = handoff.oldFrameData
+					}
+					else {
+						this.oldFrameId = asset.frameId;
+						this.oldFrameData = asset.frameData;
+						this.page.updateAsset( this.assetId, {
+							frameId: transferData
+						});
+					}
+				break;
+			}
+		},
+		leave: function(handoffAssetId) {
+			switch( this.dropFlavor ) {
+				case 'frame':
+					if (handoffAssetId == this.assetId) {
+						return {
+							oldFrameId: this.oldFrameId,
+							oldFrameData: this.oldFrameData
+						}
+					}
+				 	if ('oldFrameId' in this) {
+						this.page.updateAsset( this.assetId, {
+							frameId: this.oldFrameId,
+							frameData: this.oldFrameData
+						});
+						this.page.endTemporaryChanges();
+					}
+				break;
+			}
+		},
+		putTransferData: function( $ev, flavor, transferData ) {
+			switch( this.dropFlavor ) {
+				case 'frame':
+					this.page.updateAsset( this.assetId, {
+						frameId: transferData
+					});
+					delete this.oldFrameId;
+				break;
+			}
+		}
+	});
+
 	scope.Page.Editor = {
 		Droppable: {
 			Page: PageDroppable,
+			Photo: PhotoDroppable
 		},
 		DraggableOptions: {
+			Design: DesignDraggableOptions,
 			Background: BackgroundDraggableOptions,
 			Layout: LayoutDraggableOptions,
-			Widget: WidgetDraggableOptions
+			Widget: WidgetDraggableOptions,
+			Frame: FrameDraggableOptions
 		}
 	}
 

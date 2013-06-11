@@ -14,9 +14,67 @@
 	Draggable and Droppable interfaces have default implementations that delegate
 	to options.
 
+	Tricky code alert: Droppable HANDOFF
+
+	Some droppables replace their dom with new dom as part of their user feedback.
+	This causes trouble, because one droppable gets replaced by another.
+	Without handoff, we get stuck in infinite loop:
+	drop.enter -> delete dom -> drop.leave -> newDrop.enter -> delete dom -> drop.leave etc. etc
+
+	To prevent this, droppable can hand off data to next droppable on leave.
+
+	If new droppable gets handoff data on enter, and it is same model, it can prevent
+	animation,see PhotoDroppable enter/leave for example
 */
 (function(scope) {
 "use strict"
+
+	// Droppable is a delegate-style class that gets assigned to data('pb-droppable')
+	// See HANDOFF comment above
+	var Droppable = function(options) {
+		this.options = $.extend( {
+			flavors: ['test'],
+			enter: null,
+			leave: null,
+			putTransferData: null
+		}, options);
+	}
+
+	Droppable.prototype = {
+		get flavors() {
+			return this.options.flavors;
+		},
+		enter: function($dom, flavor, transferData, handoff) {
+			// console.log('dropEnter');
+			if (this.options.enter) {
+				return this.options.enter($dom, flavor, transferData, handoff);
+			}
+			else {
+				this.dropEl = $dom;
+				this.dropEl.addClass('drop-target');
+			}
+		},
+		leave: function(handoffId) {
+			// console.log('dropLeave');
+			if (this.options.leave) {
+				return this.options.leave(handoffId);
+			}
+			else {
+				this.dropEl.removeClass('drop-target');
+			}
+		},
+		putTransferData: function(ev, flavor, data) {
+			if (this.options.putTransferData)
+				return this.options.putTransferData(ev, flavor, data);
+			switch(flavor) {
+				case 'test':
+					console.warn(data);
+				break;
+				default:
+					console.error("putTransferData not implemented", flavor);
+			}
+		}
+	}
 
 	var Draggable = function(options) {
 		this.options = $.extend( {
@@ -44,10 +102,11 @@
 				.addClass('touch-drag-src')
 				.removeClass('draggable')
 				.css( {
-					top: startLoc.y,
-					left: startLoc.x,
+					top: startLoc.y + 2,
+					left: startLoc.x + 2,
 					marginLeft: bounds.left + window.scrollX - startLoc.x,
-					marginTop: bounds.top + window.scrollY - startLoc.y
+					marginTop: bounds.top + window.scrollY - startLoc.y,
+					position: 'absolute'
 				});
 			$dom.children().css('verticalAlign', 'top'); // eliminate LI whitespace
 			return $dom;
@@ -65,52 +124,6 @@
 				default:
 					console.error("getTransferData not implemented", flavor);
 					return null;
-			}
-		}
-	}
-
-	// Droppable is a delegate-style class that gets assigned to data('pb-droppable')
-	var Droppable = function(options) {
-		this.options = $.extend( {
-			flavors: ['test'],
-			enter: null,
-			leave: null,
-			putTransferData: null
-		}, options);
-	}
-
-	Droppable.prototype = {
-		get flavors() {
-			return this.options.flavors;
-		},
-		enter: function($dom, flavor, transferData) {
-			// console.log('dropEnter');
-			if (this.options.enter) {
-				return this.options.enter($dom, flavor, transferData);
-			}
-			else {
-				this.dropEl = $dom;
-				this.dropEl.addClass('drop-target');
-			}
-		},
-		leave: function() {
-			// console.log('dropLeave');
-			if (this.options.leave) {
-				return this.options.leave();
-			}
-			else {
-				this.dropEl.removeClass('drop-target');
-			}
-		},
-		putTransferData: function(ev, flavor, data) {
-			if (this.options.putTransferData)
-				return this.options.putTransferData(ev, flavor, data);
-			switch(flavor) {
-				case 'test':
-					console.warn(data);
-				break;
-				default:
-					console.error("putTransferData not implemented", flavor);
 			}
 		}
 	}
@@ -145,8 +158,9 @@
 		setDest: function($newDest) {
 			if ($dest[0] == $newDest[0])
 				return;
+			var handoff;
 			if ($dest.length > 0) {
-				droppable.leave();
+				handoff = droppable.leave($newDest.data('model_id'));
 			}
 			$dest = $newDest;
 			if ($dest.length > 0) {
@@ -157,7 +171,7 @@
 					$dest = $();
 					return;
 				}
-				droppable.enter($dest, transferFlavor, draggable.getTransferData($src, transferFlavor) );
+				droppable.enter($dest, transferFlavor, draggable.getTransferData($src, transferFlavor), handoff );
 			}
 			else {
 				// console.log('dest removed');

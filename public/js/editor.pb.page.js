@@ -184,10 +184,31 @@ asset widget {
 		},
 		startTemporaryChanges: function(saveState) {
 			this.hasTemporaryChanges = true;
-			// TODO save state
+			if (saveState)
+				this.temporaryState = {
+					assets: PB.clone( this.p.assets ),
+					designId: this.p.designId,
+					layoutId: this.p.layoutId,
+					layoutData: PB.clone( this.p.layoutData ),
+					backgroundId: this.p.backgroundId,
+					backgroundData: this.p.backgroundData
+				}
 		},
-		endTemporaryChanges: function() {
-			// TODO restore state
+		endTemporaryChanges: function(restoreState) {
+			if (restoreState) {
+				if ('temporaryState' in this) {
+					this.p.assets = this.temporaryState.assets;
+					this.p.designId = this.temporaryState.designId;
+					this.p.layoutId = this.temporaryState.layoutId;
+					this.p.layoutData = this.temporaryState.layoutData;
+					this.p.backgroundId = this.temporaryState.backgroundId;
+					this.p.backgroundData = this.temporaryState.backgroundData;
+					PB.broadcastChange( this, 'designId' );
+				}
+			}
+			if ('temporaryState' in this)
+				delete this.temporaryState;
+			this.hasTemporaryChanges = false;
 		},
 		// return asset id
 		addAsset: function(asset, broadcastOptions) {
@@ -298,6 +319,8 @@ asset widget {
 			}
 		},
 		setDesign: function( designId, options ) {
+			if (this.p.designId == designId)
+				return;
 			this.p.designId = designId;
 			this.p.layoutId = null;
 			this.p.layoutData = null;
@@ -1061,6 +1084,9 @@ asset widget {
 		},
 		makeEditable: function(item, $itemDom) {
 			var THIS = this;
+			if (item.type == 'photo')
+				$itemDom.addClass('pb-droppable')
+					.data('pb-droppable', PB.Page.Editor.Droppable.Photo);
 			$itemDom.hammer().on('touch', {}, function(ev) { THIS.touchCb(ev) });
 		},
 		makeItemSyncable: function(page, $itemDom, options) {

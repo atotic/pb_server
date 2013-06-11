@@ -424,6 +424,22 @@ var Controller = {
 		var dimensions = page.dimensions;
 		var whRatio = dimensions.width / dimensions.height;
 		var tileHeight = 96;
+		function getDesignTiles() {
+			var retVal = [];
+			for (x in theme.designs) {
+				var designId = 'theme://' + themeId + "/designs/" + x;
+				var $icon = $(PB.ThemeUtils.getDesignIcon( currentPage, 112, {designId: designId }
+				));
+				var designOptions = $.extend( {},
+					PB.Page.Editor.DraggableOptions.Design,
+					{designId: designId});
+				$icon.addClass('pb-draggable')
+					.data('pb-draggable', new GUI.Dnd.Draggable( designOptions));
+				retVal.push($icon);
+		//			assignCb($li, designId)
+			}
+			return retVal;
+		};
 		function getBackgroundTiles() {
 			var retVal = [];
 			for (var x in theme.backgrounds) {
@@ -438,7 +454,7 @@ var Controller = {
 					});
 				$div.addClass('pb-draggable')
 					.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions ));
-					retVal.push($div);
+				retVal.push($div);
 			}
 			return retVal;
 		};
@@ -483,10 +499,11 @@ var Controller = {
 					PB.Page.Editor.DraggableOptions.Widget,
 					{ widgetId: 'theme://' + themeId + '/widgets/' + x }
 					);
-				var $div = $('<div>').append(tile)
+				var $div = $('<div>').append(tile);
 				$div.addClass('pb-draggable')
 					.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions ))
 					.css('background', 'transparent');
+				$div.find('img').on('dragstart', function(ev) { ev.preventDefault() });
 				retVal.push($div);
 			}
 			return retVal;
@@ -517,6 +534,11 @@ var Controller = {
 						backgroundColor: 'white'
 					}
 					));
+				var frameOptions = $.extend({},
+					PB.Page.Editor.DraggableOptions.Frame,
+					{ frameId: 'theme://' + themeId + '/frames/' + x});
+				$frameDiv.addClass('pb-draggable')
+					.data('pb-draggable', new GUI.Dnd.Draggable( frameOptions ));
 				retVal.push($frameDiv);
 			}
 			return retVal;
@@ -524,6 +546,7 @@ var Controller = {
 		var picker = $('#componentPicker');
 		picker.children().remove();
 		var tiles = [].concat(
+			getDesignTiles(),
 			getBackgroundTiles(),
 			getLayoutTiles(),
 			getWidgetTiles(),
