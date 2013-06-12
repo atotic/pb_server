@@ -108,9 +108,7 @@
 					marginTop: bounds.top + window.scrollY - startLoc.y,
 					position: 'absolute'
 				});
-			if ($dom.prop('nodeName') == 'IMG')
-				$dom.on('dragstart', function(ev) { ev.preventDefault(); });
-			$dom.find('img').on('dragstart', function(ev) { ev.preventDefault(); });
+			GUI.Util.preventDefaultDrag($dom);
 			$dom.children().css('verticalAlign', 'top'); // eliminate LI whitespace
 			return $dom;
 		},
@@ -174,7 +172,13 @@
 					$dest = $();
 					return;
 				}
-				droppable.enter($dest, transferFlavor, draggable.getTransferData($src, transferFlavor), handoff );
+				try {
+					droppable.enter($dest, transferFlavor, draggable.getTransferData($src, transferFlavor), handoff );
+				}
+				catch(ex) {
+					droppable = null;
+					$dest = $();
+				}
 			}
 			else {
 				// console.log('dest removed');
@@ -305,6 +309,7 @@
 
 	$(document).on('touchstart.dnd mousedown.dnd', ".pb-draggable", Dnd.dragStart );
 	scope.Dnd = {
+		Dnd: Dnd,
 		Draggable: Draggable,
 		Droppable: Droppable
 	};

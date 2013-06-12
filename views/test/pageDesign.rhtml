@@ -446,7 +446,7 @@ var Controller = {
 			);
 			$img.addClass('pb-draggable')
 				.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions ));
-			$img.on('dragstart', function(ev) { ev.preventDefault(); });
+			GUI.Util.preventDefaultDrag($img);
 			$('#photoPicker').append($img);
 		}
 		photoIds.forEach( makePhoto );
@@ -467,6 +467,7 @@ var Controller = {
 					{designId: designId});
 				$icon.addClass('pb-draggable')
 					.data('pb-draggable', new GUI.Dnd.Draggable( designOptions));
+					GUI.Util.preventDefaultDrag($icon);
 				retVal.push($icon);
 		//			assignCb($li, designId)
 			}
@@ -535,7 +536,7 @@ var Controller = {
 				$div.addClass('pb-draggable')
 					.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions ))
 					.css('background', 'transparent');
-				$div.find('img').on('dragstart', function(ev) { ev.preventDefault() });
+				GUI.Util.preventDefaultDrag($div);
 				retVal.push($div);
 			}
 			return retVal;

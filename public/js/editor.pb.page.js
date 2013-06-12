@@ -279,7 +279,7 @@ asset widget {
 							dirty = true;
 						break;
 						case 'object':
-							if (typeof dest[prop] !== 'object') {
+							if (typeof dest[prop] !== 'object' || dest[prop] == null) {
 								dirty = true;
 								dest[prop] = {}
 							}
@@ -1076,20 +1076,30 @@ asset widget {
 			}
 			pageSelection.setSelection( assetId, $popup );
 		},
-		touchCb: function(ev) {
-			var $itemDom = $( ev.currentTarget );
-			var assetId = $itemDom.data( 'model_id' );
-			var pageSelection = PageSelection.findClosest( $itemDom );
-			this.selectItem( pageSelection, assetId, $itemDom );
-			PB.stopEvent(ev.gesture);
-			PB.stopEvent(ev);
-		},
+		// selectItem: function($itemDom) {
+		// 	console.log("wanna menu");
+		// 	var $itemDom = $( ev.currentTarget );
+		// 	var assetId = $itemDom.data( 'model_id' );
+		// 	var pageSelection = PageSelection.findClosest( $itemDom );
+		// 	this.selectItem( pageSelection, assetId, $itemDom );
+		// },
 		makeEditable: function(item, $itemDom) {
 			var THIS = this;
-			if (item.type == 'photo')
+			if (item.type == 'photo') {
 				$itemDom.addClass('pb-droppable')
 					.data('pb-droppable', PB.Page.Editor.Droppable.Photo);
-			$itemDom.hammer().on('touch', {}, function(ev) { THIS.touchCb(ev) });
+				$itemDom.addClass('pb-draggable')
+					.data('pb-draggable', new GUI.Dnd.Draggable(
+						PB.Page.Editor.DraggableOptions.PhotoInPage ));
+				$itemDom.on('mousedown.dnd touchstart.dnd', GUI.Dnd.Dnd.dragStart);
+				GUI.Util.preventDefaultDrag($itemDom);
+			}
+			$itemDom.on('mousedown.select touchstart.select', function(ev) { THIS.selectItem(
+				PageSelection.findClosest( $itemDom ),
+				$itemDom.data('model_id'),
+				$itemDom);
+				ev.stopPropagation();
+			 });
 		},
 		makeItemSyncable: function(page, $itemDom, options) {
 			$itemDom.on( PB.MODEL_CHANGED, function( ev, model, prop, eventOptions ) {

@@ -432,6 +432,12 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			if (retVal.x == undefined)
 				console.error("bad getPageLocation", $ev);
 			return retVal;
+		},
+		preventDefaultDrag: function($dom) {
+			var noDragFn = function(ev) { ev.preventDefault() };
+			if ($dom.prop('nodeName') == 'IMG')
+				$dom.on('dragstart', noDragFn);
+			$dom.find('img').on('dragstart', noDragFn);
 		}
 	}
 

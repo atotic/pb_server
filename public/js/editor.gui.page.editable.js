@@ -94,20 +94,62 @@
 	});
 
 	var PhotoDroppable = new GUI.Dnd.Droppable( {
-		flavors: ['frame', 'photo'],
+		flavors: ['frame', 'photo', 'photoInPage'],
+		setTempPhoto: function(asset, photoId) {
+			this.oldPhotoId = asset.photoId;
+			this.oldZoom = asset.zoom;
+			this.oldPhotoRect = asset.photoRect;
+			this.oldFocalPoint = asset.focalPoint;
+			this.page.updateAsset(this.assetId, {
+				photoId: photoId,
+				zoom: 1.0,
+				focalPoint: null
+			});
+			if (this.sourceAssetId) {
+				this.sourcePage.startTemporaryChanges();
+				var oldAsset = this.sourcePage.getAsset( this.sourceAssetId );
+				this.oldSourcePhotoId = oldAsset.photoId;
+				this.oldSourceZoom = oldAsset.zoom;
+				this.oldSourcePhotoRect = oldAsset.photoRect;
+				this.oldSourceFocalPoint = oldAsset.focalPoint;
+				this.sourcePage.updateAsset(this.sourceAssetId, {
+					photoId: this.oldPhotoId,
+					zoom: 1.0,
+					focalPoint: null
+				});
+			}
+		},
+		restoreTempPhoto: function() {
+			if ('oldPhotoId' in this) {
+				this.page.updateAsset( this.assetId, {
+					photoId: this.oldPhotoId,
+					zoom: this.oldZoom,
+					photoRect: this.oldPhotoRect,
+					focalPoint: this.oldFocalPoint
+				});
+				if ( this.sourceAssetId) {
+					this.sourcePage.endTemporaryChanges();
+					this.sourcePage.updateAsset( this.sourceAssetId, {
+						photoId: this.oldSourcePhotoId,
+						zoom: this.oldSourceZoom,
+						photoRect: this.oldSourcePhotoRect,
+						focalPoint: this.oldSourceFocalPoint
+					});
+					delete this.sourceAssetId;
+				}
+			}
+		},
 		enter: function($dom, flavor, transferData, handoff) {
 			this.page = PB.Page.Selection.findClosest($dom).bookPage;
-			this.page.startTemporaryChanges();
 			this.assetId = $dom.data('model_id');
 			this.dom = $dom;
 			this.dropFlavor = flavor;
 			var asset = this.page.getAsset( this.assetId );
 			switch( this.dropFlavor ) {
 				case 'frame':
-					if (handoff) {
-						this.oldFrameId = handoff.oldFrameId,
-						this.oldFrameData = handoff.oldFrameData
-					}
+					this.page.startTemporaryChanges();
+					if (handoff)
+						$.extend(this, handoff);
 					else {
 						this.oldFrameId = asset.frameId;
 						this.oldFrameData = asset.frameData;
@@ -117,32 +159,54 @@
 					}
 				break;
 				case 'photo': {
-					if (handoff) {
+					this.page.startTemporaryChanges();
+					if (handoff)
 						$.extend(this, handoff);
-					}
 					else {
-						this.oldPhotoId = asset.photoId;
-						this.oldZoom = asset.zoom;
-						this.oldPhotoRect = asset.photoRect;
-						this.oldFocalPoint = asset.focalPoint;
-						this.page.updateAsset(this.assetId, {
-							photoId: transferData,
-							zoom: 1.0,
-							focalPoint: null
-						});
+						this.setTempPhoto(asset, transferData);
 					}
 				}
+				break;
+				case 'photoInPage':
+					if (transferData.assetId == this.assetId)
+						throw new Error("No dropping image on itself");
+					this.page.startTemporaryChanges();
+					if (handoff)
+						$.extend(this, handoff);
+					else {
+						this.sourcePage = transferData.page;
+						this.sourceAssetId = transferData.assetId;
+						this.setTempPhoto(asset,
+							transferData.page.getAsset( transferData.assetId).photoId);
+					}
+				break;
+			}
+		},
+		getHandoff: function() {
+			switch(this.dropFlavor) {
+				case 'frame':
+					return {
+						oldFrameId: this.oldFrameId,
+						oldFrameData: this.oldFrameData
+					}
+				case 'photo':
+				case 'photoInPage':
+					return {
+						oldPhotoId: this.oldPhotoId,
+						oldZoom: this.oldZoom,
+						oldPhotoRect: this.oldPhotoRect,
+						oldFocalPoint: this.oldFocalPoint
+					}
 			}
 		},
 		leave: function(handoffAssetId) {
+			if (handoffAssetId == this.assetId) {
+				this.page.endTemporaryChanges();
+				return this.getHandoff();
+			}
+
 			switch( this.dropFlavor ) {
 				case 'frame':
-					if (handoffAssetId == this.assetId) {
-						return {
-							oldFrameId: this.oldFrameId,
-							oldFrameData: this.oldFrameData
-						}
-					}
 				 	if ('oldFrameId' in this) {
 						this.page.updateAsset( this.assetId, {
 							frameId: this.oldFrameId,
@@ -151,22 +215,10 @@
 					}
 				break;
 				case 'photo':
-					if (handoffAssetId == this.assetId) {
-						return {
-							oldPhotoId: this.oldPhotoId,
-							oldZoom: this.oldZoom,
-							oldPhotoRect: this.oldPhotoRect,
-							oldFocalPoint: this.oldFocalPoint
-						}
-					}
-					if ('oldPhotoId' in this) {
-						this.page.updateAsset( this.assetId, {
-							photoId: this.oldPhotoId,
-							zoom: this.oldZoom,
-							photoRect: this.oldPhotoRect,
-							focalPoint: this.oldFocalPoint
-						});
-					}
+				case 'photoInPage':
+					this.restoreTempPhoto();
+				break;
+
 			}
 			this.page.endTemporaryChanges();
 		},
@@ -180,6 +232,11 @@
 				break;
 				case 'photo':
 					delete this.oldPhotoId;
+				break;
+				case 'photoInPage':
+					// photo already there, just prevent restore
+					delete this.oldPhotoId;
+					delete this.sourceAssetId;
 				break;
 			}
 		}
@@ -239,7 +296,7 @@
 					marginTop: -height / 2,
 					background: 'transparent'
 				});
-			$dom.find('img').on('dragstart', function(ev) { ev.preventDefault(); return false;});
+			GUI.Util.preventDefaultDrag($dom);
 			return $dom;
 		},
 		getTransferData: function(ev, $src, flavor) {
@@ -255,6 +312,40 @@
 		}
 	}
 
+	var PhotoInPageDraggableOptions = {
+		flavors: ['photoInPage'],
+		getTransferData: function(ev, $src, flavor) {
+			return {
+				page: this.page,
+				assetId: this.assetId
+			};
+		},
+		start: function($dom, ev, startLoc) {
+			this.page = PB.Page.Selection.findClosest($dom).bookPage;
+			this.assetId = $dom.data('model_id');
+			var asset = this.page.getAsset( this.assetId );
+			var photo = PB.ServerPhotoCache.get( asset.photoId );
+			var maxSize = 128;
+			var d = photo.dimensions;
+			var scale = Math.min(1, Math.min( maxSize / d.width, maxSize / d.height));
+			d.width *= scale;
+			d.height *= scale;
+			var $drag = $('<img>')
+				.css({
+					position: 'absolute',
+					top: startLoc.y,
+					left: startLoc.x,
+					width: d.width,
+					height: d.height,
+					marginTop: -d.height / 2,
+					marginLeft: -d.width /2,
+					border: '1px dashed white'
+				})
+				.prop('src', photo.getUrl(PB.PhotoProxy.SMALL));
+			GUI.Util.preventDefaultDrag($drag);
+			return $drag;
+		}
+	}
 
 
 	scope.Page.Editor = {
@@ -268,7 +359,8 @@
 			Layout: LayoutDraggableOptions,
 			Widget: WidgetDraggableOptions,
 			Frame: FrameDraggableOptions,
-			Photo: PhotoDraggableOptions
+			Photo: PhotoDraggableOptions,
+			PhotoInPage: PhotoInPageDraggableOptions
 		}
 	}
 
