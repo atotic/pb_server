@@ -472,8 +472,9 @@
 			var pageList = this.pageList;
 			for (var i=0; i<pageList.length; i++) {
 				var page = this.page(pageList[i]);
-				if (page.photoList.indexOf(photo.id) != -1)
-					page.removePhoto(photo, options);
+				var assetId;
+				while (assetId = page.findAssetIdByPhotoId(photo.id))
+					page.removeAsset(assetId);
 			}
 			// Remove it from the book
 			var index = this.localData.document.photoList.indexOf(photo.id);

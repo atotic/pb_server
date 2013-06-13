@@ -232,7 +232,7 @@
 			return {width: dims.width * scale, height: dims.height * scale};
 		},
 		createImageTile: function(photo) {
-			var imgData = photo.getUrl(128);
+			var imgData = photo.getUrlWithDim(128);
 			var tile = $("<div class='photo-div'><img src='" + imgData.url + "'></div>");
 			var img = $(tile).children('img');
 			var scaled = this.scaleTileDimensions(imgData);
@@ -244,7 +244,7 @@
 						switch(prop) {
 							case 'icon_url':
 								tile.stop(true, true);
-								var imgData = photo.getUrl(128);
+								var imgData = photo.getUrlWithDim(128);
 								var scaled = THIS.scaleTileDimensions(imgData);
 								img.prop('src', imgData.url).width(scaled.width).height(scaled.height);
 							break;

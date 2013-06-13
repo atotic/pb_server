@@ -27,7 +27,10 @@
 			return this._serverPhoto;
 		},
 		getUrl: function(size) {
-			return this.p.getUrl(size);
+			return this.p.getUrlWithDim(size).url;
+		},
+		getUrlWithDim: function(size) {
+			return this.p.getUrlWithDim(size);
 		},
 		get dimensions() {
 			return this.p.dimensions;
@@ -281,12 +284,15 @@
 		},
 		// Just the url
 		getUrl: function(size) {
+			return this.getUrlWithDim(size).url;
+		},
+		getUrlWithDim: function(size) {
 			if (size <= PB.PhotoProxy.SMALL)
-				return this.iconUrl.url;
+				return this.iconUrl;
 			else if (size <= PB.PhotoProxy.MEDIUM)
-				return this.displayUrl.url;
+				return this.displayUrl;
 			else
-				return this.originalUrl.url;
+				return this.originalUrl;
 		},
 		displayName: function() {
 			if ('display_name' in this)

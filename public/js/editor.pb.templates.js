@@ -229,7 +229,7 @@ scope.Template = Template;
 					var finalPhoto = initPhoto.scaleBy(scale);
 					break;
 			}
-			var info = photo.getUrl(options.resolution);
+			var info = photo.getUrlWithDim(options.resolution);
 			var img = $(document.createElement('img'))
 				.addClass('design-photo-img')
 				.prop('src', info.url)
