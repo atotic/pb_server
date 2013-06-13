@@ -147,6 +147,8 @@ var Controller = {
 	init: function() {
 		var THIS = this;
 		PB.ServerPhotoCache.get(600);
+		PB.ServerPhotoCache.get(591);
+		PB.ServerPhotoCache.get(601);
 		$.when(
 			PB.ThemeCache.load('/t/admin@core/theme.js'),
 			PB.ThemeCache.load('/t/admin@sample/theme.js'),
@@ -166,9 +168,31 @@ var Controller = {
 				THIS.initBackPicker();
 				THIS.setDimensions(768, 512);
 				THIS.setDesign('theme://admin@sports/designs/basketballDesign1');
-				currentPage.addAsset( {
+				var p1id = currentPage.addAsset( {
 					type:'photo',
 					photoId: 600
+				});
+				var p2id = currentPage.addAsset( {
+					type:'photo',
+					photoId: 591
+				});
+				var p3id = currentPage.addAsset( {
+					type:'photo',
+					photoId: 601
+				});				
+				currentPage.addAsset({
+					type: 'text',
+					content: 'Oliver',
+					dependentOf: {
+						assetId: p1id
+					}
+				});
+				currentPage.addAsset({
+					type: 'text',
+					content: 'Jackie',
+					dependentOf: {
+						assetId: p2id
+					}
 				});
 				// THIS.addPhoto();
 				// THIS.addText("Very big text\nHas a newline too!")

@@ -7,72 +7,48 @@
 			this.page = PB.Page.Selection.findClosest($dom).bookPage;
 			this.dom = $dom;
 			this.dropFlavor = flavor;
+			this.page.startTemporaryChanges();
 			switch( this.dropFlavor ) {
 				case 'background':
-					this.page.startTemporaryChanges();
-					this.oldBackground = this.page.p.backgroundId;
-					this.oldBackgroundData = this.page.p.backgroundData;
+					this.archive = this.page.archiveSomething( { type: this.dropFlavor});
 					this.page.setBackground(transferData);
 				break;
 				case 'layout':
-					this.page.startTemporaryChanges();
-					this.oldLayout = this.page.p.layoutId;
-					this.oldLayoutData = this.page.p.layoutData;
+					this.archive = this.page.archiveSomething( { type: 'layout'});
 					this.page.setLayout( transferData);
 				break;
-				case 'widget':
-					this.page.startTemporaryChanges();
-					this.dom.addClass('drop-target');
-				break;
 				case 'design':
-					this.page.startTemporaryChanges(true);
-					this.oldDesignId = this.page.p.designId;
+					this.archive = this.page.archiveSomething({ type: 'design'});
 					this.page.setDesign( transferData );
 				break;
-				default:
-					console.error('unknown drop flavor', this.dropFlavor );
+				case 'widget':
+					this.dom.addClass('drop-target');
 				break;
 			};
 		},
 		leave: function() {
 			switch( this.dropFlavor ) {
 				case 'background':
-				 	if ('oldBackground' in this) {
-						this.page.setBackground( this.oldBackground, this.oldBackgroundData );
-						this.page.endTemporaryChanges();
-				 	}
-				break;
 				case 'layout':
-					if ('oldLayout' in this) {
- 						this.page.setLayout(this.oldLayout, this.oldLayoutData);
-						this.page.endTemporaryChanges();
-					}
+				case 'design':
+					if ('archive' in this)
+						this.page.restoreSomething( this.archive );
 				break;
 				case 'widget':
 					this.dom.removeClass('drop-target');
-					this.page.endTemporaryChanges();
-				break;
-				case 'design':
-					if ('oldDesignId' in this) {
-						this.page.endTemporaryChanges(true);
-					}
 				break;
 			}
+			this.page.endTemporaryChanges();
 		},
 		putTransferData: function( $ev, flavor, transferData ) {
+			this.page.endTemporaryChanges();
 			switch( this.dropFlavor ) {
 				case 'background':
-					this.page.endTemporaryChanges();
-					this.page.setBackground( transferData );
-					delete this.oldBackground;
-				break;
 				case 'layout':
-					this.page.endTemporaryChanges();
-					this.page.setLayout( transferData );
-					delete this.oldLayout;
+				case 'design':
+					delete this.archive;
 				break;
 				case 'widget':
-					this.page.endTemporaryChanges();
 					var loc = GUI.Util.getPageLocation($ev);
 					var pageBounds = this.dom[0].getBoundingClientRect();
 					var widget = PB.ThemeCache.resource(transferData);
@@ -85,81 +61,117 @@
 						height: widget.height()
 					});
 				break;
-				case 'design':
-					this.page.endTemporaryChanges(false);
-					delete this.oldDesignId;
-				break;
 			}
 		}
 	});
 
 	var PhotoDroppable = new GUI.Dnd.Droppable( {
 		flavors: ['frame', 'photo', 'photoInPage'],
+
 		setTempPhoto: function(asset, photoId) {
-			this.oldPhotoId = asset.photoId;
-			this.oldZoom = asset.zoom;
-			this.oldPhotoRect = asset.photoRect;
-			this.oldFocalPoint = asset.focalPoint;
-			this.page.updateAsset(this.assetId, {
+			this.destinationArchive = this.destinationPage.archiveSomething( { 
+				type: 'asset', 
+				assetId: this.assetId,
+				dependents: true
+			});
+			this.destinationPage.updateAsset(this.assetId, {
 				photoId: photoId,
 				zoom: 1.0,
 				focalPoint: null
-			});
-			if (this.sourceAssetId) {
-				this.sourcePage.startTemporaryChanges();
-				var oldAsset = this.sourcePage.getAsset( this.sourceAssetId );
-				this.oldSourcePhotoId = oldAsset.photoId;
-				this.oldSourceZoom = oldAsset.zoom;
-				this.oldSourcePhotoRect = oldAsset.photoRect;
-				this.oldSourceFocalPoint = oldAsset.focalPoint;
-				this.sourcePage.updateAsset(this.sourceAssetId, {
-					photoId: this.oldPhotoId,
-					zoom: 1.0,
-					focalPoint: null
-				});
-			}
+			});			
 		},
 		restoreTempPhoto: function() {
-			if ('oldPhotoId' in this) {
-				this.page.updateAsset( this.assetId, {
-					photoId: this.oldPhotoId,
-					zoom: this.oldZoom,
-					photoRect: this.oldPhotoRect,
-					focalPoint: this.oldFocalPoint
+			if ('destinationArchive' in this) {
+				this.destinationPage.restoreSomething( this.destinationArchive );
+				delete this.destinationArchive;
+			}
+		},
+		replaceSrcPhotoWithDest: function(page, srcId, srcArchive, destArchive) {
+			page.updateAsset(srcId, {
+				photoId: destArchive.asset.photoId,
+				zoom: destArchive.asset.zoom,
+				focalPoint: destArchive.asset.focalPoint
+			});
+			srcArchive.dependents.forEach( function(dep) {
+				page.removeAsset(dep.id);
+			});
+			return page.importAssetDependents(destArchive, srcId);
+		},
+		setTempPhotoFromPage: function() {
+			try {
+			this.sourcePage.startTemporaryChanges();
+			var sourceAsset = this.sourcePage.getAsset( this.sourceAssetId )
+
+			// create archives
+			this.destinationArchive = this.destinationPage.archiveSomething( { 
+				type: 'asset', 
+				assetId: this.assetId,
+				dependents: true
+			});
+			this.sourceArchive = this.sourcePage.archiveSomething( {
+				type: 'asset',
+				assetId: this.sourceAssetId,
+				dependents: true
+			});
+
+			this.destinationImports = this.replaceSrcPhotoWithDest( this.destinationPage, 
+				this.assetId, 
+				this.destinationArchive, 
+				this.sourceArchive);
+			this.sourceImports = this.replaceSrcPhotoWithDest( this.sourcePage,
+				this.sourceAssetId,
+				this.sourceArchive,
+				this.destinationArchive );
+			}
+			catch(ex) {
+				console.error(ex);
+				debugger;
+			}
+		},
+		restoreTempPhotoFromPage: function() {
+			try {
+			if ('destinationArchive' in this) {
+				var THIS = this;
+				this.destinationImports.forEach( function(depId) {
+					THIS.destinationPage.removeAsset( depId );
 				});
-				if ( this.sourceAssetId) {
-					this.sourcePage.endTemporaryChanges();
-					this.sourcePage.updateAsset( this.sourceAssetId, {
-						photoId: this.oldSourcePhotoId,
-						zoom: this.oldSourceZoom,
-						photoRect: this.oldSourcePhotoRect,
-						focalPoint: this.oldSourceFocalPoint
-					});
-					delete this.sourceAssetId;
-				}
+				this.sourceImports.forEach( function( depId) {
+					THIS.sourcePage.removeAsset( depId );
+				});
+				this.destinationPage.restoreSomething( this.destinationArchive );
+				this.sourcePage.restoreSomething( this.sourceArchive );
+				this.sourcePage.endTemporaryChanges();
+				delete this.destinationImports;
+				delete this.destinationArchive;
+				delete this.sourceArchive;
+				delete this.sourceImports;
+			}
+			} catch(ex) {
+				console.error(ex);
+				debugger;
 			}
 		},
 		enter: function($dom, flavor, transferData, handoff) {
-			this.page = PB.Page.Selection.findClosest($dom).bookPage;
+			this.destinationPage = PB.Page.Selection.findClosest($dom).bookPage;
 			this.assetId = $dom.data('model_id');
 			this.dom = $dom;
 			this.dropFlavor = flavor;
-			var asset = this.page.getAsset( this.assetId );
+			var asset = this.destinationPage.getAsset( this.assetId );
 			switch( this.dropFlavor ) {
 				case 'frame':
-					this.page.startTemporaryChanges();
+					this.destinationPage.startTemporaryChanges();
 					if (handoff)
 						$.extend(this, handoff);
 					else {
 						this.oldFrameId = asset.frameId;
 						this.oldFrameData = asset.frameData;
-						this.page.updateAsset( this.assetId, {
+						this.destinationPage.updateAsset( this.assetId, {
 							frameId: transferData
 						});
 					}
 				break;
 				case 'photo': {
-					this.page.startTemporaryChanges();
+					this.destinationPage.startTemporaryChanges();
 					if (handoff)
 						$.extend(this, handoff);
 					else {
@@ -170,14 +182,14 @@
 				case 'photoInPage':
 					if (transferData.assetId == this.assetId)
 						throw new Error("No dropping image on itself");
-					this.page.startTemporaryChanges();
+					this.destinationPage.startTemporaryChanges();
 					if (handoff)
 						$.extend(this, handoff);
 					else {
 						this.sourcePage = transferData.page;
 						this.sourceAssetId = transferData.assetId;
-						this.setTempPhoto(asset,
-							transferData.page.getAsset( transferData.assetId).photoId);
+						this.setTempPhotoFromPage(asset,
+							this.sourcePage.getAsset( this.sourceAssetId ).photoId);
 					}
 				break;
 			}
@@ -190,53 +202,62 @@
 						oldFrameData: this.oldFrameData
 					}
 				case 'photo':
+					return {
+						destinationArchive: this.destinationArchive
+					}
 				case 'photoInPage':
 					return {
-						oldPhotoId: this.oldPhotoId,
-						oldZoom: this.oldZoom,
-						oldPhotoRect: this.oldPhotoRect,
-						oldFocalPoint: this.oldFocalPoint
+						sourcePage: this.sourcePage,
+						sourceAssetId: this.sourceAssetId,
+						sourceImports: this.sourceImports,
+						sourceArchive: this.sourceArchive,
+						destinationArchive: this.destinationArchive,
+						destinationImports: this.destinationImports
 					}
 			}
 		},
 		leave: function(handoffAssetId) {
 			if (handoffAssetId == this.assetId) {
-				this.page.endTemporaryChanges();
+				this.destinationPage.endTemporaryChanges();
 				return this.getHandoff();
 			}
 
 			switch( this.dropFlavor ) {
 				case 'frame':
 				 	if ('oldFrameId' in this) {
-						this.page.updateAsset( this.assetId, {
+						this.destinationPage.updateAsset( this.assetId, {
 							frameId: this.oldFrameId,
 							frameData: this.oldFrameData
 						});
 					}
 				break;
 				case 'photo':
-				case 'photoInPage':
 					this.restoreTempPhoto();
+				break;
+				case 'photoInPage':
+					this.restoreTempPhotoFromPage();
 				break;
 
 			}
-			this.page.endTemporaryChanges();
+			this.destinationPage.endTemporaryChanges();
 		},
 		putTransferData: function( $ev, flavor, transferData ) {
 			switch( this.dropFlavor ) {
 				case 'frame':
-					this.page.updateAsset( this.assetId, {
+					this.destinationPage.updateAsset( this.assetId, {
 						frameId: transferData
 					});
 					delete this.oldFrameId;
 				break;
 				case 'photo':
-					delete this.oldPhotoId;
+					delete this.destinationArchive;
 				break;
 				case 'photoInPage':
 					// photo already there, just prevent restore
-					delete this.oldPhotoId;
+					delete this.destinationArchive;
+					delete this.sourcePage;
 					delete this.sourceAssetId;
+					delete this.sourceArchive;
 				break;
 			}
 		}

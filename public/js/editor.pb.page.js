@@ -28,7 +28,7 @@ asset {
 	rotate	// angle in degrees
 	frameId
 	frameData
-	childOf: {
+	dependentOf: {
 		assetId:
 		assetPositionerId:
 	}
@@ -153,8 +153,44 @@ asset widget {
 		getAssets: function() {
 			return this.p.assets;
 		},
+		debugAssets: function() {
+			function printAsset(asset, assetId) {
+				var indent = asset.dependentOf ? '  ' : '';
+				switch(asset.type) {
+					case 'photo':
+						console.log(indent, assetId, ' photo ', asset.photoId, asset.css.top, asset.css.left);
+						break;
+					case 'text':
+						console.log(indent, assetId, ' text ', asset.content, asset.css.top, asset.css.left);
+					break;
+					case 'widget':
+						console.log(indent, assetId, ' widget ', asset.widgetId, asset.css.top, asset.css.left );
+					break;
+				}
+			}
+			var assets = this.p.assets;
+			for (var i=0; i<assets.ids.length; i++) {
+				var asset = assets[ assets.ids[i]];
+				if (!asset.dependentOf) {
+					printAsset(asset, assets.ids[i]);
+					this.getDependentsIds( assets.ids[i]).forEach( function(id) {
+						printAsset( assets[id], id);
+					});
+				}
+			}
+		},
 		getAsset: function(assetId) {
 			return this.p.assets[ assetId ];
+		},
+		getDependentsIds: function(assetId) {
+			var retVal = [];
+			var assets  = this.p.assets;
+			for ( var i=0; i<assets.ids.length; i++) {
+				var asset = assets[ assets.ids[i]];
+				if (asset.dependentOf && asset.dependentOf.assetId == assetId)
+					retVal.push( assets.ids[i]);
+			}
+			return retVal;
 		},
 		findAssetIdByPhotoId: function( photoId ) {
 			var assets = this.p.assets;
@@ -182,37 +218,109 @@ asset widget {
 		get canSave() {
 			return !this.hasTemporaryChanges;
 		},
-		startTemporaryChanges: function(saveState) {
+		startTemporaryChanges: function() {
 			this.hasTemporaryChanges = true;
-			if (saveState)
-				this.temporaryState = {
-					assets: PB.clone( this.p.assets ),
-					designId: this.p.designId,
-					layoutId: this.p.layoutId,
-					layoutData: PB.clone( this.p.layoutData ),
-					backgroundId: this.p.backgroundId,
-					backgroundData: this.p.backgroundData
-				}
 		},
-		endTemporaryChanges: function(restoreState) {
-			if (restoreState) {
-				if ('temporaryState' in this) {
-					this.p.assets = this.temporaryState.assets;
-					this.p.designId = this.temporaryState.designId;
-					this.p.layoutId = this.temporaryState.layoutId;
-					this.p.layoutData = this.temporaryState.layoutData;
-					this.p.backgroundId = this.temporaryState.backgroundId;
-					this.p.backgroundData = this.temporaryState.backgroundData;
-					PB.broadcastChange( this, 'designId' );
-				}
-			}
-			if ('temporaryState' in this)
-				delete this.temporaryState;
+		endTemporaryChanges: function() {
 			this.hasTemporaryChanges = false;
 		},
+		archiveSomething: function(options) {
+			// creates snapshot of an asset, restore with restoreSomething
+			options = $.extend( {
+				type: 'type must be specified',	// 'design'|'background'|'layout'|'asset'
+				assetId: null,	// when type==asset, asset to archive
+				dependents: false // when type==asset, whether to archive dependents
+			}, options);
+			var retVal = {
+				type: options.type
+			};
+			switch(options.type) {
+				case 'design': // design archives everything
+					$.extend( retVal, {
+						assets: PB.clone( this.p.assets ),
+						designId: this.p.designId,
+						layoutId: this.p.layoutId,
+						layoutData: PB.clone( this.p.layoutData ),
+						backgroundId: this.p.backgroundId,
+						backgroundData: this.p.backgroundData
+					});
+				break;
+				case 'background':
+					retVal.backgroundId = this.p.backgroundId;
+					retVal.backgroundData = this.p.backgroundData;
+				break;
+				case 'layout':
+					retVal.layoutId = this.p.layoutId;
+					retVal.layoutData = this.p.layoutData;
+				break;
+				case 'asset':
+					retVal.asset = PB.clone( this.p.assets[ options.assetId ] );
+					retVal.assetId = options.assetId;
+					if (options.dependents) {
+						var depIds = this.getDependentsIds(options.assetId);
+						retVal.dependents = [];
+						for (var i=0; i< depIds.length; i++) 
+							retVal.dependents.push( {
+								id: depIds[i],
+								asset: PB.clone( this.p.assets[ depIds[i] ] )
+							});
+					}
+				break;
+				default:
+					console.error("do not know how to archive " + options.type);
+			}
+			return retVal;
+		},
+		restoreSomething: function(archive, options) {
+			var THIS = this;
+			switch(archive.type) {
+				case 'design':
+					['assets', 'designId', 'layoutId', 'layoutData', 'backgroundId', 'backgroundData']
+						.forEach( function(x) {
+							THIS.p[x] = archive[x];
+						});
+					PB.broadcastChange(this, 'designId');
+				break;
+				case 'background':
+					this.setBackground( archive.backgroundId, archive.backgroundData );
+				break;
+				case 'layout':
+					this.setLayout( archive.layoutId, archive.layoutData );
+				break;
+				case 'asset':
+					this.p.assets[ archive.assetId ] = PB.clone( archive.asset );
+					PB.broadcastChange({id: archive.assetId}, 'alldata');
+					if ('dependents' in archive) {
+						for (var i=0; i< archive.dependents.length; i++) {
+							var dep = archive.dependents[i];
+							if (! (dep.id in this.p.assets))
+								this.addAsset( dep.asset, { assetId: dep.id});
+							else
+								this.updateAsset( dep.id, dep.asset);
+						}
+					}
+				break;
+			}
+		},
+		importAssetDependents: function(archive, parentId) {
+			var retVal = [];
+			var THIS = this;
+			if ('dependents' in archive)
+				archive.dependents.forEach( function( dep) {
+					var newAsset = PB.clone( dep.asset );
+					newAsset.dependentOf.assetId = parentId;
+					if ('top' in newAsset.css)
+						delete newAsset.css.top;	// force layout
+					retVal.push( THIS.addAsset(newAsset));
+				});
+			return retVal;
+		},
 		// return asset id
-		addAsset: function(asset, broadcastOptions) {
-			broadcastOptions = $.extend( { broadcast: true }, broadcastOptions);
+		addAsset: function(asset, addAssetOptions) {
+			addAssetOptions = $.extend( { 
+				broadcast: true, 	// should we broadcast the addition?
+				assetId: false 	// asset id to use
+			}, addAssetOptions);
 
 			asset = PB.clone(asset);
 			if ( !asset.css )
@@ -221,7 +329,7 @@ asset widget {
 				this.p.needReflow = true;
 
 			// Add the asset to the list
-			var id = this.book.generateId();
+			var id = addAssetOptions.assetId ? addAssetOptions.assetId : this.book.generateId();
 			this.p.assets.ids.push( id );
 			this.p.assets[ id ] = asset;
 			registerPageAssetResolver(this, id);
@@ -249,10 +357,10 @@ asset widget {
 
 			// Broadcast changes
 			if ( asset.type == 'photo' )
-				this.book._pagePhotosChanged( this, broadcastOptions );
-			if ( broadcastOptions.broadcast )
+				this.book._pagePhotosChanged( this, addAssetOptions );
+			if ( addAssetOptions.broadcast )
 				PB.broadcastChange( this, 'assetList',
-					$.extend( {assetId: id}, broadcastOptions ));
+					$.extend( {assetId: id}, addAssetOptions ));
 			return id;
 		},
 		removeAsset: function(id, broadcastOptions) {
@@ -529,7 +637,7 @@ asset widget {
 				var asset = THIS.p.assets[ assetId ];
 
 				var assetDesign;
-				if ( asset.childOf ) // children are positioned after parents
+				if ( asset.dependentOf ) // children are positioned after parents
 					return;
 				switch ( asset.type ) {
 					case 'photo':
@@ -559,10 +667,10 @@ asset widget {
 			// Position children
 			this.p.assets.ids.forEach( function( assetId ) {
 				var asset = THIS.p.assets[ assetId ];
-				if ( !asset.childOf )
+				if ( !asset.dependentOf )
 					return;
 				var positioner = PB.ThemeCache.resource(
-					captionPositioners[ asset.childOf.assetId ]);
+					captionPositioners[ asset.dependentOf.assetId ]);
 				var assetDesign = positioner.getPosition( THIS, assetId );
 				assetDesignToAsset( assetDesign, asset );
 			});
@@ -638,7 +746,7 @@ asset widget {
 				div.design-text-content
 		*/
 		getDummyText: function(asset) {
-			if (asset.childOf)
+			if (asset.dependentOf)
 				return "Type your caption here";
 			else
 				return "Type your text here";
@@ -967,7 +1075,7 @@ asset widget {
 					else {
 						editId = pageAsset.page.addAsset({
 							type: 'text',
-							childOf: {
+							dependentOf: {
 								assetId: photoAssetId
 							}
 						});

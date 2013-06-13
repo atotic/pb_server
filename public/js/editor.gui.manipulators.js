@@ -585,7 +585,8 @@ EditTextManipulator.prototype = {
 			textarea: $( $.parseHTML('<textarea class="manipulator-textarea"></textarea>')),
 			mirror: $('<pre>')
 		};
-		this.handles.textarea.prop('placeholder', 'Type your text here');
+		this.handles.textarea.prop('placeholder', 
+			this.pageAsset.page.getDummyText( this.pageAsset.asset ));
 		var text = this.pageAsset.page.getText( this.pageAsset.page.getAsset( this.assetId ));
 		if (text !== undefined)
 			this.handles.textarea.prop('value', text);

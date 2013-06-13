@@ -101,10 +101,10 @@
 					break;
 				}
 				if (newAsset) {
-					if ( assets[id].childOf ) {
-						newAsset.childOf = {
-							assetId: assets[id].childOf.assetId,
-							assetPositionerId: assets[id].childOf.assetPositionerId
+					if ( assets[id].dependentOf ) {
+						newAsset.dependentOf = {
+							assetId: assets[id].dependentOf.assetId,
+							assetPositionerId: assets[id].dependentOf.assetPositionerId
 						}
 					}
 					newAssets.ids.push( id );
@@ -372,7 +372,7 @@
 				case 'text':
 				case 'photo':
 				case 'widget':
-					testFn = function(a) { return !a.childOf && a.type == type };
+					testFn = function(a) { return !a.dependentOf && a.type == type };
 					break;
 				case 'allText':
 				case 'allPhoto':
@@ -393,8 +393,8 @@
 			var retVal = [];
 			assets.ids.forEach( function(assetId) {
 				var asset = assets[ assetId ];
-				if (('childOf' in assets[ assetId ])
-					&& ( assets[ assetId].childOf.assetId == parentId ))
+				if (('dependentOf' in assets[ assetId ])
+					&& ( assets[ assetId].dependentOf.assetId == parentId ))
 					retVal.push( assetId );
 			});
 			return retVal;
