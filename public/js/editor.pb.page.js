@@ -197,6 +197,7 @@ asset widget {
 			for ( var i=0; i<assets.ids.length; i++ )
 				if ( assets[ assets.ids[i] ].photoId == photoId )
 					return assets.ids[i];
+			console.warn('photo asset not found', photoId);
 			return null;
 		},
 		filterAssetIds: function(assetType) {
@@ -259,7 +260,7 @@ asset widget {
 					if (options.dependents) {
 						var depIds = this.getDependentsIds(options.assetId);
 						retVal.dependents = [];
-						for (var i=0; i< depIds.length; i++) 
+						for (var i=0; i< depIds.length; i++)
 							retVal.dependents.push( {
 								id: depIds[i],
 								asset: PB.clone( this.p.assets[ depIds[i] ] )
@@ -288,8 +289,15 @@ asset widget {
 					this.setLayout( archive.layoutId, archive.layoutData );
 				break;
 				case 'asset':
-					this.p.assets[ archive.assetId ] = PB.clone( archive.asset );
-					PB.broadcastChange({id: archive.assetId}, 'alldata');
+					if (! this.p.assets[archive.assetId])
+						this.addAsset( PB.clone(archive.asset), {
+								assetId: archive.assetId,
+								addCaption: false
+							});
+					else {
+						this.p.assets[ archive.assetId ] = PB.clone( archive.asset );
+						PB.broadcastChange({id: archive.assetId}, 'alldata');
+					}
 					if ('dependents' in archive) {
 						for (var i=0; i< archive.dependents.length; i++) {
 							var dep = archive.dependents[i];
@@ -317,9 +325,10 @@ asset widget {
 		},
 		// return asset id
 		addAsset: function(asset, addAssetOptions) {
-			addAssetOptions = $.extend( { 
+			addAssetOptions = $.extend( {
 				broadcast: true, 	// should we broadcast the addition?
-				assetId: false 	// asset id to use
+				assetId: false, 	// asset id to use
+				addCaption: true
 			}, addAssetOptions);
 
 			asset = PB.clone(asset);
@@ -336,7 +345,8 @@ asset widget {
 
 
 			// Post processing
-			if (asset.type == 'widget') {
+			switch(asset.type) {
+			case 'widget':
 				if (!asset.widgetCreator)
 					asset.widgetCreator = 'user';
 				// User-created widgets are placed in the center of the page by default
@@ -351,8 +361,20 @@ asset widget {
 						top: Math.max(0, (d.height - height) / 2),
 						left:  Math.max(0, (d.width - width) / 2)
 					}
-
 				}
+			break;
+			case 'photo':
+				if (addAssetOptions.addCaption) {
+					var photo = PB.ServerPhotoCache.get(asset.photoId);
+					if (photo.caption) {
+						this.addAsset( {
+							type: 'text',
+							content: photo.caption,
+							dependentOf: { assetId: id }
+						});
+					}
+				}
+			break;
 			}
 
 			// Broadcast changes
@@ -454,7 +476,8 @@ asset widget {
 		enclosingDom: function(options) {
 			var d = this.dimensions;
 			return $(document.createElement('div'))
-					.addClass('design-page');
+					.addClass('design-page')
+					.data('model_id', this.id);
 		},
 		// focal point range for images
 		getFocalPointRange: function(assetId) {
@@ -921,7 +944,7 @@ asset widget {
 			else
 				$encloseDom.text("Design not available." + this.p.assets.ids.length + " items on this page");
 			if ( options.editable && !options.enclosingDom) {
-				$encloseDom.hammer().on( 'touch', {}, function(ev) {
+				$encloseDom.on( 'touchstart mousedown', function(ev) {
 					PageSelection.findClosest($encloseDom).setSelection();
 				});
 				PageSelection.bindToDom( this, $encloseDom )

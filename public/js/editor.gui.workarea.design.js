@@ -2,7 +2,6 @@
 
 // #work-area-design implementation. Visible in 'Design' mode
 
-(function(scope) {
 /*
 HTML hierarchy:
 #work-area-design -> model(book)
@@ -15,101 +14,7 @@ HTML hierarchy:
 	.design-selection select-target(dom)
 */
 
-var THEME_LIST_SELECTOR = '#theme-picker-container > ul';
 
-var ThemePicker = {
-	init: function(dom) {
-		this.initThemeList(dom);
-		this.initButtonList(dom);
-		dom.find('#theme-picker-submit').click(function() {
-			if (!$(this).hasClass('disabled') && ThemePicker.selectedTheme && ThemePicker.selectedSize)
-				GUI.DesignWorkArea.pickTheme(ThemePicker.selectedTheme, ThemePicker.selectedSize) });
-	},
-	initThemeList: function(dom) {
-		var themeList = dom.find(THEME_LIST_SELECTOR);
-		themeList.children().remove();
-		function fail(response) {
-			GUI.Template.append(themeList, 'theme-failed-to-load');
-		}
-		PB.Template.get(PB.Template.THEME_LIST)
-			.done(function(themeListResponse) {
-				// Initialize theme list
-				var themeIdList = themeListResponse[PB.Template.THEME_LIST].themes;
-				PB.Template.get(themeIdList)
-				.done(function(themeResponse) {
-					themeIdList.forEach( function(themeId) {
-						var theme = themeResponse[themeId];
-						var themeLi = GUI.Template.get('theme-picker-onetheme', {
-							title: theme.title,
-							img: '/template/img/' +theme.sample_images[0]});
-						themeLi = $(themeLi);
-						themeLi.data('theme', theme);
-						themeList.append(themeLi);
-						themeLi.click(function(ev) {
-							ThemePicker.selectTheme(theme.id);
-						});
-					});
-				})
-				.fail(fail);
-			})
-			.fail(fail);
-	},
-	initButtonList: function() {
-		var sizeContainer = $('#theme-size-container');
-		sizeContainer.children('label, #sizes-failed-to-load').remove();
-		var theme = this.selectedTheme;
-		if (!theme) {
-			return;
-		}
-		function fail() {
-			GUI.Template.append(sizeContainer,'sizes-failed-to-load');
-		}
-		PB.Template.get(theme.books)
-			.done(function(bookResponse) {
-				theme.books.forEach(function(bookId) {
-					var book = bookResponse[bookId];
-					var buttonDom = $( GUI.Template.get('theme-size-radio', {
-						width: book.width,
-						height: book.height
-					}));
-					buttonDom.find('input[type=radio]').data('book', book);
-					sizeContainer.append(buttonDom);
-				});
-				$('#theme-size-container input[type=radio]').change(function() {
-					ThemePicker.updateSelectThemeButton();
-				});
-			})
-			.fail(fail);
-	},
-	selectTheme: function(id) {
-		var themesLi = $(THEME_LIST_SELECTOR).children('li');
-		selected = themesLi.filter('.active');
-		desired = themesLi.filter('*:data("theme.id=' + id + '")');
-		if (selected.get(0) != desired.get(0)) {
-			selected.removeClass('active');
-			desired.addClass('active');
-			this.initButtonList();
-			this.updateSelectThemeButton();
-		}
-	},
-	get selectedTheme() {
-		return $(THEME_LIST_SELECTOR).children('li.active').data('theme');
-	},
-	get selectedSize() {
-		var checked = $('#theme-size-container input[type=radio]:checked');
-		return checked.data('book');
-	},
-	updateSelectThemeButton: function() {
-		if (this.selectedTheme && this.selectedSize)
-			$('#theme-picker-submit').removeClass('disabled');
-		else
-			$('#theme-picker-submit').addClass('disabled');
-	}
-};
-
-scope.ThemePicker = ThemePicker;
-
-})(GUI);
 
 (function(scope) {
 var ID= '#work-area-design';
@@ -283,7 +188,7 @@ var DesignWorkArea = {
 	bookChanged: function(ev, model, prop, options) {
 		switch(prop) {
 			case 'template':
-				if ($(ID+':visible, #theme-picker:visible').length == 1)	//
+				if ($(ID+':visible').length == 1)	//
 					DesignWorkArea.show();
 				break;
 			default:
@@ -291,16 +196,9 @@ var DesignWorkArea = {
 		}
 	},
 	show: function() {
-		var workArea = document.getElementById('work-area');
-		workArea.style.setProperty('padding-left', '0px');
-		workArea.style.setProperty('padding-top', '0px');
-		$('#work-area').css('padding-left', 0);
+		$('#work-area').css({ paddingLeft: 0, paddingTop: 0});
 		$(ID).show();
-		if (!this.book.bookTemplateId)
-			this.showThemePicker();
-		else {
-			this.showDesignArea(this._lastPage);
-		}
+		this.showDesignArea(this._lastPage);
 	},
 	hide: function() {
 		this._lastPage = this.currentPage;
@@ -308,7 +206,6 @@ var DesignWorkArea = {
 		workArea.style.removeProperty('padding-left');
 		workArea.style.removeProperty('padding-top');
 		$(ID).hide();
-		$('#theme-picker').detach();
 		GUI.CommandManager.removeCommandSet(this.commandSet);
 	},
 	resize: function() {
@@ -323,20 +220,13 @@ var DesignWorkArea = {
 		catch(ex) {
 			debugger;
 		}
-
-	},
-	showThemePicker: function() {
-		$('#palette, ' + ID).hide();
-		var picker = GUI.Template.append($('#work-area-container'), 'theme-picker');
-		GUI.ThemePicker.init(picker);
-		GUI.fixSizes($('#work-area'));
 	},
 	getPagePositions: function(book) {
 		var vinset = 20;
 		var hinset = 44;
-		var bookTemplate = PB.Template.cached(book.bookTemplateId);
-		var pageWidth = bookTemplate.pixelWidth;
-		var pageHeight = bookTemplate.pixelHeight;
+		var dimensions = book.dimensions;
+		var pageWidth = dimensions.width;
+		var pageHeight = dimensions.height;
 		var idWidth = $(ID).width() - hinset * 2;	// -1 for rounding errors
 		var idHeight = $(ID).height() - vinset;
 		var totalWidth = pageWidth * 2;
@@ -388,7 +278,10 @@ var DesignWorkArea = {
 
 		// create new pages
 		var pagesDom = [];
+		var THIS = this;
 		function makePageDom(page, options) {
+			if (!page.designId)
+				THIS.book.generateDesignId(page);
 			return $(page.generateDom(options));
 		}
 		var loResOptions = {
@@ -460,7 +353,7 @@ var DesignWorkArea = {
 		oldRight.data('removed', true);
 
 		function cleanUp() {
-//			console.log('removing ', $(ID).children(':data(removed)').length);
+			// console.log('removing ', $(ID).children(':data(removed)').length);
 			$(ID).children(':data(removed)').detach();
 			$(ID).find('div:data(highDpi)').each( function() {
 				var el = $(this);
@@ -525,24 +418,12 @@ var DesignWorkArea = {
 		}
 	},
 	showDesignArea: function(page) {
-		$('#theme-picker').detach();
 		$('#palette, ' + ID).show();
 		GUI.PhotoPalette.show();
 		GUI.fixSizes($('#work-area'));
 
 		GUI.CommandManager.addCommandSet(this.commandSet);
-		this.book.loadTemplates()
-			.done(function() {
-				DesignWorkArea.goTo(page);
-			})
-			.fail(function() { PB.error("Missing page template");});
-	},
-	pickTheme: function(themeTemplate, bookTemplate) {
-		var book = PB.ModelMap.domToModel($(ID));
-		book.setBookTemplate(themeTemplate.id, bookTemplate.id);
-		book.generateAllPagesHtml(function(msg) {
-			PB.error("msg");
-		});
+		DesignWorkArea.goTo(page);
 	},
 	goTo: function(page, direction) {
 		var facingPages = this.book.facingPages;
@@ -551,7 +432,7 @@ var DesignWorkArea = {
 			show = 0;
 		else
 			GUI.Options.designPage = page.id;
-//		console.log("show", show, this.currentPage);
+		// console.log("show", show, this.currentPage);
 		this.showPages(facingPages.get(show), direction);
 	},
 	goBack: function() {

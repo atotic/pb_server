@@ -119,7 +119,8 @@ Tools <i class='icon-wrench icon-white'></i> </a>
 </div>
 <div class='navbar-inverse' id="sidebar">
 	<ul class="nav nav-tabs nav-stacked ">
-		<li id='work-area-rough-nav'><a href='/Organize' onclick='GUI.Options.designStage="organize"; return false;'>Organize</a>
+		<li id='work-area-organize-nav' class='active'><a href='/Organize' onclick='GUI.Options.designStage="organize"; return false;'>Organize</a>
+		<li id='work-area-theme-nav'><a href='/Theme' onclick='GUI.Options.designStage="theme"; return false;'>Theme</a>
 		<li id='work-area-design-nav'><a href='/Design' onclick='GUI.Options.designStage="design"; return false;'>Design</a>
 		<li id='work-area-print-nav'><a href='/Print' onclick='GUI.Options.designStage="print"; return false;'>Print</a>
 	</ul>
@@ -149,7 +150,10 @@ Tools <i class='icon-wrench icon-white'></i> </a>
 	</div>
 	<div id='work-area'>
 		<div id='work-area-container'>
-			<div id='work-area-rough'>
+			<div id='work-area-organize'>
+			</div>
+			<div id='work-area-theme'>
+			Sizes! Themes!
 			</div>
 			<div id='work-area-design'>
 				<button id='work-area-design-btn-back' class="btn-large btn ">
@@ -178,29 +182,6 @@ Tools <i class='icon-wrench icon-white'></i> </a>
 	<p>To unlock the book, <a href='#' onclick='window.location.reload(); return false'>reload</a>.</p>
 	<p id='lockedMessage'><p>
 	<p>Developers, look at the console for details.</p>
-</div>
-</script>
-<script type='text/html' id='theme-picker-template'>
-<div>
-	<h1>Hello Designer</h1>
-	<p>We start off with the basics: theme & size.</p>
-	<h6>TODO: this dialog needs TLC from a real UI designer</h6>
-	<div id='theme-picker-container'>
-		<div class='lead'>Theme</div>
-		<ul>
-			<!--- theme-picker-onetheme-template goes here -->
-		</ul>
-	</div>
-	<div id='theme-size-container'>
-		<div class='lead' style='display:inline-block'>Size</div>
-		<label class="radio inline">
-			<input type="radio" name="sizeRadio" value="2x3">2x3</label>
-		<label class="radio inline">
-			<input type="radio" name="sizeRadio" value="2x3">8x11</label>
-		<label class="radio inline">
-			<input type="radio" name="sizeRadio" value="2x3">8x8</label>
-	</div>
-	<p><button id='theme-picker-submit' class='btn btn-large btn-success disabled'>Select this theme</button></p>
 </div>
 </script>
 <script type='text/html' id='theme-picker-onetheme-template'>

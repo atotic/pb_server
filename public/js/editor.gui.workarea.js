@@ -22,35 +22,39 @@ var WorkArea = {
 	optionsChanged: function(name, val) {
 		if (name == 'designStage')
 			switch(val) {
-				case 'organize':
-					WorkArea.show('work-area-rough');
-					break;
-				case 'design':
-					WorkArea.show('work-area-design');
-					break;
-				case 'print':
-					WorkArea.show('work-area-print');
-					break;
-				default:
-					console.warn("unknown designStage", val);
-					break;
+			case 'organize':
+				WorkArea.show('work-area-organize');
+			break;
+			case 'theme':
+				WorkArea.show('work-area-theme');
+			break;
+			case 'design':
+				WorkArea.show('work-area-design');
+			break;
+			case 'print':
+				WorkArea.show('work-area-print');
+			break;
+			default:
+				console.warn("unknown designStage", val);
+			break;
 			}
 	},
 	get visibleWorkAreaId() {
-		var area = $('#work-area-rough:visible, #work-area-design:visible, #work-area-print:visible, #theme-picker');
+		var area = $('#work-area-organize:visible, #work-area-theme:visible, #work-area-design:visible, #work-area-print:visible');
 		if (area.length == 1)
 			return area.get(0).id;
 		return null;
 	},
 	areaIdToObject: function(areaId) {
 		switch(areaId) {
-			case 'work-area-rough':
+			case 'work-area-organize':
 				return GUI.RoughWorkArea;
 			case 'work-area-design':
-			case 'theme-picker':
 				return GUI.DesignWorkArea;
 			case 'work-area-print':
 				return GUI.PrintWorkArea;
+			case 'work-area-theme':
+				return GUI.ThemeWorkArea;
 			default:
 				return null;
 		}

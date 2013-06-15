@@ -1,6 +1,6 @@
 // editor.gui.roughworkarea.js
 
-// #work-area-rough implementation. Visible in 'Organize' mode
+// #work-area-organize implementation. Visible in 'Organize' mode
 
 (function(scope) {
 	var roughPageTarget = { target: null, direction: 0, dropFeedback: "" };
@@ -9,7 +9,7 @@
 		bindToBook: function(book) {
 			this.makeDroppable();
 			var pageList = book.pageList;
-			$('#work-area-rough')
+			$('#work-area-organize')
 				.data('model_id', book.id)
 				.on( PB.MODEL_CHANGED, this.bookChanged);
 			GUI.Options.addListener(this.optionsChanged);
@@ -17,7 +17,7 @@
 			this.synchronizeRoughPageList();
 		},
 		get book() {
-			return PB.ModelMap.domToModel($('#work-area-rough'));
+			return PB.ModelMap.domToModel($('#work-area-organize'));
 		},
 		optionsChanged: function(name, val) {
 			switch(name) {
@@ -30,12 +30,12 @@
 		},
 		show: function() {
 			$('#palette').show();
-			$('#work-area-rough').show();
+			$('#work-area-organize').show();
 			GUI.PhotoPalette.show();
 			this.processDelayUntilVisible();
 		},
 		hide: function() {
-			$('#work-area-rough, #photo-list-container').hide();
+			$('#work-area-organize, #photo-list-container').hide();
 		},
 		getDragTarget: function(roughPage, clientX, clientY) {
 			roughPage = $(roughPage).get(0);
@@ -56,7 +56,7 @@
 			return retVal;
 		},
 		makeDroppable: function() {
-			$('#work-area-rough').attr('dropzone', true).on( {
+			$('#work-area-organize').attr('dropzone', true).on( {
 				dragover: function(ev) { RoughWorkArea.dragover(ev.originalEvent) },
 				dragleave: function(ev) { RoughWorkArea.dragleave(ev.originalEvent) },
 				drop: function(ev) { RoughWorkArea.drop(ev.originalEvent) },
@@ -203,7 +203,10 @@
 				type: 'photo',
 				photoId: photoModel.id
 			},
-			{animate: true});
+			{	
+				animate: true, 
+				addCaption: true 
+			});
 		},
 		dropOsFile: function(ev, t) {
 			var files = ev.dataTransfer.files;
@@ -278,7 +281,7 @@
 			return domPage;
 		},
 		renumberRoughPages: function() {
-			$('#work-area-rough .rough-page').each(function(idx) {
+			$('#work-area-organize .rough-page').each(function(idx) {
 				if (idx < 4)
 					return;
 				var pNum = idx - 3;
@@ -312,14 +315,14 @@
 						}
 					}
 				}
-				$('#work-area-rough .rough-page').each(function() {
+				$('#work-area-organize .rough-page').each(function() {
 					GUI.RoughWorkArea.layoutRoughInsideTiles(this, false);
 				});
 			}
 			catch(ex) {
 				console.log("css rules API failed");
 				debugger;
-				$('#work-area-rough .rough-page').each(function() {
+				$('#work-area-organize .rough-page').each(function() {
 					var narrow = ($(this).hasClass('rough-page-cover-flap') || $(this).hasClass('rough-page-back-flap'));
 					var width = narrow ? newSize / 3 : newSize;
 					$(this).width(width).height(newSize);
@@ -348,10 +351,10 @@
 		// synchronizeRoughPageList and synchronizeRoughPhotoList
 		// algorithms are almost identical
 		synchronizeRoughPageList: function(options) {
-			if (this.delayUntilVisible($('#work-area-rough'),this.synchronizeRoughPageList, options))
+			if (this.delayUntilVisible($('#work-area-organize'),this.synchronizeRoughPageList, options))
 				return;
 			options = $.extend({animate:false}, options);
-			var containerDom = $('#work-area-rough');
+			var containerDom = $('#work-area-organize');
 			var bookModel = PB.ModelMap.domToModel(containerDom);
 			var sel = '.rough-page';
 
@@ -453,7 +456,7 @@
 			if (diff.length > 0)
 				this.layoutRoughInsideTiles(containerDom, options.animate);
 		},
-		// #work-area-rough is 'this'
+		// #work-area-organize is 'this'
 		bookChanged: function(ev, model, prop, options) {
 			if (prop === 'pageList') {
 				RoughWorkArea.synchronizeRoughPageList(options);

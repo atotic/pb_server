@@ -422,6 +422,6 @@ BookThemeAPI = {
 	}
 }
 
-$.extend(PB.Book.prototype, BookThemeAPI);
+//$.extend(PB.Book.prototype, BookThemeAPI);
 
 

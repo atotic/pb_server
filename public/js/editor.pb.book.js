@@ -21,7 +21,7 @@
  					photo_local_id => server_id
  				}
 		localData: serverData with local mods
-			}*
+			}
 		}
 */
 // PB.Book
@@ -95,7 +95,21 @@
 		get themeId() {
 			return this.localData.document.themeId;
 		},
+		set themeId(val) {
+			if (this.themeId != val) {
+				this.localData.document.themeId = val;
+				this._dirty = true;
+				PB.broadcastChange(this, 'themeId');
+			}
+		},
+		generateDesignId: function(page) {
+			if (page.designId)
+				return;
+			else
+				page.setDesign( PB.ThemeUtils.randomDesignId(this.themeId) );
+		},
 		get bookTemplateId() {
+			debugger;
 			return this.localData.document.bookTemplateId;
 		},
 		setDimensions: function(width, height) {
@@ -108,6 +122,7 @@
 			for (var i=0; i<pageList.length; i++) {
 				this.page(pageList[i]).dimensionsChanged(width, height);
 			}
+			this._dirty = true;
 			PB.broadcastChange( this, 'dimensions');
 		},
 		get dimensions() {

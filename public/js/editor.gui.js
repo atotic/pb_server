@@ -1,3 +1,4 @@
+// editor.gui.js
 /*
 	GUI Manipulation
 
@@ -12,7 +13,8 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 	#palette
 	#work-area
 		#work-area-container
-			#work-area-rough
+			#work-area-organize
+			#work-area-theme
 			#work-area-design
 			#work-area-print
 	#palette-resize-btn

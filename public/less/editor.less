@@ -220,8 +220,11 @@ body {
 
 #work-area {
 	background-color: @work-area-color;
-	padding:8px 0 0 16px;
+	padding: 8px 0 0 16px;
 	overflow: hidden;
+	.theme {
+		padding: 0;
+	}
 }
 	#work-area-container {
 		overflow: auto;
@@ -232,6 +235,53 @@ body {
 		display:none;
 		padding-right: @palette-resize-btn-radius;
 	}
+
+	#work-area-theme {
+		display:none;
+	}
+		#work-area-size-pick {
+			vertical-align: top;
+			line-height: 80px;
+			li {
+				display: inline-block;
+				list-style-type: none;
+				margin: 8px;
+				vertical-align: bottom;
+				div.selected {
+					box-shadow: 0px 0px 1px 1px black;
+				}
+				div:hover {
+					box-shadow: 0px 0px 1px 1px Highlight;
+				}
+			}
+		}
+		.size-pick {
+			position: relative;
+			border: 1px solid black;
+			background-color: #CCC;
+			text-align: center;
+			padding-top: 16px;
+		}
+		#theme-picker {
+			li {
+				position:relative;
+				margin-left: 8px;
+				display: inline-block;
+				list-style-type: none;
+				img {
+					height: 100px;
+				}
+				p {
+					text-align: center;
+				}
+			}
+			li.selected {
+				box-shadow: 0px 0px 1px 1px black;
+			}
+			li:hover {
+				box-shadow: 0px 0px 1px 1px Highlight;
+			}
+		}
 
 	.manipulator-btn {
 		position: absolute;
@@ -450,52 +500,3 @@ body {
 		background-color: none;
 	}
 
-@theme-picker-title-width: 100px;
-
-#theme-picker-container {
-	padding-top: 8px;
-	padding-bottom: 8px;
-	max-height: 300px;
-		> .lead {
-			display:inline-block;
-			vertical-align:top;
-			width: @theme-picker-title-width;
-			line-height:1;
-		}
-		> ul {
-			display:inline-block;
-			overflow: auto;
-			margin: 0;
-			> li {
-				margin-top: 4px;
-				min-width: 300px;
-				> p {
-					display:inline;
-					vertical-align:top;
-				}
-				> img {
-					height:100px;
-					margin: 0 0 0 20px;
-				}
-			}
-			> li.active {
-				.filter(~"saturate(4)");
-				background-color: Highlight;
-			}
-			> li:hover {
-				box-shadow: inset 0px 0px 2px 2px Highlight;
-			}
-		}
-}
-
-#theme-size-container {
-	margin: 8px 0 8px 0;
-}
-
-#theme-size-container > div.lead {
-	width: @theme-picker-title-width;
-}
-
-#theme-size-container > label.radio {
-	padding-top: 0;
-}

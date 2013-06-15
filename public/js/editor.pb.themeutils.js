@@ -434,6 +434,15 @@
 				return (aspects.tall || aspects.square)(page, layoutOptions);
 			else
 				return (aspects.square || aspects.wide)(page, layoutOptions);
+		},
+		randomDesignId: function(themeId) {
+			var theme = PB.ThemeCache.get(themeId);
+			var designs = [];
+			for (var d in theme.designs)
+				designs.push( 'theme://' + themeId + '/designs/' + d);
+			if (designs.length == 0)
+				throw new Error("No designs in theme " + themeId);
+ 			return designs[Math.floor( Math.random() * designs.length )];
 		}
 	};
 

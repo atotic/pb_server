@@ -52,6 +52,9 @@
 		},
 		get faces() {
 			return this.p.faces;
+		},
+		get caption() {
+			return this.p.caption;
 		}
 	}
 

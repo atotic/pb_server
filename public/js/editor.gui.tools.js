@@ -87,7 +87,10 @@
 					}
 				}
 				while (want > 0 && photos.length > 0) {
-					nextPage.addPhoto(photos.shift(), {animate:false});
+					nextPage.addAsset( {
+						type: 'photo',
+						photoId: photos.shift()
+					}, {animate:false});
 					want--;
 				}
 			}

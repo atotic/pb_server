@@ -122,7 +122,7 @@
 							var ri = $(GUI.DragStore.dom);
 							var photo = PB.ModelMap.domToModel(ri);
 							var roughPage = PB.ModelMap.domToModel(ri.parent());
-							roughPage.removePhoto(photo, {animate: true});
+							roughPage.removeAsset( roughPage.findAssetIdByPhotoId(photo.id));
 							ev.stopPropagation();
 							ev.preventDefault();
 							GUI.DragStore.hadDrop = true;
