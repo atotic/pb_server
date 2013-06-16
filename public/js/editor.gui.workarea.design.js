@@ -21,6 +21,7 @@ var ID= '#work-area-design';
 
 var Page = {
 	bind: function(pageDom) {
+		return;
 		GUI.Events.Down.bind(pageDom, {
 			action: function(ev) {
 				Page.click(pageDom, ev);
@@ -196,6 +197,11 @@ var DesignWorkArea = {
 		}
 	},
 	show: function() {
+		if (this.book.themeId == null || !this.book.dimensions.width) {
+			GUI.Options.designStage = 'theme'
+			throw new Error("Cant design before assigning theme/width");
+		}
+
 		$('#work-area').css({ paddingLeft: 0, paddingTop: 0});
 		$(ID).show();
 		this.showDesignArea(this._lastPage);

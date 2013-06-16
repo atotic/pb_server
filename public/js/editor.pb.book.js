@@ -175,8 +175,12 @@
 				return this._proxies[id];
 			else
 				if (this.localData.document.photoList.indexOf(id) == -1) {
-					debugger;
-					throw "No such photo";
+					if (PB.ServerPhotoCache.exists(id))
+						return PB.ServerPhotoCache.get(id);
+					else {
+						debugger;
+						throw "No such photo";
+					}
 				}
 				else
 					this._proxies[id] = new PB.PhotoProxy(id, this);

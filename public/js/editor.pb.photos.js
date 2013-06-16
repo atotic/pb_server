@@ -80,6 +80,9 @@
 				return cache[id];
 			}
 		},
+		exists: function(id) {
+			return id in cache;
+		},
 		serverPhotoIdChanged: function(oldId, newId) {
 			var photo = cache[oldId];
 			delete cache[oldId];

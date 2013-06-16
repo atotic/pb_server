@@ -69,8 +69,8 @@
 		flavors: ['frame', 'photo', 'photoInPage'],
 
 		setTempPhoto: function(asset, photoId) {
-			this.destinationArchive = this.destinationPage.archiveSomething( { 
-				type: 'asset', 
+			this.destinationArchive = this.destinationPage.archiveSomething( {
+				type: 'asset',
 				assetId: this.assetId,
 				dependents: true
 			});
@@ -78,7 +78,7 @@
 				photoId: photoId,
 				zoom: 1.0,
 				focalPoint: null
-			});			
+			});
 		},
 		restoreTempPhoto: function() {
 			if ('destinationArchive' in this) {
@@ -103,8 +103,8 @@
 			var sourceAsset = this.sourcePage.getAsset( this.sourceAssetId )
 
 			// create archives
-			this.destinationArchive = this.destinationPage.archiveSomething( { 
-				type: 'asset', 
+			this.destinationArchive = this.destinationPage.archiveSomething( {
+				type: 'asset',
 				assetId: this.assetId,
 				dependents: true
 			});
@@ -114,9 +114,9 @@
 				dependents: true
 			});
 
-			this.destinationImports = this.replaceSrcPhotoWithDest( this.destinationPage, 
-				this.assetId, 
-				this.destinationArchive, 
+			this.destinationImports = this.replaceSrcPhotoWithDest( this.destinationPage,
+				this.assetId,
+				this.destinationArchive,
 				this.sourceArchive);
 			this.sourceImports = this.replaceSrcPhotoWithDest( this.sourcePage,
 				this.sourceAssetId,
@@ -345,7 +345,7 @@
 			this.page = PB.Page.Selection.findClosest($dom).bookPage;
 			this.assetId = $dom.data('model_id');
 			var asset = this.page.getAsset( this.assetId );
-			var photo = PB.ServerPhotoCache.get( asset.photoId );
+			var photo = this.page.book.photo( asset.photoId );
 			var maxSize = 128;
 			var d = photo.dimensions;
 			var scale = Math.min(1, Math.min( maxSize / d.width, maxSize / d.height));

@@ -2,8 +2,17 @@
 
 (function(scope) {
 
+"use strict"
+
 var WorkArea = {
 	init: function() {
+		['organize', 'theme', 'design', 'print'].forEach(function(action) {
+			var id = 'work-area-' + action + '-nav';
+			$('#' + id).on('mousedown touchstart', function() {
+							GUI.Options.designStage = action;
+						})
+						.find('a').on('click', function(ev) { ev.preventDefault() });
+		});
 		$('#work-area').data('resize', function() {
 			var paletteHeight = $('#palette:visible').length == 1 ? $('#palette').outerHeight() : 0;
 			var h = $('body').height() - $('#top-menu').height() - paletteHeight;
@@ -17,6 +26,7 @@ var WorkArea = {
 		GUI.Options.addListener(this.optionsChanged);
 		GUI.RoughWorkArea.bindToBook(book);
 		GUI.DesignWorkArea.bindToBook(book);
+		$('#work-area-organize').hide();
 		this.optionsChanged('designStage', GUI.Options.designStage);
 	},
 	optionsChanged: function(name, val) {
@@ -49,12 +59,12 @@ var WorkArea = {
 		switch(areaId) {
 			case 'work-area-organize':
 				return GUI.RoughWorkArea;
+			case 'work-area-theme':
+				return GUI.ThemeWorkArea;
 			case 'work-area-design':
 				return GUI.DesignWorkArea;
 			case 'work-area-print':
 				return GUI.PrintWorkArea;
-			case 'work-area-theme':
-				return GUI.ThemeWorkArea;
 			default:
 				return null;
 		}
@@ -70,9 +80,14 @@ var WorkArea = {
 			$('#' + hideId + '-nav').removeClass('active');
 		}
 		if (showArea) {
-			showArea.show();
-			$('#' + showId + '-nav').addClass('active');
-			GUI.fixSizes($('#work-area'));
+			try {
+				showArea.show();
+				$('#' + showId + '-nav').addClass('active');
+				GUI.fixSizes($('#work-area'));
+			}
+			catch(ex) { // if area is not ready to show, it will throw exception
+				$('#' + showId + '-nav').removeClass('active');
+			}
 		}
 	}
 };

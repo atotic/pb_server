@@ -65,6 +65,7 @@ eos
 
 	def to_json(*a)
 		doc = JSON.parse(self.document)
+		# preload book photos
 		photoIds = doc['photoList'].map { |id| doc['photoMap'][id]}
 		photoJson = "[" + PB::Photo.where(:id=>photoIds).map{|x| x.to_json}.join(',') + "]"
 <<-eos

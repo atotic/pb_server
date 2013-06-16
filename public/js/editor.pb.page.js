@@ -365,7 +365,7 @@ asset widget {
 			break;
 			case 'photo':
 				if (addAssetOptions.addCaption) {
-					var photo = PB.ServerPhotoCache.get(asset.photoId);
+					var photo = this.book.photo(asset.photoId);
 					if (photo.caption) {
 						this.addAsset( {
 							type: 'text',
@@ -514,7 +514,7 @@ asset widget {
 					var zoom = Math.max( asset.zoom || 1, 1);
 					var focalPoint = asset.focalPoint || { x: 50, y: 50 };
 
-					var photo = PB.ServerPhotoCache.get( asset.photoId );
+					var photo = this.book.photo( asset.photoId );
 
 					var photoRect = new GUI.Rect( photo.dimensions );
 					var scale = photoRect.fillInside( innerRect);
@@ -849,7 +849,7 @@ asset widget {
 				});
 			var imgDom = $( document.createElement('img') )
 				.addClass('design-photo-img')
-				.prop('src', PB.ServerPhotoCache.get( asset.photoId).getUrl(options.resolution) )
+				.prop('src', this.book.photo( asset.photoId).getUrl(options.resolution) )
 				.css({
 					top: asset.photoRect.top,
 					left: asset.photoRect.left,
@@ -1111,7 +1111,7 @@ asset widget {
 			return this.cmdSet;
 		},
 		makeLiAction: function(cmd) {
-			$li = $( document.createElement( 'li' ));
+			var $li = $( document.createElement( 'li' ));
 			var $a = $( document.createElement('span'));
 			$a.text( cmd.title );
 			if ( cmd.icon )
