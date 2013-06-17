@@ -160,7 +160,7 @@
 				if (id in this.localData.document.pages)
 					this._proxies[id] = new PB.Page.Proxy(id, this);
 				else
-					throw "No such page";
+					throw new Error("No such page");
 			return this._proxies[id];
 		},
 		page: function(id) {
@@ -179,7 +179,7 @@
 						return PB.ServerPhotoCache.get(id);
 					else {
 						debugger;
-						throw "No such photo";
+						throw new Error("No such photo");
 					}
 				}
 				else
@@ -350,7 +350,7 @@
 		applyBroadcastPatches: function(patchArray) {
 			if (this._corrupted) {
 				console.warn("Ignored patch, book is corrupted");
-				throw "Patch ignored, book is corrupted";
+				throw new Error("Patch ignored, book is corrupted");
 			}
 			var t = new PB.Timer("applyBroadcastPatches");
 			var changes = [];
@@ -514,7 +514,7 @@
 			var page = PB.Page.Proxy.blank(this);
 			var pageList = this.pageList;
 			if (pageList.indexOf(page.id) != -1)
-				throw "page already in book";
+				throw new Error("page already in book");
 			this.localData.document.pages[page.id] = page;
 			if (index > pageList.length || index == -1)
 				this.localData.document.pageList.push(page.id);
@@ -527,7 +527,7 @@
 		deleteRoughPage: function(page, options) {
 			var index = this.pageList.indexOf(page.id);
 			if (index == -1)
-				throw "no such page";
+				throw new Error("no such page");
 			this.localData.document.pageList.splice(index, 1);
 			delete this._proxies[page.id];
 			this._pagePhotosChanged(page, options);
@@ -537,7 +537,7 @@
 		moveRoughPage: function(page, dest, options) {
 			var src = this.pageList.indexOf(page.id);
 			if (src == -1)
-				throw "no such page";
+				throw new Error("no such page");
 			this.localData.document.pageList.splice(src, 1);
 			if (dest == -1 || dest > this.pageList.length)
 				this.localData.document.pageList.push(page.id);

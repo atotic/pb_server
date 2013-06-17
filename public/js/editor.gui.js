@@ -553,7 +553,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			var newJq;
 			if (jq.length < index) {
 				console.error("JSDiffUtil.insert out of range", arguments);
-				throw "JSDiffUtil.insert out of range";
+				throw new Error("JSDiffUtil.insert out of range");
 			}
 			if (jq.length == index) {
 				if (jq.length == 0) {

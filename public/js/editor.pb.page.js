@@ -1351,7 +1351,7 @@ asset widget {
 			$dom.parents( '*:data("pageSelection")' ).data(PageSelection.DATA_ID);
 		if (ps == null) {
 			console.error("could not find pageselection in ", $dom);
-			throw "Could not find pageselection";
+			throw new Error("Could not find pageselection");
 		}
 		return ps;
 	};
@@ -1531,7 +1531,7 @@ text_id => Points to an object in page: page.texts[text_id]. Page unique, not gl
 			if (!this.layoutId)
 				this.book.assignTemplate(this);
 			if (!this.layoutId)
-				throw "no dom yet";
+				throw new Error("no dom yet");
 			return PB.Template.cached(this.layoutId).generateDom(this, {resolution: resolution});
 		},
 		guessItemType: function(item) {

@@ -1,4 +1,6 @@
 Stream:
+Nice color picker: http://color.hailpixel.com/
+Some guy from Kiev that did md5 asm.js http://sagens.me/. Got a brain, might be useful
 Lots of relevant mobile hacks: http://www.mobilexweb.com/
 Simple, cheap deployment: https://www.digitalocean.com/features
 ColurLover: graphic designer community. Owner doing a pivot. Way to bootstrap our community? http://www.colourlovers.com/about

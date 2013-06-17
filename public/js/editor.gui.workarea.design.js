@@ -261,6 +261,14 @@ var DesignWorkArea = {
 		}
 	},
 
+	fixPlaceholders: function() {
+		console.log("fixingPlaceholders");
+		var currentPages = this.currentPages;
+		var left = $('.design-book-page-left').not(':data(removed)').children('.design-page');
+		var right = $('.design-book-page-right').not(':data(removed)').children('.design-page');
+		if (left.hasClass('placeholder') || right.hasClass('placeholder'))
+			this.showPages( this.currentPages, null, true);
+	},
 	showPages: function(pages, direction, force) {
 		if (!pages) {
 			PB.error("page does not exist");
@@ -288,7 +296,25 @@ var DesignWorkArea = {
 		function makePageDom(page, options) {
 			if (!page.designId)
 				THIS.book.generateDesignId(page);
-			return $(page.generateDom(options));
+			try {
+				return $(page.generateDom(options));
+			}
+			catch(ex) {
+				// Display placeholder if load fails
+				if (ex.name == "ThemeNotFoundException" && ex.deferred) {
+					ex.deferred.done( function() {
+						THIS.fixPlaceholders();
+					});
+				}
+				var d = page.dimensions;
+				return $('<div>')
+					.css({
+						width: d.width,
+						height: d.height
+					})
+					.addClass('design-page placeholder')
+					.data('model_id', page.id);
+			}
 		}
 		var loResOptions = {
 			size: PB.PhotoProxy.SMALL,

@@ -183,7 +183,7 @@
 				this.dropOsFile(ev, t);
 				break;
 			default:
-				throw "unknown drop flavor" + GUI.DragStore.flavor;
+				throw new Error("unknown drop flavor" + GUI.DragStore.flavor);
 			}
 			GUI.DragStore.hadDrop = true;
 		},
@@ -203,9 +203,9 @@
 				type: 'photo',
 				photoId: photoModel.id
 			},
-			{	
-				animate: true, 
-				addCaption: true 
+			{
+				animate: true,
+				addCaption: true
 			});
 		},
 		dropOsFile: function(ev, t) {

@@ -204,7 +204,7 @@
 
 	var ServerPhoto = function(id) {
 		if (!id)
-			throw "ServerPhoto must have an id";
+			throw new Error("ServerPhoto must have an id");
 		this._id = id;
 		this._status = "";
 		this._progress = 0;
@@ -471,7 +471,7 @@
 			this._jpegFile = new PB.JpegFile(file);
 			if (this._localFile.size > this.SIZE_LIMIT) {
 				GUI.Error.photoTooBig(this);
-				throw "File too big";
+				throw new Error("File too big");
 			}
 			PB.Uploader.savePhoto(this);
 		},
@@ -504,7 +504,7 @@
 		loadFromJson: function(json, noBroadcast) {
 			if ('id' in json && this.id != json.id) {
 				if (! /^temp/.exec(this.id))
-					throw "Photo id is immutable once assigned (unless temp id)";
+					throw new Error("Photo id is immutable once assigned (unless temp id)");
 				if (this._idChangeListeners) {
 					var oldId = this.id;
 					for (var i=0; i<this._idChangeListeners.length; i++)

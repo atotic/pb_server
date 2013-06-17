@@ -1,7 +1,21 @@
 // editor.pb.themecache.js
+/*
+ThemeCache loads and caches themes
 
+Usage:
+
+Theme.get - gets cached theme. Loads theme if not in cache by default
+Theme.resource - gets theme resource from theme url. Autoloads the theme if missing
+*/
 (function(scope) {
 "use strict"
+
+var ThemeNotFoundException = function(msg, deferred) {
+	var e = new Error(msg);
+	e.name = "ThemeNotFoundException";
+	e.deferred = deferred;
+	return e;
+};
 
 var ThemeCache = {
 	themes: {}, // theme_id -> {theme}, theme_id to theme map
@@ -10,13 +24,12 @@ var ThemeCache = {
 	get: function( id, options ) {
 		if (id in this.themes)
 			return this.themes[id];
-
 		options = $.extend({
-			autoload: false
+			autoload: true
 		}, options);
 		if (options.autoload)
 			this.load( this.themeUrlFromId( id ));
-		throw "No such theme " + id;
+		throw new Error("No such theme " + id);
 	},
 	put: function(theme) {
 		if ( theme.id in this.themes )
@@ -121,7 +134,7 @@ var ThemeCache = {
 			});
 	},
 
-	load: function(url) {
+	load: function(url, options) {
 		// console.log("loading", url);
 		if (url in this.loading)
 			return this.loading[url];
@@ -150,7 +163,7 @@ var ThemeCache = {
 			.fail( function( jqXHR, status, msg ) {
 				console.error( "ajax theme loading failed", status, msg, url );
 				delete this.loading[url];
-				ThemeCache.failed[url] = 'http error' + status;
+				ThemeCache.failed[url] = status + ' ' + msg;
 				deferred.rejectWith( url );
 				switch(jqXHR.status) { // offline?
 					case 404:
@@ -174,7 +187,9 @@ var ThemeCache = {
 			pathStr = match[2];
 		var theme = this.themes[themeId];
 		if (!theme) {
-			var err = "Theme not found " + resUrl; console.error(err); throw err;
+			console.error("Theme not found", resUrl);
+			var deferred = this.load( this.themeUrlFromId( themeId ));
+			throw new ThemeNotFoundException("Theme not found " + resUrl, deferred);
 		}
 		var p,
 			res = theme,

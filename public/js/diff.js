@@ -118,7 +118,7 @@ patch format:
 				this._obj[this._prop] = val;
 				return;
 			}
-			throw "Can't set root object";
+			throw new Error("Can't set root object");
 		},
 		insert: function(val) {
 			if (this._obj instanceof Array) {
@@ -150,7 +150,7 @@ patch format:
 					delete this._obj[this._prop];
 			}
 			else
-				throw "Can't delete root object";
+				throw new Error("Can't delete root object");
 		}
 	}
 
@@ -191,7 +191,7 @@ patch format:
 											el.push(new Proxy(obj, propName, path_to_here));
 									break;
 								case 'Basic':
-									throw "Nothing to traverse at" + path_to_here.join('.') + '.*';
+									throw new Error("Nothing to traverse at" + path_to_here.join('.') + '.*');
 									break;
 						}
 						break;
@@ -252,7 +252,7 @@ patch format:
 	// Transforms "$.a.b[3].c" into [ '$', 'a', 'b', '[3]', 'c' ]
 	function canonical_path(path) {
 		if (path === null || path === undefined)
-			throw "path cannot be null";
+			throw new Error("path cannot be null");
 		var p = path.replace(/\./g, ';'); // a.b => a;b
 		p = p.replace(/\[/g, ';['); // p[2] => p;[2]
 		p = p.replace(/\[([^\]]+)\]/g, "$1"); // [2] => 2
@@ -275,12 +275,12 @@ patch format:
 			if (!options.hasOwnProperty(p))
 				options[p] = defaults[p];
 
-		if (!obj || !path) throw "Empty object or path";
+		if (!obj || !path) throw new Error("Empty object or path");
 		var c_path = canonical_path(path);
 
 		var retVal = traverse(obj, c_path, [], options);
 		if (options['just_one']) {
-			if (retVal.length > 1) throw "Multiple arguments returned, just_one requested";
+			if (retVal.length > 1) throw new Error("Multiple arguments returned, just_one requested");
 			return retVal.length == 0 ? null : retVal[0];
 		}
 		return retVal;
@@ -312,7 +312,7 @@ patch format:
 		else if (obj instanceof Object)
 			return 'Object';
 		else if (typeof obj == 'function')
-			throw "Cant diff functions";
+			throw new Error("Cant diff functions");
 		else
 			return 'Basic';
 	}
@@ -355,7 +355,7 @@ patch format:
 					target.set(diff.args);
 				}
 				else
-					throw "Could not SET, target not found";
+					throw new Error("Could not SET, target not found");
 				break;
 			case 'insert':
 				var target = JsonPath.query(obj, diff.path, {'just_one': true, 'ghost_props': true});
@@ -364,7 +364,7 @@ patch format:
 					target.insert(diff.args);
 				}
 				else
-					throw "Could not INSERT, target not found";
+					throw new Error("Could not INSERT, target not found");
 				break;
 			case 'delete':
 				var target = JsonPath.query(obj, diff.path, {'just_one':true });
@@ -378,7 +378,7 @@ patch format:
 			case 'swapArray':
 				var array = JsonPath.query(obj, diff.path, {'just_one': true});
 				if (!array)
-					throw "Could not swapArray " + diff.path;
+					throw new Error("Could not swapArray " + diff.path);
 				var srcPos = diff.args.srcIndex;
 				var destPos = diff.args.destIndex;
 				if ('srcValue' in diff.args && diff.args.srcValue != undefined)
@@ -396,13 +396,13 @@ patch format:
 						dest.set(tmp);
 					}
 					else
-						throw "could not swapArray" + diff.path;
+						throw new Error("could not swapArray" + diff.path);
 				}
 				else
 					console.warn("could not swapArray", diff.path, diff.args);
 				break;
 			default:
-				throw "Unknown operation " + diff.op;
+				throw new Error("Unknown operation " + diff.op);
 		}
 	}
 
@@ -502,7 +502,7 @@ patch format:
 			if (src[i] != newObj[i]) {
 				var swapFrom = indexOfAfter(src, newObj[i], i);
 				if (swapFrom == -1)
-					throw "Unexpected error while planning a swap";
+					throw new Error("Unexpected error while planning a swap");
 				patch.push(createSwapArray(path, swapFrom, i, src[i], newObj[i]));
 				swap(src, swapFrom, i);
 			}

@@ -13,7 +13,7 @@ var	Template = {
 	// deferred result is a map id => object, { id => <requested object>, id => <requested_object> }
 	get: function(idOrIdArray) { //takes <id> | [ id* ]
 		if (idOrIdArray === null)
-			throw "Template.get(id) id must not be null";
+			throw new Error("Template.get(id) id must not be null");
 
 		var idList;
 		if (typeof idOrIdArray == 'string')
@@ -74,7 +74,7 @@ var	Template = {
 	// the cache
 	cached: function(id) {
 		if (typeof id != 'string')
-			throw "id must be a string";
+			throw new Error("id must be a string");
 		if (id in cache)
 			return cache[id];
 		else
@@ -87,7 +87,7 @@ var	Template = {
 			if (/config|theme|book|layout|image/.test(template.type))
 				return template.type;
 			else
-				throw "Unknown template type " + template.type;
+				throw new Error("Unknown template type " + template.type);
 		}
 		// guess: from template member name
 		var retVal = null;
@@ -100,7 +100,7 @@ var	Template = {
 		else if ('full' in template)
 			retVal = 'image';
 		else
-			throw "Could not guess template type";
+			throw new Error("Could not guess template type");
 		return retVal;
 	},
 	put: function(template) {

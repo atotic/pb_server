@@ -212,7 +212,7 @@ Thumbnail extraction: http://code.flickr.com/blog/2012/06/01/parsing-exif-client
 				var parser = new DOMParser();
 				var dom = parser.parseFromString(rdf, "application/xml");
 				if (!dom)
-					throw "Could not parse dom";
+					throw new Error("Could not parse dom");
 				var title = this.readRdfValue(dom, 'title');
 				if (title)
 					this.exif.title = title;
