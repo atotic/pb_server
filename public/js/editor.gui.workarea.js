@@ -15,7 +15,7 @@ var WorkArea = {
 		});
 		$('#work-area').data('resize', function() {
 			var paletteHeight = $('#palette:visible').length == 1 ? $('#palette').outerHeight() : 0;
-			var h = $('body').height() - $('#top-menu').height() - paletteHeight;
+			var h = $('body').height() - $('#site-navbar').height() - $('#top-navbar').height() - $('#bottom-navbar').height() - paletteHeight;
 			$('#work-area').css('height', h);
 			$('#work-area-container').css('height', h - parseInt($('#work-area').css('padding-top')));
 			GUI.Buttons.ResizePaletteButton.fixPosition();

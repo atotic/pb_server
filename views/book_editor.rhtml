@@ -4,7 +4,6 @@
 	<title>Pook.io editor</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 	<%= asset_link("bootstrap.css", "application.css", "editor.css") %>
-	<meta http-equiv="X-UA-Compatible" content="chrome=1">
 </head>
 <body>
 <input id="add-photo-input"
@@ -13,49 +12,41 @@
 		accept="image/*"
 		capture="filesystem"
 		style="position:absolute;width:0px;height:0px;border:0;padding:0;margin:0">
-<div id='top-menu' class="navbar navbar-inverse">
+<div id='site-navbar' class="navbar navbar-inverse">
 	<div class="navbar-inner">
 		<ul class="nav">
 			<li class="dropdown" style='width:130px'>
-				<a href="#"
-				class="brand dropdown-toggle"
-				data-toggle="dropdown">
-pook.io <b class="caret"></b>
-				</a>
+				<a href="#" class="brand dropdown-toggle" data-toggle="dropdown">pook.io <b class="caret"></b></a>
 				<ul class='dropdown-menu'>
-					<li class="disabled" ><a href="#">
-about</a></li>
-					<li><a href="/">
-home</a></li>
+					<li class="disabled" ><a href="#">about</a></li>
+					<li><a href="/">home</a></li>
 				</ul>
 			</li>
-			<li
-					rel='tooltip'
-					title='Esc to toggle'>
-		<a href='/Tools' onclick="GUI.toggleTools();return false;"><i class='icon-wrench icon-white'></i>
-Tools <i class='icon-wrench icon-white'></i> </a>
+			<li rel='tooltip' title='Esc to toggle'>
+				<a href='/Tools' onclick="GUI.toggleTools();return false;">
+				<i class='icon-wrench icon-white'></i>Tools <i class='icon-wrench icon-white'></i> </a>
 		</ul>
 		<ul class="nav pull-right">
-<% if current_user %>
+		<% if current_user %>
 			<li class="dropdown">
 				<a href="#"
 					class="dropdown-toggle"
 					data-toggle="dropdown">
-<%= current_user.display_name %><b class="caret"></b>
+		<%= current_user.display_name %><b class="caret"></b>
 				</a>
 				<ul class='dropdown-menu'>
 					<li><a href="/account">account</a></li>
 					<li><a href="/logout">log out</a></li>
 				<% if current_user.is_administrator %><li><a href="/admin" class="admin">admin</a><% end %>
 				</ul>
-<% else %>
+		<% else %>
 					<li><a href="/auth/login">log in</a>
-<% end %>
+		<% end %>
 			<li id='fullscreen'><a href='/Fullscreen' onclick="$(document.body).toggleFullScreen(); return false;"><i class='icon-fullscreen icon-white'></i></a></li>
 		</ul>
 	</div>
 </div>
-<div id="rough-more-tools" style='display:none'>
+<div id="rough-more-tools">
 	<dl>
 	<dt>
 		Display
@@ -117,28 +108,14 @@ Tools <i class='icon-wrench icon-white'></i> </a>
 	</dd>
 	</dl>
 </div>
-<div class='navbar-inverse' id="sidebar">
-	<ul class="nav nav-tabs nav-stacked ">
-		<li id='work-area-organize-nav' class='active'><a href='/Organize'>Organize</a>
-		<li id='work-area-theme-nav'><a href='/Theme'>Theme</a>
-		<li id='work-area-design-nav'><a href='/Design'>Design</a>
-		<li id='work-area-print-nav'><a href='/Print' >Print</a>
+<div id='top-navbar' class="navbar navbar-inverse">
+	<div class="navbar-inner">
+	<ul id='top-menu' class="nav">
+		<li id='work-area-organize-nav'><a href='/Organize'>Organize</a></li>
+		<li id='work-area-theme-nav'><a href='/Theme'>Theme</a></li>
+		<li id='work-area-design-nav'><a href='/Design'>Design</a></li>
+		<li id='work-area-print-nav'><a href='/Print' >Print</a></li>
 	</ul>
-	<ul class="nav nav-pills nav-stacked">
-		<li >
-			<a id='add-photo-btn' href="#">Add photo</a>
-		<li id='add-page-btn'
-			rel="tooltip"
-			title="You can DRAG the button to insert pages in the middle"
-		>
-			<a href="#" >Add page</a>
-	</ul>
-	<div id='trash-btn'
-		class='well'
-		style='position:absolute;bottom:0px;right:0px;left:0px;margin-bottom:0px'
-		rel='tooltip'
-		title='Anything dropped here will be removed (images, pages)'>
-		<i class='icon-trash icon-white'></i> Trash
 	</div>
 </div>
 <div id="main-content">
@@ -173,6 +150,23 @@ Tools <i class='icon-wrench icon-white'></i> </a>
 	</div>
 	<div id='palette-resize-btn'>
 	</div>
+</div>
+<div id='bottom-navbar' class='navbar  navbar-fixed-bottom'>
+<div class='navbar-inner'>
+	<ul id='workarea-menu' class='nav'>
+		<li><a id='add-photo-btn' href="#">Add photo</a></li>
+		<li id='add-page-btn'
+			rel="tooltip"
+			title="You can DRAG the button to insert pages in the middle">
+		<a href="#" >Add page</a></li>
+	</ul>
+	<div id='trash-btn'
+		class='well pull-right'
+		rel='tooltip'
+		title='Anything dropped here will be removed (images, pages)'>
+		<i class='icon-trash icon-white'></i></li>
+	</div>
+</div>
 </div>
 <!-- Templates -->
 <script type='text/html' id='error-locked-template'>

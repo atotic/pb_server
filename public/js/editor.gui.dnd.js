@@ -185,7 +185,7 @@
 			}
 		},
 		dragStart: function(ev) {
-			// console.log("dragStart");
+			console.log("dragStart");
 			if ($dragImage)	// if we get both mousedown and touchstart do only one
 				return;
 			$src = $(ev.currentTarget);
@@ -256,7 +256,7 @@
 			return { droppable: $(), flavor: null};
 		},
 		dragMove: function($ev) {
-			// console.log('dragMove enter');
+			console.log('dragMove enter');
 			$ev.preventDefault(); // stop touch scrolling
 			var loc = GUI.Util.getPageLocation($ev);
 			loc.x = Math.max( Math.min( loc.x, dragBounds.right ), dragBounds.left);
@@ -286,7 +286,7 @@
 			}
 		},
 		dragEnd: function(ev) {
-			// console.log('dragEnd');
+			console.log('dragEnd');
 
 			var transferDone = false;
 			if ($dest.length > 0)

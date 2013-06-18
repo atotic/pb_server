@@ -14,8 +14,6 @@
 @navbar-height: @navbarHeight;
 @navbar-color: #1b1b1b;
 
-@sidebar-width: 160px;
-
 @photo-list-photo-height: 128px;
 @photo-list-photo-margin: 2px;
 @photo-list-margin-top: 8px;
@@ -77,46 +75,23 @@ body {
 	}
 }
 
-#sidebar {
-	position: absolute;
-	top: @navbar-height;
-	left:0px;
-	bottom:0px;
-	width: @sidebar-width;
-	background-color: @navbar-color;
-}
-
-#sidebar * {
-	.user-select(none);
-}
 	#trash-btn {
-		position:absolute;
-		bottom:0px;
-		right:0px;
-		left:0px;
-		margin-bottom:0px;
-		background-color: @navbar-color;
+		position: absolute;
+		right: 8px;
+		top: -20px;
+		background-color: white;
 		color: @grayLight;
-	}
-
-	#sidebar > .nav-tabs.nav-stacked {
-		 > li:first-child > a {
-			.border-top-right-radius(0px);
-			.border-top-left-radius(0px);
-		}
-		> li:last-child > a {
-			.border-bottom-right-radius(0px);
-			.border-bottom-left-radius(0px);
-		}
+		font-size: 50px;
+		padding: 2px;
 	}
 
 #main-content {
 	position:absolute;
 	top: @navbar-height;
-	left: @sidebar-width;
 	bottom:0px;
 	width:100%;
 	overflow: hidden;
+	width: 100%;
 }
 
 #palette {

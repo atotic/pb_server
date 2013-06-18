@@ -317,12 +317,12 @@ var DesignWorkArea = {
 			}
 		}
 		var loResOptions = {
-			size: PB.PhotoProxy.SMALL,
+			resolution: PB.PhotoProxy.SMALL,
 			syncable: false,
 			editable: false
 		};
 		var hiResOptions = {
-			size: PB.PhotoProxy.MEDIUM,
+			resolution: PB.PhotoProxy.MEDIUM,
 			syncable: true,
 			editable: true
 		};
@@ -334,7 +334,7 @@ var DesignWorkArea = {
 				pagesDom[i].data('highDpi', makePageDom( pages[i], hiResOptions));
 			}
 			else
-				pagesDom[i] = makePageDom(pages[i], PB.PhotoProxy.MEDIUM);
+				pagesDom[i] = makePageDom(pages[i], hiResOptions);
 		}
 		// create page containers
 		var leftDom = $("<div class='design-book-page-left'/>");

@@ -187,7 +187,7 @@ var ThemeCache = {
 			pathStr = match[2];
 		var theme = this.themes[themeId];
 		if (!theme) {
-			console.error("Theme not found", resUrl);
+			console.warn("Theme not found", resUrl);
 			var deferred = this.load( this.themeUrlFromId( themeId ));
 			throw new ThemeNotFoundException("Theme not found " + resUrl, deferred);
 		}

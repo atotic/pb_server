@@ -32,8 +32,8 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			this.initGlobalShortcuts();
 			window.setTimeout(function() {
 				// One time sizing fix
-				$('#sidebar').css('top', $('#top-menu').height());
-				$('#main-content').css('top', $('#top-menu').height());
+				var menuBottom = document.getElementById('top-navbar').getBoundingClientRect().bottom;
+				$('#main-content').css('top', menuBottom);
 				GUI.fixSizes();
 			},0);
 			$('#main-content').data('resize', function(el) {
@@ -264,7 +264,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 
 // Graphics utilities
 (function(scope) {
-"use strict"
+"use strict";
 	var Util = {
 		// false not in rect, 'left' to the left, 'right' to the right
 		pointInClientRect: function(x, y, r) {
@@ -381,7 +381,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		},
 		// returns css path, parent
 		getPath: function (el, parent_id) {
-			var el = $(el);
+			el = $(el);
 			if (parent_id === undefined)
 				parent_id = 'this is not an id';
 
