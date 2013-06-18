@@ -104,8 +104,8 @@
 				.css( {
 					top: startLoc.y + 2,
 					left: startLoc.x + 2,
-					marginLeft: bounds.left + window.scrollX - startLoc.x,
-					marginTop: bounds.top + window.scrollY - startLoc.y,
+					marginLeft: bounds.left + $(document).scrollLeft() - startLoc.x,
+					marginTop: bounds.top + $(document).scrollTop() - startLoc.y,
 					position: 'absolute'
 				});
 			GUI.Util.preventDefaultDrag($dom);
@@ -185,6 +185,7 @@
 			}
 		},
 		dragStart: function(ev) {
+			// console.log("dragStart");
 			if ($dragImage)	// if we get both mousedown and touchstart do only one
 				return;
 			$src = $(ev.currentTarget);
@@ -227,8 +228,8 @@
 					hidden.pop().style.visibility = 'visible';
 			}
 			var loc = GUI.Util.getPageLocation($ev);
-			var scrollTop = window.scrollY;
-			var scrollLeft = window.scrollX;
+			var scrollTop = $(document).scrollTop();
+			var scrollLeft = $(document).scrollLeft();
 			var el = document.elementFromPoint( loc.x - scrollLeft,
 													loc.y - scrollTop );
 			while (el && el.nodeName != 'BODY' && el.nodeName != 'HTML') {

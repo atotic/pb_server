@@ -12,7 +12,7 @@
 		multiple="true"
 		accept="image/*"
 		capture="filesystem"
-		style="position:absolute;width:0px;height:0px;border:0;padding:0;margin:0"></input>
+		style="position:absolute;width:0px;height:0px;border:0;padding:0;margin:0">
 <div id='top-menu' class="navbar navbar-inverse">
 	<div class="navbar-inner">
 		<ul class="nav">
@@ -66,7 +66,7 @@ Tools <i class='icon-wrench icon-white'></i> </a>
 				<label class="control-label">Show photos</label>
 				<div class="controls btn-group">
 					<button id='photoFilter-all' class="btn">All</button>
-					<button id='photoFilter-unused'class="btn">Unused</button>
+					<button id='photoFilter-unused' class="btn">Unused</button>
 				</div>
 			</div>
 
@@ -210,11 +210,9 @@ Tools <i class='icon-wrench icon-white'></i> </a>
 	<p>Your login session has expired, please log in again.</p>
 </div>
 </script>
-<script
 <%= asset_link("jquery.js") %>
 <%= asset_link("bootstrap.js") %>
 <%= asset_link("editor.js") %>
-<scripts src="http://dev.pb4us.com:9000/target/target-script-min.js"></script>
 <script>
 
 PB.init();

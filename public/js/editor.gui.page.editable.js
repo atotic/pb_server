@@ -55,8 +55,8 @@
 					this.page.addAsset( {
 						type: 'widget',
 						widgetId: transferData,
-						top: loc.y - widget.height() / 2 - (pageBounds.top + window.scrollY),
-						left: loc.x - widget.width() / 2 - (pageBounds.left + window.scrollX),
+						top: loc.y - widget.height() / 2 - (pageBounds.top + $(document).scrollTop()),
+						left: loc.x - widget.width() / 2 - (pageBounds.left + $(document).scrollLeft()),
 						width: widget.width(),
 						height: widget.height()
 					});
