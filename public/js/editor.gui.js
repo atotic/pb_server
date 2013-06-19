@@ -50,7 +50,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			GUI.WorkArea.init();
 		},
 		clearPopups: function(ev) {
-			$('.pb-popup').detach();
+			$('.pb-popup').remove();
 		},
 		// root can be undefined, selector,
 		fixSizes: function(root) {
@@ -580,7 +580,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 				throw 'JSDiffUtil.delete non-existent element';
 			}
 			if (!noDetach)
-				$(el).detach();
+				$(el).remove();
 			var elArry = jq.get();
 			elArry.splice(index, 1);
 			return $(elArry);

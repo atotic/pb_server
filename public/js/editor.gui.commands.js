@@ -171,6 +171,12 @@
 		},
 		getCommandById: function(id) {
 			return this._commands[id];
+		},
+		getCommands: function() {
+			var retVal = [];
+			for (x in this._commands)
+				retVal.push(this._commands[x]);
+			return retVal;
 		}
 	}
 

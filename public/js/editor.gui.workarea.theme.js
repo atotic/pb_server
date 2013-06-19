@@ -13,8 +13,8 @@ var ThemeWorkArea = {
 		var $dom = $('#work-area-theme');
 		$dom.show();
 		$dom.append( this.getSizePicker());
-		this.loadSizePicker();
-//		$dom.append( this.getThemePicker());
+		this.loadThemePicker();
+		$('#workarea-menu').find('li').hide();
 	},
 	hide: function() {
 		$('#work-area').removeClass('theme');
@@ -99,9 +99,9 @@ var ThemeWorkArea = {
 				$li.addClass('selected');
 		});
 		$('#work-area-theme').append($picker);
-		console.log("themes loaded");
+		// console.log("themes loaded");
 	},
-	loadSizePicker: function() {
+	loadThemePicker: function() {
 		this.loadThemes();
 	},
 	getThemePicker: function() {

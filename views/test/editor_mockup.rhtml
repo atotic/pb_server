@@ -585,20 +585,20 @@ function makeDraggable() {
 		},
 		removeRoughPage: function(roughPage) {
 			$(roughPage).animate({width:0}, function() {
-				$(roughPage).detach();
+				$(roughPage).remove();
 				Wimp.renumberRoughPages();
 			});
 		},
 		removeImage: function(image) {
 			$(image).animate({width: 0}, function() {
-				$(image).detach();
+				$(image).remove();
 			});
 		},
 		removeRoughImage: function(roughImage) {
 			roughImage = $(roughImage);
 			var parent = $(roughImage).parent();
 			roughImage.animate({width:0}, function() {
-				roughImage.detach();
+				roughImage.remove();
 				Wimp.tileRoughInsideTiles(parent);
 			});
 		}

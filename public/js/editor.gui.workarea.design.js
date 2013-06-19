@@ -19,102 +19,6 @@ HTML hierarchy:
 (function(scope) {
 var ID= '#work-area-design';
 
-var Page = {
-	bind: function(pageDom) {
-		return;
-		GUI.Events.Down.bind(pageDom, {
-			action: function(ev) {
-				Page.click(pageDom, ev);
-			}
-		});
-	},
-	click: function(page, ev) {
-		page.find(".design-photo").each(function() {
-			var r = this.getBoundingClientRect();
-			if (ev.clientX > r.left && ev.clientX < r.right
-				&& ev.clientY > r.top && ev.clientY < r.bottom) {
-				ev.stopPropagation();
-				ev.preventDefault();
-				Page.select(this);
-		}
-		});
-	},
-	createSelectPopup: function(page, layoutItemId) {
-		var popup = $("<ul class='dropdown-menu pb-popup'></ul>");
-		page.getEditMenu(layoutItemId).forEach(
-			function(title) {
-				var li = $("<li><a href='#'>" + title + "</a></li>");
-				GUI.Events.JSAnchor.bind(li.children('a'), {
-					action: function(){
-						GUI.DesignWorkArea.startEdit(page, layoutItemId, title);
-					},
-					title: title
-				});
-				popup.append(li);
-			}
-		);
-		popup.addClass('design-select-popup');
-		return popup;
-	},
-	select: function(el) {
-		$(ID).find('.design-selection')
-			.each(function() {
-				$(this).data('select-popup').detach();
-			})
-			.detach();	// clears selection
-		if (el == null)
-			return;
-		var designFrame = document.getElementById('work-area-design').getBoundingClientRect();
-		var frame = el.getBoundingClientRect();
-		var newSel = $(document.createElement('div'))
-			.data('select-target', GUI.Util.getPath(el, 'work-area-design'))
-			.addClass('design-selection');
-
-		var designPage = $(el).parents('.design-page');
-		GUI.Events.forward(newSel, designPage, ['mousedown', 'touchstart']);
-		newSel.data('select-popup',
-			this.createSelectPopup(
-				PB.ModelMap.domToModel(designPage),
-				$(el).data('layout-item-id')));
-		this.positionSelection(newSel);
-
-		$(ID).append(newSel);
-	},
-	positionSelection: function(el) {
-		el = $(el);
-		var target = $(el.data('select-target')).get(0);
-		if (!target) {
-			console.warn('lost selection');
-			return;
-		}
-		var designFrame = document.getElementById('work-area-design').getBoundingClientRect();
-		var frame = target.getBoundingClientRect();
-		el.css({
-			top: frame.top - designFrame.top,
-			left: frame.left - designFrame.left,
-			width: frame.width,
-			height: frame.height
-		});
-		el.parent().append(el);	// be on top
-		var popup = el.data('select-popup');
-		// position popup here
-		if (popup) {
-			$(document.body).append(popup);
-			var height = popup.height();
-			var top = frame.top - height - 16;
-			top = Math.max(top, 4);
-			popup.css({
-				top: top,
-				left: frame.left
-			});
-		}
-	},
-	resizeSelection: function() {
-		$('.design-selection').each(function() {
-			Page.positionSelection(this);
-		});
-	}
-}
 
 var DesignWorkArea = {
 	init: function() {
@@ -138,17 +42,17 @@ var DesignWorkArea = {
 		});
 	},
 	createCommandSet: function() {
-		this.commandSet = new GUI.CommandSet("design");
-		this.commandSet.add( new GUI.Command( {
-			id: 'designBack',
-			key: GUI.CommandManager.keys.leftArrow,
-			action: function() { GUI.DesignWorkArea.goBack() }
-		}));
-		this.commandSet.add( new GUI.Command( {
-			id : 'designForward',
-			key: GUI.CommandManager.keys.rightArrow,
-			action: function() { GUI.DesignWorkArea.goForward() }
-		}));
+		this.commandSet = new GUI.CommandSet("design")
+			.add( new GUI.Command( {
+				id: 'designBack',
+				key: GUI.CommandManager.keys.leftArrow,
+				action: function() { GUI.DesignWorkArea.goBack() }
+			}))
+			.add( new GUI.Command( {
+				id : 'designForward',
+				key: GUI.CommandManager.keys.rightArrow,
+				action: function() { GUI.DesignWorkArea.goForward() }
+			}));
 	},
 	bindToBook: function(book) {
 		$(ID)
@@ -176,16 +80,6 @@ var DesignWorkArea = {
 			$('.design-book-page-right').not(':data(removed)').children('.design-page'))
 		];
 	},
-	popupMenuClickHandler: function() {
-		debugger;
-		var popupCallback = $(this).parents('li').data('menu-action');
-		if (popupCallback)
-			popupCallback(this);
-	},
-	startEdit: function(page, layoutItemId, title) {
-		console.log("startEdit");
-	},
-
 	bookChanged: function(ev, model, prop, options) {
 		switch(prop) {
 			case 'template':
@@ -201,10 +95,17 @@ var DesignWorkArea = {
 			GUI.Options.designStage = 'theme'
 			throw new Error("Cant design before assigning theme/width");
 		}
-
 		$('#work-area').css({ paddingLeft: 0, paddingTop: 0});
 		$(ID).show();
-		this.showDesignArea(this._lastPage);
+
+		$('#palette, ' + ID).show();
+		GUI.PhotoPalette.show();
+		GUI.fixSizes($('#work-area'));
+		GUI.CommandManager.addCommandSet(this.commandSet);
+		DesignWorkArea.goTo(this._lastPage);
+		// initialize workarea-menu
+		$('#workarea-menu').find('li').hide();
+		$('#add-photo-btn').show();
 	},
 	hide: function() {
 		this._lastPage = this.currentPage;
@@ -221,11 +122,13 @@ var DesignWorkArea = {
 			var cur = this.currentPages;
 			if (cur[0] || cur[1])
 				this.showPages(cur, null, true);
-			Page.resizeSelection();
 		}
 		catch(ex) {
 			debugger;
 		}
+	},
+	updateSelection: function(sel) {
+
 	},
 	getPagePositions: function(book) {
 		var vinset = 20;
@@ -283,9 +186,6 @@ var DesignWorkArea = {
 			if (!diff && !force)	// pages already shown, nothing to do
 				return;
 		}
-
-		if (!force)
-			Page.select();
 
 		var pos = this.getPagePositions(this.book);
 		var animate = direction == 'forward' || direction == 'back';
@@ -385,19 +285,19 @@ var DesignWorkArea = {
 		oldRight.data('removed', true);
 
 		function cleanUp() {
+			// removes deleted elements,
 			// console.log('removing ', $(ID).children(':data(removed)').length);
 			$(ID).children(':data(removed)').detach();
 			$(ID).find('div:data(highDpi)').each( function() {
 				var el = $(this);
 				var highDpi = el.data('highDpi');
 				el.replaceWith(highDpi);
-				Page.bind(highDpi);
 			});
 		};
 
 		if (animate) {
-			oldLeft.find('.pageTitle').detach();
-			oldRight.find('.pageTitle').detach();
+			oldLeft.find('.pageTitle').remove();
+			oldRight.find('.pageTitle').remove();
 			var duration = 500;
 			if (direction == 'forward') {
 				oldRight.css({
@@ -445,17 +345,7 @@ var DesignWorkArea = {
 		else { // no animation
 			cleanUp();
 			workAreaDiv.append(newRight).append(newLeft);
-			Page.bind(newLeft);
-			Page.bind(newRight);
 		}
-	},
-	showDesignArea: function(page) {
-		$('#palette, ' + ID).show();
-		GUI.PhotoPalette.show();
-		GUI.fixSizes($('#work-area'));
-
-		GUI.CommandManager.addCommandSet(this.commandSet);
-		DesignWorkArea.goTo(page);
 	},
 	goTo: function(page, direction) {
 		var facingPages = this.book.facingPages;

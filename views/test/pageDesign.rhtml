@@ -24,7 +24,8 @@
 <%= asset_link("editor.pb.themecache.js") %>
 <%= asset_link("editor.pb.themeutils.js") %>
 <%= asset_link("editor.gui.dnd.js") %>
-<%= asset_link("editor.gui.page.editable.js") %>
+<%= asset_link("editor.pb.page.editable.js") %>
+<%= asset_link("editor.pb.page.commands.js") %>
 
 <style type="text/css">
 #tools {
@@ -123,7 +124,11 @@
 }
 #pagePopupContainer {
 	position:relative;
-	height: 20px;
+}
+
+#pagePopupContainer ul {
+	right: 0;
+	left: auto;
 }
 </style>
 <script type="text/javascript">
@@ -179,7 +184,7 @@ var Controller = {
 				var p3id = currentPage.addAsset( {
 					type:'photo',
 					photoId: 601
-				});				
+				});
 				// currentPage.addAsset({
 				// 	type: 'text',
 				// 	content: 'Oliver',
@@ -631,14 +636,45 @@ var Controller = {
 				console.error('unknown mode', mode);
 		};
 	},
+	updateSelectionMenu: function(sel) {
+		$('#pagePopupContainer').empty();
+		if (this.popupCommandSet)
+			this.popupCommandSet.deactivate();
+		this.popupCommandSet = sel.commandSet;
+		if (!this.popupCommandSet) {
+			$('#pagePopupContainer').hide();
+			return;
+		}
+		var $ul = $('<ul>').addClass('pb-popup-menu').addClass('pbopen');
+		$('#pagePopupContainer').show().append($ul);
+		var THIS = this;
+		this.popupCommandSet.getCommands().forEach( function(cmd) {
+			var $li = $('<li>');
+			$ul.append($li);
+			var $a = $('<span>');
+			$a.text( cmd.title );
+			if ( cmd.icon )
+				$a.prepend( $('<i>').addClass('icon-' + cmd.icon));
+			$li.append($a);
+			$li.on('mousedown touchstart', function() {
+				cmd.action( sel.dom, sel.selection[0]);
+			});
+		});
+	},
 	showPage: function() {
 		var options = {
 			editable: $('#editable').prop('checked'),
 			syncable: $('#syncable').prop('checked')
 		};
-		var dom = currentPage.generateDom(options);
+		var $dom = currentPage.generateDom(options);
+
+		var sel = PB.Page.Selection.findClosest($dom);
+		var THIS = this;
+		sel.addListener( function() {
+			THIS.updateSelectionMenu(sel);
+		});
 		$('.design-book-page-left').children().remove();
-		$('.design-book-page-left').append(dom);
+		$('.design-book-page-left').append($dom);
 		this.updateLayoutPicker();
 	},
 	addPhoto: function() {
@@ -716,6 +752,7 @@ function testCanvas2() {
 	var x = GUI.Util.cloneDomWithCanvas(canvas);
 	$(canvas).after(c2);
 };
+
 $(document).ready(function() {
 	Controller.init();
 	GUI.CommandManager.init();
@@ -726,8 +763,12 @@ $(document).ready(function() {
 	$('#partModeButton').hammer().on('touch', {}, function() {
 		Controller.setDesignMode('parts');
 	});
-
-//	$(document.body).css('background', 'linear-gradient(45deg, red, blue)');
+	$(document).on('click', function(ev) {
+		if (ev.target.nodeName == 'BODY' || ev.target.nodeName == 'HTML')
+			PB.Page.Selection.getActiveSelections().forEach( function( sel ) {
+				sel.setSelection();
+			});
+	});
 });
 </script>
 <body>

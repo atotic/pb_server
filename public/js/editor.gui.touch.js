@@ -176,7 +176,7 @@
 		get domCopy() { return this._domCopy },
 		set domCopy(el) {
 			if (this._domCopy)
-				this._domCopy.stop().detach();
+				this._domCopy.stop().remove();
 			this._domCopy = el;
 		}
 	}

@@ -144,7 +144,7 @@
 				statusDiv.text(msg);
 			}
 			else
-				statusDiv.detach();
+				statusDiv.remove();
 		},
 		setTileInfo: function(tile, model) {
 			tile = $(tile);
@@ -175,7 +175,7 @@
 				infoDiv.text(infoTxt);
 			}
 			else
-				infoDiv.detach();
+				infoDiv.remove();
 		},
 		setTileProgress: function(tile, model) {
 			var progressDiv = tile.children('.progress');
@@ -195,10 +195,10 @@
 						.children('.bar').css('width', percent + '%');
 			}
 			else
-				progressDiv.detach();
+				progressDiv.remove();
 		},
 		setTileFaces: function(tile, model) {
-			tile.children('.face').detach();
+			tile.children('.face').remove();
 			var width = tile.children('img').width();
 			var height = tile.children('img').height();
 			if (!model.faces)
@@ -324,11 +324,11 @@
 						el.css('visible', 'hidden')
 							.data('pb.markedForDelete', true)
 							.animate({width: 0}, function() {
-							 	el.detach();
+							 	el.remove();
 							});
 					}
 					else
-						el.detach();
+						el.remove();
 				break;
 				case 'swapArray':
 					var src = containerDom.children(sel).get(diff[i].args.srcIndex);

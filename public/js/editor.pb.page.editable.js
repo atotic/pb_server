@@ -1,10 +1,10 @@
-// editor.gui.page.editable.js
+// editor.pb.page.editable.js
 
 (function(scope) {
 	var PageDroppable = new GUI.Dnd.Droppable({
 		flavors: ['background', 'layout', 'widget', 'design'],
 		enter: function($dom, flavor, transferData) {
-			this.page = PB.Page.Selection.findClosest($dom).bookPage;
+			this.page = PB.Page.Selection.findClosest($dom).page;
 			this.dom = $dom;
 			this.dropFlavor = flavor;
 			this.page.startTemporaryChanges();
@@ -152,7 +152,7 @@
 			}
 		},
 		enter: function($dom, flavor, transferData, handoff) {
-			this.destinationPage = PB.Page.Selection.findClosest($dom).bookPage;
+			this.destinationPage = PB.Page.Selection.findClosest($dom).page;
 			this.assetId = $dom.data('model_id');
 			this.dom = $dom;
 			this.dropFlavor = flavor;
@@ -342,7 +342,7 @@
 			};
 		},
 		start: function($dom, ev, startLoc) {
-			this.page = PB.Page.Selection.findClosest($dom).bookPage;
+			this.page = PB.Page.Selection.findClosest($dom).page;
 			this.assetId = $dom.data('model_id');
 			var asset = this.page.getAsset( this.assetId );
 			var photo = this.page.book.photo( asset.photoId );

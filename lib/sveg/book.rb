@@ -16,25 +16,25 @@ class Book < Sequel::Model(:books)
 		super
 		self.title ||= 'untitled'
 		self.last_diff ||= 0
+		page_ids = [ rand(36**6).to_s(36), rand(36**6).to_s(36), rand(36**6).to_s(36), rand(36**6).to_s(36) ]
 		self.document ||=
 <<-eos
 {
 	"title": #{self.title.to_json},
 	"bookTemplateId": null,
 	"themeId": null,
-	"pageList": ["cover", "cover-flap", "back-flap", "back","P1","P2","P3","P4"],
 	"photoList": [],
 	"photoMap": {},
-	"pageList": ["cover", "cover-flap", "back-flap", "back","P1","P2","P3","P4"],
+	"pageList": ["cover", "cover-flap", "back-flap", "back","#{page_ids[0]}","#{page_ids[1]}","#{page_ids[2]}","#{page_ids[3]}"],
 	"pages": {
 		"cover": { "id": "cover", "assets": { "ids":[] } },
 		"cover-flap": { "id": "cover-flap", "assets": { "ids":[] } },
 		"back-flap": { "id": "back-flap", "assets": { "ids":[] } },
 		"back": {"id": "back", "assets": { "ids":[] } },
-		"P1": {"id": "P1", "assets": { "ids":[] } },
-		"P2": {"id": "P2", "assets": { "ids":[] } },
-		"P3": {"id": "P3", "assets": { "ids":[] } },
-		"P4": {"id": "P4", "assets": { "ids":[] } }
+		"#{page_ids[0]}": {"id": "#{page_ids[0]}", "assets": { "ids":[] } },
+		"#{page_ids[1]}": {"id": "#{page_ids[1]}", "assets": { "ids":[] } },
+		"#{page_ids[2]}": {"id": "#{page_ids[2]}", "assets": { "ids":[] } },
+		"#{page_ids[3]}": {"id": "#{page_ids[3]}", "assets": { "ids":[] } }
 	}
 }
 eos

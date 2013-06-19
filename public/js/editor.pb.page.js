@@ -989,223 +989,38 @@ asset widget {
 		}
 	};
 
-	var Popups = {
-		getManipulatorCommandSet: function() {
-			if ('cmdSet' in this)
-				return this.cmdSet;
-			this.cmdSet = new GUI.CommandSet('manipulators');
-
-			this.cmdSet.add( new GUI.Command ({
-				id: 'move',
-				title: 'move',
-				icon: 'move',
-				action: function( $pageDom, assetId ) {
-					var m = new GUI.Manipulators.Move( $pageDom, assetId );
-					PageSelection.findClosest( $pageDom ).setManipulator( m );
-				}
-			}));
-			this.cmdSet.add( new GUI.Command({
-				id: 'pan',
-				title: 'pan',
-				icon: 'hand-up',
-				action: function( $pageDom, assetId) {
-					var m = new GUI.Manipulators.Pan( $pageDom, assetId );
-					PageSelection.findClosest( $pageDom ).setManipulator( m );
-				}
-			}));
-			this.cmdSet.add( new GUI.Command({
-				id: 'zoom',
-				title: 'zoom',
-				icon: 'search',
-				action: function( $pageDom, assetId) {
-					var m = new GUI.Manipulators.Zoom( $pageDom, assetId );
-					PageSelection.findClosest( $pageDom ).setManipulator( m );
-				}
-			}));
-			this.cmdSet.add( new GUI.Command({
-				id: 'resize',
-				title: 'resize',
-				icon: 'arrow-up',
-				action: function( $pageDom, assetId) {
-					var m = new GUI.Manipulators.Resize( $pageDom, assetId );
-					PageSelection.findClosest( $pageDom ).setManipulator( m );
-				}
-			}));
-			this.cmdSet.add( new GUI.Command({
-				id: 'resizeHorizontal',
-				title: 'resize',
-				icon: 'arrow-up',
-				action: function( $pageDom, assetId) {
-					var m = new GUI.Manipulators.Resize( $pageDom, assetId ,{ vertical: false });
-					PageSelection.findClosest( $pageDom ).setManipulator( m );
-				}
-			}));
-			this.cmdSet.add( new GUI.Command({
-				id: 'resizeFixAspect',
-				title: 'resize',
-				icon: 'arrow-up',
-				action: function( $pageDom, assetId) {
-					var m = new GUI.Manipulators.Resize( $pageDom, assetId ,{ fixAspect: true });
-					PageSelection.findClosest( $pageDom ).setManipulator( m );
-				}
-			}));
-			this.cmdSet.add( new GUI.Command({
-				id: 'rotate',
-				title: 'rotate',
-				icon: 'repeat',
-				action: function( $pageDom, assetId) {
-					var m = new GUI.Manipulators.Rotate( $pageDom, assetId );
-					PageSelection.findClosest( $pageDom ).setManipulator( m );
-				}
-			}));
-			this.cmdSet.add( new GUI.Command({
-				id: 'editText',
-				title: 'edit',
-				icon: 'edit',
-				action: function( $pageDom, assetId) {
-					var m = new GUI.Manipulators.EditText( $pageDom, assetId );
-					PageSelection.findClosest( $pageDom ).setManipulator( m );
-				}
-			}));
-			this.cmdSet.add( new GUI.Command({
-				id: 'remove',
-				title: 'remove',
-				icon: 'remove',
-				key: GUI.CommandManager.keys.backspace,
-				action: function($pageDom, assetId) {
-					// when deletekey is pressed, $pageDom and itId are null
-					PageSelection.forEach(function( page, assetId, pageSelection) {
-						if ($pageDom != null || pageSelection.manipulator == null) {
-							pageSelection.setSelection();
-							page.removeAsset( assetId );
-						}
-					});
-				}
-			}));
-			this.cmdSet.add( new GUI.Command( {
-				id: 'caption',
-				title: 'caption',
-				icon: 'comment-alt',
-				action: function($pageDom, photoAssetId) {
-					var pageAsset = PB.ModelMap.model( photoAssetId );
-					var assets = pageAsset.page.getAssets();
-					var captionIds = PB.ThemeUtils.findAssetChildren(assets, photoAssetId)
-						.filter( function( id ) { return assets[id].type == 'text'});
-					// if caption already exist, go in edit mode
-					var editId;
-					if (captionIds.length > 0)
-						editId = captionIds[0];
-					else {
-						editId = pageAsset.page.addAsset({
-							type: 'text',
-							dependentOf: {
-								assetId: photoAssetId
-							}
-						});
-					}
-					if (editId)
-						Popups.cmdSet.getCommandById( 'editText' )
-							.action( $pageDom, editId);
-				}
-			}));
-			return this.cmdSet;
-		},
-		makeLiAction: function(cmd) {
-			var $li = $( document.createElement( 'li' ));
-			var $a = $( document.createElement('span'));
-			$a.text( cmd.title );
-			if ( cmd.icon )
-				$a.prepend( $.parseHTML("<i class='icon-" + cmd.icon + "'></i>" ));
-			$a.hammer().on("touch", function(ev) {
-					try {
-						var $popup = $a.parents('.pb-popup-menu');
-						var pageAsset = PB.ModelMap.model($popup.data('popupModel'));
-						var $pageDom = $popup.data("popupPageDom");
-						cmd.action( $pageDom, pageAsset.assetId );
-					}
-					catch(ex) {
-						console.error(ex);
-					}
-					PB.stopEvent(ev);
-				});
-			$li.append($a);
-			return $li;
-		},
-		popupShell: function() {
-			return $('<ul>').addClass('pb-popup-menu');
-		},
-		photoPopup: function() {
-			var $popup = this.popupShell();
-			var cmdSet = this.getManipulatorCommandSet();
-			var localCmdSet = new GUI.CommandSet('photoPopup');
-			['move', 'pan', 'zoom', 'resize', 'rotate', 'remove','caption']
-				.forEach( function(cmdId) {
-					var cmd = cmdSet.getCommandById( cmdId );
-					localCmdSet.add( cmd );
-					var $li = Popups.makeLiAction( cmd );
-					$popup.append($li);
-			});
-			localCmdSet.add( cmdSet.getCommandById( 'remove'));
-			$popup.data('commandSet', localCmdSet);
-			return $popup;
-		},
-		textPopup: function() {
-			var $popup = this.popupShell();
-			var cmdSet = this.getManipulatorCommandSet();
-			var localCmdSet = new GUI.CommandSet('textPopup');
-			['editText', 'move', 'resizeHorizontal', 'rotate', 'remove']
-				.forEach( function(cmdId) {
-					var cmd = cmdSet.getCommandById( cmdId );
-					localCmdSet.add( cmd );
-					var $li = Popups.makeLiAction( cmd );
-					$popup.append($li);
-				});
-			localCmdSet.add( cmdSet.getCommandById( 'remove'));
-			$popup.data('commandSet', localCmdSet);
-			return $popup;
-		},
-		widgetPopup: function(pageAsset) {
-			var $popup = this.popupShell();
-			var cmdSet = this.getManipulatorCommandSet();
-			var localCmdSet = new GUI.CommandSet('widgetPopup');
-			['move', 'resizeFixAspect', 'rotate', 'remove']
-				.forEach( function(cmdId) {
-					var cmd = cmdSet.getCommandById( cmdId );
-					localCmdSet.add( cmd );
-					var $li = Popups.makeLiAction( cmd );
-					$popup.append($li);
-				});
-			localCmdSet.add( cmdSet.getCommandById( 'remove'));
-			$popup.data('commandSet', localCmdSet);
-			return $popup;
-		}
-	}
 
 	var PageProxyEditable = {
 		// callback, 'this' points to an HTMLElement, not page
 		selectItem: function(pageSelection, assetId, $itemDom) {
 			var pageAsset = PB.ModelMap.model(assetId);
 			var multiTap = pageSelection.selection.some(function(val) { return val == assetId; });
-			var $popup;
+			var commandSet;
 			switch(pageAsset.asset.type) {
 				case 'photo':
-					$popup = Popups.photoPopup();
+					commandSet = PB.Page.Commands.makeCommandSet(
+						['move', 'pan', 'zoom', 'resize', 'rotate', 'remove','caption']
+					);
 				break;
 				case 'text':
-					$popup = Popups.textPopup();
+					commandSet = PB.Page.Commands.makeCommandSet(
+						['editText', 'move', 'resizeHorizontal', 'rotate', 'remove']
+					);
 					if (multiTap)
 						window.setTimeout(function() {
-							var cmd = Popups.getManipulatorCommandSet().getCommandById('editText');
+							var cmd = commandSet.getCommandById('editText');
 							cmd.action( $itemDom.parents('.design-page'), assetId );
 						}, 0);
 				break;
 				case 'widget':
-					$popup = Popups.widgetPopup(pageAsset);
+					commandSet = PB.Page.Commands.makeCommandSet(
+						['move', 'resizeFixAspect', 'rotate', 'remove']
+					);
 				break;
 				default:
 					console.warn("No menus available over items of type", pageAsset.asset.type);
 			}
-			pageSelection.setSelection( assetId, $popup );
+			pageSelection.setSelection( assetId, commandSet );
 		},
 		// selectItem: function($itemDom) {
 		// 	console.log("wanna menu");
@@ -1286,23 +1101,27 @@ asset widget {
 
 	$.extend(PageProxy.prototype, PageProxyEditable);
 
-	var PageSelection = function(bookPage, dom) {
-		this.bookPage = bookPage;
+	var PageSelection = function(page, dom) {
+		this.page = page;
 		this.dom = dom;
-		this.selection = [];
+		this.selection = [];	// array of asset ids
 		this.manipulator = null;
-		this.popup = null;
+		this.commandSet = null;
 	};
 	PageSelection.prototype = {
-		setSelection: function(assetId, $popup) {
-			this.selection = assetId ? [assetId] : [];
+		setSelection: function(assetId, commandSet) {
+			var newSelection = assetId ? [assetId] : [];
+			if (newSelection.toString() == this.selection.toString())
+				return;
+			this.selection = newSelection;
 			this.highlight();
 			// hide manipulator if from another item
 			if (this.manipulator && this.manipulator.assetId != assetId)
-				this.setManipulator(null);
-			if ($popup != null && $popup.length == 0)
-				$popup = null;
-			this.setPopup(assetId, $popup);
+			 	this.setManipulator(null);
+			// if ($popup != null && $popup.length == 0)
+			// 	$popup = null;
+			this.commandSet = commandSet;
+			this.broadcast('selection', this.selection);
 		},
 
 		highlight: function() {
@@ -1317,83 +1136,60 @@ asset widget {
 			if (this.manipulator)
 				this.manipulator.show();
 		},
-		setPopup: function(assetId, $popup) {
-			if (this.popup && this.popup != $popup) {
-				var cmdSet = this.popup.data('commandSet');
-				if (cmdSet) cmdSet.deactivate();
-				this.popup.remove();
-			}
-			this.popup = $popup;
-			if (this.popup) {
-				this.popup.data("popupModel", assetId );
-				this.popup.data("popupPageDom", this.dom );
-				$('#pagePopupContainer').append( this.popup );
-				this.popup.css({
-					right: 0,
-					left: 'auto'
-				});
-				var cmdSet = this.popup.data('commandSet');
-				if (cmdSet) cmdSet.activate();
-				this.popup.show();
-			}
-		},
 		relayout: function() {
 			if (this.manipulator)
 				this.manipulator.reposition();
 		}
 	};
 
+	$.extend( PageSelection.prototype, PB.ListenerMixin);
 
-	PageSelection.DATA_ID = 'pageSelection';
-	PageSelection.findClosest = function($dom) {
-
-		var ps = $dom.data(PageSelection.DATA_ID) ||
-			$dom.parents( '*:data("pageSelection")' ).data(PageSelection.DATA_ID);
-		if (ps == null) {
-			console.error("could not find pageselection in ", $dom);
-			throw new Error("Could not find pageselection");
-		}
-		return ps;
-	};
-
-	PageSelection.bindToDom = function(page, $dom) {
-		var sel = $dom.data(PageSelection.DATA_ID);
-		if (sel) {
-			sel.highlight();
-		}
-		else {
-			sel = new PageSelection(page, $dom);
-			$dom.data(PageSelection.DATA_ID, sel);
-		}
-		return sel;
-	};
-
-	// return [PageSelection]
-	PageSelection.getActiveSelections = function() {
-		var retVal = [];
-		$('.selected').each(function() {
-			var s = PageSelection.findClosest($(this));
-			if (s)
-				retVal.push(s);
-		});
-		return retVal;
-	};
-
-	// callback(PB.PageProxy, assetId)
-	PageSelection.forEach = function(callback) {
-		this.getActiveSelections()
-			.forEach( function( pageSel ) {
-				pageSel.selection.forEach( function( assetId ) {
-					callback(pageSel.bookPage, assetId, pageSel);
-				});
+	$.extend( PageSelection, {
+		DATA_ID: 'pageSelection',
+		bindToDom: function(page, $dom) {
+			var sel = $dom.data(PageSelection.DATA_ID);
+			if (sel) {
+				sel.highlight();
+			}
+			else {
+				sel = new PageSelection(page, $dom);
+				$dom.data(PageSelection.DATA_ID, sel);
+			}
+			return sel;
+		},
+		findClosest: function($dom) {
+			var ps = $dom.data(PageSelection.DATA_ID) ||
+				$dom.parents( '*:data("pageSelection")' ).data(PageSelection.DATA_ID);
+			if (ps == null) {
+				console.error("could not find pageselection in ", $dom);
+				throw new Error("Could not find pageselection");
+			}
+			return ps;
+		},
+		// return [PageSelection]
+		getActiveSelections: function() {
+			var retVal = [];
+			$('.selected').each(function() {
+				var s = PageSelection.findClosest($(this));
+				if (s)
+					retVal.push(s);
 			});
-	};
-
-	$(document).on('click', function(ev) {
-		if (ev.target.nodeName == 'BODY' || ev.target.nodeName == 'HTML')
+			return retVal;
+		},
+		forEach: function(callback) {
+			// callback(PB.PageProxy, assetId)
+			this.getActiveSelections()
+				.forEach( function( pageSel ) {
+					pageSel.selection.forEach( function( assetId ) {
+						callback(pageSel.page, assetId, pageSel);
+					});
+				});
+		},
+		clear: function() {
 			PageSelection.getActiveSelections().forEach( function( sel ) {
 				sel.setSelection();
 			});
+		}
 	});
 
 	scope.Page = {

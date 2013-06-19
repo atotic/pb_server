@@ -213,7 +213,6 @@ class SvegApp < Sinatra::Base
 						"editor.pb.page.js",
 						"editor.pb.upload.js",
 						"editor.pb.photos.js",
-						"editor.pb.templates.js",
 						"editor.pb.themecache.js",
 						"editor.pb.themeutils.js",
 						"editor.pb.jpegFile.js",
@@ -230,7 +229,8 @@ class SvegApp < Sinatra::Base
 						"editor.gui.workarea.design.js",
 						"editor.gui.photopalette.js",
 						"editor.gui.tools.js",
-						"editor.gui.page.editable.js"
+						"editor.pb.page.editable.js",
+						"editor.pb.page.commands.js"
 						)
 				elsif arg.end_with?("js")
 					arg = "jquery-2.0.0.js" if arg.eql? "jquery.js"
@@ -347,6 +347,8 @@ class SvegApp < Sinatra::Base
 	end
 
 	get '/auth/login' do
+		# check http://accountchooser.net/owners
+		# content security policy
 		render_erb :login, :layout => :'layout/plain'
 	end
 

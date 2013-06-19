@@ -12,11 +12,10 @@
 
 	var AddPhotoButton = {
 		init: function() {
-			$('#add-photo-btn').on( {
+			$('#add-photo-btn').children('a').on( {
 				click: function(ev) {
 					$('#add-photo-input').click();
 					ev.preventDefault();
-					ev.stopPropagation();
 				}
 			});
 			$("#add-photo-input").on( {

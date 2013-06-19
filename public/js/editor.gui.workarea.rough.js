@@ -33,6 +33,8 @@
 			$('#work-area-organize').show();
 			GUI.PhotoPalette.show();
 			this.processDelayUntilVisible();
+			$('#workarea-menu').find('li').hide();
+			$('#add-photo-btn,#add-page-btn').show();
 		},
 		hide: function() {
 			$('#work-area-organize, #photo-list-container').hide();
