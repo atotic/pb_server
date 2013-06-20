@@ -43,8 +43,8 @@ class Photo < Sequel::Model(:photos)
 		url = "/photo/#{self.pk}"
 		size = size.to_sym if size
 		case size
-			when :icon then url += "?size=icon"
-			when :display then url += "?size=display"
+			when :icon then url += ".icon"
+			when :display then url += ".display"
 			else
 		end
 		url

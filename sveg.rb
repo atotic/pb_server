@@ -465,7 +465,7 @@ class SvegApp < Sinatra::Base
 		end
 	end
 
-	get '/photo/:id' do
+	get '/photo/:id.?:size?' do
 		photo = Photo[params[:id]]
 		user_must_have_access photo
 		if (params[:size].eql? 'json')

@@ -478,7 +478,7 @@
 		load: function() {
 			var THIS = this;
 			this.status = 'Loading';
-			$.ajax('/photo/'+ this.id + "?size=json")
+			$.ajax('/photo/'+ this.id + ".json")
 				.done(function(response, msg, jqXHR) {
 					THIS.status = "";
 					THIS.loadFromJson(response);
