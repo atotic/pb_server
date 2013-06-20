@@ -1,0 +1,125 @@
+ <!DOCTYPE html>
+<html>
+<head>
+<title>dnd test</title>
+<script src="http://code.jquery.com/jquery-2.0.0.js"></script>
+<%= asset_link( "application.js") %>
+<%= asset_link("gradients.js") %>
+<%= asset_link("jquery.hammer.js") %>
+<%= asset_link("jquery.dataSelector.js") %>
+<%= asset_link("jquery.transit.js") %>
+<%= asset_link("bootstrap") %>
+<%= asset_link("application.css", "editor.css") %>
+<style type="text/css">
+.square {
+    background-color: gray;
+    width: 100px;
+    height: 100px;
+    display:inline-block;
+}
+
+.dragEl {
+	position:absolute;
+	background-color: yellow;
+	width: 50px;
+	height: 50px;
+	border-radius: 20px;
+}
+body {
+	background-color: green;
+}
+</style>
+</head>
+<body>
+<script type='text/javascript'>
+
+var $dragEl;
+
+	var webkitIpadBugWorkaround = {
+		patchedRemove: function(selector, keepData) {	// jquery: 5421
+			var elem,
+				elems = selector ? jQuery.filter( selector, this ) : this,
+				i = 0;
+				for ( ; (elem = elems[i]) != null; i++ ) {
+					webkitIpadBugWorkaround.remove_container.append(elem);
+				}
+
+				return this;
+		},
+		startFix: function() {
+			if ('original_remove' in $.fn)
+				return;
+			this.remove_container = $("<div id='remove_container' style='display:none'>");
+			$(document.body).append( this.remove_container );
+			$.fn.original_remove = $.fn.remove;
+			$.fn.remove = this.patchedRemove;
+		},
+		endFix: function() {
+			if (! ('original_remove' in $.fn))
+				return;
+			$.fn.remove = $.fn.original_remove;
+			delete $.fn.original_remove;
+			this.remove_container.remove();
+		}
+	}
+
+function getPageLocation($ev) {
+	var ev = $ev.originalEvent;
+	var retVal;
+	if ('changedTouches' in ev)
+		retVal = { x: ev.changedTouches[0].pageX,
+			y: ev.changedTouches[0].pageY};
+	else
+		retVal = { x: ev.pageX, y: ev.pageY };
+	if (retVal.x == undefined)
+		console.error("bad getPageLocation", $ev);
+	return retVal;
+}
+function dragStart($ev) {
+	webkitIpadBugWorkaround.startFix();
+	console.log('dragStart');
+	$dragEl = $('<div>').addClass('dragEl');
+	var loc = getPageLocation($ev);
+	$dragEl.css({ top: loc.y, left: loc.x });
+	$(document.body).append($dragEl);
+	$(document.body).on('touchmove.dnd mousemove.dnd', dragMove);
+	$(document.body).on('touchend.dnd mouseup.dnd', dragEnd);
+
+}
+function dragMove($ev) {
+	var loc = getPageLocation($ev);
+	var target = document.elementFromPoint(loc.x, loc.y);
+	console.log('targets: current', $ev.currentTarget.nodeName, ' target ', $ev.target.nodeName);
+	if (target.nodeName != 'BODY'
+		&& target.nodeName != 'HTML'
+		&& !$(target).hasClass('dragEl')) {
+			console.log('hiding', target.nodeName, target.id);
+			$(target).remove();
+			// $(target).hide();
+			// $(document.body).append(target);
+			// $(target).css({visibility: 'hidden'});
+	}
+	else {
+		console.log(target.nodeName);
+//		$($ev.target).animate({opacity: Math.random() }, { duration: 10});
+	}
+	$ev.preventDefault();
+	var loc = getPageLocation($ev);
+	$dragEl.css({ top: loc.y + 50, left: loc.x });
+}
+function dragEnd($ev) {
+	console.log('dragEnd');
+	webkitIpadBugWorkaround.endFix();
+	$dragEl.remove();
+	$(document.body).off('touchmove.dnd mousemove.dnd touchend.dnd mouseup.dnd');
+}
+for (var i=0; i<20; i++) {
+	var $div = $('<div id="sq' + i + '">').addClass('square').text("square " + i);
+	$(document.body).append($div);
+}
+$(document.body).on('mousedown.dnd touchstart.dnd', '.square', function(ev) {
+	dragStart(ev);
+	$(document.body).on('mousemove.')
+});
+</script>
+</body>

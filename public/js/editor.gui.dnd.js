@@ -147,6 +147,47 @@
 		right: 32000
 	};
 
+	/*
+	Jun-2013 Webkit bug:
+	touchmove event will stop firing if the element dragged is detached from dom during drag
+	this makes for very choppy photo dragging.
+	Workaround: during drag, do not remove elements, move them to hidden div instead
+				remove all elements at once when drag is done
+	This is done by patching jQuery.remove
+	*/
+	var webkitIpadBugWorkaround = {
+		patchedRemove: function(selector, keepData) {	// jquery: 5421
+			var elem,
+				elems = selector ? jQuery.filter( selector, this ) : this,
+				i = 0;
+				for ( ; (elem = elems[i]) != null; i++ ) {
+					// hiding ourselves from selectors
+					elem.className = '';
+					$(elem).removeData();
+					$(elem).find('*').attr('class', '').removeData();
+					// move to dead dom
+					webkitIpadBugWorkaround.remove_container.append(elem);
+				}
+
+				return this;
+		},
+		startFix: function() {
+			if ('original_remove' in $.fn)
+				return;
+			this.remove_container = $("<div id='remove_container' style='display:none'>");
+			$(document.body).append( this.remove_container );
+			$.fn.original_remove = $.fn.remove;
+			$.fn.remove = this.patchedRemove;
+		},
+		endFix: function() {
+			if (! ('original_remove' in $.fn))
+				return;
+			$.fn.remove = $.fn.original_remove;
+			delete $.fn.original_remove;
+			this.remove_container.remove();
+		}
+	}
+
 	var Dnd = {
 		reset: function() {
 			this.setDest($());
@@ -154,7 +195,7 @@
 			draggable = null;
 			droppable = null;
 			$dragImage = null;
-			$(document).off('touchmove.dnd mousemove.dnd touchend.dnd mouseup.dnd');
+			$(document.body).off('touchmove.dnd mousemove.dnd touchend.dnd mouseup.dnd');
 		},
 		setDest: function($newDest) {
 			if ($dest[0] == $newDest[0])
@@ -186,6 +227,7 @@
 		},
 		dragStart: function(ev) {
 			// console.log("dragStart");
+			webkitIpadBugWorkaround.startFix();
 			if ($dragImage)	// if we get both mousedown and touchstart do only one
 				return;
 			$src = $(ev.currentTarget);
@@ -206,8 +248,8 @@
 				right: bodySize.width - dragRect.width + startLoc.x - dragRect.left
 			};
 			// tracking events
-			$(document).on('touchmove.dnd mousemove.dnd', Dnd.dragMove);
-			$(document).on('touchend.dnd mouseup.dnd', Dnd.dragEnd);
+			$(document.body).on('touchmove.dnd mousemove.dnd', Dnd.dragMove);
+			$(document.body).on('touchend.dnd mouseup.dnd', Dnd.dragEnd);
 		},
 		matchFlavors: function(srcFlavors, destFlavors) {
 			for (var i=0; i<srcFlavors.length; i++) {
@@ -268,7 +310,7 @@
 			var d = Dnd.findDroppable($ev);
 			transferFlavor = d.flavor;
 			Dnd.setDest( d.droppable );
-			// console.log('dragMove leave');
+			console.log('dragMove leave');
 		},
 		// return true if transfer successful
 		doTransfer: function(ev) {
@@ -287,6 +329,7 @@
 		},
 		dragEnd: function(ev) {
 			// console.log('dragEnd');
+			webkitIpadBugWorkaround.endFix();
 
 			var transferDone = false;
 			if ($dest.length > 0)
@@ -308,7 +351,7 @@
 		}
 	}
 
-	$(document).on('touchstart.dnd mousedown.dnd', ".pb-draggable", Dnd.dragStart );
+	$(document.body).on('touchstart.dnd mousedown.dnd', ".pb-draggable", Dnd.dragStart );
 	scope.Dnd = {
 		Dnd: Dnd,
 		Draggable: Draggable,

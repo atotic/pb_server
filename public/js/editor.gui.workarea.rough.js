@@ -34,6 +34,7 @@
 			GUI.PhotoPalette.show();
 			this.processDelayUntilVisible();
 			$('#workarea-menu').find('li').hide();
+			$('#selection-menu').empty();
 			$('#add-photo-btn,#add-page-btn').show();
 		},
 		hide: function() {

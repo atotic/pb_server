@@ -40,8 +40,8 @@ var DesignWorkArea = {
 		});
 	},
 	createCommandSet: function() {
-		this.commandSet = new GUI.CommandSet("design")
-			.add( new GUI.Command( {
+		this.commandSet = new GUI.CommandSet("design");
+		this.commandSet.add( new GUI.Command( {
 				id: 'designBack',
 				key: GUI.CommandManager.keys.leftArrow,
 				action: function() { GUI.DesignWorkArea.goBack() }
@@ -409,7 +409,7 @@ var DesignWorkArea = {
 		}
 	},
 	goTo: function(page, direction) {
-		console.log('goto', page.id);
+		console.log('goto', page ? page.id : page);
 		var facingPages = this.book.facingPages;
 		var show = facingPages.find(page);
 		if (show === undefined)
