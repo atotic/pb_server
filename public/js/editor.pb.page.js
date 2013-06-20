@@ -1151,6 +1151,18 @@ asset widget {
 		relayout: function() {
 			if (this.manipulator)
 				this.manipulator.reposition();
+		},
+		store: function() {
+			return {
+				selection: this.selection,
+				manipulator: this.manipulator,
+				commandSet: this.commandSet
+			}
+		},
+		restore: function(state) {
+			// restores selection stored with save
+			this.setSelection(
+				state.selection.length > 0 ? state.selection[0] : null, state.commandSet)
 		}
 	};
 
@@ -1167,7 +1179,6 @@ asset widget {
 				sel = new PageSelection(page, $dom);
 				$dom.data('page-selection', sel);
 				$dom.on('pageRemoved', this, function() {
-					console.log('pageRemoved');
 					var sel = $(this).data('page-selection');
 					if (sel)
 						sel.setSelection();

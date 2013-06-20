@@ -17,8 +17,6 @@ HTML hierarchy:
 
 
 (function(scope) {
-var ID= '#work-area-design';
-
 
 var DesignWorkArea = {
 	init: function() {
@@ -37,7 +35,7 @@ var DesignWorkArea = {
 			action: function() { GUI.DesignWorkArea.goForward()},
 			delay: buttonTimer
 		});
-		$(ID).data('resize', function() {
+		$('#work-area-design').data('resize', function() {
 			DesignWorkArea.resize();
 		});
 	},
@@ -55,7 +53,7 @@ var DesignWorkArea = {
 			}));
 	},
 	bindToBook: function(book) {
-		$(ID)
+		$('#work-area-design')
 			.data('model_id', book.id)
 			.on(PB.MODEL_CHANGED, this.bookChanged);
 		try {
@@ -66,7 +64,7 @@ var DesignWorkArea = {
 		}
 	},
 	get book() {
-		return PB.ModelMap.domToModel($(ID));
+		return PB.ModelMap.domToModel($('#work-area-design'));
 	},
 	get designPages() {
 		return [
@@ -91,7 +89,7 @@ var DesignWorkArea = {
 	bookChanged: function(ev, model, prop, options) {
 		switch(prop) {
 			case 'template':
-				if ($(ID+':visible').length == 1)	//
+				if ($('#work-area-design:visible').length == 1)	//
 					DesignWorkArea.show();
 				break;
 			default:
@@ -104,9 +102,7 @@ var DesignWorkArea = {
 			throw new Error("Cant design before assigning theme/width");
 		}
 		$('#work-area').css({ paddingLeft: 0, paddingTop: 0});
-		$(ID).show();
-
-		$('#palette, ' + ID).show();
+		$('#palette, #work-area-design').show();
 		GUI.PhotoPalette.show();
 		GUI.fixSizes($('#work-area'));
 		GUI.CommandManager.addCommandSet(this.commandSet);
@@ -120,11 +116,11 @@ var DesignWorkArea = {
 		var workArea = document.getElementById('work-area');
 		workArea.style.removeProperty('padding-left');
 		workArea.style.removeProperty('padding-top');
-		$(ID).hide();
+		$('#work-area-design').hide();
 		GUI.CommandManager.removeCommandSet(this.commandSet);
 	},
 	resize: function() {
-		if (!($(ID).is(':visible')))
+		if (!($('#work-area-design').is(':visible')))
 			return;
 		try {
 			var cur = this.currentPages;
@@ -170,8 +166,8 @@ var DesignWorkArea = {
 		var dimensions = book.dimensions;
 		var pageWidth = dimensions.width;
 		var pageHeight = dimensions.height;
-		var idWidth = $(ID).width() - hinset * 2;	// -1 for rounding errors
-		var idHeight = $(ID).height() - vinset;
+		var idWidth = $('#work-area-design').width() - hinset * 2;	// -1 for rounding errors
+		var idHeight = $('#work-area-design').height() - vinset;
 		var totalWidth = pageWidth * 2;
 		var totalHeight = pageHeight;
 		var hScale = idWidth / totalWidth;
@@ -199,12 +195,13 @@ var DesignWorkArea = {
 	},
 
 	fixPlaceholders: function() {
-		console.log("fixingPlaceholders");
 		var currentPages = this.currentPages;
 		var left = $('.design-book-page-left').not(':data(removed)').children('.design-page');
 		var right = $('.design-book-page-right').not(':data(removed)').children('.design-page');
-		if (left.hasClass('placeholder') || right.hasClass('placeholder'))
+		if (left.hasClass('placeholder') || right.hasClass('placeholder')) {
+			console.log("fixingPlaceholders");
 			this.showPages( this.currentPages, null, true);
+		}
 	},
 	showPages: function(pages, direction, force) {
 		if (!pages) {
@@ -318,10 +315,10 @@ var DesignWorkArea = {
 		// animate pages into view with 3D transitions
 		// based upon http://jsfiddle.net/atotic/B8Rng/
 
-		var workAreaDiv = $(ID);
+		var workAreaDiv = $('#work-area-design');
 		var oldLeft = workAreaDiv.find('.design-book-page-left').not(':data(removed)'); 	// 1
 		var oldRight = workAreaDiv.find('.design-book-page-right').not(':data(removed)'); // 2
-		var newLeft = pagesDom[0] ? leftDom : null; 								// 3
+		var newLeft = pagesDom[0] ? leftDom : null; 							// 3
 		var newRight = pagesDom[1] ? rightDom : null; 							// 4
 
 		oldLeft.data('removed', true);
@@ -330,8 +327,8 @@ var DesignWorkArea = {
 		function cleanUp() {
 			// removes deleted elements, replaces pages with highDPI version
 			// console.log('removing ', $(ID).children(':data(removed)').length);
-			$(ID).children(':data(removed)').remove();
-			$(ID).find('div:data(highDpi)').each( function() {
+			$('#work-area-design').children(':data(removed)').remove();
+			$('#work-area-design').find('div:data(highDpi)').each( function() {
 				var el = $(this);
 				var highDpi = el.data('highDpi');
 				el.replaceWith(highDpi);
@@ -339,10 +336,11 @@ var DesignWorkArea = {
 		};
 
 		if (animate) {
-			oldLeft.find('.pageTitle').remove();
-			oldRight.find('.pageTitle').remove();
-			oldLeft.children('.design-page').trigger('pageRemoved');
-			oldRight.children('.design-page').trigger('pageRemoved');
+			oldLeft.add( oldRight ).find('.pageTitle').remove();
+			oldLeft.add( oldRight ).children('.design-page').trigger('pageRemoved');
+			// oldRight.find('.pageTitle').remove();
+			// oldLeft.children('.design-page').trigger('pageRemoved');
+			// oldRight.children('.design-page').trigger('pageRemoved');
 			var duration = 500;
 			if (direction == 'forward') {
 				oldRight.css({
@@ -356,7 +354,7 @@ var DesignWorkArea = {
 					});
 				// add pages in correct order for proper flip visibility
 				// 4 1 3 2
-				$(ID).append(newRight).append(oldLeft).append(newLeft).append(oldRight);
+				$('#work-area-design').append(newRight).append(oldLeft).append(newLeft).append(oldRight);
 				if (oldRight.length > 0)
 					oldRight.transition({transform: 'rotateY(-180deg)'}, duration, cleanUp);
 				else
@@ -376,7 +374,7 @@ var DesignWorkArea = {
 					transformOrigin: 'center left',
 					backfaceVisibility: 'hidden'
 				});
-				$(ID).append(newLeft).append(oldLeft).append(oldRight).append(newRight);
+				$('#work-area-design').append(newLeft).append(oldLeft).append(oldRight).append(newRight);
 				if (oldLeft.length > 0)
 					oldLeft.transition({transform: 'rotateY(180deg)'}, duration, cleanUp);
 				else
@@ -388,12 +386,30 @@ var DesignWorkArea = {
 			}
 		}
 		else { // no animation
-			var leftSel, rightSel;
+			var savedSelection = {};
+			function saveSelection() {
+				var sel = oldLeft.find('.design-page').data('page-selection');
+				if (sel) savedSelection.left = sel.store();
+				sel = oldRight.find('.design-page').data('page-selection');
+				if (sel) savedSelection.right = sel.store();
+			}
+			function restoreSelection() {
+				var sel;
+				if (savedSelection.left && (sel = newLeft.find('.design-page').data('page-selection')))
+					sel.restore(savedSelection.left);
+				if (savedSelection.right && (sel = newRight.find('.design-page').data('page-selection')))
+					sel.restore(savedSelection.right);
+			}
+			if (force)	// happens during window resize
+				saveSelection();
 			cleanUp();
 			workAreaDiv.append(newRight).append(newLeft);
+			if (force)
+				restoreSelection();
 		}
 	},
 	goTo: function(page, direction) {
+		console.log('goto', page.id);
 		var facingPages = this.book.facingPages;
 		var show = facingPages.find(page);
 		if (show === undefined)

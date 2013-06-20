@@ -242,6 +242,7 @@ ZoomManipulator.prototype = {
 			top: midpoint.top,
 			left: midpoint.left + distance + this.manipulatorOffset
 		});
+		this.scale = Manipulator.scaleFromCorners( corners, pageAsset );
 	},
 	show: function() {
 		this.pageAsset = PB.ModelMap.model( this.assetId );
@@ -585,7 +586,7 @@ EditTextManipulator.prototype = {
 			textarea: $( $.parseHTML('<textarea class="manipulator-textarea"></textarea>')),
 			mirror: $('<pre>')
 		};
-		this.handles.textarea.prop('placeholder', 
+		this.handles.textarea.prop('placeholder',
 			this.pageAsset.page.getDummyText( this.pageAsset.asset ));
 		var text = this.pageAsset.page.getText( this.pageAsset.page.getAsset( this.assetId ));
 		if (text !== undefined)
