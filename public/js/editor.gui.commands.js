@@ -149,6 +149,7 @@
 				}
 			if (cmd.id)
 				this._commands[cmd.id] = cmd;
+			return this;
 		},
 		remove: function(cmd) {
 			if (cmd.key)

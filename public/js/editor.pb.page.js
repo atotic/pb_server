@@ -992,7 +992,7 @@ asset widget {
 
 	var PageProxyEditable = {
 		// callback, 'this' points to an HTMLElement, not page
-		selectItem: function(pageSelection, assetId, $itemDom) {
+		selectItem: function(pageSelection, assetId) {
 			var pageAsset = PB.ModelMap.model(assetId);
 			var multiTap = pageSelection.selection.some(function(val) { return val == assetId; });
 			var commandSet;
@@ -1009,7 +1009,7 @@ asset widget {
 					if (multiTap)
 						window.setTimeout(function() {
 							var cmd = commandSet.getCommandById('editText');
-							cmd.action( $itemDom.parents('.design-page'), assetId );
+							cmd.action( sel.dom, assetId );
 						}, 0);
 				break;
 				case 'widget':
@@ -1099,6 +1099,18 @@ asset widget {
 		}
 	};
 
+	// Special event fires when dom element has been removed
+	// The only documentation I've found for jQuery special events
+	// http://benalman.com/news/2010/03/jquery-special-events/
+
+	$.event.special.pageRemoved = {
+		remove: function( handleObj ) {
+			var sel = $(this).data('page-selection');
+			if (sel)
+				sel.setSelection();
+			return false;
+		}
+	}
 	$.extend(PageProxy.prototype, PageProxyEditable);
 
 	var PageSelection = function(page, dom) {
@@ -1145,21 +1157,27 @@ asset widget {
 	$.extend( PageSelection.prototype, PB.ListenerMixin);
 
 	$.extend( PageSelection, {
-		DATA_ID: 'pageSelection',
 		bindToDom: function(page, $dom) {
-			var sel = $dom.data(PageSelection.DATA_ID);
+			var sel = $dom.data('page-selection');
 			if (sel) {
+				debugger;
 				sel.highlight();
 			}
 			else {
 				sel = new PageSelection(page, $dom);
-				$dom.data(PageSelection.DATA_ID, sel);
+				$dom.data('page-selection', sel);
+				$dom.on('pageRemoved', this, function() {
+					console.log('pageRemoved');
+					var sel = $(this).data('page-selection');
+					if (sel)
+						sel.setSelection();
+				});
 			}
 			return sel;
 		},
 		findClosest: function($dom) {
-			var ps = $dom.data(PageSelection.DATA_ID) ||
-				$dom.parents( '*:data("pageSelection")' ).data(PageSelection.DATA_ID);
+			var ps = $dom.data('page-selection') ||
+				$dom.parents( '*:data("pageSelection")' ).data('page-selection');
 			if (ps == null) {
 				console.error("could not find pageselection in ", $dom);
 				throw new Error("Could not find pageselection");

@@ -13,7 +13,7 @@
 				icon: 'move',
 				action: function( $pageDom, assetId ) {
 					var m = new GUI.Manipulators.Move( $pageDom, assetId );
-					PageSelection.findClosest( $pageDom ).setManipulator( m );
+					PB.Page.Selection.findClosest( $pageDom ).setManipulator( m );
 				}
 			}));
 			this.cmdSet.add( new GUI.Command({
@@ -22,7 +22,7 @@
 				icon: 'hand-up',
 				action: function( $pageDom, assetId) {
 					var m = new GUI.Manipulators.Pan( $pageDom, assetId );
-					PageSelection.findClosest( $pageDom ).setManipulator( m );
+					PB.Page.Selection.findClosest( $pageDom ).setManipulator( m );
 				}
 			}));
 			this.cmdSet.add( new GUI.Command({
@@ -31,7 +31,7 @@
 				icon: 'search',
 				action: function( $pageDom, assetId) {
 					var m = new GUI.Manipulators.Zoom( $pageDom, assetId );
-					PageSelection.findClosest( $pageDom ).setManipulator( m );
+					PB.Page.Selection.findClosest( $pageDom ).setManipulator( m );
 				}
 			}));
 			this.cmdSet.add( new GUI.Command({
@@ -40,7 +40,7 @@
 				icon: 'arrow-up',
 				action: function( $pageDom, assetId) {
 					var m = new GUI.Manipulators.Resize( $pageDom, assetId );
-					PageSelection.findClosest( $pageDom ).setManipulator( m );
+					PB.Page.Selection.findClosest( $pageDom ).setManipulator( m );
 				}
 			}));
 			this.cmdSet.add( new GUI.Command({
@@ -49,7 +49,7 @@
 				icon: 'arrow-up',
 				action: function( $pageDom, assetId) {
 					var m = new GUI.Manipulators.Resize( $pageDom, assetId ,{ vertical: false });
-					PageSelection.findClosest( $pageDom ).setManipulator( m );
+					PB.Page.Selection.findClosest( $pageDom ).setManipulator( m );
 				}
 			}));
 			this.cmdSet.add( new GUI.Command({
@@ -58,7 +58,7 @@
 				icon: 'arrow-up',
 				action: function( $pageDom, assetId) {
 					var m = new GUI.Manipulators.Resize( $pageDom, assetId ,{ fixAspect: true });
-					PageSelection.findClosest( $pageDom ).setManipulator( m );
+					PB.Page.Selection.findClosest( $pageDom ).setManipulator( m );
 				}
 			}));
 			this.cmdSet.add( new GUI.Command({
@@ -67,7 +67,7 @@
 				icon: 'repeat',
 				action: function( $pageDom, assetId) {
 					var m = new GUI.Manipulators.Rotate( $pageDom, assetId );
-					PageSelection.findClosest( $pageDom ).setManipulator( m );
+					PB.Page.Selection.findClosest( $pageDom ).setManipulator( m );
 				}
 			}));
 			this.cmdSet.add( new GUI.Command({
@@ -76,7 +76,7 @@
 				icon: 'edit',
 				action: function( $pageDom, assetId) {
 					var m = new GUI.Manipulators.EditText( $pageDom, assetId );
-					PageSelection.findClosest( $pageDom ).setManipulator( m );
+					PB.Page.Selection.findClosest( $pageDom ).setManipulator( m );
 				}
 			}));
 			this.cmdSet.add( new GUI.Command({
@@ -86,7 +86,7 @@
 				key: GUI.CommandManager.keys.backspace,
 				action: function($pageDom, assetId) {
 					// when deletekey is pressed, $pageDom and itId are null
-					PageSelection.forEach(function( page, assetId, pageSelection) {
+					PB.Page.Selection.forEach(function( page, assetId, pageSelection) {
 						if ($pageDom != null || pageSelection.manipulator == null) {
 							pageSelection.setSelection();
 							page.removeAsset( assetId );

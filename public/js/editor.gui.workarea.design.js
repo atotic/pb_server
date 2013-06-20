@@ -68,17 +68,25 @@ var DesignWorkArea = {
 	get book() {
 		return PB.ModelMap.domToModel($(ID));
 	},
+	get designPages() {
+		return [
+			$('.design-book-page-left').not(':data(removed)').children('.design-page'),
+			$('.design-book-page-right').not(':data(removed)').children('.design-page')
+		];
+	},
+	get currentPages() { // returns left & right page. They might be null
+		return this.designPages.map( function(page) { return PB.ModelMap.domToModel(page) });;
+	},
 	get currentPage() {	// just first page
 		var cp = this.currentPages;
 		return cp[0] || cp[1];
 	},
-	get currentPages() { // returns left & right page. They might be null
-		return [
-		PB.ModelMap.domToModel(
-			$('.design-book-page-left').not(':data(removed)').children('.design-page')),
-		PB.ModelMap.domToModel(
-			$('.design-book-page-right').not(':data(removed)').children('.design-page'))
-		];
+	get currentSelections() {
+		var pages = this.designPages;
+		var retVal = [];
+		if (pages[0]) retVal.push( pages[0].data('page-selection'));
+		if (pages[1]) retVal.push( pages[1].data('page-selection'));
+		return retVal;
 	},
 	bookChanged: function(ev, model, prop, options) {
 		switch(prop) {
@@ -127,8 +135,34 @@ var DesignWorkArea = {
 			debugger;
 		}
 	},
-	updateSelection: function(sel) {
-
+	updateSelectionMenu: function(sel) {
+		// Clear menu
+		$menu = $('#selection-menu');
+		$menu.empty();
+		if ( this.selectionCommandSet )
+			this.selectionCommandSet.deactivate();
+		this.selectionCommandSet = sel.commandSet;
+		if (!this.selectionCommandSet)
+			return;
+		// Empty all other selections. Be careful, without guards above this could get recursive
+		this.currentSelections.forEach( function(otherSel) {
+			if (otherSel != sel)
+				otherSel.setSelection();
+		});
+		this.selectionCommandSet = sel.commandSet;	// keep this, other selection might have reset it
+		// Populate the menu
+		this.selectionCommandSet.getCommands().forEach( function(cmd) {
+			var $li = $('<li>');
+			var $a = $('<a>');
+			$a.text( cmd.title );
+			if ( cmd.icon )
+				$a.prepend( $('<i>').addClass('icon-' + cmd.icon ) );
+			$li.append($a);
+			$li.on('mousedown touchstart', function() {
+				cmd.action( sel.dom, sel.selection[0]);
+			});
+			$menu.append($li);
+		});
 	},
 	getPagePositions: function(book) {
 		var vinset = 20;
@@ -193,29 +227,38 @@ var DesignWorkArea = {
 		// create new pages
 		var pagesDom = [];
 		var THIS = this;
+		function getPlaceholder(page) {
+			var d = page.dimensions;
+			return $('<div>')
+				.css({
+					width: d.width,
+					height: d.height
+				})
+				.addClass('design-page placeholder')
+				.data('model_id', page.id);
+		};
 		function makePageDom(page, options) {
 			if (!page.designId)
 				THIS.book.generateDesignId(page);
 			try {
-				return $(page.generateDom(options));
+				var $dom = page.generateDom(options);
+				if ( options.editable ) {
+					var sel = PB.Page.Selection.findClosest($dom);
+					sel.addListener( function() {
+						THIS.updateSelectionMenu(sel);
+					});
+				}
+				return $dom;
 			}
-			catch(ex) {
-				// Display placeholder if load fails
+			catch(ex) { // Display placeholder if load fails
 				if (ex.name == "ThemeNotFoundException" && ex.deferred) {
 					ex.deferred.done( function() {
 						THIS.fixPlaceholders();
 					});
 				}
-				var d = page.dimensions;
-				return $('<div>')
-					.css({
-						width: d.width,
-						height: d.height
-					})
-					.addClass('design-page placeholder')
-					.data('model_id', page.id);
+				return getPlaceholder(page);
 			}
-		}
+		};
 		var loResOptions = {
 			resolution: PB.PhotoProxy.SMALL,
 			syncable: false,
@@ -285,9 +328,9 @@ var DesignWorkArea = {
 		oldRight.data('removed', true);
 
 		function cleanUp() {
-			// removes deleted elements,
+			// removes deleted elements, replaces pages with highDPI version
 			// console.log('removing ', $(ID).children(':data(removed)').length);
-			$(ID).children(':data(removed)').detach();
+			$(ID).children(':data(removed)').remove();
 			$(ID).find('div:data(highDpi)').each( function() {
 				var el = $(this);
 				var highDpi = el.data('highDpi');
@@ -298,6 +341,8 @@ var DesignWorkArea = {
 		if (animate) {
 			oldLeft.find('.pageTitle').remove();
 			oldRight.find('.pageTitle').remove();
+			oldLeft.children('.design-page').trigger('pageRemoved');
+			oldRight.children('.design-page').trigger('pageRemoved');
 			var duration = 500;
 			if (direction == 'forward') {
 				oldRight.css({
@@ -343,6 +388,7 @@ var DesignWorkArea = {
 			}
 		}
 		else { // no animation
+			var leftSel, rightSel;
 			cleanUp();
 			workAreaDiv.append(newRight).append(newLeft);
 		}

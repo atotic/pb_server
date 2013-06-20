@@ -645,6 +645,7 @@ var Controller = {
 			$('#pagePopupContainer').hide();
 			return;
 		}
+		this.popupCommandSet.activate();
 		var $ul = $('<ul>').addClass('pb-popup-menu').addClass('pbopen');
 		$('#pagePopupContainer').show().append($ul);
 		var THIS = this;

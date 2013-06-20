@@ -254,6 +254,9 @@
 				break;
 				case 'photoInPage':
 					// photo already there, just prevent restore
+					var sel = PB.Page.Selection.findClosest(this.dom);
+					if (sel)
+						this.destinationPage.selectItem(sel, this.assetId)
 					delete this.destinationArchive;
 					delete this.sourcePage;
 					delete this.sourceAssetId;
