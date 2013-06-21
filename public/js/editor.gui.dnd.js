@@ -350,7 +350,7 @@
 		}
 	}
 
-	$(document.body).on('touchstart.dnd mousedown.dnd', ".pb-draggable", Dnd.dragStart );
+	$(document).on('touchstart.dnd mousedown.dnd', ".pb-draggable", Dnd.dragStart );
 	scope.Dnd = {
 		Dnd: Dnd,
 		Draggable: Draggable,
