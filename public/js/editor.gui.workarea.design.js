@@ -38,6 +38,20 @@ var DesignWorkArea = {
 		$('#work-area-design').data('resize', function() {
 			DesignWorkArea.resize();
 		});
+		$('#work-area-design').on('mousedown touchstart', function(ev) {
+			DesignWorkArea.currentSelections.forEach(function(sel) {
+				sel.setSelection();
+			});
+		});
+		$('#add-text-btn').on('mousedown touchstart', function() {
+			var designPages = DesignWorkArea.designPages;
+			var destPage = designPages.left || designPages.right;
+			if (destPage) {
+				var sel = destPage.data('page-selection');
+				var assetId = sel.page.addAsset({ type: 'text' });
+				sel.page.selectItem(sel, assetId);
+			}
+		});
 	},
 	createCommandSet: function() {
 		this.commandSet = new GUI.CommandSet("design");
@@ -67,24 +81,38 @@ var DesignWorkArea = {
 		return PB.ModelMap.domToModel($('#work-area-design'));
 	},
 	get designPages() {
-		return [
-			$('.design-book-page-left').not(':data(removed)').children('.design-page'),
-			$('.design-book-page-right').not(':data(removed)').children('.design-page')
-		];
+		var retVal = {
+			left: $('.design-book-page-left').not(':data(removed)').children('.design-page'),
+			right: $('.design-book-page-right').not(':data(removed)').children('.design-page')
+		};
+		if (retVal.left.length == 0)
+			retVal.left = null;
+		if (retVal.right.length == 0)
+			retVal.right = null;
+		return retVal;
 	},
-	get currentPages() { // returns left & right page. They might be null
-		return this.designPages.map( function(page) { return PB.ModelMap.domToModel(page) });;
+	get currentModels() { // returns left & right page. They might be null
+		var dp = this.designPages;
+		return {
+			left: PB.ModelMap.domToModel( dp.left),
+			right: PB.ModelMap.domToModel( dp.right)
+		}
 	},
-	get currentPage() {	// just first page
-		var cp = this.currentPages;
-		return cp[0] || cp[1];
+	get currentModel() {	// just first page
+		var cp = this.currentModels;
+		return cp.left || cp.right;
 	},
-	get currentSelections() {
+	get currentSelections() {	// all selections in the page
 		var pages = this.designPages;
 		var retVal = [];
-		if (pages[0]) retVal.push( pages[0].data('page-selection'));
-		if (pages[1]) retVal.push( pages[1].data('page-selection'));
+		if (pages.left) retVal.push( pages.left.data('page-selection'));
+		if (pages.right) retVal.push( pages.right.data('page-selection'));
 		return retVal;
+	},
+	clearSelection: function() {
+		this.currentSelections.forEach( function(sel) {
+			sel.setSelection();
+		});
 	},
 	bookChanged: function(ev, model, prop, options) {
 		switch(prop) {
@@ -109,22 +137,23 @@ var DesignWorkArea = {
 		DesignWorkArea.goTo(this._lastPage);
 		// initialize workarea-menu
 		$('#workarea-menu').find('li').hide();
-		$('#add-photo-btn').show();
+		$('#add-photo-btn, #add-text-btn').show();
 	},
 	hide: function() {
-		this._lastPage = this.currentPage;
+		this._lastPage = this.currentModel;
 		var workArea = document.getElementById('work-area');
 		workArea.style.removeProperty('padding-left');
 		workArea.style.removeProperty('padding-top');
 		$('#work-area-design').hide();
 		GUI.CommandManager.removeCommandSet(this.commandSet);
+		this.clearSelection();
 	},
 	resize: function() {
 		if (!($('#work-area-design').is(':visible')))
 			return;
 		try {
-			var cur = this.currentPages;
-			if (cur[0] || cur[1])
+			var cur = this.currentModels;
+			if (cur.left || cur.right)
 				this.showPages(cur, null, true);
 		}
 		catch(ex) {
@@ -142,7 +171,7 @@ var DesignWorkArea = {
 			return;
 		// Empty all other selections. Be careful, without guards above this could get recursive
 		this.currentSelections.forEach( function(otherSel) {
-			if (otherSel != sel)
+			if (otherSel && otherSel != sel)
 				otherSel.setSelection();
 		});
 		this.selectionCommandSet = sel.commandSet;	// keep this, other selection might have reset it
@@ -195,35 +224,29 @@ var DesignWorkArea = {
 	},
 
 	fixPlaceholders: function() {
-		var currentPages = this.currentPages;
-		var left = $('.design-book-page-left').not(':data(removed)').children('.design-page');
-		var right = $('.design-book-page-right').not(':data(removed)').children('.design-page');
-		if (left.hasClass('placeholder') || right.hasClass('placeholder')) {
+		var dp = this.designPages;
+		if ( (dp.left && dp.left.hasClass('placeholder'))
+			|| (dp.right && dp.right.hasClass('placeholder'))) {
 			console.log("fixingPlaceholders");
-			this.showPages( this.currentPages, null, true);
+			this.showPages( this.currentModels, null, true);
 		}
 	},
-	showPages: function(pages, direction, force) {
-		if (!pages) {
+	showPages: function(pageModels, direction, force) {
+		var THIS = this;
+		if (!pageModels) {
 			PB.error("page does not exist");
 			this.goTo();
 		}
-		var currentPages = this.currentPages;
-		if (currentPages.length == pages.length) {
-			var diff = false;
-			for (var i=0; i<currentPages.length; i++)
-				if (currentPages[i] != pages[i])
-					diff = true;
-			if (!diff && !force)	// pages already shown, nothing to do
-				return;
-		}
+		var currentModels = this.currentModels;
+		if (!force
+			&& (currentModels.left == pageModels.left)
+			&& (currentModels.right == pageModels.right))
+			return; 	// pages already shown, nothing to do
 
 		var pos = this.getPagePositions(this.book);
 		var animate = direction == 'forward' || direction == 'back';
 
 		// create new pages
-		var pagesDom = [];
-		var THIS = this;
 		function getPlaceholder(page) {
 			var d = page.dimensions;
 			return $('<div>')
@@ -266,15 +289,16 @@ var DesignWorkArea = {
 			syncable: true,
 			editable: true
 		};
-		for (var i=0; i<pages.length; i++) {
-			if (pages[i] == null)
+		var pagesDom = { left: null, right: null };
+		for (var p in pagesDom) {
+			if (pageModels[p] == null)
 				continue;
-			if (animate) {
-				pagesDom[i] = makePageDom( pages[i], loResOptions);
-				pagesDom[i].data('highDpi', makePageDom( pages[i], hiResOptions));
+			if (animate) {	// for animation, create lores, with hires in data
+				pagesDom[p] = makePageDom( pageModels[p], loResOptions);
+				pagesDom[p].data('highDpi', makePageDom( pageModels[p], hiResOptions));
 			}
 			else
-				pagesDom[i] = makePageDom(pages[i], hiResOptions);
+				pagesDom[p] = makePageDom(pageModels[p], hiResOptions);
 		}
 		// create page containers
 		var leftDom = $("<div class='design-book-page-left'/>");
@@ -292,25 +316,25 @@ var DesignWorkArea = {
 			height: pos.right.height
 		});
 		// place new pages into containers
-		if (pagesDom[0]) {
+		if (pagesDom.left) {
 			var transform = 'scale(' + pos.scale.toFixed(4) + ')';
-			pagesDom[0].css('transform', transform);
-			if (pagesDom[0].data('highDpi'))
-				pagesDom[0].data('highDpi').css('transform', transform);
-			leftDom.append(pagesDom[0]);
-			leftDom.append($('<p class="pageTitle">').text(pages[0].pageTitle()));
+			pagesDom.left.css('transform', transform);
+			if (pagesDom.left.data('highDpi'))
+				pagesDom.left.data('highDpi').css('transform', transform);
+			leftDom.append(pagesDom.left);
+			leftDom.append($('<p class="pageTitle">').text(pageModels.left.pageTitle()));
 		}
-		if (pagesDom[1]) {
+		if (pagesDom.right) {
 			var transform = 'scale(' + pos.scale.toFixed(4) + ')';
-			var widthDiff = pos.pageWidth - pagesDom[1].width();
+			var widthDiff = pos.pageWidth - pagesDom.right.width();
 			if (widthDiff > 5) {
 				transform += ' translate(' + widthDiff.toFixed(4) + 'px)';
 			}
-			pagesDom[1].css('transform', transform);
-			if (pagesDom[1].data('highDpi'))
-				pagesDom[1].data('highDpi').css('transform', transform);
-			rightDom.append(pagesDom[1]);
-			rightDom.append($('<p class="pageTitle">').text(pages[1].pageTitle()));
+			pagesDom.right.css('transform', transform);
+			if (pagesDom.right.data('highDpi'))
+				pagesDom.right.data('highDpi').css('transform', transform);
+			rightDom.append( pagesDom.right );
+			rightDom.append($('<p class="pageTitle">').text(pageModels.right.pageTitle()));
 		}
 		// animate pages into view with 3D transitions
 		// based upon http://jsfiddle.net/atotic/B8Rng/
@@ -318,8 +342,8 @@ var DesignWorkArea = {
 		var workAreaDiv = $('#work-area-design');
 		var oldLeft = workAreaDiv.find('.design-book-page-left').not(':data(removed)'); 	// 1
 		var oldRight = workAreaDiv.find('.design-book-page-right').not(':data(removed)'); // 2
-		var newLeft = pagesDom[0] ? leftDom : null; 							// 3
-		var newRight = pagesDom[1] ? rightDom : null; 							// 4
+		var newLeft = pagesDom.left ? leftDom : null; 							// 3
+		var newRight = pagesDom.right ? rightDom : null; 							// 4
 
 		oldLeft.data('removed', true);
 		oldRight.data('removed', true);
@@ -416,20 +440,19 @@ var DesignWorkArea = {
 			show = 0;
 		else
 			GUI.Options.designPage = page.id;
-		// console.log("show", show, this.currentPage);
 		this.showPages(facingPages.get(show), direction);
 	},
 	goBack: function() {
-		if (this.currentPage == null)
+		if (this.currentModel == null)
 			return;
-		var show = this.book.facingPages.before(this.currentPage);
-		this.goTo(show[0] || show[1], 'back');
+		var show = this.book.facingPages.before(this.currentModel);
+		this.goTo(show.left || show.right, 'back');
 	},
 	goForward: function() {
-		if (this.currentPage == null)
+		if (this.currentModel == null)
 			return;
-		var show = this.book.facingPages.after(this.currentPage);
-		this.goTo(show[0] || show[1], 'forward');
+		var show = this.book.facingPages.after(this.currentModel);
+		this.goTo(show.left || show.right, 'forward');
 	}
 }
 

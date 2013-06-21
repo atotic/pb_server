@@ -55,6 +55,9 @@
 		},
 		get caption() {
 			return this.p.caption;
+		},
+		get serverPhotoId() {
+			return this.book.serverPhotoId( this.id );
 		}
 	}
 

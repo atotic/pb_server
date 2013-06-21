@@ -148,8 +148,15 @@
 			}
 			console.error("invalid page type in getPageDimensions", pageType);
 		},
-		serverPhotoId: function(photoId) {
-			return this.localData.document.photoMap[photoId];
+		serverPhotoId: function(bookPhotoId) { // bookPhotoId => serverPhotoId
+			return this.localData.document.photoMap[bookPhotoId];
+		},
+		bookPhotoId: function(serverPhotoId) {
+			var photoMap = this.localData.document.photoMap;
+			for ( var p in photoMap)
+				if (photoMap[p] == serverPhotoId)
+					return p;
+			return null;
 		},
 		_getPageProxy: function(id) {
 			if (id === undefined)
@@ -175,6 +182,7 @@
 				return this._proxies[id];
 			else
 				if (this.localData.document.photoList.indexOf(id) == -1) {
+					console.warn('missing photo id', id);
 					if (PB.ServerPhotoCache.exists(id))
 						return PB.ServerPhotoCache.get(id);
 					else {
@@ -484,6 +492,14 @@
 				return null;
 			}
 		},
+		addServerPhoto: function( serverPhotoId ) {
+			var localId = this.generateId();
+			this.localData.document.photoList.push(localId);
+			this.localData.document.photoMap[localId] = serverPhotoId;
+			this._dirty = true;
+			PB.broadcastChange(this, 'photoList', options);
+			return localId;
+		},
 		removePhoto: function(photo, options) {
 			//
 			photo.doNotSave = true;
@@ -643,7 +659,11 @@
 			this._facing = facing;
 		},
 		get: function(index) {
-			return this._facing[index];
+			var f = this._facing[index];
+			return {
+				left: f[0],
+				right: f[1]
+			}
 		},
 		find: function(page) {
 			if (page === null)
@@ -658,13 +678,13 @@
 			var idx = this.find(page);
 			if (idx === undefined)
 				return this._facing[0];
-			return this._facing[Math.max(idx - 1, 0)];
+			return this.get([Math.max(idx - 1, 0)]);
 		},
 		after: function(page) {
 			var idx = this.find(page);
 			if (idx == undefined)
 				return this._facing[this._facing.length -1];
-			return this._facing[Math.min(idx + 1, this._facing.length - 1)];
+			return this.get([Math.min(idx + 1, this._facing.length - 1)]);
 		}
 	}
 

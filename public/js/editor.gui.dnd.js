@@ -310,7 +310,6 @@
 			var d = Dnd.findDroppable($ev);
 			transferFlavor = d.flavor;
 			Dnd.setDest( d.droppable );
-			console.log('dragMove leave');
 		},
 		// return true if transfer successful
 		doTransfer: function(ev) {

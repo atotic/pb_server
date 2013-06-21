@@ -35,7 +35,7 @@ asset {
 }
 asset photo {
 	type: 'photo'
-	photoId
+	photoId // bookPhotoId
 	focalPoint { xy %, default 50}
 	zoom { 1.0,}
 	photoRect { tlwh } // automatically generated
@@ -215,6 +215,9 @@ asset widget {
 		dimensionsChanged: function(width, height) {
 			this.p.needReflow = true;
 			PB.broadcastChange(this, 'dimensions');
+		},
+		broadcastPhotosChanged: function(options) {
+			this.book._pagePhotosChanged(this, options);
 		},
 		get canSave() {
 			return !this.hasTemporaryChanges;
@@ -1009,7 +1012,7 @@ asset widget {
 					if (multiTap)
 						window.setTimeout(function() {
 							var cmd = commandSet.getCommandById('editText');
-							cmd.action( sel.dom, assetId );
+							cmd.action( pageSelection.dom, assetId );
 						}, 0);
 				break;
 				case 'widget':

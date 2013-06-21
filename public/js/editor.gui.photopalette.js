@@ -4,6 +4,16 @@
 // images can be dragged out
 (function(scope){
 "use strict";
+
+	var PhotoPaletteDraggableOptions = {
+		flavors: ['photo'],	// photo belongs to a particular book
+		photoId: 'your id here',
+		book: 'book',
+		getTransferData: function(ev, $src, flavor) {
+			return this.photoId;
+		}
+	}
+
 	var PhotoPalette = {
 		bindToBook: function(book) {
 			this.makeDroppable();
@@ -17,6 +27,12 @@
 					});
 			GUI.Options.addListener(this.optionsChanged);
 			this.synchronizePhotoList();
+		},
+		makeDraggable: function($imgDiv)  {
+			var model = PB.ModelMap.domToModel( $imgDiv );
+			var dragOptions = $.extend( {}, PhotoPaletteDraggableOptions, { photoId: model.serverPhotoId } );
+			$imgDiv.addClass('pb-draggable')
+				.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions ));
 		},
 		optionsChanged: function(name, val) {
 			switch(name) {
@@ -384,11 +400,11 @@
 
 	$.extend(PhotoPalette, GUI.Mixin.DelayUntilVisible);
 
-	if (PB.hasTouch()) {
-		$.extend(PhotoPalette, PhotoPaletteTouch);
-	}
-	else
-		$.extend(PhotoPalette, PhotoPaletteDnd);
+	// if (PB.hasTouch()) {
+	// 	$.extend(PhotoPalette, PhotoPaletteTouch);
+	// }
+	// else
+	// 	$.extend(PhotoPalette, PhotoPaletteDnd);
 
 	scope.PhotoPalette = PhotoPalette;
 })(window.GUI);

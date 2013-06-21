@@ -109,6 +109,8 @@ window.PB // Generic utilities
 				console.warn("unsetResolver of not-registered resolver");
 		},
 		domToModel: function(el) {
+			if (!el)
+				return undefined;
 			try {
 				var e = el.nodeType ? el : el.get(0);
 				if (e)

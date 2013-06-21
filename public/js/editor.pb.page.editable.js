@@ -2,7 +2,12 @@
 
 (function(scope) {
 	var PageDroppable = new GUI.Dnd.Droppable({
-		flavors: ['background', 'layout', 'widget', 'design'],
+		flavors: [
+			'background', // transferData: backgroundId
+			'layout', // transferData: layoutId
+			'widget',  // transferData: widgetId
+			'design'	// transferData: designId
+		],
 		enter: function($dom, flavor, transferData) {
 			this.page = PB.Page.Selection.findClosest($dom).page;
 			this.dom = $dom;
@@ -66,16 +71,25 @@
 	});
 
 	var PhotoDroppable = new GUI.Dnd.Droppable( {
-		flavors: ['frame', 'photo', 'photoInPage'],
+		flavors: [
+			'frame', // transferData: frameId
+			'photo',  // transferData: serverPhotoId
+			'photoInPage' // transferData: { page: , assetId: }
+		],
 
-		setTempPhoto: function(asset, photoId) {
+		setTempPhoto: function(asset, serverPhotoId) {
 			this.destinationArchive = this.destinationPage.archiveSomething( {
 				type: 'asset',
 				assetId: this.assetId,
 				dependents: true
 			});
+			var bookPhotoId = this.book.bookPhotoId(serverPhotoId);
+
+			if (bookPhotoId == null)
+				bookPhotoId = this.book.addServerPhoto( serverPhotoId );
+
 			this.destinationPage.updateAsset(this.assetId, {
-				photoId: photoId,
+				photoId: bookPhotoId,
 				zoom: 1.0,
 				focalPoint: null
 			});
@@ -153,6 +167,7 @@
 		},
 		enter: function($dom, flavor, transferData, handoff) {
 			this.destinationPage = PB.Page.Selection.findClosest($dom).page;
+			this.book = this.destinationPage.book;
 			this.assetId = $dom.data('model_id');
 			this.dom = $dom;
 			this.dropFlavor = flavor;
@@ -250,6 +265,7 @@
 					delete this.oldFrameId;
 				break;
 				case 'photo':
+					this.destinationPage.broadcastPhotosChanged();
 					delete this.destinationArchive;
 				break;
 				case 'photoInPage':
