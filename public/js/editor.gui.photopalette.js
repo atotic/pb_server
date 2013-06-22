@@ -11,8 +11,45 @@
 		book: 'book',
 		getTransferData: function(ev, $src, flavor) {
 			return this.photoId;
+		},
+		start: function( $el, ev, startLoc ) {
+			this.el = $el;
+			var bounds = $el[0].getBoundingClientRect();
+			var $dom = GUI.Util.cloneDomWithCanvas($el)
+				.addClass('touch-drag-src')
+				.removeClass('draggable')
+				.css( {
+					top: startLoc.y + 2,
+					left: startLoc.x + 2,
+					marginLeft: bounds.left + $(document).scrollLeft() - startLoc.x,
+					marginTop: bounds.top + $(document).scrollTop() - startLoc.y,
+					position: 'absolute'
+				});
+			GUI.Dnd.preventDefaultDrag($dom);
+			$el.css('opacity', 0);
+			return $dom;
+		},
+		end: function(transferDone) {
+			this.el.animate( {opacity: 1.0 }, 500);
 		}
 	}
+
+	var PhotoPaletteDroppable = new GUI.Dnd.Droppable({
+		flavors: [
+			'photoInRoughPage'	// transferData: assetId
+		],
+		enter: function($dom, flavor, transferData) {
+			this.dom = $dom;
+			this.dom.addClass('drop-target');
+		},
+		leave: function() {
+			this.dom.removeClass('drop-target');
+		},
+		putTransferData: function($ev, flavor, transferData) {
+			var pageAsset = PB.ModelMap.model( transferData );
+			pageAsset.page.removeAsset( pageAsset.assetId, { animate: true });
+		}
+	});
 
 	var PhotoPalette = {
 		bindToBook: function(book) {
@@ -30,9 +67,16 @@
 		},
 		makeDraggable: function($imgDiv)  {
 			var model = PB.ModelMap.domToModel( $imgDiv );
+			if (!model)
+				return;
 			var dragOptions = $.extend( {}, PhotoPaletteDraggableOptions, { photoId: model.serverPhotoId } );
 			$imgDiv.addClass('pb-draggable')
 				.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions ));
+			GUI.Dnd.preventDefaultDrag($imgDiv);
+		},
+		makeDroppable: function() {
+			$('#photo-list-container').addClass('pb-droppable')
+				.data('pb-droppable', PhotoPaletteDroppable );
 		},
 		optionsChanged: function(name, val) {
 			switch(name) {
@@ -105,7 +149,8 @@
 				GUI.DragStore.OS_FILE,
 				GUI.DragStore.ROUGH_IMAGE);
 		},
-		makeDroppable: function() {
+		makeDroppableOld: function() {
+
 			$('#photo-list-container').attr('dropzone', true).on({
 				dragenter: function(ev) {
 					GUI.DragStore.setDataTransferFlavor(ev.originalEvent.dataTransfer);

@@ -92,20 +92,8 @@ asset widget {
 		set layoutId(val) {
 			debugger;
 		},
-		getEditMenu: function(layoutassetId) {
-			debugger;
-		},
 		isDraggable: function() {
 			return this.id.match(coverRegex) === null;
-		},
-		isDroppable: function(flavor) {
-			switch(flavor) {
-				case 'roughPage':
-				case 'addRoughPage':
-					return this.pageClass == 'page';
-				default:
-					return true;
-			}
 		},
 		type: function() {
 			debugger; // should use get pageClass()
@@ -293,10 +281,10 @@ asset widget {
 				break;
 				case 'asset':
 					if (! this.p.assets[archive.assetId])
-						this.addAsset( PB.clone(archive.asset), {
+						this.addAsset( PB.clone(archive.asset), $.extend({}, {
 								assetId: archive.assetId,
 								addCaption: false
-							});
+							}, options));
 					else {
 						this.p.assets[ archive.assetId ] = PB.clone( archive.asset );
 						PB.broadcastChange({id: archive.assetId}, 'alldata');
@@ -305,9 +293,9 @@ asset widget {
 						for (var i=0; i< archive.dependents.length; i++) {
 							var dep = archive.dependents[i];
 							if (! (dep.id in this.p.assets))
-								this.addAsset( dep.asset, { assetId: dep.id});
+								this.addAsset( dep.asset, $.extend({}, options, { assetId: dep.id}));
 							else
-								this.updateAsset( dep.id, dep.asset);
+								this.updateAsset( dep.id, dep.asset, options);
 						}
 					}
 				break;
@@ -330,7 +318,7 @@ asset widget {
 		addAsset: function(asset, addAssetOptions) {
 			addAssetOptions = $.extend( {
 				broadcast: true, 	// should we broadcast the addition?
-				assetId: false, 	// asset id to use
+				assetId: null, 	// asset id to use
 				addCaption: true
 			}, addAssetOptions);
 
@@ -340,12 +328,17 @@ asset widget {
 			if ( !asset.css.top )
 				this.p.needReflow = true;
 
+			if (asset.type == 'photo') {
+				// if photo id is serverPhotoId, convert it to bookPhotoId
+				if (! this.book.serverPhotoId(asset.photoId) ) {
+					asset.photoId = this.book.bookPhotoId( asset.photoId ) || this.book.addServerPhoto( asset.photoId );
+				}
+			}
 			// Add the asset to the list
 			var id = addAssetOptions.assetId ? addAssetOptions.assetId : this.book.generateId();
 			this.p.assets.ids.push( id );
 			this.p.assets[ id ] = asset;
 			registerPageAssetResolver(this, id);
-
 
 			// Post processing
 			switch(asset.type) {
@@ -389,18 +382,32 @@ asset widget {
 			return id;
 		},
 		removeAsset: function(id, broadcastOptions) {
+			broadcastOptions = $.extend( {
+				broadcast: true
+			}, broadcastOptions );
 			var idx = this.p.assets.ids.indexOf( id );
 			if (idx == -1)
 				return PB.debugstr("removing non-exhistent asset");
 			this.p.assets.ids.splice( idx, 1 );
 			var assetType = this.p.assets[ id ].type;
 			delete this.p.assets[id];
-			if ( assetType != 'widget')
+			if ( assetType != 'widget' )
 				this.p.needReflow = true;
 			PB.ModelMap.unsetResolver( id );
-			if ( assetType == 'photo' )
-				this.book._pagePhotosChanged( this, broadcastOptions );
-			PB.broadcastChange( this, 'assetList', broadcastOptions );
+			// remove all dependents
+			var THIS = this;
+			this.p.assets.ids.filter( function(depId) {
+					var asset =  THIS.p.assets[depId];
+					return asset.dependentOf && asset.dependentOf.assetId == id;
+				})
+				.forEach(function(depId) {
+					THIS.removeAsset(depId, $.extend({}, broadcastOptions, { broadcast: false }));
+				});
+			if (broadcastOptions.broadcast) {
+				if ( assetType == 'photo' )
+					this.book._pagePhotosChanged( this, broadcastOptions );
+				PB.broadcastChange( this, 'assetList', broadcastOptions );
+			}
 		},
 		updateAsset: function(id, newAsset, options) {
 			function myExtend(src, dest) {
@@ -450,6 +457,11 @@ asset widget {
 				this.layoutInnerItem(id);
 				PB.broadcastChange({id: id}, 'alldata', options);
 			}
+		},
+		moveAsset: function( assetId, destPage, options) {
+			var archive = this.archiveSomething({ type: 'asset', assetId: assetId, dependents: true });
+			this.removeAsset( assetId, options);
+			destPage.restoreSomething( archive, options );
 		},
 		setDesign: function( designId, options ) {
 			if (this.p.designId == designId)
@@ -695,6 +707,10 @@ asset widget {
 				var asset = THIS.p.assets[ assetId ];
 				if ( !asset.dependentOf )
 					return;
+				if (! captionPositioners[ asset.dependentOf.assetId ] ) {
+					console.warn('dependent asset with no parent');
+					return;
+				}
 				var positioner = PB.ThemeCache.resource(
 					captionPositioners[ asset.dependentOf.assetId ]);
 				var assetDesign = positioner.getPosition( THIS, assetId );
@@ -1041,7 +1057,7 @@ asset widget {
 					.data('pb-draggable', new GUI.Dnd.Draggable(
 						PB.Page.Editor.DraggableOptions.PhotoInPage ));
 				$itemDom.on('mousedown.dnd touchstart.dnd', GUI.Dnd.Dnd.dragStart);
-				GUI.Util.preventDefaultDrag($itemDom);
+				GUI.Dnd.preventDefaultDrag($itemDom);
 			}
 			$itemDom.on('mousedown.select touchstart.select', function(ev) { THIS.selectItem(
 				PageSelection.findClosest( $itemDom ),

@@ -84,10 +84,8 @@
 				dependents: true
 			});
 			var bookPhotoId = this.book.bookPhotoId(serverPhotoId);
-
 			if (bookPhotoId == null)
 				bookPhotoId = this.book.addServerPhoto( serverPhotoId );
-
 			this.destinationPage.updateAsset(this.assetId, {
 				photoId: bookPhotoId,
 				zoom: 1.0,
@@ -265,7 +263,7 @@
 					delete this.oldFrameId;
 				break;
 				case 'photo':
-					this.destinationPage.broadcastPhotosChanged();
+					this.destinationPage.broadcastPhotosChanged({animate: true});
 					delete this.destinationArchive;
 				break;
 				case 'photoInPage':
@@ -336,7 +334,7 @@
 					marginTop: -height / 2,
 					background: 'transparent'
 				});
-			GUI.Util.preventDefaultDrag($dom);
+			GUI.Dnd.preventDefaultDrag($dom);
 			return $dom;
 		},
 		getTransferData: function(ev, $src, flavor) {
@@ -382,7 +380,7 @@
 					border: '1px dashed white'
 				})
 				.prop('src', photo.getUrl(PB.PhotoProxy.SMALL));
-			GUI.Util.preventDefaultDrag($drag);
+			GUI.Dnd.preventDefaultDrag($drag);
 			return $drag;
 		}
 	}

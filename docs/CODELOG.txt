@@ -1,3 +1,4 @@
+
 Feb 14th estimates:
 2 weeks: comet, image resizing delayed, nginx
 1 week: kill datamapper, use sequel http://rhnh.net/2011/11/29/datamapper-retrospective
@@ -65,6 +66,7 @@ Next
 - Map is a great example of a widget
 Apr 17:
 Debugging android:
+adb, remote chrome debugging
 cd /Users/atotic/adt-bundle-mac-x86_64-20130219/sdk/platform-tools
 ./adb forward tcp:9222 localabstract:chrome_devtools_remote
 open http://localhost:9222/

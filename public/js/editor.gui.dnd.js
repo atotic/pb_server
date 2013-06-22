@@ -54,6 +54,10 @@
 				this.dropEl.addClass('drop-target');
 			}
 		},
+		move: function($ev, flavor) {
+			if (this.options.move)
+				this.options.move($ev, flavor);
+		},
 		leave: function(handoffId) {
 			// console.log('dropLeave');
 			if (this.options.leave) {
@@ -76,6 +80,14 @@
 		}
 	}
 
+	var noDragFn = function(ev) { ev.preventDefault() };
+	function preventDefaultDrag($dom) {
+		if ($dom.prop('nodeName') == 'IMG')
+			$dom.on('dragstart', noDragFn);
+		$dom.find('img').on('dragstart', noDragFn);
+	}
+
+
 	var Draggable = function(options) {
 		this.options = $.extend( {
 			flavors:['test'],
@@ -90,30 +102,35 @@
 		get flavors() {
 			return this.options.flavors;
 		},
+		sanitizeDragDom: function($dom) {
+			$dom.removeClass('pb-draggable')
+				.removeClass('pb-droppable');
+			preventDefaultDrag($dom);
+			return $dom;
+		},
 		// Returns drag image
 		start: function( $el, ev, startLoc ) {
 			var $dom;
 			if ( this.options.start )
 				$dom = this.options.start($el, ev, startLoc);
-			if ($dom)
-				return $dom;
-			var bounds = $el[0].getBoundingClientRect();
-			var $dom = GUI.Util.cloneDomWithCanvas($el)
-				.addClass('touch-drag-src')
-				.removeClass('draggable')
-				.css( {
-					top: startLoc.y + 2,
-					left: startLoc.x + 2,
-					marginLeft: bounds.left + $(document).scrollLeft() - startLoc.x,
-					marginTop: bounds.top + $(document).scrollTop() - startLoc.y,
-					position: 'absolute'
-				});
-			GUI.Util.preventDefaultDrag($dom);
-			$dom.children().css('verticalAlign', 'top'); // eliminate LI whitespace
-			return $dom;
+			if (!$dom) {
+				var bounds = $el[0].getBoundingClientRect();
+				$dom = GUI.Util.cloneDomWithCanvas($el)
+					.addClass('touch-drag-src')
+					.css( {
+						top: startLoc.y + 2,
+						left: startLoc.x + 2,
+						marginLeft: bounds.left + $(document).scrollLeft() - startLoc.x,
+						marginTop: bounds.top + $(document).scrollTop() - startLoc.y,
+						position: 'absolute'
+					});
+				$dom.children().css('verticalAlign', 'top'); // eliminate LI whitespace
+			}
+			return this.sanitizeDragDom($dom);
 		},
-		end: function() {
-
+		end: function(transferDone) {
+			if ( this.options.end )
+				this.options.end(transferDone);
 		},
 		getTransferData: function($src, flavor) {
 			if (this.options.getTransferData)
@@ -310,6 +327,8 @@
 			var d = Dnd.findDroppable($ev);
 			transferFlavor = d.flavor;
 			Dnd.setDest( d.droppable );
+			if (droppable)
+				droppable.move($ev, transferFlavor);
 		},
 		// return true if transfer successful
 		doTransfer: function(ev) {
@@ -352,6 +371,7 @@
 
 	$(document).on('touchstart.dnd mousedown.dnd', ".pb-draggable", Dnd.dragStart );
 	scope.Dnd = {
+		preventDefaultDrag: preventDefaultDrag,
 		Dnd: Dnd,
 		Draggable: Draggable,
 		Droppable: Droppable

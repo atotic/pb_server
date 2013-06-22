@@ -164,6 +164,9 @@
 				height: this.height
 			});
 		},
+		pointInRect: function(x, y) {
+			return y >= this.top && y < this.bottom && x >= this.left && x < this.right;
+		},
 		forceInside: function(enclosure) {
 			var scale = this.fitInside(enclosure);
 			var retVal;
