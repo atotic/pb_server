@@ -6,14 +6,20 @@
 
 	var RoughWorkAreaDroppable = new GUI.Dnd.Droppable( {
 		flavors: [
-			'page' // transferData: pageModelId
+			'page', // transferData: pageModelId
+			'newPage', // transferData: null
+			'osFile' // transferData: event.dataTransfer.files
 			],
 		enter: function($dom, flavor, transferData) {
 			this.dom = $dom;
+			this.target = null;
 			switch(flavor) {
 			case 'page':
-				this.target = null;
 				this.sourcePage = transferData;
+			break;
+			case 'osFile':
+			case 'newPage':
+				this.sourcePage = null;
 			break;
 			}
 		},
@@ -24,6 +30,7 @@
 		findRoughPage: function($ev) {
 			var retVal = null;
 			var screenLoc = GUI.Util.getPageLocation($ev);
+			// TODO no tracking outside of our visible bounds
 			var THIS = this;
 			this.dom.find('.rough-page').each( function() {
 				var bounds = new GUI.Rect( this.getBoundingClientRect()) ;
@@ -35,13 +42,18 @@
 			});
 			return retVal;
 		},
-		isValidTarget: function(target) {
+		isValidTarget: function(target, flavor) {
 			if (!target) return false;
-			var model_id = target.data('model_id');
-			if (model_id == this.sourcePage) // can't drag on itself
-				return false;
-			if (PB.ModelMap.model(model_id).pageClass != 'page')
-				return false;
+			switch( flavor ) {
+			case 'page':
+			case 'newPage':
+				var model_id = target.data('model_id');
+				if (model_id == this.sourcePage) // can't drag on itself
+					return false;
+				if (PB.ModelMap.model(model_id).pageClass != 'page')
+					return false;
+			break;
+			}
 			return true;
 		},
 		move: function($ev, flavor) {
@@ -49,7 +61,7 @@
 			if (newTarget != this.target) {
 				if (this.target)
 					this.target.removeClass('drop-target');
-				if ( !this.isValidTarget(newTarget) )
+				if ( !this.isValidTarget( newTarget, flavor ) )
 					newTarget = null;
 				this.target = newTarget;
 				if (this.target)
@@ -57,12 +69,32 @@
 			}
 		},
 		putTransferData: function($ev, flavor, transferData) {
-			if (this.target) {
-				var src = PB.ModelMap.model( this.sourcePage );
-				src.book.moveRoughPage( src,
-					src.book.pageList.indexOf(
-						this.target.data('model_id')
-				));
+			if (!this.target) {
+				throw new Error('no page target');	// not really an error
+			}
+			switch(flavor) {
+				case 'page':
+					var src = PB.ModelMap.model( this.sourcePage );
+					src.book.moveRoughPage( src,
+						src.book.pageList.indexOf(
+							this.target.data('model_id')
+					));
+				break;
+				case 'osFile':
+					var targetPage = PB.ModelMap.domToModel( this.target);
+					GUI.Dnd.Util.filterFileList( transferData )
+						.forEach( function(file) {
+							var photo = targetPage.book.addLocalPhoto(file, { animate:false } );
+							targetPage.addAsset( {
+								type: 'photo',
+								photoId: photo.id
+							}, { animate: true });
+						});
+				break;
+				case 'newPage':
+					var targetPage = PB.ModelMap.domToModel( this.target );
+					targetPage.book.insertRoughPage( targetPage.indexOf(), { animate: true });
+				break;
 			}
 		}
 	});
@@ -104,6 +136,7 @@
 			break;
 			}
 		}
+
 	});
 
 	var RoughPagePhotoDraggableOptions = {
@@ -159,7 +192,7 @@
 			return $dom;
 		},
 		end: function(transferDone) {
-			this.el.animate( {opacity: 1.0 }, 500);
+			this.el.animate( {opacity: 1.0 },0);
 		}
 	}
 	var roughPageTarget = { target: null, direction: 0, dropFeedback: "" };
@@ -383,7 +416,7 @@
 			for (var i=0; i<files.length; i++) {
 				var f = files.item(i);
 				if (f.type.match("image/(png|jpeg|gif)")) {
-					var photo = PB.Book.default.addLocalPhoto(f, {animate:false});
+					var photo = PB.Book.default.addLocalPhoto(file, { animate: false });
 					roughModel.addPhoto(photo, {animate:true});
 				}
 			}
@@ -395,7 +428,7 @@
 			var oldModel = PB.ModelMap.domToModel( oldParent );
 			var newModel = PB.ModelMap.domToModel( t.target );
 			PB.startChangeBatch();
-			oldModel.removeAsset( oldModel.findAssetIdByPhotoId( photo.id ) , {animate:true});
+			oldModel.removeAsset( oldModel.findAssetIdByPhotoId( photo.id ) , { animate: true });
 			newModel.addAsset( {
 				type: 'photo',
 				photoId: photo.id
@@ -696,12 +729,12 @@
 	$.extend(RoughWorkArea, RoughWorkAreaEvents);
 	$.extend(RoughWorkArea, GUI.Mixin.DelayUntilVisible);
 
-	if (PB.hasTouch()) {
-		$.extend(RoughWorkArea, RoughWorkAreaTouch);
-	}
-	else {
-		$.extend(RoughWorkArea, RoughWorkAreaDnd);
-	}
+	// if (PB.hasTouch()) {
+	// 	$.extend(RoughWorkArea, RoughWorkAreaTouch);
+	// }
+	// else {
+	// 	$.extend(RoughWorkArea, RoughWorkAreaDnd);
+	// }
 	scope.RoughWorkArea = RoughWorkArea;
 
 })(window.GUI);

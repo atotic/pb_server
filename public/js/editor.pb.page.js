@@ -70,9 +70,7 @@ asset widget {
 		this.id = id;
 		this.book = book;
 		PB.ModelMap.setResolver( id, book.pageResolver() );
-		this.p.assets.ids.forEach( function( assetId ) {
-			registerPageAssetResolver( this, assetId );
-		}, this);
+		this.registerAssetIdResolvers();
 	};
 
 
@@ -81,16 +79,6 @@ asset widget {
 	PageProxy.prototype = {
 		get p() {
 			return this.book.localData.document.pages[this.id];
-		},
-		get layoutId() {
-			debugger;
-			return this.book.localData.document.pages[this.id].layoutId;
-		},
-		get layout() {
-			debugger;
-		},
-		set layoutId(val) {
-			debugger;
 		},
 		isDraggable: function() {
 			return this.id.match(coverRegex) === null;
@@ -102,12 +90,15 @@ asset widget {
 			else
 				return 'pages';
 		},
+		get photoList() {
+			debugger;
+		},
 
 		// indexOf this page inside the book
 		indexOf: function() {
 			return this.book.pageList.indexOf(this.id);
 		},
-		get pageClass() {
+		get pageClass() {	// cover | cover-flap | back-flap | back | oage
 			if ( this.id.match(coverRegex))
 				return this.id;
 			else
@@ -131,9 +122,10 @@ asset widget {
 					asset.photoId = newId;
 			}
 		},
-
-		get photoList() {
-			debugger;
+		registerAssetIdResolvers: function() {
+			this.p.assets.ids.forEach( function( assetId ) {
+				registerPageAssetResolver( this, assetId );
+			}, this );
 		},
 		remove: function(options) {
 			this.book.deleteRoughPage(this, options);
@@ -319,7 +311,8 @@ asset widget {
 			addAssetOptions = $.extend( {
 				broadcast: true, 	// should we broadcast the addition?
 				assetId: null, 	// asset id to use
-				addCaption: true
+				addCaption: true,
+				animate: false
 			}, addAssetOptions);
 
 			asset = PB.clone(asset);
@@ -1057,7 +1050,7 @@ asset widget {
 					.data('pb-draggable', new GUI.Dnd.Draggable(
 						PB.Page.Editor.DraggableOptions.PhotoInPage ));
 				$itemDom.on('mousedown.dnd touchstart.dnd', GUI.Dnd.Dnd.dragStart);
-				GUI.Dnd.preventDefaultDrag($itemDom);
+				GUI.Dnd.Util.preventDefaultDrag($itemDom);
 			}
 			$itemDom.on('mousedown.select touchstart.select', function(ev) { THIS.selectItem(
 				PageSelection.findClosest( $itemDom ),

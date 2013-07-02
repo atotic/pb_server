@@ -61,7 +61,9 @@ body {
 .navbar-inner {
 	.border-radius(0px)
 }
-
+.navbar * {
+	.user-select(none);
+}
 #rough-more-tools {
 	background-color: white;
 	position:absolute;
@@ -191,6 +193,7 @@ body {
 		background-color: white;
 		opacity: 0.8;
 		list-style-type: none;
+		z-index: 1031;
 	}
 
 #work-area {

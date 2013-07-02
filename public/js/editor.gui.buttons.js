@@ -2,87 +2,99 @@
 */
 (function(scope) {
 
+	var TrashDroppable = new GUI.Dnd.Droppable( {
+		flavors: [
+			'page',	// transferData: transferData: pageModelId
+			'photo', // transferData: serverPhotoId
+			'photoInRoughPage' // transferData: assetId
+		],
+		enter: function( $dom, flavor, transferData) {
+			this.dom = $dom;
+			this.dom.addClass('drop-target');
+		},
+		leave: function( transferDone ) {
+			this.dom.removeClass('drop-target');
+		},
+		putTransferData: function($ev, flavor, transferData) {
+			switch(flavor) {
+			case 'page':
+				PB.ModelMap.model(transferData).remove({animate:true});
+			break;
+			case 'photo':
+				var book = PB.Book.default;
+				var bookPhoto = book.photo( book.bookPhotoId( transferData ));
+				book.removePhoto( bookPhoto, { animate: true } );
+			break;
+			case 'photoInRoughPage':
+				var pageAsset = PB.ModelMap.model( transferData);
+				pageAsset.page.removeAsset( pageAsset.assetId, { animate: true });
+			break;
+			}
+		}
+	});
+
+	var AddPageDraggableOptions = {
+		flavors: [
+			'newPage' // transferData: null
+		],
+		getTransferData: function($src, flavor) {
+			return null;
+		},
+		start: function( $el, ev, startLoc ) {
+			this.startTime = Date.now();
+			var bounds = $el[0].getBoundingClientRect();
+			var $dom = GUI.Util.cloneDomWithCanvas($el)
+				.addClass('touch-drag-src')
+				.css( {
+					top: startLoc.y,
+					left: startLoc.x,
+					marginLeft: bounds.left + $(document).scrollLeft() - startLoc.x,
+					marginTop: bounds.top + $(document).scrollTop() - startLoc.y + 10,
+					position: 'absolute'
+				});
+			var anchorStyling = window.getComputedStyle($el.find('a')[0]);
+			$dom.find('a').css({
+				paddingTop: anchorStyling.paddingTop,
+				paddingLeft: anchorStyling.paddingLeft,
+				paddingBottom: anchorStyling.paddingBottom,
+				paddingRight: anchorStyling.paddingRight,
+				color: anchorStyling.color,
+				textDecoration: anchorStyling.textDecoration,
+				textShadow: anchorStyling.textShadow
+			});
+			//	$dom.children().css('verticalAlign', 'top'); // eliminate LI whitespace
+			return $dom;
+		},
+		end: function(transferDone) {
+			var diff = Date.now() - this.startTime;
+			if (!transferDone && diff < 300)
+				PB.Book.default.insertRoughPage( -1, { animate: true });
+		},
+	}
 	var Buttons = {
 		init: function() {
-			AddRemoveButtons.init();
-			ResizePaletteButton.init();
-			AddPhotoButton.init();
-		}
-	}
-
-	var AddPhotoButton = {
-		init: function() {
-			$('#add-photo-btn').children('a').on( {
-				click: function(ev) {
+			// Trash
+			$('#trash-btn').addClass('pb-droppable')
+				.data( 'pb-droppable', TrashDroppable );
+			// Add page
+			$('#add-page-btn').addClass('pb-draggable')
+				.data( 'pb-draggable', new GUI.Dnd.Draggable( AddPageDraggableOptions));
+			GUI.Dnd.Util.preventDefaultDrag($('#add-page-btn'));
+			// Add photo
+			$('#add-photo-btn')
+				.on('mousedown touchstart', function() {
 					$('#add-photo-input').click();
+				})
+				.children('a').on('click', function(ev) {
+					// $('#add-photo-input').click();
 					ev.preventDefault();
-				}
-			});
+				});
 			$("#add-photo-input").on( {
 				change: function(e) {
 					for (var i=0; i<this.files.length; i++)
 						PB.Book.default.addLocalPhoto(this.files[i], {animate:true});
-				}});
-		}
-	}
-	var AddRemoveButtons = {
-		init: function() {
-			var addPageBtn = $('#add-page-btn');
-			addPageBtn.click(
-				function() { GUI.RoughWorkArea.book.insertRoughPage(-1, {animate: true} ); }
-				);
-
-			if (PB.hasTouch())
-				scope.TouchDragHandler.makeDraggable(addPageBtn, 'addRoughPage');
-			else
-				addPageBtn.attr('draggable', true).on( {
-					dragstart: function(ev) {
-						ev = ev.originalEvent;
-						ev.dataTransfer.clearData();
-						ev.dataTransfer.setData('text/plain', "my text");
-						GUI.DragStore.reset(GUI.DragStore.ADD_PAGE_BUTTON);
-						ev.dataTransfer.effectAllowed = "move";
-					},
-					dragend: function(ev) {
-						GUI.DragStore.reset();
-					}
-				});
-
-			$('#trash-btn').attr('dropzone', true).on( {
-				dragover: function(ev) {
-					ev = ev.originalEvent;
-					ev.preventDefault();
-					if (!(GUI.DragStore.hasFlavor(GUI.DragStore.ROUGH_PAGE,
-							GUI.DragStore.IMAGE, GUI.DragStore.ROUGH_IMAGE)))
-						return;
-					$(this).addClass('drop-target');
-					ev.stopPropagation();
-				},
-				dragleave: function(ev) {
-					$(this).removeClass('drop-target');
-				},
-				drop: function(ev) {
-					ev.preventDefault();
-					ev.stopPropagation();
-					$(this).removeClass('drop-target');
-					switch(GUI.DragStore.flavor) {
-					case 'roughPage':
-						PB.ModelMap.domToModel(GUI.DragStore.dom).remove({animate:true});
-						break;
-					case 'image':
-						GUI.RoughWorkArea.book.removePhoto(
-							PB.ModelMap.domToModel(GUI.DragStore.dom), {animate: true});
-						break;
-					case 'roughImage':
-						var ri = $(GUI.DragStore.dom);
-						var photo = PB.ModelMap.domToModel(ri);
-						var roughPage = PB.ModelMap.domToModel(ri.parent());
-						roughPage.removePhoto(photo, {animate: true});
-						break;
-					}
-					GUI.DragStore.hadDrop = true;
-				}
-			});
+			}});
+			ResizePaletteButton.init();
 		}
 	}
 

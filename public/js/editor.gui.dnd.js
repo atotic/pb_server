@@ -80,14 +80,6 @@
 		}
 	}
 
-	var noDragFn = function(ev) { ev.preventDefault() };
-	function preventDefaultDrag($dom) {
-		if ($dom.prop('nodeName') == 'IMG')
-			$dom.on('dragstart', noDragFn);
-		$dom.find('img').on('dragstart', noDragFn);
-	}
-
-
 	var Draggable = function(options) {
 		this.options = $.extend( {
 			flavors:['test'],
@@ -105,7 +97,7 @@
 		sanitizeDragDom: function($dom) {
 			$dom.removeClass('pb-draggable')
 				.removeClass('pb-droppable');
-			preventDefaultDrag($dom);
+			GUI.Dnd.Util.preventDefaultDrag($dom);
 			return $dom;
 		},
 		// Returns drag image
@@ -143,6 +135,30 @@
 					console.error("getTransferData not implemented", flavor);
 					return null;
 			}
+		}
+	}
+
+	var Util = {
+		noDragFn: function($ev) {
+			console.log("no drag dammit!");
+			$ev.preventDefault()
+		},
+		preventDefaultDrag: function($dom) {
+			var nodeName = $dom.prop('nodeName');
+			if (nodeName == 'IMG' || nodeName == 'A')
+				$dom.on('dragstart', this.noDragFn);
+			$dom.find('img,a').on('dragstart', this.noDragFn);
+		},
+		filterFileList: function(dragFileList, mimeRegex) {
+			// returns array of files whose mime type matches, defaults to images
+			mimeRegex = mimeRegex || "image/(png|jpeg|gif)";
+			var retVal = [];
+			for (var i=0; i<dragFileList.length; i++) {
+				var f = dragFileList.item(i);
+				if (f.type.match( mimeRegex ))
+					retVal.push(f);
+			}
+			return retVal;
 		}
 	}
 
@@ -276,6 +292,9 @@
 			return null;
 		},
 		findDroppable: function($ev) {
+			var NULL = { droppable: $(), flavor: null};
+			if (draggable == null)
+				return NULL;
 			// This function was hand-tuned to prevent crashes/hangs in iOS
 			var hidden = [];
 			function hide(hideEl) {
@@ -312,11 +331,12 @@
 												loc.y - scrollTop );
 			}
 			restoreHidden();
-			return { droppable: $(), flavor: null};
+			return NULL;
 		},
 		dragMove: function($ev) {
 			// console.log('dragMove enter');
 			$ev.preventDefault(); // stop touch scrolling
+			$ev.stopPropagation();
 			var loc = GUI.Util.getPageLocation($ev);
 			loc.x = Math.max( Math.min( loc.x, dragBounds.right ), dragBounds.left);
 			loc.y = Math.max( Math.min( loc.y, dragBounds.bottom), dragBounds.top);
@@ -369,11 +389,98 @@
 		}
 	}
 
+// Native Dnd
+// implemented by delegating native dnd events to our Dnd api
+// JS dnd events are messy: dragenter/dragleave can overlap in funny ways
+	var NativeDraggable = new Draggable( {
+		flavors: ['osFile'], // transferData: event.dataTransfer.files
+		getTransferData: function($src, flavor) {
+			var dataTransfer = $src.originalEvent.dataTransfer;
+			if (dataTransfer.files && dataTransfer.files.length > 0) {
+				console.log('got files');
+				return dataTransfer.files;
+			}
+			else if (dataTransfer.types) {
+				console.log('got file type');
+				if ('contains' in dataTransfer.types)	// Firefox
+					return dataTransfer.types.contains("Files");
+				else // Chrome
+					return dataTransfer.types.indexOf("Files") != -1;
+			}
+			console.log('got nothing');
+			return null;
+		}
+	});
+
+	var NativeDnd = {
+		dragenter: function($ev) {
+			console.log('dragenter');
+			var dragFiles = NativeDraggable.getTransferData( $ev, 'osFile');
+			if (dragFiles) {
+				draggable = NativeDraggable;
+				$ev.stopPropagation();
+				$ev.preventDefault();
+			}
+		},
+		dragover: function($ev) {
+			console.log('dragover');
+			if (!draggable)
+				return;
+			var d = Dnd.findDroppable($ev);
+			transferFlavor = d.flavor;
+			$src = $ev;	// hacky, in native dnd, $src is event instead of dom
+			Dnd.setDest( d.droppable );
+			if (droppable)
+				droppable.move($ev, transferFlavor);
+			$ev.stopPropagation();
+			$ev.preventDefault();
+		},
+		dragleave: function($ev) {
+			console.log('dragleave');
+			$ev.stopPropagation();
+			$ev.preventDefault();
+			if (draggable)
+				Dnd.setDest( $());
+		},
+		drop: function($ev) {
+			console.log('drop');
+			var dragFiles = NativeDraggable.getTransferData( $ev, 'osFile');
+			if (dragFiles) {
+				if (droppable) { // let droppable handle it
+					try {
+						var transferDone = droppable.putTransferData($ev, transferFlavor, dragFiles);
+						droppable.leave();
+						$dest = $();
+						droppable = null;
+					}
+					catch(ex) {
+					}
+				}
+				else { // add to book
+					var book = PB.Book.default;
+					GUI.Dnd.Util.filterFileList( dragFiles )
+						.forEach( function( f ) {
+							book.addLocalPhoto( f, { animate: true } );
+						});
+				}
+			}
+			$ev.preventDefault();
+			$ev.stopPropagation();
+		}
+	}
 	$(document).on('touchstart.dnd mousedown.dnd', ".pb-draggable", Dnd.dragStart );
+	$('body')
+		.on({
+		dragenter: function(ev) { return NativeDnd.dragenter( ev ) },
+		dragover: function(ev) { return NativeDnd.dragover( ev ) },
+		dragleave: function(ev) { return NativeDnd.dragleave( ev ) },
+		drop: function(ev) { return NativeDnd.drop( ev ) }
+	});
+
 	scope.Dnd = {
-		preventDefaultDrag: preventDefaultDrag,
 		Dnd: Dnd,
 		Draggable: Draggable,
-		Droppable: Droppable
+		Droppable: Droppable,
+		Util: Util
 	};
 })(GUI);

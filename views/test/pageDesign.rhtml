@@ -28,6 +28,11 @@
 <%= asset_link("editor.pb.page.commands.js") %>
 
 <style type="text/css">
+* {
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+}
 #tools {
 	position: fixed;
 	top: 0;
@@ -475,7 +480,7 @@ var Controller = {
 			);
 			$img.addClass('pb-draggable')
 				.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions ));
-			GUI.Dnd.preventDefaultDrag($img);
+			GUI.Dnd.Util.preventDefaultDrag($img);
 			$('#photoPicker').append($img);
 		}
 		photoIds.forEach( makePhoto );
@@ -496,7 +501,7 @@ var Controller = {
 					{designId: designId});
 				$icon.addClass('pb-draggable')
 					.data('pb-draggable', new GUI.Dnd.Draggable( designOptions));
-					GUI.Dnd.preventDefaultDrag($icon);
+					GUI.Dnd.Util.preventDefaultDrag($icon);
 				retVal.push($icon);
 		//			assignCb($li, designId)
 			}
@@ -565,7 +570,7 @@ var Controller = {
 				$div.addClass('pb-draggable')
 					.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions ))
 					.css('background', 'transparent');
-				GUI.Dnd.preventDefaultDrag($div);
+				GUI.Dnd.Util.preventDefaultDrag($div);
 				retVal.push($div);
 			}
 			return retVal;

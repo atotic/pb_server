@@ -267,7 +267,6 @@
 					duplicatePhotoId = p;
 			}
 			if (duplicatePhotoId) {
-				debugger;
 				// Replace photo in all pages with the duplicate
 				var pageList = this.pageList;
 				for (var i=0; i<pageList.length; i++) {
@@ -337,12 +336,12 @@
 				return [{model:this, prop: 'pageList'}];
 			else if (document_var == this.localData.document.pages) {
 				if (objectPath.length > 3) {
-					var roughPage = member(objectPath, 2);
-					var rough_page_var = member(objectPath, 3);
-					if (rough_page_var == roughPage.assets) {
+					var page = member(objectPath, 2);
+					var page_var = member(objectPath, 3);
+					if (page_var == page.assets) {
 						return [
-						{model: roughPage, prop: 'assetList'},
-						{model: this, prop:'photoList'}
+							{ model: page, prop: 'assetList'},
+							{ model: this, prop: 'photoList'}
 						]
 					}
 					else
@@ -381,9 +380,13 @@
 				}
 //				t.print("patch");
 				PB.startChangeBatch();
-				var options = {animate: broadcastChanges.length < 10};
-				for (i=0; i<broadcastChanges.length; i++)
-					PB.broadcastChange(broadcastChanges[i].model, broadcastChanges[i].prop, options);
+				var options = { animate: broadcastChanges.length < 10 };
+				var THIS = this;
+				broadcastChanges.forEach( function( change ) {
+					if (change.prop == 'assetList')
+						THIS.page( change.model.id ).registerAssetIdResolvers();
+					PB.broadcastChange(change.model, change.prop, options );
+				});
 				PB.broadcastChangeBatch();
 //				t.print("broadcast");
 			}
@@ -492,7 +495,7 @@
 				return null;
 			}
 		},
-		addServerPhoto: function( serverPhotoId ) {
+		addServerPhoto: function( serverPhotoId, options ) {
 			var localId = this.generateId();
 			this.localData.document.photoList.push(localId);
 			this.localData.document.photoMap[localId] = serverPhotoId;

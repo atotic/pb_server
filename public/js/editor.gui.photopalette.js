@@ -6,14 +6,15 @@
 "use strict";
 
 	var PhotoPaletteDraggableOptions = {
-		flavors: ['photo'],	// photo belongs to a particular book
-		photoId: 'your id here',
+		flavors: ['photo'],	// transferData: severPhotoId
 		book: 'book',
 		getTransferData: function(ev, $src, flavor) {
-			return this.photoId;
+			var bookPhoto = PB.ModelMap.model( this.bookPhotoId );
+			return bookPhoto.serverPhotoId;
 		},
 		start: function( $el, ev, startLoc ) {
 			this.el = $el;
+			this.bookPhotoId = $el.data('model_id');
 			var bounds = $el[0].getBoundingClientRect();
 			var $dom = GUI.Util.cloneDomWithCanvas($el)
 				.addClass('touch-drag-src')
@@ -25,7 +26,7 @@
 					marginTop: bounds.top + $(document).scrollTop() - startLoc.y,
 					position: 'absolute'
 				});
-			GUI.Dnd.preventDefaultDrag($dom);
+			GUI.Dnd.Util.preventDefaultDrag($dom);
 			$el.css('opacity', 0);
 			return $dom;
 		},
@@ -36,7 +37,8 @@
 
 	var PhotoPaletteDroppable = new GUI.Dnd.Droppable({
 		flavors: [
-			'photoInRoughPage'	// transferData: assetId
+			'photoInRoughPage',	// transferData: assetId
+			'osFile'
 		],
 		enter: function($dom, flavor, transferData) {
 			this.dom = $dom;
@@ -46,8 +48,19 @@
 			this.dom.removeClass('drop-target');
 		},
 		putTransferData: function($ev, flavor, transferData) {
-			var pageAsset = PB.ModelMap.model( transferData );
-			pageAsset.page.removeAsset( pageAsset.assetId, { animate: true });
+			switch(flavor) {
+			case 'photoInRoughPage':
+				var pageAsset = PB.ModelMap.model( transferData );
+				pageAsset.page.removeAsset( pageAsset.assetId, { animate: true });
+			break;
+			case 'osFile':
+				var book = PB.ModelMap.domToModel($('#photo-list'));
+				GUI.Dnd.Util.filterFileList( transferData )
+					.forEach( function( file ) {
+						book.addLocalPhoto(file, { animate:false } );
+					});
+			break;
+			}
 		}
 	});
 
@@ -69,10 +82,9 @@
 			var model = PB.ModelMap.domToModel( $imgDiv );
 			if (!model)
 				return;
-			var dragOptions = $.extend( {}, PhotoPaletteDraggableOptions, { photoId: model.serverPhotoId } );
 			$imgDiv.addClass('pb-draggable')
-				.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions ));
-			GUI.Dnd.preventDefaultDrag($imgDiv);
+				.data('pb-draggable', new GUI.Dnd.Draggable( PhotoPaletteDraggableOptions ));
+			GUI.Dnd.Util.preventDefaultDrag($imgDiv);
 		},
 		makeDroppable: function() {
 			$('#photo-list-container').addClass('pb-droppable')

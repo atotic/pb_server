@@ -81,7 +81,6 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 		bindToBook: function(book) {
 			$('body')
 				.data('model_id', book.id)
-				.attr('dropzone', true)
 				.on(PB.MODEL_CHANGED, function(ev, model, prop, options) {
 					switch(prop) {
 						case 'corrupted':
@@ -97,38 +96,6 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 						break;
 					}
 				});
-			var bodyDropHandler = {
-				dragenter: function(ev) {
-//					console.log('dragenter');
-//					ev = ev.originalEvent;
-//					var isFile = ev.dataTransfer.types.contains("Files");
-				},
-				dragover: function(ev) {
-					// stopping event here prevents default action, which is loading new url
-//					console.log('dragover');
-					stopEvent(ev);
-				},
-				dragleave: function(ev) {
-//					$('#photo-list').removeClass('drop-target');
-//					console.log('dragleave');
-					stopEvent(ev);
-				},
-				drop: function(ev) {
-					ev = ev.originalEvent;
-//					$('#photo-list').removeClass('drop-target');
-					var files = ev.dataTransfer.files;
-					if (files) {
-						for (var i=0; i<files.length; i++) {
-							var f = files.item(i);
-							if (f.type.match("image/(png|jpeg|gif)"))
-								PB.Book.default.addLocalPhoto(f, {animate: true});
-						}
-					}
-//					console.log('drop');
-					stopEvent(ev);
-				}
-			}
-			$('body').on(bodyDropHandler);
 			GUI.PhotoPalette.bindToBook(book);
 			GUI.WorkArea.bindToBook(book);
 			window.document.title = book.title + " PhotoBook";

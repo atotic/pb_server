@@ -334,7 +334,7 @@
 					marginTop: -height / 2,
 					background: 'transparent'
 				});
-			GUI.Dnd.preventDefaultDrag($dom);
+			GUI.Dnd.Util.preventDefaultDrag($dom);
 			return $dom;
 		},
 		getTransferData: function(ev, $src, flavor) {
@@ -380,7 +380,7 @@
 					border: '1px dashed white'
 				})
 				.prop('src', photo.getUrl(PB.PhotoProxy.SMALL));
-			GUI.Dnd.preventDefaultDrag($drag);
+			GUI.Dnd.Util.preventDefaultDrag($drag);
 			return $drag;
 		}
 	}

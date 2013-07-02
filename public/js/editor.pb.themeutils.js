@@ -172,7 +172,7 @@
 		},
 		initPhoto: function( defOp, assetData) {
 			// load the photo here
-			var url = PB.ServerPhotoCache.get( assetData.photoId).getUrl( PB.PhotoProxy.SMALL );
+			var url = this.page.book.photo( assetData.photoId).getUrl( PB.PhotoProxy.SMALL );
 			var img = new Image();
 			img.onload = function() {
 				assetData.image = img;

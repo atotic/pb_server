@@ -115,9 +115,12 @@
 							}
 						});
 					}
-					if (editId)
+					if (editId) {
+						var sel = PB.Page.Selection.findClosest( $pageDom);
+						pageAsset.page.selectItem( sel, editId);
 						Commands.cmdSet.getCommandById( 'editText' )
 							.action( $pageDom, editId);
+					}
 				}
 			}));
 			return this.cmdSet;

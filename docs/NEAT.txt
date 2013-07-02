@@ -1,4 +1,6 @@
 Stream:
+CC# vault: https://spreedly.com/
+Group chat with WebRTC: https://talky.io/
 NIce drawings, would love his layouts: http://www.flickr.com/photos/brentcouchman/
 Nice color picker: http://color.hailpixel.com/
 Some guy from Kiev that did md5 asm.js http://sagens.me/. Got a brain, might be useful
