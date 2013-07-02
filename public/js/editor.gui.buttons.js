@@ -40,7 +40,10 @@
 		getTransferData: function($src, flavor) {
 			return null;
 		},
-		start: function( $el, ev, startLoc ) {
+		isTouch: false,
+		start: function( $el, $ev, startLoc ) {
+			console.log('start', $ev.type );
+			this.isTouch = this.isTouch || ($ev.type == 'touchstart');
 			this.startTime = Date.now();
 			var bounds = $el[0].getBoundingClientRect();
 			var $dom = GUI.Util.cloneDomWithCanvas($el)
@@ -65,7 +68,14 @@
 			//	$dom.children().css('verticalAlign', 'top'); // eliminate LI whitespace
 			return $dom;
 		},
-		end: function(transferDone) {
+		end: function(transferDone, $ev) {
+			var diff = Date.now() - this.startTime;
+			if (diff > 300)
+				this.isTouch = false;
+
+			if ( this.isTouch && $ev.type == 'mouseup') // prevents double action when mouse & touch fire together
+				return;
+			console.log('end');
 			var diff = Date.now() - this.startTime;
 			if (!transferDone && diff < 300)
 				PB.Book.default.insertRoughPage( -1, { animate: true });
@@ -114,7 +124,7 @@
 					},
 					touchmove: function(ev) {
 						ev = ev.originalEvent;
-						var newTouch = GUI.TouchDragHandler.touchItemById(ev.changedTouches, touchId);
+						var newTouch = ResizePaletteButton.touchItemById(ev.changedTouches, touchId);
 						if (!newTouch)
 
 							return;
@@ -159,6 +169,13 @@
 					}
 				});
 			}
+		},
+		touchItemById: function(touchList, identifier) {
+			for (var i=0; i<touchList.length; i++) {
+				if (touchList[i].identifier == identifier)
+					return touchList[i];
+			}
+			return null;
 		},
 		startDrag: function(clientY) {
 			lastMouse = clientY;

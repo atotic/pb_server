@@ -407,64 +407,6 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 	scope.Util = Util;
 })(window.GUI);
 
-// DragStore is a global used to store dragged local data
-// Why? Html drag can only drag strings, we need js objects
-// Limitation: holds only one flavor
-(function(window) {
-	var DragStore = {
-		get hadDrop() { return this._hadDrop; },
-		set hadDrop(val) { this._hadDrop = val; },
-
-		reset: function(type, element, props) {
-			this._source = null;
-			this._hadDrop = false;
-			if (type)
-				this.setFlavor(type, element, props);
-		},
-
-		// Drag flavors:
-		ROUGH_PAGE: 'roughPage',
-		IMAGE: 'image',
-		ADD_PAGE_BUTTON: 'addRoughPage',
-		ROUGH_IMAGE: 'roughImage',
-		OS_FILE: 'os_file',
-
-		// Common props:
-		// dom: dom element being dragged
-		setFlavor: function(flavor, props) {
-			this._source = { flavor: flavor }
-			$.extend(this._source, props);
-		},
-		setDataTransferFlavor: function(dataTransfer) {
-			var isFile;
-			if (!dataTransfer.types)
-				return;
-			if ('contains' in dataTransfer.types)	// Firefox
-				isFile = dataTransfer.types.contains("Files");
-			else // Chrome
-				isFile = dataTransfer.types.indexOf("Files") != -1;
-			if (isFile)
-				this.setFlavor(DragStore.OS_FILE, true);
-		},
-		get flavor() {
-			return this._source ? this._source.flavor : null;
-		},
-		prop: function(propName) {
-			return (this._source && (propName in this._source)) ? this._source[propName] : null;
-		},
-		get dom() {
-			return this.prop('dom');
-		},
-		hasFlavor: function() {
-			if (this._source)
-				for (var i=0; i<arguments.length; i++)
-					if (arguments[i] == this._source.flavor)
-						return true;
-			return false;
-		}
-	};
-	window.DragStore = DragStore;
-})(window.GUI);
 
 (function(scope) {
 	var Error = {

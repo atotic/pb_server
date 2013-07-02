@@ -101,10 +101,10 @@
 			return $dom;
 		},
 		// Returns drag image
-		start: function( $el, ev, startLoc ) {
+		start: function( $el, $ev, startLoc ) {
 			var $dom;
 			if ( this.options.start )
-				$dom = this.options.start($el, ev, startLoc);
+				$dom = this.options.start($el, $ev, startLoc);
 			if (!$dom) {
 				var bounds = $el[0].getBoundingClientRect();
 				$dom = GUI.Util.cloneDomWithCanvas($el)
@@ -120,9 +120,9 @@
 			}
 			return this.sanitizeDragDom($dom);
 		},
-		end: function(transferDone) {
+		end: function(transferDone, $ev) {
 			if ( this.options.end )
-				this.options.end(transferDone);
+				this.options.end(transferDone, $ev);
 		},
 		getTransferData: function($src, flavor) {
 			if (this.options.getTransferData)
@@ -258,17 +258,17 @@
 				// console.log('dest removed');
 			}
 		},
-		dragStart: function(ev) {
+		dragStart: function($ev) {
 			// console.log("dragStart");
 			webkitIpadBugWorkaround.startFix();
 			if ($dragImage)	// if we get both mousedown and touchstart do only one
 				return;
-			$src = $(ev.currentTarget);
+			$src = $($ev.currentTarget);
 
 			// create a clone
-			startLoc = GUI.Util.getPageLocation(ev);
+			startLoc = GUI.Util.getPageLocation($ev);
 			draggable = $src.data('pb-draggable') || testDraggable;
-			$dragImage = draggable.start( $src, ev, startLoc );
+			$dragImage = draggable.start( $src, $ev, startLoc );
 			$(document.body).append($dragImage);
 
 			// set dragging bounds
@@ -365,13 +365,13 @@
 				return false;
 			}
 		},
-		dragEnd: function(ev) {
+		dragEnd: function($ev) {
 			// console.log('dragEnd');
 			webkitIpadBugWorkaround.endFix();
 
 			var transferDone = false;
 			if ($dest.length > 0)
-				transferDone = Dnd.doTransfer(ev);
+				transferDone = Dnd.doTransfer($ev);
 			if (transferDone) {
 				$dragImage.remove();
 			}
@@ -384,7 +384,7 @@
 					complete: function() { $di.remove();}
 				});
 			}
-			draggable.end(transferDone);
+			draggable.end( transferDone, $ev );
 			Dnd.reset();
 		}
 	}

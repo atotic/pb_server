@@ -149,63 +149,6 @@
 				retVal.heights.push(retVal.heights[i++] + photoHeight);
 			return retVal;
 		},
-		startDragEffect: function(tile) {
-			$(tile).css('opacity', '0');
-		},
-		stopDragEffect: function(tile) {
-			if (!$(tile).data('pb.markedForDelete'))
-				$(tile).css('opacity', '1.0');
-		},
-		hasDragFlavors: function() {
-			return GUI.DragStore.hasFlavor(
-				GUI.DragStore.OS_FILE,
-				GUI.DragStore.ROUGH_IMAGE);
-		},
-		makeDroppableOld: function() {
-
-			$('#photo-list-container').attr('dropzone', true).on({
-				dragenter: function(ev) {
-					GUI.DragStore.setDataTransferFlavor(ev.originalEvent.dataTransfer);
-					if (!PhotoPalette.hasDragFlavors())
-						return;
-//					console.log('dragenter palette');
-					ev.preventDefault();
-				},
-				dragover: function(ev) {
-					if (!PhotoPalette.hasDragFlavors())
-						return;
-//					console.log('dragover palette');
-					$(this).addClass('drop-target');
-				},
-				dragleave: function(ev) {
-					if (!PhotoPalette.hasDragFlavors())
-						return;
-//					console.log('dragleave palette');
-					$(this).removeClass('drop-target');
-				},
-				drop: function(ev) {
-					$(this).removeClass('drop-target');
-					if (!PhotoPalette.hasDragFlavors())
-						return;
-					ev = ev.originalEvent;
-					switch(GUI.DragStore.flavor) {
-						case 'os_file': // PB.DragStore.OS_FILE:
-						return; // Document will handle the drop
-						case 'roughImage':
-							var ri = $(GUI.DragStore.dom);
-							var photo = PB.ModelMap.domToModel(ri);
-							var roughPage = PB.ModelMap.domToModel(ri.parent());
-							roughPage.removeAsset( roughPage.findAssetIdByPhotoId(photo.id));
-							ev.stopPropagation();
-							ev.preventDefault();
-							GUI.DragStore.hadDrop = true;
-						break;
-						default:
-						break;
-					}
-				}
-			});
-		},
 		setTileStatus: function(tile, model) {
 			var statusDiv = tile.children('.status');
 			var msg = model.status;
@@ -413,55 +356,7 @@
 		}
 	}
 
-	var PhotoPaletteDnd = {
-		makeDraggable: function(imgdiv) {
-			$(imgdiv).attr('draggable', true).on( {
-				'dragstart': function(ev) {
-					ev = ev.originalEvent;
-					ev.dataTransfer.clearData();
-					var img = $(this).children('img').get(0);
-					try {
-						ev.dataTransfer.setData('text/uri-list', img.src);
-					}
-					catch(ex) { // IE
-						console.warn("IE setData");
-						ev.dataTransfer.setData("URL", img.src);
-					}
-					var canvas = GUI.Util.imgToCanvas(img);
-					var r = this.getBoundingClientRect();
-					try {
-						ev.dataTransfer.setDragImage(canvas,ev.clientX - r.left, ev.clientY - r.top);
-					}
-					catch(ex) {
-						console.warn("IE setDragImage");
-					}
-					PhotoPalette.startDragEffect(this);
-					GUI.DragStore.reset(GUI.DragStore.IMAGE, {dom: this});
-					ev.effectAllowed = 'move';
-				},
-				'dragend': function(ev) {
-					PhotoPalette.stopDragEffect(this);
-					GUI.DragStore.reset();
-				}
-			});
-		}
-	}
-	var PhotoPaletteTouch = {
-		makeDraggable: function(tile) {
-			scope.TouchDragHandler.makeDraggable(tile, 'image',
-				function() { PhotoPalette.startDragEffect(GUI.DragStore.dom);},
-				function() { PhotoPalette.stopDragEffect(GUI.DragStore.dom)}
-				);
-		}
-	}
-
 	$.extend(PhotoPalette, GUI.Mixin.DelayUntilVisible);
-
-	// if (PB.hasTouch()) {
-	// 	$.extend(PhotoPalette, PhotoPaletteTouch);
-	// }
-	// else
-	// 	$.extend(PhotoPalette, PhotoPaletteDnd);
 
 	scope.PhotoPalette = PhotoPalette;
 })(window.GUI);
