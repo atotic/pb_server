@@ -351,7 +351,7 @@ patch format:
 			case 'set':
 				var target = JsonPath.query(obj, diff.path, {'just_one': true, 'ghost_props': true});
 				if (target) {
-					if (change_record) change_record.push(['set', target]);
+					if (change_record) change_record.push( { op: 'set', target: target });
 					target.set(diff.args);
 				}
 				else
@@ -360,7 +360,7 @@ patch format:
 			case 'insert':
 				var target = JsonPath.query(obj, diff.path, {'just_one': true, 'ghost_props': true});
 				if (target) {
-					if (change_record) change_record.push(['insert', target]);
+					if (change_record) change_record.push({ op: 'insert', target: target });
 					target.insert(diff.args);
 				}
 				else
@@ -369,7 +369,7 @@ patch format:
 			case 'delete':
 				var target = JsonPath.query(obj, diff.path, {'just_one':true });
 				if (target) {
-					if (change_record) change_record.push(['delete', target]);
+					if (change_record) change_record.push({ op: 'delete', target: target });
 					target.delete(diff.args);
 				}
 				else
@@ -390,8 +390,8 @@ patch format:
 					dest = JsonPath.query(obj, diff.path + "[" + destPos + "]", {just_one:true});
 					if (src && dest) {
 						var tmp = src.val();
-						if (change_record) change_record.push(['set', src]);
-						if (change_record) change_record.push(['set', dest]);
+						if (change_record) change_record.push({op: 'set', target: src });
+						if (change_record) change_record.push({op: 'set', target: dest });
 						src.set(dest.val());
 						dest.set(tmp);
 					}
@@ -556,8 +556,9 @@ patch format:
 
 	// Patches the object with diff.
 	// Return: patched copy of the object
-	// Return: [patched_copy, changes] if options.record_changes is true.
+	// Return: [patched_copy, change_record] if options.record_changes is true.
 	//
+	// change_record: [ { op: set|insert|delete, target: targetPath }]
 	// Do not patch in place, because patch can fail half-way, leaving object inconsistent
 	function jsonPatch(obj, diff, options) {
 		options = mergeOptions(options, {record_changes: false})

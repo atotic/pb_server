@@ -22,7 +22,6 @@ class Book < Sequel::Model(:books)
 <<-eos
 {
 	"title": #{self.title.to_json},
-	"bookTemplateId": null,
 	"themeId": null,
 	"photoList": [],
 	"photoMap": {},

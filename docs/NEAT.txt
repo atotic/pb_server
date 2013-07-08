@@ -1,4 +1,5 @@
 Stream:
+I Can Haz Cheezburger Huh: I see my role here as a person whose job is to make playgrounds and keep them open. What you do on that playground is up to you, and what is awesome is watching people have a great time on that playground.
 Balanced Payments isn’t just another payments processor. They’ve open sourced their whole site, their chat logs are publicly available, and they even discuss their roadmap in the open. These people get openness.
 CC# vault: https://spreedly.com/
 Group chat with WebRTC: https://talky.io/

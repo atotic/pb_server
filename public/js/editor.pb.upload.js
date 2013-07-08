@@ -76,8 +76,10 @@
 			Uploader.processQueue();
 		},
 		getNextRequest: function() {
-			if (this.activeRequest)
-					return null;
+			if (this.activeRequest) {
+				// console.log("getNextRequest: activeRequest outstanding");
+				return null;
+			}
 			if (!NetworkErrorRetry.retryOk()) {
 				window.setTimeout(function()
 					{Uploader.processQueue() },

@@ -11,7 +11,6 @@
  			id: book database id
  			last_diff: id of the last diff that was applied to this document
  			document:
- 				bookTemplateId: book template
  				pageList: [page_id*]
  				pages: {
  					page_id => Page object
@@ -103,29 +102,34 @@
 			}
 		},
 		generateDesignId: function(page) {
+			// temporary function, will be replaced by
 			if (page.designId)
 				return;
 			else
 				page.setDesign( PB.ThemeUtils.randomDesignId(this.themeId) );
 		},
-		get bookTemplateId() {
-			debugger;
-			return this.localData.document.bookTemplateId;
-		},
-		setDimensions: function(width, height) {
-			if (this.localData.document.width == width
-				&& this.localData.document.height == height)
+		setDimensions: function(dimensions) {
+			if (this.localData.document.dimensions
+				&& dimensions
+				&& this.localData.document.dimensions.width == dimensions.width
+				&& this.localData.document.dimensions.height == dimensions.height)
 				return;
-			this.localData.document.width = width;
-			this.localData.document.height = height;
+			if (dimensions == null)
+				this.localData.document.dimensions = null;
+			else
+				this.localData.document.dimensions = { width: dimensions.width, height: dimensions.height };
 			// update page dimensions
-			var dims = {
-				'page': { width: width, height: height},
-				'cover': { width: width, height: height},
-				'back': { width: width, height: height},
-				'cover-flap': { width: width / 3, height: height},
-				'back-flap': { width: width / 3, height: height}
-			}
+			var dims;
+			if ( dimensions != null)
+				dims = {
+					'page': dimensions,
+					'cover': dimensions,
+					'back': dimensions,
+					'cover-flap': { width: dimensions.width / 3, height: dimensions.height},
+					'back-flap': { width: dimensions.width / 3, height: dimensions.height}
+				}
+			else
+				dims = { page: null, cover: null, back: null, 'cover-flap': null, 'back-flap': null };
 			var pageList = this.pageList;
 			for (var i=0; i<pageList.length; i++) {
 				var page = this.page(pageList[i]);
@@ -135,10 +139,7 @@
 			PB.broadcastChange( this, 'dimensions');
 		},
 		get dimensions() {
-			return {
-				width: this.localData.document.width,
-				height: this.localData.document.height
-			}
+			return this.localData.document.dimensions || { width: undefined, height: undefined};
 		},
 		serverPhotoId: function(bookPhotoId) { // bookPhotoId => serverPhotoId
 			return this.localData.document.photoMap[bookPhotoId];
@@ -322,8 +323,10 @@
 				else
 					return null;
 			}
-			var objectPath = change[1].objectPath();
+			var objectPath = change.target.objectPath();
 			var document_var= member(objectPath, 1);
+			if (document_var == this.localData.document.dimensions)
+				return [ { model: this, prop: 'dimensions'} ];
 			if (document_var == this.localData.document.pageList)
 				return [{model:this, prop: 'pageList'}];
 			else if (document_var == this.localData.document.pages) {
@@ -335,15 +338,17 @@
 							{ model: page, prop: 'assetList'},
 							{ model: this, prop: 'photoList'}
 						]
+					} else if (page_var == page.dimensions) {
+						return [ { model: page, prop: 'dimensions' }];
 					}
 					else
-						console.log(change[0], change[1].path());
+						console.log(change.op, change.targetpath());
 				}
 			}
 			else if (document_var == this.localData.document.photoList)
 				return [{model:this, prop: 'photoList'}];
 			else
-				console.log(change[0], change[1].path());
+				console.log(change.op, change.target.path());
 			return [];
 		},
 		applyBroadcastPatches: function(patchArray) {
@@ -397,9 +402,8 @@
 			return diff;
 		},
 		getSaveDeferred: function() {
-
 		// Preflight checks
-
+			// console.log('getSaveDeferred');
 			if (this._corrupted)
 				return null;
 			// safeguard, do not save book with temporary photo ids
@@ -483,6 +487,7 @@
 						break;
 				}
 			});
+			// console.log('getSaveDeferred success');
 			return ajax;
 		},
 		addLocalPhoto: function(localFile, options) {
@@ -712,7 +717,6 @@
 			last_diff: 0,
 			document: {
 				title: "Untitled",
-				bookTemplateId: null,
 				themeId: null,
 				pageList: [],
 				pages: {},
