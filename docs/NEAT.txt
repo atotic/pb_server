@@ -1,4 +1,5 @@
 Stream:
+Balanced Payments isn’t just another payments processor. They’ve open sourced their whole site, their chat logs are publicly available, and they even discuss their roadmap in the open. These people get openness.
 CC# vault: https://spreedly.com/
 Group chat with WebRTC: https://talky.io/
 NIce drawings, would love his layouts: http://www.flickr.com/photos/brentcouchman/

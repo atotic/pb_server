@@ -105,8 +105,12 @@ var DesignWorkArea = {
 	get currentSelections() {	// all selections in the page
 		var pages = this.designPages;
 		var retVal = [];
-		if (pages.left) retVal.push( pages.left.data('page-selection'));
-		if (pages.right) retVal.push( pages.right.data('page-selection'));
+		var leftSel = pages.left ? pages.left.data('page-selection') : null;
+		var rightSel = pages.right ? pages.right.data('page-selection') : null;
+		if (leftSel)
+			retVal.push(leftSel);
+		if (rightSel)
+			retVal.push(rightSel);
 		return retVal;
 	},
 	clearSelection: function() {

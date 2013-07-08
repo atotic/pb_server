@@ -16,7 +16,8 @@ class Book < Sequel::Model(:books)
 		super
 		self.title ||= 'untitled'
 		self.last_diff ||= 0
-		page_ids = [ rand(36**6).to_s(36), rand(36**6).to_s(36), rand(36**6).to_s(36), rand(36**6).to_s(36) ]
+		page_ids = []
+		20.times { page_ids.push rand(36**6).to_s(36) }
 		self.document ||=
 <<-eos
 {
@@ -25,16 +26,16 @@ class Book < Sequel::Model(:books)
 	"themeId": null,
 	"photoList": [],
 	"photoMap": {},
-	"pageList": ["cover", "cover-flap", "back-flap", "back","#{page_ids[0]}","#{page_ids[1]}","#{page_ids[2]}","#{page_ids[3]}"],
+	"pageList": ["#{page_ids[0]}","#{page_ids[1]}","#{page_ids[2]}","#{page_ids[3]}","#{page_ids[4]}","#{page_ids[5]}","#{page_ids[6]}","#{page_ids[7]}"],
 	"pages": {
-		"cover": { "id": "cover", "assets": { "ids":[] } },
-		"cover-flap": { "id": "cover-flap", "assets": { "ids":[] } },
-		"back-flap": { "id": "back-flap", "assets": { "ids":[] } },
-		"back": {"id": "back", "assets": { "ids":[] } },
-		"#{page_ids[0]}": {"id": "#{page_ids[0]}", "assets": { "ids":[] } },
-		"#{page_ids[1]}": {"id": "#{page_ids[1]}", "assets": { "ids":[] } },
-		"#{page_ids[2]}": {"id": "#{page_ids[2]}", "assets": { "ids":[] } },
-		"#{page_ids[3]}": {"id": "#{page_ids[3]}", "assets": { "ids":[] } }
+		"#{page_ids[0]}": {"id": "#{page_ids[0]}", "assets": { "ids":[] }, "kind": "cover"},
+		"#{page_ids[1]}": {"id": "#{page_ids[1]}", "assets": { "ids":[] }, "kind": "cover-flap" },
+		"#{page_ids[2]}": {"id": "#{page_ids[2]}", "assets": { "ids":[] }, "kind": "back-flap" },
+		"#{page_ids[3]}": {"id": "#{page_ids[3]}", "assets": { "ids":[] }, "kind": "back" },
+		"#{page_ids[4]}": {"id": "#{page_ids[4]}", "assets": { "ids":[] } },
+		"#{page_ids[5]}": {"id": "#{page_ids[5]}", "assets": { "ids":[] } },
+		"#{page_ids[6]}": {"id": "#{page_ids[6]}", "assets": { "ids":[] } },
+		"#{page_ids[7]}": {"id": "#{page_ids[7]}", "assets": { "ids":[] } }
 	}
 }
 eos

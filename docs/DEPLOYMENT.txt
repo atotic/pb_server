@@ -1,3 +1,7 @@
+Want:
+vagrant for devs, local ip login, just like oldreader setup
+redis, mongo?
+
 
 See pb_chrome/docs/linux_install for cold deployment script
 Keeping servers up:

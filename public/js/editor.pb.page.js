@@ -9,6 +9,7 @@ BookPage JSON {
 		asset_id : { asset }
 		asset_id2: { asset }
 	},
+	dimensions: null
 	designId: null,
 	layoutId: null,
 	layoutData: null,
@@ -85,27 +86,32 @@ asset widget {
 		},
 		type: function() {
 			debugger; // should use get pageClass()
-			if ( this.id.match(coverRegex))
-				return 'cover';
-			else
-				return 'pages';
 		},
 		get photoList() {
 			debugger;
 		},
-
+		get dimensions() {
+			return this.p.dimensions;
+		},
+		set dimensions(d) {
+			if (d == null)
+				this.p.dimensions = d;
+			else
+				this.p.dimensions = { width: d.width, height: d.height };
+			PB.broadcastChange(this, 'dimensions');
+		},
+		get needReflow() {
+			return this.p.needReflow;
+		},
 		// indexOf this page inside the book
 		indexOf: function() {
 			return this.book.pageList.indexOf(this.id);
 		},
-		get pageClass() {	// cover | cover-flap | back-flap | back | oage
-			if ( this.id.match(coverRegex))
-				return this.id;
-			else
-				return 'page';
+		get kind() { // cover | cover-flap | back-flap | back | page
+			return this.p.kind || 'page';
 		},
 		pageTitle: function() {
-			switch(this.id) {
+			switch(this.kind) {
 				case 'cover': return 'cover';
 				case 'cover-flap': return 'flap';
 				case 'back-flap': return 'flap';
@@ -188,13 +194,6 @@ asset widget {
 					retVal.push(assetId);
 			}
 			return retVal;
-		},
-		get dimensions() {
-			return this.book.getPageDimensions(this.id, this.pageClass);
-		},
-		dimensionsChanged: function(width, height) {
-			this.p.needReflow = true;
-			PB.broadcastChange(this, 'dimensions');
 		},
 		broadcastPhotosChanged: function(options) {
 			this.book._pagePhotosChanged(this, options);
@@ -550,6 +549,7 @@ asset widget {
 		},
 
 		reflow: function() {
+			console.log('doing reflow');
 			this.p.needReflow = true;
 			if ( !this.p.designId )
 				return;
@@ -1347,12 +1347,6 @@ text_id => Points to an object in page: page.texts[text_id]. Page unique, not gl
 		// indexOf this page inside the book
 		indexOf: function() {
 			return this.book.pageList.indexOf(this.id);
-		},
-		get pageClass() {
-			if ( this.id.match(coverRegex))
-				return this.id;
-			else
-				return 'page';
 		},
 		pageTitle: function() {
 			switch(this.id) {

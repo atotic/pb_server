@@ -50,7 +50,7 @@
 				var model_id = target.data('model_id');
 				if (model_id == this.sourcePage) // can't drag on itself
 					return false;
-				if (PB.ModelMap.model(model_id).pageClass != 'page')
+				if (PB.ModelMap.model(model_id).kind != 'page')
 					return false;
 			break;
 			}
@@ -261,8 +261,8 @@
 		},
 		createRoughPage: function(pageModel) {
 			var domPage = $("<div class='rough-page'><p>" + pageModel.pageTitle() + "</p></div>");
-			if (pageModel.pageClass !== 'page')
-				domPage.addClass('rough-page-' + pageModel.pageClass);
+			if (pageModel.kind !== 'page')
+				domPage.addClass('rough-page-' + pageModel.kind);
 
 			// Hook it up to the model
 			domPage.data('model_id', pageModel.id);
@@ -273,9 +273,9 @@
 			domPage.addClass('pb-droppable')
 				.data('pb-droppable', RoughPageDroppable);
 			var dragOptions = $.extend({}, RoughPageDraggableOptions, { pageId: pageModel.id });
-			if (pageModel.pageClass === 'page') {
-			domPage.addClass('pb-draggable')
-				.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions ));
+			if (pageModel.kind === 'page') {
+				domPage.addClass('pb-draggable')
+					.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions ));
 			}
 //			this.makeDraggable(domPage);
 			return domPage;

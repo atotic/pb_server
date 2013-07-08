@@ -118,9 +118,18 @@
 				return;
 			this.localData.document.width = width;
 			this.localData.document.height = height;
+			// update page dimensions
+			var dims = {
+				'page': { width: width, height: height},
+				'cover': { width: width, height: height},
+				'back': { width: width, height: height},
+				'cover-flap': { width: width / 3, height: height},
+				'back-flap': { width: width / 3, height: height}
+			}
 			var pageList = this.pageList;
 			for (var i=0; i<pageList.length; i++) {
-				this.page(pageList[i]).dimensionsChanged(width, height);
+				var page = this.page(pageList[i]);
+				page.dimensions = dims[ page.kind ];
 			}
 			this._dirty = true;
 			PB.broadcastChange( this, 'dimensions');
@@ -130,23 +139,6 @@
 				width: this.localData.document.width,
 				height: this.localData.document.height
 			}
-		},
-		getPageDimensions: function(pageId, pageType) {
-			pageType = pageType || this.page(pageId).pageClass;
-			var w = this.localData.document.width || 0;
-			var h = this.localData.document.height || 0;
-			if (w == 0)
-				console.error('getPageDimensions called, no dimensions available');
-			switch (pageType) {
-				case 'cover':
-				case 'back':
-				case 'page':
-					return { width: w, height: h};
-				case 'cover-flap':
-				case 'back-flap':
-					return { width: w / 3, height: h}
-			}
-			console.error("invalid page type in getPageDimensions", pageType);
 		},
 		serverPhotoId: function(bookPhotoId) { // bookPhotoId => serverPhotoId
 			return this.localData.document.photoMap[bookPhotoId];
@@ -420,8 +412,23 @@
 			}
 			var pageList = this.pageList;
 			var canSave = true;
+			// check if pages are in 'saveable' state
 			for (var i=0; i<pageList.length; i++) {
 				canSave = canSave && this.page(pageList[i]).canSave;
+			}
+			if (!canSave)
+				return;
+			// make sure all pages were 'reflown'
+			for (var i=0; i<pageList.length; i++) {
+				var page = this.page(pageList[i]);
+				if (page.needReflow) {
+					try {
+						page.reflow();
+					}
+					catch(ex) {
+						canSave = false;
+					}
+				}
 			}
 			if (!canSave)
 				return;
@@ -593,7 +600,7 @@
 			var coverFlap;
 			var firstPage;
 			while (page = this.book.page(pageList.shift())) {
-				switch(page.pageClass) {
+				switch(page.kind) {
 					case 'cover':
 						cover = page;
 						break;
@@ -621,7 +628,7 @@
 						}
 						break;
 					default:
-						console.warn("unknown page class", page.pageClass);
+						console.warn("unknown page kind", page.kind);
 						break;
 				}
 			}
