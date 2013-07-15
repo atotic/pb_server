@@ -56,6 +56,9 @@
 		get dirty() {
 			return this._dirty;
 		},
+		makeDirty: function() {
+			this._dirty = true;
+		},
 		get photoList() {
 			return this.localData.document.photoList.slice();
 		},

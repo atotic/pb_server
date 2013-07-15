@@ -120,6 +120,9 @@ var DesignWorkArea = {
 	},
 	bookChanged: function(ev, model, prop, options) {
 		switch(prop) {
+			case 'dimensions':
+				DesignWorkArea.resize();
+			break;
 			case 'template':
 				if ($('#work-area-design:visible').length == 1)	//
 					DesignWorkArea.show();

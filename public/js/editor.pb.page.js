@@ -98,6 +98,7 @@ asset widget {
 				this.p.dimensions = d;
 			else
 				this.p.dimensions = { width: d.width, height: d.height };
+			this.p.needReflow = true;
 			PB.broadcastChange(this, 'dimensions');
 		},
 		get needReflow() {
@@ -371,6 +372,7 @@ asset widget {
 			if ( addAssetOptions.broadcast )
 				PB.broadcastChange( this, 'assetList',
 					$.extend( {assetId: id}, addAssetOptions ));
+			this.book.makeDirty();
 			return id;
 		},
 		removeAsset: function(id, broadcastOptions) {
@@ -400,6 +402,7 @@ asset widget {
 					this.book._pagePhotosChanged( this, broadcastOptions );
 				PB.broadcastChange( this, 'assetList', broadcastOptions );
 			}
+			this.book.makeDirty();
 		},
 		updateAsset: function(id, newAsset, options) {
 			function myExtend(src, dest) {
@@ -448,6 +451,7 @@ asset widget {
 			if (dirty) {
 				this.layoutInnerItem(id);
 				PB.broadcastChange({id: id}, 'alldata', options);
+				this.book.makeDirty();
 			}
 		},
 		moveAsset: function( assetId, destPage, options) {
