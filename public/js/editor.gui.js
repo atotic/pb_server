@@ -39,7 +39,10 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			$('#main-content').data('resize', function(el) {
 				$('#main-content').width($('body').width() - $('#sidebar').width());
 			});
-			$(window).resize(function() { GUI.fixSizes($(document.body))});
+			$(window).on('resize', function($ev) {
+				// console.log('window.resize');
+				GUI.fixSizes($(document.body))
+			});
 			$('html').click(GUI.clearPopups);
 			if ($(document.body).fullScreen() === null)
 				$('#fullscreen').hide();

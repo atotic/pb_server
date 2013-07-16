@@ -159,6 +159,7 @@ var DesignWorkArea = {
 		if (!($('#work-area-design').is(':visible')))
 			return;
 		try {
+			// console.log('resize', window.innerWidth, window.innerHeight);
 			var cur = this.currentModels;
 			if (cur.left || cur.right)
 				this.showPages(cur, null, true);
@@ -234,7 +235,7 @@ var DesignWorkArea = {
 		var dp = this.designPages;
 		if ( (dp.left && dp.left.hasClass('placeholder'))
 			|| (dp.right && dp.right.hasClass('placeholder'))) {
-			console.log("fixingPlaceholders");
+						// console.log("fixingPlaceholders");
 			this.showPages( this.currentModels, null, true);
 		}
 	},
@@ -440,7 +441,7 @@ var DesignWorkArea = {
 		}
 	},
 	goTo: function(page, direction) {
-		console.log('goto', page ? page.id : page);
+		// console.log('goto', page ? page.id : page);
 		var facingPages = this.book.facingPages;
 		var show = facingPages.find(page);
 		if (show === undefined)

@@ -67,7 +67,8 @@ var DefaultManipulator = function($pageDom, assetId) {
 }
 
 DefaultManipulator.prototype = {
-	reposition: function() {
+	reposition: function(pageDom) {
+		this.pageDom = pageDom || this.pageDom;
 		var $itemDom = this.pageDom.find('*:data("model_id=' + this.assetId + '")');
 		var pageAsset = PB.ModelMap.model(this.assetId);
 		var corners = Manipulator.getBoundingCorners($itemDom, pageAsset.asset.rotate);
@@ -101,7 +102,8 @@ var MoveManipulator = function($pageDom, assetId) {
 	this.assetId = assetId;
 }
 MoveManipulator.prototype = {
-	reposition: function() {
+	reposition: function(pageDom) {
+		this.pageDom = pageDom || this.pageDom;
 		var $itemDom = this.pageDom.find('*:data("model_id=' + this.assetId + '")');
 		var pageAsset = PB.ModelMap.model(this.assetId);
 		var corners = Manipulator.getBoundingCorners($itemDom, pageAsset.asset.rotate);
@@ -150,7 +152,8 @@ var PanManipulator = function($pageDom, assetId) {
 };
 
 PanManipulator.prototype = {
-	reposition: function() {
+	reposition: function(pageDom) {
+		this.pageDom = pageDom || this.pageDom;
 		var $itemDom = this.pageDom.find('*:data("model_id=' + this.assetId + '")');
 		var pageAsset = PB.ModelMap.model(this.assetId);
 		var corners = Manipulator.getBoundingCorners($itemDom, pageAsset.asset.rotate);
@@ -224,7 +227,8 @@ var ZoomManipulator = function($pageDom, assetId) {
 };
 
 ZoomManipulator.prototype = {
-	reposition: function() {
+	reposition: function(pageDom) {
+		this.pageDom = pageDom || this.pageDom;
 		var $itemDom = this.pageDom.find('*:data("model_id=' + this.assetId + '")');
 		var pageAsset = PB.ModelMap.model(this.assetId);
 		var corners = Manipulator.getBoundingCorners($itemDom, pageAsset.asset.rotate);
@@ -313,7 +317,8 @@ var RotateManipulator = function($pageDom, assetId) {
 };
 
 RotateManipulator.prototype = {
-	reposition: function() {
+	reposition: function(pageDom) {
+		this.pageDom = pageDom || this.pageDom;
 		var $itemDom = this.pageDom.find('*:data("model_id=' + this.assetId + '")');
 		var pageAsset = PB.ModelMap.model(this.assetId);
 		var corners = Manipulator.getBoundingCorners($itemDom, pageAsset.asset.rotate);
@@ -397,7 +402,8 @@ var ResizeManipulator = function($pageDom, assetId, options) {
 };
 
 ResizeManipulator.prototype = {
-	reposition: function() {
+	reposition: function(pageDom) {
+		this.pageDom = pageDom || this.pageDom;
 		var $itemDom = this.pageDom.find('*:data("model_id=' + this.assetId + '")');
 		var pageAsset = PB.ModelMap.model(this.assetId);
 		var corners = Manipulator.getBoundingCorners($itemDom, pageAsset.asset.rotate);
@@ -534,7 +540,9 @@ var EditTextManipulator = function($pageDom, assetId) {
 };
 
 EditTextManipulator.prototype = {
-	reposition: function() {
+	reposition: function(pageDom) {
+		this.pageDom = pageDom || this.pageDom;
+		// console.log('reposition');
 		var $itemDom = this.pageDom.find('*:data("model_id=' + this.assetId + '")');
 		var $textDom = $itemDom.find('.design-text-content');
 		var corners = Manipulator.getBoundingCorners($textDom, this.pageAsset.asset.rotate);
@@ -553,8 +561,10 @@ EditTextManipulator.prototype = {
 		this.autogrow();
 	},
 	autogrow: function() {
+		// console.log('autogrow');
 		var textarea = this.handles.textarea.get(0);
 		if (textarea.scrollHeight > textarea.clientHeight) {
+			console.log('autogrow growing');
 			var s = window.getComputedStyle(textarea);
 			textarea.style.height = textarea.scrollHeight
 				+ parseInt(s.getPropertyValue('border-top-width'))
@@ -571,17 +581,21 @@ EditTextManipulator.prototype = {
 		}
 	},
 	input: function() {
+		// console.log('input');
 		this.pageAsset.page.updateAsset( this.assetId, {
 			content: this.handles.textarea.prop('value')
 		});
 		this.autogrow();
 	},
 	blur: function() {
+		// console.log('blur');
 		// only works well outside of touch
 		PB.Page.Selection.findClosest( this.pageDom ).setManipulator();
 	},
 	show: function() {
+		// console.log('show');
 		this.pageAsset = PB.ModelMap.model( this.assetId );
+		this.pageAsset.page.startTemporaryChanges();
 		this.handles = {
 			textarea: $( $.parseHTML('<textarea class="manipulator-textarea"></textarea>')),
 			mirror: $('<pre>')
@@ -607,7 +621,9 @@ EditTextManipulator.prototype = {
 		}, 0);
 	},
 	remove: function() {
+		// console.log('remove');
 		this.handles.textarea.remove();
+		this.pageAsset.page.endTemporaryChanges();
 	}
 }
 

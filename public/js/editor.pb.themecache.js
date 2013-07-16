@@ -34,7 +34,7 @@ var ThemeCache = {
 	put: function(theme) {
 		if ( theme.id in this.themes )
 			throw new Error("theme already defined " + theme.id);
-		console.log("ThemeCache+", theme.id);
+		// console.log("ThemeCache+", theme.id);
 		this.themes[ theme.id ] = theme;
 	},
 	themeUrlFromId: function(id) {
@@ -187,7 +187,7 @@ var ThemeCache = {
 			pathStr = match[2];
 		var theme = this.themes[themeId];
 		if (!theme) {
-			console.warn("Theme not found", resUrl);
+			// console.warn("Theme not found", resUrl);
 			var deferred = this.load( this.themeUrlFromId( themeId ));
 			throw new ThemeNotFoundException("Theme not found " + resUrl, deferred);
 		}
