@@ -26,8 +26,10 @@
 		commandSets: [],
 		init: function() {
 
-			$(document).on('keydown', function(ev) {
-				ev = ev.originalEvent;
+			$(document).on('keydown', function($ev) {
+				var ev = $ev.originalEvent;
+				if (ev.target.nodeName == 'TEXTAREA' || ev.target.nodeName == 'INPUT')
+					return;
 				if (ev.repeat)
 					return;
 				var s = CommandManager.eventToString(ev);
