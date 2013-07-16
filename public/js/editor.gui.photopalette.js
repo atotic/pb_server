@@ -38,7 +38,8 @@
 	var PhotoPaletteDroppable = new GUI.Dnd.Droppable({
 		flavors: [
 			'photoInRoughPage',	// transferData: assetId
-			'osFile'
+			'osFile', // transferData: fileList
+			'photoInPage'	// transferData: { page: p,  assetId: id }
 		],
 		enter: function($dom, flavor, transferData) {
 			this.dom = $dom;
@@ -60,6 +61,9 @@
 						book.addLocalPhoto(file, { animate:false } );
 					});
 			break;
+			case 'photoInPage':// removes photo from page
+				transferData.page.clearPhoto( transferData.assetId );
+			break;
 			}
 		}
 	});
@@ -72,8 +76,11 @@
 				.data('model_id', book.id)
 				.on(PB.MODEL_CHANGED,
 					function(ev, model, prop, options) {
-						if (prop == 'photoList')
+						switch( prop ) {
+						case 'photoList':
 							PhotoPalette.synchronizePhotoList(options);
+						break;
+						}
 					});
 			GUI.Options.addListener(this.optionsChanged);
 			this.synchronizePhotoList();

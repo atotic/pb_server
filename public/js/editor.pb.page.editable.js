@@ -86,11 +86,7 @@
 			var bookPhotoId = this.book.bookPhotoId(serverPhotoId);
 			if (bookPhotoId == null)
 				bookPhotoId = this.book.addServerPhoto( serverPhotoId );
-			this.destinationPage.updateAsset(this.assetId, {
-				photoId: bookPhotoId,
-				zoom: 1.0,
-				focalPoint: null
-			});
+			this.destinationPage.replacePhotoId( this.assetId, bookPhotoId );
 		},
 		restoreTempPhoto: function() {
 			if ('destinationArchive' in this) {

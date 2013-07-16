@@ -6,7 +6,8 @@
 		flavors: [
 			'page',	// transferData: transferData: pageModelId
 			'photo', // transferData: serverPhotoId
-			'photoInRoughPage' // transferData: assetId
+			'photoInRoughPage', // transferData: assetId
+			'photoInPage'	// transferData: { page: p, assetId: id }
 		],
 		enter: function( $dom, flavor, transferData) {
 			this.dom = $dom;
@@ -28,6 +29,9 @@
 			case 'photoInRoughPage':
 				var pageAsset = PB.ModelMap.model( transferData);
 				pageAsset.page.removeAsset( pageAsset.assetId, { animate: true });
+			break;
+			case 'photoInPage':
+				transferData.page.clearPhoto( transferData.assetId );
 			break;
 			}
 		}

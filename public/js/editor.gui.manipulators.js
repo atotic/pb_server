@@ -68,7 +68,7 @@ var DefaultManipulator = function($pageDom, assetId) {
 
 DefaultManipulator.prototype = {
 	reposition: function(pageDom) {
-		this.pageDom = pageDom || this.pageDom;
+		this.pageDom = pageDom || this.pageDom;	// pageDom can get switched on resize
 		var $itemDom = this.pageDom.find('*:data("model_id=' + this.assetId + '")');
 		var pageAsset = PB.ModelMap.model(this.assetId);
 		var corners = Manipulator.getBoundingCorners($itemDom, pageAsset.asset.rotate);

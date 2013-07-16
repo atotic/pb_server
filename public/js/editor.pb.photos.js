@@ -50,11 +50,11 @@
 		get display_name() {
 			return this.p.display_name;
 		},
-		get faces() {
-			return this.p.faces;
-		},
 		get caption() {
 			return this.p.caption;
+		},
+		set caption(val) {
+			this.p.caption = val;
 		},
 		get serverPhotoId() {
 			return this.book.serverPhotoId( this.id );
@@ -664,10 +664,6 @@
 		},
 		get display_name() {
 			return "filler";
-		},
-		get faces() {
-			console.error('filler faces');
-			return [];
 		}
 	}
 

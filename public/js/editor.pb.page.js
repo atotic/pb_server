@@ -278,10 +278,10 @@ asset widget {
 								addCaption: false
 							}, options));
 					else {
-						this.p.assets[ archive.assetId ] = PB.clone( archive.asset );
-						PB.broadcastChange({id: archive.assetId}, 'alldata');
+						this.updateAsset( archive.assetId, archive.asset, {clobber: true });
 					}
 					if ('dependents' in archive) {
+						this.removeDependents( archive.assetId );
 						for (var i=0; i< archive.dependents.length; i++) {
 							var dep = archive.dependents[i];
 							if (! (dep.id in this.p.assets))
@@ -368,7 +368,7 @@ asset widget {
 
 			// Broadcast changes
 			if ( asset.type == 'photo' )
-				this.book._pagePhotosChanged( this, addAssetOptions );
+				this.broadcastPhotosChanged( addAssetOptions );
 			if ( addAssetOptions.broadcast )
 				PB.broadcastChange( this, 'assetList',
 					$.extend( {assetId: id}, addAssetOptions ));
@@ -399,7 +399,7 @@ asset widget {
 				});
 			if (broadcastOptions.broadcast) {
 				if ( assetType == 'photo' )
-					this.book._pagePhotosChanged( this, broadcastOptions );
+					this.broadcastPhotosChanged( broadcastOptions );
 				PB.broadcastChange( this, 'assetList', broadcastOptions );
 			}
 			this.book.makeDirty();
@@ -450,6 +450,8 @@ asset widget {
 			// optimize: if data does not change, do not broadcast changes. Useful for manipulators
 			if (dirty) {
 				this.layoutInnerItem(id);
+				if ( this.p.assets[id].type == 'photo' )
+					this.broadcastPhotosChanged( options );
 				PB.broadcastChange({id: id}, 'alldata', options);
 				this.book.makeDirty();
 			}
@@ -458,6 +460,67 @@ asset widget {
 			var archive = this.archiveSomething({ type: 'asset', assetId: assetId, dependents: true });
 			this.removeAsset( assetId, options);
 			destPage.restoreSomething( archive, options );
+		},
+		getCaptionText: function( assetId ) {
+			var retVal = null;
+			var THIS = this;
+			this.getDependentsIds( assetId ).forEach( function( depId ) {
+				var dep = THIS.getAsset( depId );
+				if (dep.type == 'text')
+					retVal = dep.content;
+			});
+			return retVal;
+		},
+		clearPhoto: function( assetId, options) {
+			options = $.extend( {
+				fillerBookPhotoId: null
+			}, options);
+			var asset = this.getAsset( assetId );
+			// replace existing photo with filler
+			var replacementId;	// bookPhotoId
+			if (options.fillerBookPhotoId) {
+				replacementId = options.fillerBookPhotoId;
+			}
+			else {
+				var fillerPhoto = asset.css.width > asset.css.height ?
+					PB.FillerPhotos.randomH() : PB.FillerPhotos.randomV();
+				replacementId = fillerPhoto.id;
+			}
+			var oldPhotoId = asset.photoId;
+			var oldCaption = this.getCaptionText( assetId );
+			// clean up asset
+			asset.photoId = replacementId;
+			asset.zoom = 1.0;
+			delete asset.focalPoint;
+			delete asset.photoRect;
+			this.updateAsset( assetId, asset, { clobber: true} );
+			this.removeDependents( assetId );
+			if (oldCaption) {
+				var oldPhoto = this.book.photo(oldPhotoId);
+				oldPhoto.caption = oldCaption;
+				console.log('stored caption');
+			}
+		},
+		replacePhotoId: function( assetId, bookPhotoId, options) {
+			this.clearPhoto( assetId , { fillerBookPhotoId: bookPhotoId });
+			var photo = this.book.photo( bookPhotoId );
+			if (photo.caption) {
+				this.addAsset( {
+					type: 'text',
+					content: photo.caption,
+					dependentOf: {
+						assetId: assetId
+					}
+				});
+			}
+			else
+				console.log('no caption');
+		},
+		removeDependents: function( assetId ) {
+			var THIS = this;
+			this.getDependentsIds( assetId ).forEach( function( depId ) {
+				THIS.removeAsset( depId );
+			});
 		},
 		setDesign: function( designId, options ) {
 			if (this.p.designId == designId)
