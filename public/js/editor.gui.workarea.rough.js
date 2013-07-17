@@ -82,14 +82,7 @@
 				break;
 				case 'osFile':
 					var targetPage = PB.ModelMap.domToModel( this.target);
-					GUI.Dnd.Util.filterFileList( transferData )
-						.forEach( function(file) {
-							var photo = targetPage.book.addLocalPhoto(file, { animate:false } );
-							targetPage.addAsset( {
-								type: 'photo',
-								photoId: photo.id
-							}, { animate: true });
-						});
+					targetPage.addOsFileList( transferData );
 				break;
 				case 'newPage':
 					var targetPage = PB.ModelMap.domToModel( this.target );

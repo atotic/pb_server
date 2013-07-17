@@ -46,6 +46,11 @@ hammer.js
 https://github.com/EightMedia/hammer.js/
 gesture library
 
+jquery.transit https://github.com/rstacruz/jquery.transit
+replaces jquery animations with css animations when possible
+actively developed. a little slow to take up a patch.
+I enabled transitionEnd events, and had to use a patch for it to work: https://github.com/rstacruz/jquery.transit/pull/145
+
 Need update
 jdataview.js
 https://github.com/vjeux/jDataView
@@ -54,8 +59,4 @@ backports DataView standard, used for reading image files
 jquery.stream http://code.google.com/p/jquery-stream/
 xhr streaming.
 obsoleted by portal project, need to replace it https://github.com/flowersinthesand/portal
-
-jquery.transit https://github.com/rstacruz/jquery.transit
-replaces jquery animations with css animations when possible
-actively developed. a little slow to take up a patch.
 

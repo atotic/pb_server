@@ -358,7 +358,18 @@ asset widget {
 				this.book.makeDirty();
 			}
 		},
-				archiveSomething: function(options) {
+		addOsFileList: function( fileList) {
+			var THIS = this;
+			GUI.Dnd.Util.filterFileList( fileList )
+				.forEach( function(file) {
+					var photo = THIS.book.addLocalPhoto(file, { animate:false } );
+					THIS.addAsset( {
+						type: 'photo',
+						photoId: photo.id
+						}, { animate: true });
+					});
+		},
+		archiveSomething: function(options) {
 			// creates snapshot of an asset, restore with restoreSomething
 			options = $.extend( {
 				type: 'type must be specified',	// 'design'|'background'|'layout'|'asset'
@@ -513,8 +524,6 @@ asset widget {
 					}
 				});
 			}
-			else
-				console.log('no caption');
 		},
 		removeDependents: function( assetId ) {
 			var THIS = this;

@@ -253,22 +253,24 @@
 			if (this.options.stop)
 				this.options.stop($ev, this.dom);
 			this.active = false;
-			$ev.stopPropagation();
-			$ev.preventDefault();
 			$(document.body).off('touchend.fire mouseup.fire');
 		},
 		fire: function() {
 			if (!this.active)
 				return;
 			var delay = 100;
-			if (this.options.fire)
-				delay = this.options.fire(this.fireCount++);
-			else
-				console.log('fire button fire');
+			if (this.options.fire) {
+				if (BrowserDetect.OS == "iOS" && this.fireCount > 0) {
+					this.stop();
+					// console.log("no repeat fire on iOS because of delay issues");
+				}
+				else
+					delay = this.options.fire(this.fireCount++);
+			}
 			var THIS = this;
 			var startTime = Date.now();
 			window.setTimeout(function() {
-				console.log("fired after", Date.now() - startTime);
+				// console.log("fired after", Date.now() - startTime);
 				THIS.fire();
 			}, delay);
 		}

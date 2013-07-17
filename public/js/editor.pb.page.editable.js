@@ -6,7 +6,9 @@
 			'background', // transferData: backgroundId
 			'layout', // transferData: layoutId
 			'widget',  // transferData: widgetId
-			'design'	// transferData: designId
+			'design',	// transferData: designId
+			'photo',	// transferData: serverPhotoId
+			'osFile'	// transferData: fileList
 		],
 		enter: function($dom, flavor, transferData) {
 			this.page = PB.Page.Selection.findClosest($dom).page;
@@ -27,6 +29,8 @@
 					this.page.setDesign( transferData );
 				break;
 				case 'widget':
+				case 'photo':
+				case 'osFile':
 					this.dom.addClass('drop-target');
 				break;
 			};
@@ -40,6 +44,8 @@
 						this.page.restoreSomething( this.archive );
 				break;
 				case 'widget':
+				case 'photo':
+				case 'osFile':
 					this.dom.removeClass('drop-target');
 				break;
 			}
@@ -65,6 +71,16 @@
 						width: widget.width(),
 						height: widget.height()
 					});
+				break;
+				case 'photo':
+					var bookPhotoId = this.page.book.bookPhotoId( transferData );
+					this.page.addAsset( {
+						type: 'photo',
+						photoId: bookPhotoId
+					});
+				break;
+				case 'osFile':
+					this.page.addOsFileList( transferData );
 				break;
 			}
 		}
