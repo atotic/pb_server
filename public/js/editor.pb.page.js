@@ -135,7 +135,7 @@ asset widget {
 			}, this );
 		},
 		remove: function(options) {
-			this.book.deleteRoughPage(this, options);
+			this.book.removePage(this, options);
 		},
 		getAssets: function() {
 			return this.p.assets;
@@ -207,104 +207,6 @@ asset widget {
 		},
 		endTemporaryChanges: function() {
 			this.hasTemporaryChanges = false;
-		},
-		archiveSomething: function(options) {
-			// creates snapshot of an asset, restore with restoreSomething
-			options = $.extend( {
-				type: 'type must be specified',	// 'design'|'background'|'layout'|'asset'
-				assetId: null,	// when type==asset, asset to archive
-				dependents: false // when type==asset, whether to archive dependents
-			}, options);
-			var retVal = {
-				type: options.type
-			};
-			switch(options.type) {
-				case 'design': // design archives everything
-					$.extend( retVal, {
-						assets: PB.clone( this.p.assets ),
-						designId: this.p.designId,
-						layoutId: this.p.layoutId,
-						layoutData: PB.clone( this.p.layoutData ),
-						backgroundId: this.p.backgroundId,
-						backgroundData: this.p.backgroundData
-					});
-				break;
-				case 'background':
-					retVal.backgroundId = this.p.backgroundId;
-					retVal.backgroundData = this.p.backgroundData;
-				break;
-				case 'layout':
-					retVal.layoutId = this.p.layoutId;
-					retVal.layoutData = this.p.layoutData;
-				break;
-				case 'asset':
-					retVal.asset = PB.clone( this.p.assets[ options.assetId ] );
-					retVal.assetId = options.assetId;
-					if (options.dependents) {
-						var depIds = this.getDependentsIds(options.assetId);
-						retVal.dependents = [];
-						for (var i=0; i< depIds.length; i++)
-							retVal.dependents.push( {
-								id: depIds[i],
-								asset: PB.clone( this.p.assets[ depIds[i] ] )
-							});
-					}
-				break;
-				default:
-					console.error("do not know how to archive " + options.type);
-			}
-			return retVal;
-		},
-		restoreSomething: function(archive, options) {
-			var THIS = this;
-			switch(archive.type) {
-				case 'design':
-					['assets', 'designId', 'layoutId', 'layoutData', 'backgroundId', 'backgroundData']
-						.forEach( function(x) {
-							THIS.p[x] = archive[x];
-						});
-					PB.broadcastChange(this, 'designId');
-				break;
-				case 'background':
-					this.setBackground( archive.backgroundId, archive.backgroundData );
-				break;
-				case 'layout':
-					this.setLayout( archive.layoutId, archive.layoutData );
-				break;
-				case 'asset':
-					if (! this.p.assets[archive.assetId])
-						this.addAsset( PB.clone(archive.asset), $.extend({}, {
-								assetId: archive.assetId,
-								addCaption: false
-							}, options));
-					else {
-						this.updateAsset( archive.assetId, archive.asset, {clobber: true });
-					}
-					if ('dependents' in archive) {
-						this.removeDependents( archive.assetId );
-						for (var i=0; i< archive.dependents.length; i++) {
-							var dep = archive.dependents[i];
-							if (! (dep.id in this.p.assets))
-								this.addAsset( dep.asset, $.extend({}, options, { assetId: dep.id}));
-							else
-								this.updateAsset( dep.id, dep.asset, options);
-						}
-					}
-				break;
-			}
-		},
-		importAssetDependents: function(archive, parentId) {
-			var retVal = [];
-			var THIS = this;
-			if ('dependents' in archive)
-				archive.dependents.forEach( function( dep) {
-					var newAsset = PB.clone( dep.asset );
-					newAsset.dependentOf.assetId = parentId;
-					if ('top' in newAsset.css)
-						delete newAsset.css.top;	// force layout
-					retVal.push( THIS.addAsset(newAsset));
-				});
-			return retVal;
 		},
 		// return asset id
 		addAsset: function(asset, addAssetOptions) {
@@ -455,6 +357,104 @@ asset widget {
 				PB.broadcastChange({id: id}, 'alldata', options);
 				this.book.makeDirty();
 			}
+		},
+				archiveSomething: function(options) {
+			// creates snapshot of an asset, restore with restoreSomething
+			options = $.extend( {
+				type: 'type must be specified',	// 'design'|'background'|'layout'|'asset'
+				assetId: null,	// when type==asset, asset to archive
+				dependents: false // when type==asset, whether to archive dependents
+			}, options);
+			var retVal = {
+				type: options.type
+			};
+			switch(options.type) {
+				case 'design': // design archives everything
+					$.extend( retVal, {
+						assets: PB.clone( this.p.assets ),
+						designId: this.p.designId,
+						layoutId: this.p.layoutId,
+						layoutData: PB.clone( this.p.layoutData ),
+						backgroundId: this.p.backgroundId,
+						backgroundData: this.p.backgroundData
+					});
+				break;
+				case 'background':
+					retVal.backgroundId = this.p.backgroundId;
+					retVal.backgroundData = this.p.backgroundData;
+				break;
+				case 'layout':
+					retVal.layoutId = this.p.layoutId;
+					retVal.layoutData = this.p.layoutData;
+				break;
+				case 'asset':
+					retVal.asset = PB.clone( this.p.assets[ options.assetId ] );
+					retVal.assetId = options.assetId;
+					if (options.dependents) {
+						var depIds = this.getDependentsIds(options.assetId);
+						retVal.dependents = [];
+						for (var i=0; i< depIds.length; i++)
+							retVal.dependents.push( {
+								id: depIds[i],
+								asset: PB.clone( this.p.assets[ depIds[i] ] )
+							});
+					}
+				break;
+				default:
+					console.error("do not know how to archive " + options.type);
+			}
+			return retVal;
+		},
+		restoreSomething: function(archive, options) {
+			var THIS = this;
+			switch(archive.type) {
+				case 'design':
+					['assets', 'designId', 'layoutId', 'layoutData', 'backgroundId', 'backgroundData']
+						.forEach( function(x) {
+							THIS.p[x] = archive[x];
+						});
+					PB.broadcastChange(this, 'designId');
+				break;
+				case 'background':
+					this.setBackground( archive.backgroundId, archive.backgroundData );
+				break;
+				case 'layout':
+					this.setLayout( archive.layoutId, archive.layoutData );
+				break;
+				case 'asset':
+					if (! this.p.assets[archive.assetId])
+						this.addAsset( PB.clone(archive.asset), $.extend({}, {
+								assetId: archive.assetId,
+								addCaption: false
+							}, options));
+					else {
+						this.updateAsset( archive.assetId, archive.asset, {clobber: true });
+					}
+					if ('dependents' in archive) {
+						this.removeDependents( archive.assetId );
+						for (var i=0; i< archive.dependents.length; i++) {
+							var dep = archive.dependents[i];
+							if (! (dep.id in this.p.assets))
+								this.addAsset( dep.asset, $.extend({}, options, { assetId: dep.id}));
+							else
+								this.updateAsset( dep.id, dep.asset, options);
+						}
+					}
+				break;
+			}
+		},
+		importAssetDependents: function(archive, parentId) {
+			var retVal = [];
+			var THIS = this;
+			if ('dependents' in archive)
+				archive.dependents.forEach( function( dep) {
+					var newAsset = PB.clone( dep.asset );
+					newAsset.dependentOf.assetId = parentId;
+					if ('top' in newAsset.css)
+						delete newAsset.css.top;	// force layout
+					retVal.push( THIS.addAsset(newAsset));
+				});
+			return retVal;
 		},
 		moveAsset: function( assetId, destPage, options) {
 			var archive = this.archiveSomething({ type: 'asset', assetId: assetId, dependents: true });
@@ -1055,6 +1055,7 @@ asset widget {
 		});
 
 	PageProxy.blank = function(book) {
+
 		return {
 			id: book.generateId(),
 			assets: {
@@ -1062,6 +1063,7 @@ asset widget {
 			},
 			backgroundId: null,
 			backgroundData: null,
+			dimensions: book.getPageDimensions('page'),
 			layoutId: null,
 			layoutData: null,
 			needReflow: true
@@ -1202,6 +1204,7 @@ asset widget {
 	};
 	PageSelection.prototype = {
 		setSelection: function(assetId, commandSet) {
+			this.selectTime = Date.now();
 			var newSelection = assetId ? [assetId] : [];
 			if (newSelection.toString() == this.selection.toString())
 				return;
@@ -1213,7 +1216,6 @@ asset widget {
 			// if ($popup != null && $popup.length == 0)
 			// 	$popup = null;
 			this.commandSet = commandSet;
-			this.selectTime = Date.now();
 			this.broadcast('selection', this.selection);
 		},
 

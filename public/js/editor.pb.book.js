@@ -111,6 +111,22 @@
 			else
 				page.setDesign( PB.ThemeUtils.randomDesignId(this.themeId) );
 		},
+		getPageDimensions: function(kind) {
+			if (this.localData.document.dimensions) {
+				var d = this.localData.document.dimensions;
+				switch(kind) {
+					case 'page':
+					case 'cover':
+					case 'back':
+						return d;
+					case 'cover-flap':
+					case 'back-flap':
+						return { width: d.width / 3, height: d.height }
+				}
+			}
+			else
+				return null;
+		},
 		setDimensions: function(dimensions) {
 			if (this.localData.document.dimensions
 				&& dimensions
@@ -122,22 +138,11 @@
 			else
 				this.localData.document.dimensions = { width: dimensions.width, height: dimensions.height };
 			// update page dimensions
-			var dims;
-			if ( dimensions != null)
-				dims = {
-					'page': dimensions,
-					'cover': dimensions,
-					'back': dimensions,
-					'cover-flap': { width: dimensions.width / 3, height: dimensions.height},
-					'back-flap': { width: dimensions.width / 3, height: dimensions.height}
-				}
-			else
-				dims = { page: null, cover: null, back: null, 'cover-flap': null, 'back-flap': null };
-			var pageList = this.pageList;
-			for (var i=0; i<pageList.length; i++) {
-				var page = this.page(pageList[i]);
-				page.dimensions = dims[ page.kind ];
-			}
+			var THIS = this;
+			this.pageList.forEach( function( pageId) {
+				var page = THIS.page( pageId );
+				page.dimensions = THIS.getPageDimensions( page.kind );
+			});
 			this._dirty = true;
 			PB.broadcastChange( this, 'dimensions');
 		},
@@ -542,7 +547,7 @@
 			PB.broadcastChange(this, 'photoList', options);
 		},
 		// index: page position for insert. -1 means last
-		insertRoughPage: function(index, options) {
+		addPage: function(index, options) {
 			if (index == undefined)
 				index = -1;
 			var page = PB.Page.Proxy.blank(this);
@@ -558,7 +563,7 @@
 			PB.broadcastChange(this, 'pageList', options);
 			return this.page(page.id);
 		},
-		deleteRoughPage: function(page, options) {
+		removePage: function(page, options) {
 			var index = this.pageList.indexOf(page.id);
 			if (index == -1)
 				throw new Error("no such page");
@@ -568,7 +573,7 @@
 			this._dirty = true;
 			PB.broadcastChange(this, 'pageList', options);
 		},
-		moveRoughPage: function(page, dest, options) {
+		movePage: function(page, dest, options) {
 			var src = this.pageList.indexOf(page.id);
 			if (src == -1)
 				throw new Error("no such page");

@@ -260,6 +260,26 @@ test("pages b1 move page, b2 move page", function() {
 	deepEqual(b1.localData, b2.localData, "books should now be identical");
 });
 
+test("BUG: undefined properties cause infinited diffs", function() {
+	var book = createBlankBook( { pages:6 });
+	var page = book.page( book.pageList[0]);
+	var assetId = page.addAsset( {
+		type: 'text',
+		content: 'yo',
+		frameId: 5,
+		frameData: {}
+	});
+	// apply patches, assure no diffs
+	book.applyBroadcastPatch( 2, book.getDiff() );
+	var diff = book.getDiff();
+	ok( diff.length == 0, "book is clean");
+	// apply patches, assure no diffs
+	page.updateAsset( assetId, { frameId: undefined, frameData: undefined } );
+	book.applyBroadcastPatch( 3, book.getDiff() );
+	diff = book.getDiff();
+	ok( diff.length == 0, "book is clean after undefined");
+});
+
 
 });
 </script>

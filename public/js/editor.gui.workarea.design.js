@@ -21,19 +21,30 @@ HTML hierarchy:
 var DesignWorkArea = {
 	init: function() {
 		this.createCommandSet();
-		function buttonTimer(clickCount) {
-			if (clickCount < 2)
-				return 400;
-			else
-				return 100;
-		};
-		GUI.Events.RepeatFireButton.bind($('#work-area-design-btn-back'), {
-			action: function() {GUI.DesignWorkArea.goBack()},
-			delay: buttonTimer
+		var delay = 100;
+		new GUI.Buttons.FireButton($('#work-area-design-btn-back'), {
+			start: function($ev, $dom) {
+				$dom.addClass('btn-success');
+			},
+			stop: function($ev, $dom) {
+				$dom.removeClass('btn-success');
+			},
+			fire: function(howMany) {
+				DesignWorkArea.goBack();
+				return howMany > 0 ? delay : delay * 3;
+			}
 		});
-		GUI.Events.RepeatFireButton.bind($('#work-area-design-btn-forward'), {
-			action: function() { GUI.DesignWorkArea.goForward()},
-			delay: buttonTimer
+		new GUI.Buttons.FireButton($('#work-area-design-btn-forward'), {
+			start: function($ev, $dom) {
+				$dom.addClass('btn-success');
+			},
+			stop: function($ev, $dom) {
+				$dom.removeClass('btn-success');
+			},
+			fire: function(howMany) {
+				DesignWorkArea.goForward();
+				return howMany > 0 ? delay : delay * 3;
+			}
 		});
 		$('#work-area-design').data('resize', function() {
 			DesignWorkArea.resize();
@@ -44,13 +55,9 @@ var DesignWorkArea = {
 			});
 		});
 		$('#add-text-btn').on('mousedown touchstart', function() {
-			var designPages = DesignWorkArea.designPages;
-			var destPage = designPages.left || designPages.right;
-			if (destPage) {
-				var sel = destPage.data('page-selection');
-				var assetId = sel.page.addAsset({ type: 'text' });
-				sel.page.selectItem(sel, assetId);
-			}
+			var lastSelection = DesignWorkArea.latestSelection;
+			var assetId = lastSelection.page.addAsset({ type: 'text' });
+			lastSelection.page.selectItem(lastSelection, assetId);
 		});
 	},
 	createCommandSet: function() {
@@ -112,6 +119,11 @@ var DesignWorkArea = {
 		if (rightSel)
 			retVal.push(rightSel);
 		return retVal;
+	},
+	get latestSelection() {
+		return this.currentSelections
+			.sort( function(a,b) { return b.selectTime - a.selectTime; })
+			[0];
 	},
 	clearSelection: function() {
 		this.currentSelections.forEach( function(sel) {
@@ -451,12 +463,14 @@ var DesignWorkArea = {
 		this.showPages(facingPages.get(show), direction);
 	},
 	goBack: function() {
+		console.log('goBack');
 		if (this.currentModel == null)
 			return;
 		var show = this.book.facingPages.before(this.currentModel);
 		this.goTo(show.left || show.right, 'back');
 	},
 	goForward: function() {
+		console.log('goForward');
 		if (this.currentModel == null)
 			return;
 		var show = this.book.facingPages.after(this.currentModel);

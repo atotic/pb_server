@@ -75,7 +75,7 @@
 			switch(flavor) {
 				case 'page':
 					var src = PB.ModelMap.model( this.sourcePage );
-					src.book.moveRoughPage( src,
+					src.book.movePage( src,
 						src.book.pageList.indexOf(
 							this.target.data('model_id')
 					));
@@ -93,7 +93,7 @@
 				break;
 				case 'newPage':
 					var targetPage = PB.ModelMap.domToModel( this.target );
-					targetPage.book.insertRoughPage( targetPage.indexOf(), { animate: true });
+					targetPage.book.addPage( targetPage.indexOf(), { animate: true });
 				break;
 			}
 		}

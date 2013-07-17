@@ -75,7 +75,7 @@
 				if (emptyPages.length > 0)
 					nextPage = book.page(emptyPages.shift());
 				else
-					nextPage = book.insertRoughPage(-1, {animate:false});
+					nextPage = book.addPage(-1, {animate:false});
 				var want = Math.floor(Math.random() * 4 + 1);
 				if (nextPage.kind != 'page') {
 					switch(nextPage.kind) {

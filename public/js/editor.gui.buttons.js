@@ -46,7 +46,7 @@
 		},
 		isTouch: false,
 		start: function( $el, $ev, startLoc ) {
-			console.log('start', $ev.type );
+//			console.log('start', $ev.type );
 			this.isTouch = this.isTouch || ($ev.type == 'touchstart');
 			this.startTime = Date.now();
 			var bounds = $el[0].getBoundingClientRect();
@@ -82,7 +82,7 @@
 			console.log('end');
 			var diff = Date.now() - this.startTime;
 			if (!transferDone && diff < 300)
-				PB.Book.default.insertRoughPage( -1, { animate: true });
+				PB.Book.default.addPage( -1, { animate: true });
 		},
 	}
 	var Buttons = {
@@ -215,8 +215,67 @@
 		}
 	}
 
-	scope.Buttons = Buttons;
+	var FireButton = function ($dom, options) {
+		this.dom = $dom;
+		this.fireCount = 0;	// how many times have we fired?
+		this.active = false;
+		this.options = $.extend( {
+			start: null,
+			stop: null,
+			fire: null
+		}, options);
+		this.initEventHandlers();
+	}
 
+	FireButton.prototype = {
+		initEventHandlers: function() {
+			this.dom.data('fire-handler', this)
+				.on('touchstart.fire mousedown.fire', function($ev) {
+					$($ev.currentTarget).data('fire-handler').start($ev);
+				});
+		},
+		start: function($ev) {
+			var THIS = this;
+			this.active = true;
+			this.fireCount = 0;
+			$(document.body).on('touchend.fire mouseup.fire', function($ev) {
+				THIS.stop($ev);
+			});
+			if (this.options.start)
+				this.options.start($ev, this.dom);
+			else
+				console.log('fire button start');
+			this.fire();
+			$ev.stopPropagation();
+			$ev.preventDefault();
+		},
+		stop: function($ev) {
+			if (this.options.stop)
+				this.options.stop($ev, this.dom);
+			this.active = false;
+			$ev.stopPropagation();
+			$ev.preventDefault();
+			$(document.body).off('touchend.fire mouseup.fire');
+		},
+		fire: function() {
+			if (!this.active)
+				return;
+			var delay = 100;
+			if (this.options.fire)
+				delay = this.options.fire(this.fireCount++);
+			else
+				console.log('fire button fire');
+			var THIS = this;
+			var startTime = Date.now();
+			window.setTimeout(function() {
+				console.log("fired after", Date.now() - startTime);
+				THIS.fire();
+			}, delay);
+		}
+	}
+	scope.Buttons = Buttons;
 	scope.Buttons.ResizePaletteButton = ResizePaletteButton;
+	scope.Buttons.FireButton = FireButton;
+
 })(window.GUI);
 
