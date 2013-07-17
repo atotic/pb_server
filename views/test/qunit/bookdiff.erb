@@ -3,50 +3,30 @@
 
 $(document).ready(function() {
 
+PB.ServerPhoto.prototype.load = function() {
+	console.log('disabled photo loading');
+};
+
 function createBlankBook(options) {
 	options = $.extend({pages: 4, photos: 0, pagesWithPhotos: false}, options);
-	var bookJson = {
-		"id": 1,
-		"last_diff": 1,
-		"photos": [],
-		"document": {
-			"title": "testBook",
-			"photoList": [],
-			"pageList": ["cover", "cover-flap", "back-flap", "back"],
-			"pages": {
-				"cover": { "id": "cover", "photoList": [] },
-				"cover-flap": { "id": "cover-flap", "photoList": [] },
-				"back-flap": { "id": "back-flap", "photoList": [] },
-				"back": {"id": "back", "photoList": [] }
-			}
-		}
-	}
+
+	var book = new PB.Book.blank();
 	for (var i=0; i<options.pages; i++) {
-		var pageId = "P" + (i +1);
-		bookJson.document.pageList.push(pageId);
-		bookJson.document.pages[pageId] = {
-			id: pageId, photoList:[]
-		}
+		book.addPage();
 	}
-	var book = new PB.Book(bookJson);
-	//	book.insertRoughPage(-1);
 	for (var i=0; i<options.photos; i++)
-		book.addPhotoById(i);
+		book.addServerPhoto(i+100);
 	if (options.pagesWithPhotos) {
-		var roughPages = book.pageList;
-		var photos = book.photoList.map(function(photoId) { return book.photo(photoId)});
-		for (var i=0; i<roughPages.length; i++) {
-			var page = book.page(roughPages[i]);
-			for (var j=0; j<photos.length; j++)
-				page.addPhoto(photos[j]);
-		}
+		book.pageList.forEach( function(pageId) {
+			var page = book.page( pageId );
+			for (var i=0; i<options.photos; i++)
+				page.addAsset( {
+					type: 'photo',
+					photoId: book.bookPhotoId( i +100)
+				});
+		});
 	}
-	var diff = { id: 2, diff: book.getDiff() };
-	book.applyBroadcastPatch(diff.id, diff.diff);
-	var newdiff = book.getDiff();
-	if (newdiff.length != 0 || book.serverData.last_diff != diff.id)
-		debugger;
-	equal(newdiff.length, 0, ".");
+	book.applyBroadcastPatch( 1, book.getDiff() );
 	return book;
 }
 
@@ -58,9 +38,10 @@ function cmp(a,b) {
 		fail();
 	switch(typeof a) {
 		case 'object':
-			if ('length' in a)
+			if ($.isArray(a) && $.isArray(b)) {
 				for (var i=0; i<a.length; i++)
 					cmp(a[i], b[i]);
+			}
 			else
 				for (var x in a)
 					cmp(a[x], b[x]);
@@ -73,7 +54,7 @@ function cmp(a,b) {
 	}
 }
 function cloneBook(b) {
-	var b2 = new PB.Book(b.serverData);
+	var b2 = new PB.Book(b.localData);
 	cmp(b.localData, b2.localData);
 	deepEqual(b.localData, b2.localData, ".");
 	deepEqual(b.serverData, b2.serverData, ".");
@@ -91,8 +72,8 @@ test("book add photo", function() {
 	var b1 = createBlankBook();
 	var b2 = cloneBook(b1);
 
-	b1.addPhotoById(1);
-	b2.addPhotoById(2);
+	b1.addServerPhoto(1);
+	b2.addServerPhoto(2);
 
 	// diff(b1) -> b2
 	var b1diff = { id: 10, diff: b1.getDiff() };
@@ -113,12 +94,12 @@ test("book add several photos", function() {
 	var b1 = createBlankBook();
 	var b2 = cloneBook(b1);
 
-	b1.addPhotoById(1);
-	b1.addPhotoById(2);
-	b1.addPhotoById(3);
-	b2.addPhotoById(4);
-	b2.addPhotoById(5);
-	b2.addPhotoById(6);
+	b1.addServerPhoto(1);
+	b1.addServerPhoto(2);
+	b1.addServerPhoto(3);
+	b2.addServerPhoto(4);
+	b2.addServerPhoto(5);
+	b2.addServerPhoto(6);
 
 	// diff(b1) -> b2
 	var b1diff = { id: 10, diff: b1.getDiff() };
@@ -138,13 +119,13 @@ test("book add several photos", function() {
 test("book add page", function() {
 	var b1 = createBlankBook();
 	var b2 = cloneBook(b1);
-	b1.insertRoughPage(-1);
-	b1.insertRoughPage(-1);
-	b1.insertRoughPage(-1);
+	b1.addPage(-1);
+	b1.addPage(-1);
+	b1.addPage(-1);
 
-	b2.insertRoughPage(-1);
-	b2.insertRoughPage(-1);
-	b2.insertRoughPage(-1);
+	b2.addPage(-1);
+	b2.addPage(-1);
+	b2.addPage(-1);
 
 	// diff(b1) -> b2
 	var b1diff = { id: 10, diff: b1.getDiff() };
@@ -163,13 +144,13 @@ test("book add page", function() {
 test("book add page in the middle", function() {
 	var b1 = createBlankBook();
 	var b2 = cloneBook(b1);
-	b1.insertRoughPage(-1);
-	b1.insertRoughPage(-1);
-	b1.insertRoughPage(-1);
+	b1.addPage(-1);
+	b1.addPage(-1);
+	b1.addPage(-1);
 
-	b2.insertRoughPage(-1);
-	b2.insertRoughPage(-1);
-	b2.insertRoughPage(4);
+	b2.addPage(-1);
+	b2.addPage(-1);
+	b2.addPage(4);
 
 	// diff(b1) -> b2
 	var b1diff = { id: 10, diff: b1.getDiff() };
@@ -191,13 +172,13 @@ test("page add photo", function() {
 	var b2 = cloneBook(b1);
 
 	// add photos to pages
-	var b1page = b1.page(b1.pageList[5])
-	b1page.addPhoto(b1.photo(b1.photoList[0]));
-	b1page.addPhoto(b1.photo(b1.photoList[1]));
+	var b1page = b1.page(b1.pageList[0])
+	b1page.addAsset( { type: 'photo', photoId: b1.photoList[0] } );
+	b1page.addAsset( { type: 'photo', photoId: b1.photoList[1] } );
 
-	var b2page = b2.page(b2.pageList[5])
-	b2page.addPhoto(b2.photo(b2.photoList[2]));
-	b2page.addPhoto(b2.photo(b2.photoList[3]));
+	var b2page = b2.page(b2.pageList[0])
+	b2page.addAsset( { type: 'photo', photoId: b2.photoList[2] } );
+	b2page.addAsset( { type: 'photo', photoId: b2.photoList[3] } );
 
 	var b1diff = { id: 30, diff: b1.getDiff() };
 	b1.applyBroadcastPatch(b1diff.id, b1diff.diff);
@@ -213,16 +194,16 @@ test("page add photo", function() {
 });
 
 test("pages, b1 add, b2 remove, same position", function() {
-	var b1 = createBlankBook({pages:2, photos: 5, pagesWithPhotos: true});
+	var b1 = createBlankBook({pages:6, photos: 5, pagesWithPhotos: true});
 	var b2 = cloneBook(b1);
 
 	// add page to b1
 //	console.log("before", b1.pageList);
-	var insertedPage = b1.insertRoughPage(4).id;
+	var insertedPage = b1.addPage(2).id;
 //	console.log("inserting", insertedPage);
 //	console.log("after b1 page insert", b1.pageList);
-	var removedPage = b2.pageList[4];
-	b2.page(b2.pageList[4]).remove();
+	var removedPage = b2.pageList[2];
+	b2.page(removedPage).remove();
 //	console.log("removing", removedPage);
 //	console.log("after b2 page removal", b2.pageList);
 	// patch b2
@@ -249,7 +230,7 @@ test("pages b1 move page", function() {
 	var b1 = createBlankBook({pages:6});
 	var b2 = cloneBook(b1);
 
-	b1.moveRoughPage(b1.page(b1.pageList[4]), 9)
+	b1.movePage(b1.page(b1.pageList[4]), 9)
 	var d = {id: 10, diff: b1.getDiff()};
 //	JsonDiff.prettyPrint(d.diff);
 //	console.log(JSON.stringify(b1.serverData.document));
@@ -264,8 +245,8 @@ test("pages b1 move page, b2 move page", function() {
 	var b1 = createBlankBook({pages:6, photos: 5, pagesWithPhotos: true});
 	var b2 = cloneBook(b1);
 
-	b1.moveRoughPage(b1.page(b1.pageList[4]), 9);
-	b2.moveRoughPage(b2.page(b2.pageList[5]), 7);
+	b1.movePage(b1.page(b1.pageList[4]), 9);
+	b2.movePage(b2.page(b2.pageList[5]), 7);
 	var d = {id: 10, diff: b1.getDiff()};
 //	JsonDiff.prettyPrint(d.diff);
 	b1.applyBroadcastPatch(d.id, d.diff);
