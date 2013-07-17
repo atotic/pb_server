@@ -28,7 +28,7 @@
     enabled: true,
 
     // Set this to false if you don't want to use the transition end property.
-    useTransitionEnd: false
+    useTransitionEnd: true
   };
 
   var div = document.createElement('div');
@@ -68,16 +68,13 @@
   support.transformOrigin = getVendorPropertyName('transformOrigin');
   support.transform3d     = checkTransform3dSupport();
 
-  var eventNames = {
-    'transition':       'transitionEnd',
-    'MozTransition':    'transitionend',
-    'OTransition':      'oTransitionEnd',
-    'WebkitTransition': 'webkitTransitionEnd',
-    'msTransition':     'MSTransitionEnd'
-  };
-
-  // Detect the 'transitionend' event needed.
-  var transitionEnd = support.transitionEnd = eventNames[support.transition] || null;
+  // Non-working transitionend event names are gonna get spliced out on the first event
+  var eventNames = [
+    'transitionend',
+    'webkitTransitionEnd',
+    'otransitionend',
+    'oTransitionEnd'
+  ];
 
   // Populate jQuery's `$.support` with the vendor prefixes we know.
   // As per [jQuery's cssHooks documentation](http://api.jquery.com/jQuery.cssHooks/),
@@ -515,6 +512,8 @@
     var delay = 0;
     var queue = true;
 
+    var theseProperties = jQuery.extend(true, {}, properties);
+
     // Account for `.transition(properties, callback)`.
     if (typeof duration === 'function') {
       callback = duration;
@@ -537,29 +536,29 @@
     }
 
     // Alternate syntax.
-    if (typeof properties.easing !== 'undefined') {
-      easing = properties.easing;
-      delete properties.easing;
+    if (typeof theseProperties.easing !== 'undefined') {
+      easing = theseProperties.easing;
+      delete theseProperties.easing;
     }
 
-    if (typeof properties.duration !== 'undefined') {
-      duration = properties.duration;
-      delete properties.duration;
+    if (typeof theseProperties.duration !== 'undefined') {
+      duration = theseProperties.duration;
+      delete theseProperties.duration;
     }
 
-    if (typeof properties.complete !== 'undefined') {
-      callback = properties.complete;
-      delete properties.complete;
+    if (typeof theseProperties.complete !== 'undefined') {
+      callback = theseProperties.complete;
+      delete theseProperties.complete;
     }
 
-    if (typeof properties.queue !== 'undefined') {
-      queue = properties.queue;
-      delete properties.queue;
+    if (typeof theseProperties.queue !== 'undefined') {
+      queue = theseProperties.queue;
+      delete theseProperties.queue;
     }
 
-    if (typeof properties.delay !== 'undefined') {
-      delay = properties.delay;
-      delete properties.delay;
+    if (typeof theseProperties.delay !== 'undefined') {
+      delay = theseProperties.delay;
+      delete theseProperties.delay;
     }
 
     // Set defaults. (`400` duration, `ease` easing)
@@ -569,7 +568,7 @@
     duration = toMS(duration);
 
     // Build the `transition` property.
-    var transitionValue = getTransition(properties, duration, easing, delay);
+    var transitionValue = getTransition(theseProperties, duration, easing, delay);
 
     // Compute delay until callback.
     // If this becomes 0, don't bother setting the transition property.
@@ -579,7 +578,7 @@
     // If there's nothing to do...
     if (i === 0) {
       var fn = function(next) {
-        self.css(properties);
+        self.css(theseProperties);
         if (callback) { callback.apply(self); }
         if (next) { next(); }
       };
@@ -595,8 +594,15 @@
       var bound = false;
 
       // Prepare the callback.
-      var cb = function() {
-        if (bound) { self.unbind(transitionEnd, cb); }
+      var cb = function(event) {
+        if (bound) {
+          for (var j=bound.length; j>0; --j) {
+            self.unbind(bound[j], cb);
+            if ((eventNames.length > 1) && (bound[j] !== event.type) && (eventNames.indexOf(bound[j]) !== -1)) {
+              eventNames.splice(eventNames.indexOf(bound[j]), 1);
+            }
+          }
+        }
 
         if (i > 0) {
           self.each(function() {
@@ -608,10 +614,12 @@
         if (typeof nextCall === 'function') { nextCall(); }
       };
 
-      if ((i > 0) && (transitionEnd) && ($.transit.useTransitionEnd)) {
+      if ((i > 0) && ($.transit.useTransitionEnd)) {
         // Use the 'transitionend' event if it's available.
-        bound = true;
-        self.bind(transitionEnd, cb);
+        bound = eventNames;
+        for (var j=0; j<eventNames.length; ++j) {
+          self.bind(eventNames[j], cb);
+        }
       } else {
         // Fallback to timers if the 'transitionend' event isn't supported.
         window.setTimeout(cb, i);
@@ -687,14 +695,16 @@
   // ### toMS(duration)
   // Converts given `duration` to a millisecond string.
   //
-  //     toMS('fast')   //=> '400ms'
-  //     toMS(10)       //=> '10ms'
+  // toMS('fast') => $.fx.speeds[i] => "200ms"
+  // toMS('normal') //=> $.fx.speeds._default => "400ms"
+  // toMS(10) //=> '10ms'
+  // toMS('100ms') //=> '100ms'
   //
   function toMS(duration) {
     var i = duration;
 
-    // Allow for string durations like 'fast'.
-    if (typeof i === 'string') { i = $.fx.speeds[i] || $.fx.speeds._default; }
+    // Allow string durations like 'fast' and 'slow', without overriding numeric values.
+    if (typeof i === 'string' && (!i.match(/^[\-0-9\.]+/))) { i = $.fx.speeds[i] || $.fx.speeds._default; }
 
     return unit(i, 'ms');
   }
