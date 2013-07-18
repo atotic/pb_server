@@ -31,7 +31,7 @@
 				pageAsset.page.removeAsset( pageAsset.assetId, { animate: true });
 			break;
 			case 'photoInPage':
-				transferData.page.clearPhoto( transferData.assetId );
+				transferData.page.removeAsset( transferData.assetId );
 			break;
 			}
 		}

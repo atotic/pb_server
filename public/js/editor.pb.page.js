@@ -140,6 +140,9 @@ asset widget {
 		getAssets: function() {
 			return this.p.assets;
 		},
+		isEmpty: function() {
+			return this.p.assets.ids.length == 0;
+		},
 		debugAssets: function() {
 			function printAsset(asset, assetId) {
 				var indent = asset.dependentOf ? '  ' : '';
@@ -1045,23 +1048,6 @@ asset widget {
 			return $encloseDom;
 		}
 	};
-
-
-	['getEditMenu',
-		'dom',
-		'addItem',
-		'removeItem',
-		'allItems',
-		'itemsByType',
-		'item',
-		'photos'
-		].forEach(
-		function(name) {
-			PageProxy.prototype[name] = function() {
-				console.error("Removed function called", name);
-				debugger;
-			}
-		});
 
 	PageProxy.blank = function(book) {
 

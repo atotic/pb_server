@@ -29,9 +29,12 @@
 					this.page.setDesign( transferData );
 				break;
 				case 'widget':
-				case 'photo':
 				case 'osFile':
 					this.dom.addClass('drop-target');
+				break;
+				case 'photo':
+					this.dom.addClass('drop-target-outside');
+					console.log('nada');
 				break;
 			};
 		},
@@ -44,9 +47,11 @@
 						this.page.restoreSomething( this.archive );
 				break;
 				case 'widget':
-				case 'photo':
 				case 'osFile':
 					this.dom.removeClass('drop-target');
+				break;
+				case 'photo':
+					this.dom.removeClass('drop-target-outside');
 				break;
 			}
 			this.page.endTemporaryChanges();

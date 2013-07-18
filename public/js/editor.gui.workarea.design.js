@@ -463,14 +463,14 @@ var DesignWorkArea = {
 		this.showPages(facingPages.get(show), direction);
 	},
 	goBack: function() {
-		console.log('goBack');
+		// console.log('goBack');
 		if (this.currentModel == null)
 			return;
 		var show = this.book.facingPages.before(this.currentModel);
 		this.goTo(show.left || show.right, 'back');
 	},
 	goForward: function() {
-		console.log('goForward');
+		// console.log('goForward');
 		if (this.currentModel == null)
 			return;
 		var show = this.book.facingPages.after(this.currentModel);
