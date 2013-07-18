@@ -183,7 +183,7 @@
 				return this._proxies[id];
 			else
 				if (this.localData.document.photoList.indexOf(id) == -1) {
-					console.warn('missing photo id', id);
+					// console.warn('missing photo id', id);
 					if (PB.ServerPhotoCache.exists(id))
 						return PB.ServerPhotoCache.get(id);
 					else {
@@ -546,10 +546,7 @@
 			this._dirty = true;
 			PB.broadcastChange(this, 'photoList', options);
 		},
-		// index: page position for insert. -1 means last
-		addPage: function(index, options) {
-			if (index == undefined)
-				index = -1;
+		addPageHelper: function (index) {
 			var page = PB.Page.Proxy.blank(this);
 			var pageList = this.pageList;
 			if (pageList.indexOf(page.id) != -1)
@@ -559,16 +556,37 @@
 				this.localData.document.pageList.push(page.id);
 			else
 				this.localData.document.pageList.splice(index, 0, page.id);
+			return page;
+		},
+		// index: page position for insert. -1 means last
+		addPage: function(index, options) {
+			if (index == undefined)
+				index = -1;
+			var page = this.addPageHelper(index); // always insert two pages, to keep numbers legal
+			this.addPageHelper(-1);
 			this._dirty = true;
 			PB.broadcastChange(this, 'pageList', options);
 			return this.page(page.id);
 		},
-		removePage: function(page, options) {
+		removePageHelper: function (page) {
 			var index = this.pageList.indexOf(page.id);
 			if (index == -1)
 				throw new Error("no such page");
+			if (index >= this.localData.document.pageList.length)
+				throw new Error("no such page");
 			this.localData.document.pageList.splice(index, 1);
 			delete this._proxies[page.id];
+		},
+		removePage: function(page, options) {
+			this.removePageHelper( page );
+			// make number of pages legal again
+			var lastPageId = this.localData.document.pageList[ this.localData.document.pageList.length - 1];
+			var lastPage = this.page( lastPageId );
+			// remove last page if empty
+			if ( lastPage.isEmpty() )
+				this.removePageHelper( lastPage );
+			else // or add page to the end
+				this.addPageHelper(-1);
 			this._pagePhotosChanged(page, options);
 			this._dirty = true;
 			PB.broadcastChange(this, 'pageList', options);
