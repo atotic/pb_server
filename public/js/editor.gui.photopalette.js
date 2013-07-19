@@ -360,6 +360,7 @@
 				break;
 				}
 			}
+			$('#photo-list').prepend($('#palette-kind-picker'));
 		}
 	}
 

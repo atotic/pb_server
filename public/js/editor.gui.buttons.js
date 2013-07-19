@@ -189,7 +189,7 @@
 		},
 		continueDrag: function(clientY) {
 			var heights = GUI.Palette.getPossibleHeights();
-			var min = heights[0];
+			var min = heights[0] / 2;
 			var max = heights[heights.length -1];
 			var mainRect = document.getElementById('main-content').getBoundingClientRect();
 			var loc = GUI.Util.clamp(clientY,

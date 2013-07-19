@@ -93,6 +93,9 @@
 					}, {animate:false});
 					want--;
 				}
+				var lastPage = book.lastPage();
+				if (lastPage.isEmpty())
+					emptyPages.push( lastPage.id);
 			}
 			t.print("placed");
 			PB.broadcastChangeBatch();

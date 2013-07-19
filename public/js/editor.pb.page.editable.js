@@ -34,7 +34,6 @@
 				break;
 				case 'photo':
 					this.dom.addClass('drop-target-outside');
-					console.log('nada');
 				break;
 			};
 		},

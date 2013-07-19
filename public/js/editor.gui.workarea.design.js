@@ -266,6 +266,8 @@ var DesignWorkArea = {
 		var pos = this.getPagePositions(this.book);
 		var animate = direction == 'forward' || direction == 'back';
 
+		if (BrowserDetect.OS == 'iOS')
+			animate = false;
 		// create new pages
 		function getPlaceholder(page) {
 			var d = page.dimensions;

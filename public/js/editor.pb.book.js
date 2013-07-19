@@ -174,6 +174,10 @@
 		page: function(id) {
 			return this._getPageProxy(id);
 		},
+		lastPage: function() {
+			var lastPageId = this.localData.document.pageList[ this.localData.document.pageList.length - 1];
+			return this.page( lastPageId );
+		},
 		pageResolver: function() {
 			var THIS = this;
 			return function(id) { return THIS._getPageProxy(id);}
@@ -580,8 +584,7 @@
 		removePage: function(page, options) {
 			this.removePageHelper( page );
 			// make number of pages legal again
-			var lastPageId = this.localData.document.pageList[ this.localData.document.pageList.length - 1];
-			var lastPage = this.page( lastPageId );
+			var lastPage = this.lastPage();
 			// remove last page if empty
 			if ( lastPage.isEmpty() )
 				this.removePageHelper( lastPage );
