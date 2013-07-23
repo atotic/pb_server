@@ -50,6 +50,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			GUI.Buttons.init();
 			GUI.CommandManager.init();
 			GUI.Tools.init();
+			GUI.Palette.init();
 			GUI.WorkArea.init();
 		},
 		clearPopups: function(ev) {
@@ -99,7 +100,7 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 						break;
 					}
 				});
-			GUI.PhotoPalette.bindToBook(book);
+			GUI.Palette.bindToBook(book);
 			GUI.WorkArea.bindToBook(book);
 			window.document.title = book.title + " PhotoBook";
 		},

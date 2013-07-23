@@ -60,8 +60,8 @@ body {
 @navbar-height: 41px;
 @image-height: 128px;
 @image-padding: 12px;
-@photo-list-height: @image-height + @image-padding;
-@palette-height: @navbar-height + @photo-list-height;
+@palette-bookphoto-height: @image-height + @image-padding;
+@palette-height: @navbar-height + @palette-bookphoto-height;
 @side-tool-width: 120px;
 @arrow-width: 28px;
 @work-area-color: #ddd;
@@ -97,19 +97,19 @@ body {
 	overflow: auto;
 	margin-left:0px;
 	top: @navbar-height;
-	max-height: @photo-list-height;
+	max-height: @palette-bookphoto-height;
 }
-#photo-list-container {
+#palette-bookphoto-container {
 	.pb-palette-container;
 }
 
-	#photo-list {
+	#palette-bookphoto {
 		margin-top: 8px;
 		padding-left: @side-tool-width;
 		padding-right: @palette-resize-btn-radius / 2;
 		width: 100%;
 	}
-		#photo-list img {
+		#palette-bookphoto img {
 			margin: 2px;
 		}
 
@@ -317,7 +317,7 @@ body {
 			  	</li>
 				</ul>
 				<ul id='palette-tabs' class='nav nav-tabs'>
-					<li class='active'><a data-toggle='tab' href='#photo-list-container'>Your photos</a></li>
+					<li class='active'><a data-toggle='tab' href='#palette-bookphoto-container'>Your photos</a></li>
 					<li><a data-toggle='tab' href='#background-list-container'>Backgrounds</a></li>
 					<li><a data-toggle='tab' href='#layout-list-container'>Layouts</a></li>
 					<li><a data-toggle='tab' href='#gadget-list-container'>Gadgets</a></li>
@@ -355,8 +355,8 @@ body {
   		</ul>
 		</div>
 		<div id='palette-tabs-container' class='tab-content'>
-			<div class="tab-pane active"  id='photo-list-container'>
-				<div id='photo-list'>
+			<div class="tab-pane active"  id='palette-bookphoto-container'>
+				<div id='palette-bookphoto'>
 				</div>
 			</div>
 
@@ -380,9 +380,9 @@ function insertImages() {
 	var html ="";
 	for (var i=0; i<20; i++)
 		html += "<img src='/assets/test/" + i + ".jpg?size=icon'>"
-	$('#photo-list').append(html);
-	$('#photo-list img').each(function() {
-		GUI.PhotoPalette.makeDraggable(this);
+	$('#palette-bookphoto').append(html);
+	$('#palette-bookphoto img').each(function() {
+		GUI.Palette.BookPhoto.makeDraggable(this);
 	});
 }
 

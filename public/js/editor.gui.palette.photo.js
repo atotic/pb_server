@@ -1,6 +1,6 @@
-// editor.gui.photopalette.js
+// editor.gui.BookPhotoPalette.js
 
-// PhotoPalette
+// BookPhotoPalette
 // images can be dragged out
 (function(scope){
 "use strict";
@@ -55,7 +55,7 @@
 				pageAsset.page.removeAsset( pageAsset.assetId, { animate: true });
 			break;
 			case 'osFile':
-				var book = PB.ModelMap.domToModel($('#photo-list'));
+				var book = PB.ModelMap.domToModel($('#palette-bookphoto'));
 				GUI.Dnd.Util.filterFileList( transferData )
 					.forEach( function( file ) {
 						book.addLocalPhoto(file, { animate:false } );
@@ -68,20 +68,23 @@
 		}
 	});
 
-	var PhotoPalette = {
+	var BookPhotoPalette = {
 		bindToBook: function(book) {
 			this.makeDroppable();
 			// Keep models in sync
-			$('#photo-list')
+			$('#palette-bookphoto')
 				.data('model_id', book.id)
 				.on(PB.MODEL_CHANGED,
 					function(ev, model, prop, options) {
 						switch( prop ) {
 						case 'photoList':
-							PhotoPalette.synchronizePhotoList(options);
+							BookPhotoPalette.synchronizePhotoList(options);
 						break;
 						}
-					});
+					})
+				.on('pbShow', function() {
+					BookPhotoPalette.processDelayUntilVisible();
+				});
 			GUI.Options.addListener(this.optionsChanged);
 			this.synchronizePhotoList();
 		},
@@ -94,36 +97,29 @@
 			GUI.Dnd.Util.preventDefaultDrag($imgDiv);
 		},
 		makeDroppable: function() {
-			$('#photo-list-container').addClass('pb-droppable')
+			$('#palette-bookphoto-container').addClass('pb-droppable')
 				.data('pb-droppable', PhotoPaletteDroppable );
 		},
 		optionsChanged: function(name, val) {
 			switch(name) {
 				case 'photoFilter':
-					GUI.PhotoPalette.synchronizePhotoList();
+					BookPhotoPalette.synchronizePhotoList();
 					break;
 				case 'photoSize':
-					GUI.PhotoPalette.resizeAllImages();
+					BookPhotoPalette.resizeAllImages();
 					break;
 				case 'photoSort':
-					GUI.PhotoPalette.synchronizePhotoList();
-					$('#photo-list .photo-div').each(function() {
-						GUI.PhotoPalette.setTileInfo(this, PB.ModelMap.domToModel(this));
+					BookPhotoPalette.synchronizePhotoList();
+					$('#palette-bookphoto .photo-div').each(function() {
+						BookPhotoPalette.setTileInfo(this, PB.ModelMap.domToModel(this));
 					});
 					break;
 				default:
 					break;
 			}
 		},
-		show: function() {
-			$('#photo-list-container').show();
-			this.processDelayUntilVisible();
-		},
-		hide: function() {
-			$('#photo-list-container').hide();
-		},
 		getDomBoxInfo: function() {
-			var photoList = $('#photo-list');
+			var photoList = $('#palette-bookphoto');
 			var domBoxInfo = {
 				photoList: {
 					top: parseInt(photoList.css('margin-top')),
@@ -131,7 +127,7 @@
 				},
 				photoDiv: {	top: 2, bottom: 2, height: GUI.Options.photoSizeHeight} // guess
 			};
-			var photoDiv = $('#photo-list > .photo-div');
+			var photoDiv = $('#palette-bookphoto > .photo-div');
 			if (photoDiv.length !== 0)
 				domBoxInfo.photoDiv = {
 					top: parseInt(photoDiv.css('margin-top')),
@@ -142,7 +138,7 @@
 		},
 		// Have to return margins too
 		getPossibleHeights: function(max) {
-			$('#photo-list-container').stop();
+			$('#palette-bookphoto-container').stop();
 			var boxInfo = this.getDomBoxInfo();
 			var retVal = {
 				top: boxInfo.photoList.top,
@@ -243,7 +239,7 @@
 			$('.photo-div > img').each(function() {
 				var el = $(this);
 				el.stop();
-				var newSize = PhotoPalette.scaleTileDimensions({ width: this.naturalWidth, height: this.naturalHeight });
+				var newSize = BookPhotoPalette.scaleTileDimensions({ width: this.naturalWidth, height: this.naturalHeight });
 				el.width(newSize.width).height(newSize.height);
 			});
 		},
@@ -272,10 +268,10 @@
 								img.prop('src', imgData.url).width(scaled.width).height(scaled.height);
 							break;
 							case 'status':
-								PhotoPalette.setTileStatus(tile, model);
+								BookPhotoPalette.setTileStatus(tile, model);
 								break;
 							case 'progress':
-								PhotoPalette.setTileProgress(tile, model);
+								BookPhotoPalette.setTileProgress(tile, model);
 							break;
 							default:
 							break;
@@ -294,10 +290,10 @@
 		},
 
 		synchronizePhotoList: function(options) {
-			if (this.delayUntilVisible($('#photo-list'), this.synchronizePhotoList))
+			if (this.delayUntilVisible($('#palette-bookphoto'), this.synchronizePhotoList))
 				return;
 			options = $.extend({animate:false}, options);
-			var containerDom = $('#photo-list');
+			var containerDom = $('#palette-bookphoto');
 			var bookModel = PB.ModelMap.domToModel(containerDom);
 			var sel = '.photo-div';
 
@@ -331,7 +327,7 @@
 					var newDom = this.createImageTile(newModel);
 					oldChildren = GUI.JQDiffUtil.insert(oldChildren, containerDom, targetIndex, newDom);
 					if (options.animate) {
-						GUI.Util.revealByScrolling(newDom, $('#photo-list-container'));
+						GUI.Util.revealByScrolling(newDom, $('#palette-bookphoto-container'));
 						var w = newDom.width();
 						newDom.css('width', 0)
 									.animate({width: w}, {complete: function() {
@@ -360,46 +356,11 @@
 				break;
 				}
 			}
-			$('#photo-list').prepend($('#palette-kind-picker'));
+			$('#palette-bookphoto').prepend( $('#palette-bookphoto').find('#palette-kind-picker'));
 		}
 	}
 
-	$.extend(PhotoPalette, GUI.Mixin.DelayUntilVisible);
+	$.extend(BookPhotoPalette, GUI.Mixin.DelayUntilVisible);
 
-	scope.PhotoPalette = PhotoPalette;
-})(window.GUI);
-
-(function(scope) {
-	var Palette = {
-		getPossibleHeights: function() {
-			var max = $('#main-content').height() - GUI.Options.pageSizePixels - 32;
-			var heights = GUI.PhotoPalette.getPossibleHeights(max);
-			var palette = $('#palette');
-			var topExtra = heights.top + parseInt(palette.css('padding-top'));
-			var bottomExtra = heights.bottom + parseInt(palette.css('padding-bottom'));
-			return heights.heights.map(function(x) { return x + topExtra + bottomExtra;});
-		},
-		setHeight: function(height, animate) {
-			var palette = $('#palette');
-			var padding = parseInt(palette.css('padding-top')) + parseInt(palette.css('padding-bottom'));
-			var containerHeight = height - padding;
-			$('#photo-list-container').css({minHeight: containerHeight, maxHeight: containerHeight});
-			GUI.fixSizes($('#work-area'));
-		},
-		viewMore: function() {
-			var heights = this.getPossibleHeights();
-			var height = $('#palette').outerHeight();
-			for (var i=0; i<heights.length; i++)
-				if (heights[i] > height)
-					return this.setHeight(heights[i], true);
-		},
-		viewLess: function() {
-			var heights = this.getPossibleHeights();
-			var height = $('#palette').outerHeight();
-			for (var i=heights.length-1; i>=0; i--)
-				if (heights[i] < height)
-					return this.setHeight(heights[i], true);
-		}
-	};
-	scope.Palette = Palette;
+	scope.Palette.BookPhoto = BookPhotoPalette;
 })(window.GUI);

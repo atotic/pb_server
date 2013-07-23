@@ -216,14 +216,15 @@
 		show: function() {
 			$('#palette').show();
 			$('#work-area-organize').show();
-			GUI.PhotoPalette.show();
+			GUI.Palette.setupPicker(['bookphoto']);
+			GUI.Palette.select('bookphoto');
 			this.processDelayUntilVisible();
 			$('#workarea-menu').find('li').hide();
 			$('#selection-menu').empty();
 			$('#add-photo-btn,#add-page-btn').show();
 		},
 		hide: function() {
-			$('#work-area-organize, #photo-list-container').hide();
+			$('#work-area-organize').hide();
 		},
 		makeDroppable: function() {
 			$('#work-area-organize').addClass('pb-droppable')

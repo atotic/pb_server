@@ -226,7 +226,9 @@ class SvegApp < Sinatra::Base
 						"editor.gui.workarea.theme.js",
 						"editor.gui.workarea.design.js",
 						"editor.gui.manipulators.js",
-						"editor.gui.photopalette.js",
+						"editor.gui.palette.js",
+						"editor.gui.palette.photo.js",
+						"editor.gui.palette.theme.js",
 						"editor.gui.tools.js",
 						"editor.pb.page.editable.js",
 						"editor.pb.page.commands.js"

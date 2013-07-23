@@ -361,7 +361,7 @@
 		},
 		// Creates icon for design or layout as canvas
 		getDesignIcon: function( page, maxHeight, options) {
-			var builder = new DesignIconBuilder( currentPage, maxHeight, options);
+			var builder = new DesignIconBuilder( page, maxHeight, options);
 			return builder.create();
 		},
 		// count by type. Do not count children by default

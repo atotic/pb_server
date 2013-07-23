@@ -14,6 +14,7 @@ var ThemeWorkArea = {
 		$dom.show();
 		$dom.append( this.getSizePicker(PB.Book.default));
 		this.loadThemePicker();
+		GUI.Palette.setupPicker([]);
 		$('#workarea-menu').find('li').hide();
 	},
 	hide: function() {

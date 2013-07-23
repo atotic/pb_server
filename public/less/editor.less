@@ -14,10 +14,10 @@
 @navbar-height: @navbarHeight;
 @navbar-color: #1b1b1b;
 
-@photo-list-photo-height: 128px;
-@photo-list-photo-margin: 2px;
-@photo-list-margin-top: 8px;
-@photo-list-height: @photo-list-photo-height + @photo-list-margin-top + @photo-list-photo-margin * 4;
+@palette-bookphoto-photo-height: 128px;
+@palette-bookphoto-photo-margin: 2px;
+@palette-bookphoto-margin-top: 8px;
+@palette-bookphoto-height: @palette-bookphoto-photo-height + @palette-bookphoto-margin-top + @palette-bookphoto-photo-margin * 4;
 
 @palette-resize-btn-radius: 20px;
 
@@ -104,17 +104,23 @@ body {
 	}
 }
 
-.pb-palette-container {
+.palette-container {
 	overflow: auto;
-	max-height: @photo-list-height;
-	min-height: @photo-list-height;
+	max-height: @palette-bookphoto-height;
+	min-height: @palette-bookphoto-height;
 	position: relative;
 	display: none;
 }
 
+.palette-content {
+	margin-top: @palette-bookphoto-margin-top;
+	padding-right: @palette-resize-btn-radius;
+	width: 100%;
+}
+
 #palette-resize-btn {
 	position: absolute;
-	top: @photo-list-height - @palette-resize-btn-radius + 12;
+	top: @palette-bookphoto-height - @palette-resize-btn-radius + 12;
 	width: @palette-resize-btn-radius * 2;
 	height: @palette-resize-btn-radius * 2;
 	border-radius: @palette-resize-btn-radius;
@@ -131,20 +137,31 @@ body {
 #palette-kind-picker {
 	display: inline-block;
 	color: @dark-bg-color-lighten;
-	margin: 0 16px 0 16px;
+	margin: 0 16px 0 0px;
+	max-width: 128px;
+	min-width: 100px;
+	vertical-align: top;
+	li {
+		list-style-type: none;
+		cursor: pointer;
+		padding-bottom: 8px;
+	}
+	li:hover {
+		color: white;
+	}
+	li.menuselected {
+		color: @grayLight;
+	}
 }
 
-#photo-list-container {
-	.pb-palette-container;
+#palette-bookphoto-container {
+	.palette-container;
 }
 
-	#photo-list {
-		margin-top: @photo-list-margin-top;
-		padding-right: @palette-resize-btn-radius;
-		width: 100%;
+	#palette-bookphoto {
 		.photo-div {
 			display: inline-block;
-			margin: @photo-list-photo-margin;
+			margin: @palette-bookphoto-photo-margin;
 			position:relative;
 			.status {
 				position: absolute;
@@ -176,7 +193,7 @@ body {
 		}
 	}
 
-	#photo-list.drop-target {
+	#palette-bookphoto.drop-target {
 		background-color: maroon;
 	}
 
@@ -203,6 +220,18 @@ body {
 		list-style-type: none;
 		z-index: 1031;
 	}
+
+.palette-tile {
+	display: inline-block;
+	margin: @palette-bookphoto-photo-margin;
+	position:relative;
+}
+.palette-title-tile {
+	display: inline-block;
+	vertical-align: top;
+	color: gray;
+	clear:both;
+}
 
 #work-area {
 	background-color: @work-area-color;

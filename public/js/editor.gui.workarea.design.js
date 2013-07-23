@@ -150,7 +150,8 @@ var DesignWorkArea = {
 		}
 		$('#work-area').css({ paddingLeft: 0, paddingTop: 0});
 		$('#palette, #work-area-design').show();
-		GUI.PhotoPalette.show();
+		GUI.Palette.setupPicker(['bookphoto', 'theme', 'themepicker']);
+		GUI.Palette.select('bookphoto');
 		GUI.fixSizes($('#work-area'));
 		GUI.CommandManager.addCommandSet(this.commandSet);
 		DesignWorkArea.goTo(this._lastPage);
