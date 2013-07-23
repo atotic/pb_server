@@ -258,6 +258,17 @@
 				// console.log('dest removed');
 			}
 		},
+		clearWindowSelection: function() {	// FF can select on user drag
+			if (window.getSelection) {
+				if (window.getSelection().empty) {  // Chrome
+					window.getSelection().empty();
+				} else if (window.getSelection().removeAllRanges) {  // Firefox
+					window.getSelection().removeAllRanges();
+				}
+			} else if (document.selection) {  // IE?
+				document.selection.empty();
+			}
+		},
 		dragStart: function($ev) {
 			// console.log("dragStart");
 			webkitIpadBugWorkaround.startFix();
@@ -337,6 +348,7 @@
 			// console.log('dragMove enter');
 			$ev.preventDefault(); // stop touch scrolling
 			$ev.stopPropagation();
+			Dnd.clearWindowSelection();
 			var loc = GUI.Util.getPageLocation($ev);
 			loc.x = Math.max( Math.min( loc.x, dragBounds.right ), dragBounds.left);
 			loc.y = Math.max( Math.min( loc.y, dragBounds.bottom), dragBounds.top);
