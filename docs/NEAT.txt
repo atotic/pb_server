@@ -1,4 +1,7 @@
 Stream:
+Preventing cross-site forgery: http://blog.alexmaccaw.com/jswebapps-csrf
+Resizing images on the fly: http://petewarden.com/2013/07/27/how-to-easily-resize-and-cache-images-for-the-mobile-web
+A guy to hire to do an iPhone app: http://sealedabstract.com/
 Cute to integrate things like this: http://adamdraws.bigcartel.com/
 If I have to: http://founderdating.com/
 Do Things That Do Not Scale: http://paulgraham.com/ds.html

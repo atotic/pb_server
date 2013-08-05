@@ -143,6 +143,7 @@ var DesignWorkArea = {
 				;
 		}
 	},
+	lastPaletteId: 'bookphoto',
 	show: function() {
 		if (this.book.themeId == null || !this.book.dimensions.width) {
 			GUI.Options.designStage = 'theme'
@@ -151,7 +152,7 @@ var DesignWorkArea = {
 		$('#work-area').css({ paddingLeft: 0, paddingTop: 0});
 		$('#palette, #work-area-design').show();
 		GUI.Palette.setupPicker(['bookphoto', 'theme', 'themepicker']);
-		GUI.Palette.select('bookphoto');
+		GUI.Palette.select( this.lastPaletteId || 'bookphoto' );
 		GUI.fixSizes($('#work-area'));
 		GUI.CommandManager.addCommandSet(this.commandSet);
 		DesignWorkArea.goTo(this._lastPage);
@@ -161,6 +162,7 @@ var DesignWorkArea = {
 	},
 	hide: function() {
 		this._lastPage = this.currentModel;
+		this.lastPaletteId = GUI.Palette.getCurrentPaletteId();
 		var workArea = document.getElementById('work-area');
 		workArea.style.removeProperty('padding-left');
 		workArea.style.removeProperty('padding-top');

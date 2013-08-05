@@ -4,6 +4,7 @@
 "use strict"
 
 var DPI = 96;
+
 var ThemeWorkArea = {
 	getBook: function() {
 		return PB.ModelMap.model( $('body').data('model_id') );

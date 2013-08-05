@@ -172,7 +172,7 @@ var ThemePalette = {
 		var palette = $('#palette-theme');
 		this.clear();
 		var dimensions = this.book.dimensions;
-		var tileHeight = 96;
+		var tileHeight = 128;
 		var page = this.workarea.currentModel;
 		var tiles = this.createDesignTiles( theme, tileHeight, page);
 		appendTiles( 'designs', tiles, true );

@@ -213,17 +213,19 @@
 					break;
 			}
 		},
+		lastPaletteId: 'bookphoto',
 		show: function() {
 			$('#palette').show();
 			$('#work-area-organize').show();
 			GUI.Palette.setupPicker(['bookphoto']);
-			GUI.Palette.select('bookphoto');
+			GUI.Palette.select( this.lastPaletteId || 'bookphoto');
 			this.processDelayUntilVisible();
 			$('#workarea-menu').find('li').hide();
 			$('#selection-menu').empty();
 			$('#add-photo-btn,#add-page-btn').show();
 		},
 		hide: function() {
+			this.lastPaletteId = GUI.Palette.getCurrentPaletteId();
 			$('#work-area-organize').hide();
 		},
 		makeDroppable: function() {
