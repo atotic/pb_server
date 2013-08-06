@@ -186,6 +186,13 @@
 		},
 		end: function(transferDone) {
 			this.el.animate( {opacity: 1.0 },0);
+		},
+		doubleClick: function($el) {
+			var THIS = this;
+			window.setTimeout(function() {
+				GUI.DesignWorkArea.goTo( RoughWorkArea.book.page( THIS.pageId ));
+				GUI.WorkArea.show('work-area-design');
+			},0);
 		}
 	}
 	var roughPageTarget = { target: null, direction: 0, dropFeedback: "" };

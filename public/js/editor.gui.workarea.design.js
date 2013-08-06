@@ -114,7 +114,8 @@ var DesignWorkArea = {
 		return cm.left || cm.right;
 	},
 	get activeModel() {
-		return this.activeSelection.page;
+		var activeSel = this.activeSelection;
+		return activeSel ? this.activeSelection.page : null;
 	},
 	get activeSelection() { // active, lastClicked page
 		return this.currentSelections
@@ -156,15 +157,14 @@ var DesignWorkArea = {
 		$('#palette, #work-area-design').show();
 		GUI.Palette.setupPicker(['bookphoto', 'theme', 'themepicker']);
 		GUI.Palette.select( this.lastPaletteId || 'bookphoto' );
-		GUI.fixSizes($('#work-area'));
 		GUI.CommandManager.addCommandSet(this.commandSet);
-		DesignWorkArea.goTo(this._lastPage);
+		if ( !this.activeSelection)
+			DesignWorkArea.goTo(this._lastPage);
 		// initialize workarea-menu
 		$('#workarea-menu').find('li').hide();
 		$('#add-photo-btn, #add-text-btn').show();
 	},
 	hide: function() {
-		this._lastPage = this.currentModel;
 		this.lastPaletteId = GUI.Palette.getCurrentPaletteId();
 		var workArea = document.getElementById('work-area');
 		workArea.style.removeProperty('padding-left');
@@ -278,6 +278,8 @@ var DesignWorkArea = {
 			&& (currentModels.left == pageModels.left)
 			&& (currentModels.right == pageModels.right))
 			return; 	// pages already shown, nothing to do
+
+		this._lastPage = pageModels.left || pageModels.right;
 
 		var pos = this.getPagePositions(this.book);
 		var animate = direction == 'forward' || direction == 'back';

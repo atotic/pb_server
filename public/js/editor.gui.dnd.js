@@ -85,6 +85,7 @@
 			flavors:['test'],
 			start: null,
 			end: null,
+			doubleClick: null,
 			getTransferData: null
 		}, options);
 	}
@@ -135,6 +136,13 @@
 					console.error("getTransferData not implemented", flavor);
 					return null;
 			}
+		},
+		doubleClick: function($ev) {
+			if (this.options.doubleClick) {
+				this.options.doubleClick($ev);
+				return true;
+			}
+			console.log("doubleClick");
 		}
 	}
 
@@ -166,12 +174,15 @@
 	var testDraggable = new Draggable();
 
 	var $src;	// Dom drag source
+	var previousDraggable; // Last draggable
+	var startTime = 0;
 	var $dest = $();	// Dom drag destination
 	var draggable;	// Dnd.Draggable object
 	var droppable;	// Dnd.Droppable object
 	var $dragImage;	// DOM being dragged
 	var startLoc;	// start location of the drag
 	var transferFlavor;
+
 
 	var dragBounds = {
 		top: 0,
@@ -275,10 +286,20 @@
 			if ($dragImage)	// if we get both mousedown and touchstart do only one
 				return;
 			$src = $($ev.currentTarget);
-
-			// create a clone
 			startLoc = GUI.Util.getPageLocation($ev);
 			draggable = $src.data('pb-draggable') || testDraggable;
+			// double click detection
+			var now = Date.now();
+			if (draggable == previousDraggable
+				&& ( ( now - startTime) < 300)
+				&& draggable.doubleClick($ev) ) {
+					previousDraggable = null;
+					return;
+				}
+			else
+				previousDraggable = null;
+			startTime = now;
+			// create a clone
 			$dragImage = draggable.start( $src, $ev, startLoc );
 			$(document.body).append($dragImage);
 
@@ -384,7 +405,7 @@
 		dragEnd: function($ev) {
 			// console.log('dragEnd', $ev.type);
 			webkitIpadBugWorkaround.endFix();
-
+			previousDraggable = draggable;
 			var transferDone = false;
 			if ($dest.length > 0)
 				transferDone = Dnd.doTransfer($ev);

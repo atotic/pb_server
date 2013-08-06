@@ -84,7 +84,6 @@ var Palette = {
 			$('#palette-kind-picker').show();
 		$('#palette-kind-picker').find('li').removeClass('menuselected');
 		$( '#' + this.paletteMenuitemId(paletteId) ).addClass('menuselected');
-		GUI.fixSizes($('#work-area'));
 	},
 	paletteId: function( paletteId) {
 		return 'palette-' + paletteId;
