@@ -549,16 +549,25 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 
 if (!('Mixin' in GUI))
 	GUI.Mixin = {};
-// DelayUntilVisible mixin
-// Use to delay things that should only happen when visible
-// Usage:
-/*
-doVisibleStuff: function(arg1, arg2) {
-	var dom = $('#blah')
-	if (!this.delayUntilVisible(dom, this.doVisibleStuff, [arg1, arg2]))
-		return;
-}
-show: function() {
+/* DelayUntilVisible mixin
+	Used to delay functions that should only execute when visible
+	Framework sends 'pbShow' event when element is visible.
+	Call processDelayUntilVisible in the event handler
+
+Usage:
+	init: function() {
+		// initialize event handlers
+		$('#blah').on('pbShow', function() {
+			this.processDelayUntilVisible();
+		}
+	}
+	executeOnlyWhenVisible: function(arg1, arg2) {
+		var dom = $('#blah')
+		if (!this.delayUntilVisible(dom, this.executeOnlyWhenVisible, [arg1, arg2]))
+			return;
+	}
+
+	.
 	$('#blah').show();
 	this.processDelayUntilVisible();
 }

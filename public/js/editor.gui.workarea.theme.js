@@ -79,7 +79,7 @@ var ThemeWorkArea = {
 		return $picker;
 	},
 	loadThemes: function($picker) {
-		var themeIds = ['admin@sports'];
+		var themeIds = ['admin@sports', 'admin@modern_full'];
 
 		var themesLoading = false;
 

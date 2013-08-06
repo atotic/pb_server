@@ -55,7 +55,7 @@ var DesignWorkArea = {
 			});
 		});
 		$('#add-text-btn').on('mousedown touchstart', function() {
-			var lastSelection = DesignWorkArea.latestSelection;
+			var lastSelection = DesignWorkArea.activeSelection;
 			var assetId = lastSelection.page.addAsset({ type: 'text' });
 			lastSelection.page.selectItem(lastSelection, assetId);
 		});
@@ -105,9 +105,17 @@ var DesignWorkArea = {
 			right: PB.ModelMap.domToModel( dp.right)
 		}
 	},
-	get currentModel() {	// just first page
-		var cp = this.currentModels;
-		return cp.left || cp.right;
+	get firstVisiblePage() {
+		var cm = this.currentModels;
+		return cm.left || cm.right;
+	},
+	get activeModel() {
+		return this.activeSelection.page;
+	},
+	get activeSelection() { // active, lastClicked page
+		return this.currentSelections
+			.sort( function(a,b) { return b.clickTime - a.clickTime; })
+			[0];
 	},
 	get currentSelections() {	// all selections in the page
 		var pages = this.designPages;
@@ -120,11 +128,6 @@ var DesignWorkArea = {
 			retVal.push(rightSel);
 		return retVal;
 	},
-	get latestSelection() {
-		return this.currentSelections
-			.sort( function(a,b) { return b.selectTime - a.selectTime; })
-			[0];
-	},
 	clearSelection: function() {
 		this.currentSelections.forEach( function(sel) {
 			sel.setSelection();
@@ -135,10 +138,6 @@ var DesignWorkArea = {
 			case 'dimensions':
 				DesignWorkArea.resize();
 			break;
-			case 'template':
-				if ($('#work-area-design:visible').length == 1)	//
-					DesignWorkArea.show();
-				break;
 			default:
 				;
 		}
@@ -184,6 +183,7 @@ var DesignWorkArea = {
 		}
 	},
 	updateSelectionMenu: function(sel) {
+		console.log("updateSelectionMenu");
 		// Clear menu
 		$menu = $('#selection-menu');
 		$menu.empty();
@@ -211,6 +211,15 @@ var DesignWorkArea = {
 			});
 			$menu.append($li);
 		});
+	},
+	lastActiveSelection: null,
+	updateActiveSelection: function() {
+		var active = this.activeSelection;
+		if (active != this.lastActiveSelection) {
+			console.log('updateActiveSelection');
+			this.lastActiveSelection = active;
+			this.broadcast('activeSelection', active);
+		}
 	},
 	getPagePositions: function(book) {
 		var vinset = 20;
@@ -289,8 +298,16 @@ var DesignWorkArea = {
 				var $dom = page.generateDom(options);
 				if ( options.editable ) {
 					var sel = PB.Page.Selection.findClosest($dom);
-					sel.addListener( function() {
-						THIS.updateSelectionMenu(sel);
+					sel.addListener( function( propName, propVal) {
+						switch( propName ) {
+							case 'selection':
+								THIS.updateSelectionMenu(sel);
+							break;
+							case 'clickTime':
+								THIS.updateActiveSelection();
+								console.log('clickTime');
+							break;
+						}
 					});
 				}
 				return $dom;
@@ -469,20 +486,21 @@ var DesignWorkArea = {
 	},
 	goBack: function() {
 		// console.log('goBack');
-		if (this.currentModel == null)
+		if (this.firstVisiblePage == null)
 			return;
-		var show = this.book.facingPages.before(this.currentModel);
+		var show = this.book.facingPages.before(this.firstVisiblePage);
 		this.goTo(show.left || show.right, 'back');
 	},
 	goForward: function() {
 		// console.log('goForward');
-		if (this.currentModel == null)
+		if (this.firstVisiblePage == null)
 			return;
-		var show = this.book.facingPages.after(this.currentModel);
+		var show = this.book.facingPages.after(this.firstVisiblePage);
 		this.goTo(show.left || show.right, 'forward');
 	}
 }
 
+$.extend(DesignWorkArea, PB.ListenerMixin );
 scope.DesignWorkArea = DesignWorkArea;
 
 })(GUI);

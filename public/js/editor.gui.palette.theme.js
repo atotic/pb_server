@@ -27,8 +27,18 @@ var ThemePalette = {
 	},
 	bindToWorkarea: function( workarea ) {
 		this.workarea = workarea;
+		workarea.addListener( function(propName, propVal ) {
+			if (propName == 'activeSelection')
+				ThemePalette.updateTiles();
+		});
 	},
-	processDelayUntilVisible: function() {
+	updateTiles: function() {
+		var designId = this.workarea.activeSelection.page.designId;
+		var themeId = PB.ThemeCache.themeIdFromUrl( designId );
+		if (themeId)
+			this.setTheme(themeId, { force: true });
+		else
+			console.log('could not find theme for ', designId);
 	},
 	createDesignTiles: function(theme, tileHeight, page) {
 		if (page == null)
@@ -154,6 +164,8 @@ var ThemePalette = {
 	},
 	clear: function() {
 		$('#palette-theme').find('.palette-tile').remove();
+		$('#palette-theme').find('.palette-title-tile').remove();
+		$('#palette-theme').find('br').remove();
 	},
 	syncToTheme: function( theme ) {
 		function appendTiles(title, tileArray, noBR) {
@@ -170,10 +182,12 @@ var ThemePalette = {
 			});
 		}
 		var palette = $('#palette-theme');
+		if ( this.delayUntilVisible( palette, this.syncToTheme, [theme]))
+			return;
 		this.clear();
 		var dimensions = this.book.dimensions;
 		var tileHeight = 128;
-		var page = this.workarea.currentModel;
+		var page = this.workarea.activeModel;
 		var tiles = this.createDesignTiles( theme, tileHeight, page);
 		appendTiles( 'designs', tiles, true );
 		tiles = this.createBackgroundTiles( theme, tileHeight, dimensions.width / dimensions.height );
@@ -214,5 +228,6 @@ var ThemePalette = {
 	}
 }
 
+$.extend( ThemePalette, GUI.Mixin.DelayUntilVisible );
 GUI.Palette.Theme = ThemePalette;
 })(GUI);

@@ -1036,7 +1036,9 @@ asset widget {
 				$encloseDom.text("Design not available." + this.p.assets.ids.length + " items on this page");
 			if ( options.editable && !options.enclosingDom) {
 				$encloseDom.on( 'touchstart mousedown', function(ev) {
-					PageSelection.findClosest($encloseDom).setSelection();
+					PageSelection.findClosest($encloseDom)
+						.setSelection(null, null, {updateClickTime: true });
+					ev.stopPropagation();
 				});
 				PageSelection.bindToDom( this, $encloseDom )
 			}
@@ -1068,7 +1070,7 @@ asset widget {
 
 	var PageProxyEditable = {
 		// callback, 'this' points to an HTMLElement, not page
-		selectItem: function(pageSelection, assetId) {
+		selectItem: function(pageSelection, assetId, setSelectionOptions) {
 			var pageAsset = PB.ModelMap.model(assetId);
 			var multiTap = pageSelection.selection.some(function(val) { return val == assetId; });
 			var commandSet;
@@ -1096,7 +1098,7 @@ asset widget {
 				default:
 					console.warn("No menus available over items of type", pageAsset.asset.type);
 			}
-			pageSelection.setSelection( assetId, commandSet );
+			pageSelection.setSelection( assetId, commandSet, setSelectionOptions );
 		},
 		// selectItem: function($itemDom) {
 		// 	console.log("wanna menu");
@@ -1118,8 +1120,8 @@ asset widget {
 			}
 			$itemDom.on('mousedown.select touchstart.select', function(ev) {
 				THIS.selectItem( PageSelection.findClosest( $itemDom ),
-								$itemDom.data('model_id'),
-								$itemDom);
+								 $itemDom.data('model_id'),
+								 { updateClickTime: true } );
 				ev.stopPropagation();
 			 });
 		},
@@ -1195,23 +1197,34 @@ asset widget {
 		this.selection = [];	// array of asset ids
 		this.manipulator = null;
 		this.commandSet = null;
-		this.selectTime = Date.now();
+		this._clickTime = Date.now();
 	};
 	PageSelection.prototype = {
-		setSelection: function(assetId, commandSet) {
-			this.selectTime = Date.now();
+		get clickTime() {
+			return this._clickTime;
+		},
+		set clickTime(val) {
+			this._clickTime = val;
+			this.broadcast('clickTime')
+		},
+		setSelection: function(assetId, commandSet, options) {
+			options = $.extend({
+				updateClickTime: false
+			}, options);
+			if (options.updateClickTime)
+				this.clickTime = Date.now();
 			var newSelection = assetId ? [assetId] : [];
-			if (newSelection.toString() == this.selection.toString())
-				return;
-			this.selection = newSelection;
-			this.highlight();
-			// hide manipulator if from another item
-			if (this.manipulator && this.manipulator.assetId != assetId)
-			 	this.setManipulator(null);
-			// if ($popup != null && $popup.length == 0)
-			// 	$popup = null;
-			this.commandSet = commandSet;
-			this.broadcast('selection', this.selection);
+			if (newSelection.toString() != this.selection.toString()) {
+				this.selection = newSelection;
+				this.highlight();
+				// hide manipulator if from another item
+				if (this.manipulator && this.manipulator.assetId != assetId)
+				 	this.setManipulator(null);
+				// if ($popup != null && $popup.length == 0)
+				// 	$popup = null;
+				this.commandSet = commandSet;
+				this.broadcast('selection', this.selection);
+			}
 		},
 
 		highlight: function() {
