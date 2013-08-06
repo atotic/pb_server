@@ -20,7 +20,7 @@ var ThemePalette = {
 				function(ev, model, prop, options) {
 					switch( prop ) {
 					case 'dimensions':
-						ThemePalette.setTheme( ThemePalette.currentThemeId, { force: true });
+						ThemePalette.updateTiles();
 					break;
 					}
 				})
@@ -33,12 +33,14 @@ var ThemePalette = {
 		});
 	},
 	updateTiles: function() {
-		var designId = this.workarea.activeSelection.page.designId;
-		var themeId = PB.ThemeCache.themeIdFromUrl( designId );
-		if (themeId)
-			this.setTheme(themeId, { force: true });
-		else
-			console.log('could not find theme for ', designId);
+		if (this.workarea && this.workarea.activeSelection) {
+			var designId = this.workarea.activeSelection.page.designId;
+			var themeId = PB.ThemeCache.themeIdFromUrl( designId );
+			if (themeId)
+				this.setTheme(themeId, { force: true });
+			else
+				console.log('could not find theme for ', designId);
+		}
 	},
 	createDesignTiles: function(theme, tileHeight, page) {
 		if (page == null)
