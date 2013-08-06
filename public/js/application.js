@@ -35,6 +35,7 @@ var BrowserDetect = { // http://www.quirksmode.org/js/detect.html
 		{ string: navigator.platform, subString: "Mac", identity: "Mac"},
 		{ string: navigator.userAgent, subString: "iPhone", identity: "iOS" },
 		{ string: navigator.userAgent, subString: "iPad", identity: "iOS" },
+		{ string: navigator.userAgent, subString: "Android", identity: "Android" },
 		{ string: navigator.platform, subString: "Linux", identity: "Linux" }
 	]
 };

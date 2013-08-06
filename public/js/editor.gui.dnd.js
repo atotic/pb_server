@@ -270,7 +270,7 @@
 			}
 		},
 		dragStart: function($ev) {
-			// console.log("dragStart");
+			// console.log("dragStart", $ev.type);
 			webkitIpadBugWorkaround.startFix();
 			if ($dragImage)	// if we get both mousedown and touchstart do only one
 				return;
@@ -345,7 +345,7 @@
 			return NULL;
 		},
 		dragMove: function($ev) {
-			// console.log('dragMove enter');
+			// console.log('dragMove enter', $ev.type);
 			$ev.preventDefault(); // stop touch scrolling
 			$ev.stopPropagation();
 			Dnd.clearWindowSelection();
@@ -359,8 +359,12 @@
 			var d = Dnd.findDroppable($ev);
 			transferFlavor = d.flavor;
 			Dnd.setDest( d.droppable );
-			if (droppable)
-				droppable.move($ev, transferFlavor);
+			if (droppable) {
+				window.setTimeout( function() {
+					droppable.move($ev, transferFlavor);	// for smoother ui on touch
+				},0);
+			}
+			// console.log("dragMove leave");
 		},
 		// return true if transfer successful
 		doTransfer: function(ev) {
@@ -378,7 +382,7 @@
 			}
 		},
 		dragEnd: function($ev) {
-			// console.log('dragEnd');
+			// console.log('dragEnd', $ev.type);
 			webkitIpadBugWorkaround.endFix();
 
 			var transferDone = false;

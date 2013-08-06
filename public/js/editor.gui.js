@@ -562,15 +562,11 @@ Usage:
 		}
 	}
 	executeOnlyWhenVisible: function(arg1, arg2) {
+		// function should only execute when visible
 		var dom = $('#blah')
-		if (!this.delayUntilVisible(dom, this.executeOnlyWhenVisible, [arg1, arg2]))
+		if (this.delayUntilVisible(dom, this.executeOnlyWhenVisible, [arg1, arg2]))
 			return;
 	}
-
-	.
-	$('#blah').show();
-	this.processDelayUntilVisible();
-}
 */
 (function(scope) {
 	var DelayUntilVisible = {

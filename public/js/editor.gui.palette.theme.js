@@ -2,7 +2,7 @@
 
 (function(scope) {
 
-var DefaultThemeId = 'admin@sports';
+var DefaultThemeId = 'admin@modern_full';
 
 var ThemePalette = {
 	currentThemeId: null,
@@ -169,6 +169,8 @@ var ThemePalette = {
 	},
 	syncToTheme: function( theme ) {
 		function appendTiles(title, tileArray, noBR) {
+			if (tileArray.length == 0)
+				return;
 			var $title = $('<div>')
 				.addClass('palette-title-tile')
 				.text(title + ' ');
@@ -217,6 +219,10 @@ var ThemePalette = {
 			this.syncToTheme( theme );
 		}
 		catch(ex) {
+			if (ex.name != 'NoSuchTheme') {
+				console.warn("unexpected error loading theme", ex, ex.stack);
+				return;
+			}
 			PB.ThemeCache.load( PB.ThemeCache.themeUrlFromId( themeId ))
 				.done( function() {
 					THIS.setTheme( themeId)

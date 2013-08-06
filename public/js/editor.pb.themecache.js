@@ -29,7 +29,9 @@ var ThemeCache = {
 		}, options);
 		if (options.autoload)
 			this.load( this.themeUrlFromId( id ));
-		throw new Error("No such theme " + id);
+		var err = new Error("No such theme " + id);
+		err.name = "NoSuchTheme";
+		throw err;
 	},
 	put: function(theme) {
 		if ( theme.id in this.themes )

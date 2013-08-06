@@ -30,7 +30,9 @@ var DesignWorkArea = {
 				$dom.removeClass('btn-success');
 			},
 			fire: function(howMany) {
-				DesignWorkArea.goBack();
+				window.setTimeout( function() {
+					DesignWorkArea.goBack(); // on timer to let tablets fire touchend event
+				}, 0);
 				return howMany > 0 ? delay : delay * 3;
 			}
 		});
@@ -42,7 +44,9 @@ var DesignWorkArea = {
 				$dom.removeClass('btn-success');
 			},
 			fire: function(howMany) {
-				DesignWorkArea.goForward();
+				window.setTimeout( function() {
+					DesignWorkArea.goForward();
+				}, 0);
 				return howMany > 0 ? delay : delay * 3;
 			}
 		});
@@ -278,7 +282,7 @@ var DesignWorkArea = {
 		var pos = this.getPagePositions(this.book);
 		var animate = direction == 'forward' || direction == 'back';
 
-		if (BrowserDetect.OS == 'iOS')
+		if (BrowserDetect.OS == 'iOS' || BrowserDetect.OS == 'Android')
 			animate = false;
 		// create new pages
 		function getPlaceholder(page) {

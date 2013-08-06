@@ -224,6 +224,7 @@
 			stop: null,
 			fire: null
 		}, options);
+		this.touchMode = false;
 		this.initEventHandlers();
 	}
 
@@ -235,10 +236,17 @@
 				});
 		},
 		start: function($ev) {
+			// console.log("firebutton.start", $ev.type);
 			var THIS = this;
+			// Do not listen to mouse events if touch is active
+			if ($ev.type == 'touchstart') {
+				this.touchmode = true;
+				this.dom.off('mousedown.fire');
+			}
 			this.active = true;
 			this.fireCount = 0;
-			$(document.body).on('touchend.fire mouseup.fire', function($ev) {
+			var stopEvents = $ev.type == 'touchstart' ? 'touchend.fire' : 'mouseup.fire'
+			$(document.body).on(stopEvents, function($ev) {
 				THIS.stop($ev);
 			});
 			if (this.options.start)
@@ -250,6 +258,7 @@
 			$ev.preventDefault();
 		},
 		stop: function($ev) {
+			// console.log("firebutton.stop", $ev ? $ev.type : "no event");
 			if (this.options.stop)
 				this.options.stop($ev, this.dom);
 			this.active = false;
@@ -260,7 +269,7 @@
 				return;
 			var delay = 100;
 			if (this.options.fire) {
-				if (BrowserDetect.OS == "iOS" && this.fireCount > 0) {
+				if ( this.touchmode && this.fireCount > 0) {
 					this.stop();
 					// console.log("no repeat fire on iOS because of delay issues");
 				}
