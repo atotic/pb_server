@@ -21,6 +21,7 @@ var WorkArea = {
 			GUI.Buttons.ResizePaletteButton.fixPosition();
 		});
 		GUI.DesignWorkArea.init();
+		GUI.PrintWorkArea.init();
 		WorkAreaMenu.init();
 	},
 	bindToBook: function(book) {

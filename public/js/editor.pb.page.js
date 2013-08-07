@@ -203,13 +203,13 @@ asset widget {
 			this.book._pagePhotosChanged(this, options);
 		},
 		get canSave() {
-			return !this.hasTemporaryChanges;
+			return !this.doNotSave;
 		},
-		startTemporaryChanges: function() {
-			this.hasTemporaryChanges = true;
+		suspendSave: function() {
+			this.doNotSave = true;
 		},
-		endTemporaryChanges: function() {
-			this.hasTemporaryChanges = false;
+		resumeSave: function() {
+			this.doNotSave = false;
 		},
 		// return asset id
 		addAsset: function(asset, addAssetOptions) {
@@ -1197,7 +1197,7 @@ asset widget {
 		this.selection = [];	// array of asset ids
 		this.manipulator = null;
 		this.commandSet = null;
-		this._clickTime = Date.now();
+		this._clickTime = 0;
 	};
 	PageSelection.prototype = {
 		get clickTime() {

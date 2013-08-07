@@ -190,8 +190,8 @@
 		doubleClick: function($el) {
 			var THIS = this;
 			window.setTimeout(function() {
+				GUI.Options.designStage = 'design';
 				GUI.DesignWorkArea.goTo( RoughWorkArea.book.page( THIS.pageId ));
-				GUI.WorkArea.show('work-area-design');
 			},0);
 		}
 	}

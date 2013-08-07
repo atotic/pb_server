@@ -433,6 +433,7 @@ ResizeManipulator.prototype = {
 	},
 	show: function() {
 		this.pageAsset = PB.ModelMap.model( this.assetId );
+		this.pageAsset.page.suspendSave();
 		this.handles = {
 			top: Manipulator.makeIconHandle('arrow-up'),
 			left: Manipulator.makeIconHandle('arrow-left'),
@@ -471,6 +472,7 @@ ResizeManipulator.prototype = {
 	remove: function() {
 		for (var p in this.handles)
 			this.handles[p].remove();
+		this.pageAsset.page.resumeSave();
 	},
 	dragstart: function(ev) {
 		this.pageAsset = PB.ModelMap.model(this.assetId);
@@ -595,7 +597,7 @@ EditTextManipulator.prototype = {
 	show: function() {
 		// console.log('show');
 		this.pageAsset = PB.ModelMap.model( this.assetId );
-		this.pageAsset.page.startTemporaryChanges();
+		this.pageAsset.page.suspendSave();
 		this.handles = {
 			textarea: $( $.parseHTML('<textarea class="manipulator-textarea"></textarea>')),
 			mirror: $('<pre>')
@@ -623,7 +625,7 @@ EditTextManipulator.prototype = {
 	remove: function() {
 		// console.log('remove');
 		this.handles.textarea.remove();
-		this.pageAsset.page.endTemporaryChanges();
+		this.pageAsset.page.resumeSave();
 	}
 }
 

@@ -14,7 +14,7 @@
 			this.page = PB.Page.Selection.findClosest($dom).page;
 			this.dom = $dom;
 			this.dropFlavor = flavor;
-			this.page.startTemporaryChanges();
+			this.page.suspendSave();
 			switch( this.dropFlavor ) {
 				case 'background':
 					this.archive = this.page.archiveSomething( { type: this.dropFlavor});
@@ -53,10 +53,10 @@
 					this.dom.removeClass('drop-target-outside');
 				break;
 			}
-			this.page.endTemporaryChanges();
+			this.page.resumeSave();
 		},
 		putTransferData: function( $ev, flavor, transferData ) {
-			this.page.endTemporaryChanges();
+			this.page.resumeSave();
 			switch( this.dropFlavor ) {
 				case 'background':
 				case 'layout':
@@ -127,7 +127,7 @@
 		},
 		setTempPhotoFromPage: function() {
 			try {
-			this.sourcePage.startTemporaryChanges();
+			this.sourcePage.suspendSave();
 			var sourceAsset = this.sourcePage.getAsset( this.sourceAssetId )
 
 			// create archives
@@ -168,7 +168,7 @@
 				});
 				this.destinationPage.restoreSomething( this.destinationArchive );
 				this.sourcePage.restoreSomething( this.sourceArchive );
-				this.sourcePage.endTemporaryChanges();
+				this.sourcePage.resumeSave();
 				delete this.destinationImports;
 				delete this.destinationArchive;
 				delete this.sourceArchive;
@@ -188,7 +188,7 @@
 			var asset = this.destinationPage.getAsset( this.assetId );
 			switch( this.dropFlavor ) {
 				case 'frame':
-					this.destinationPage.startTemporaryChanges();
+					this.destinationPage.suspendSave();
 					if (handoff)
 						$.extend(this, handoff);
 					else {
@@ -200,7 +200,7 @@
 					}
 				break;
 				case 'photo': {
-					this.destinationPage.startTemporaryChanges();
+					this.destinationPage.suspendSave();
 					if (handoff)
 						$.extend(this, handoff);
 					else {
@@ -211,7 +211,7 @@
 				case 'photoInPage':
 					if (transferData.assetId == this.assetId)
 						throw new Error("No dropping image on itself");
-					this.destinationPage.startTemporaryChanges();
+					this.destinationPage.suspendSave();
 					if (handoff)
 						$.extend(this, handoff);
 					else {
@@ -247,7 +247,7 @@
 		},
 		leave: function(handoffAssetId) {
 			if (handoffAssetId == this.assetId) {
-				this.destinationPage.endTemporaryChanges();
+				this.destinationPage.resumeSave();
 				return this.getHandoff();
 			}
 
@@ -268,7 +268,7 @@
 				break;
 
 			}
-			this.destinationPage.endTemporaryChanges();
+			this.destinationPage.resumeSave();
 		},
 		putTransferData: function( $ev, flavor, transferData ) {
 			switch( this.dropFlavor ) {

@@ -260,6 +260,7 @@ body {
 
 	#work-area-theme {
 		display:none;
+		padding: 16px;
 	}
 		#work-area-size-pick {
 			vertical-align: top;
@@ -354,6 +355,12 @@ body {
 		padding-top: 4px;
 		.perspective(1600px);
 	}
+	@media print {
+		* {-webkit-print-color-adjust: exact}
+		.navbar, #palette, #palette-resize-btn, .well {
+			display: none;
+		}
+	}
 	#work-area-design-btn-back, #work-area-design-btn-forward {
 		position: absolute;
 		top: 45%;
@@ -406,20 +413,24 @@ body {
 			position: absolute;
 			width: 100% ;
 			height: 100% ;
+			-webkit-print-color-adjust:exact;
 		}
 		.design-photo {
 			position: absolute;
+			-webkit-print-color-adjust:exact;
 		}
 		.design-photo-inner {
 			position:absolute;
 			top: 0px;
 			left: 0px;
 			overflow: hidden;
+			-webkit-print-color-adjust:exact;
 		}
 		.design-photo-img {
 			position:absolute;
 			max-width: none;
 			background-color: gray;
+			-webkit-print-color-adjust:exact;
 		}
 		.design-frame {
 			position:absolute;
@@ -466,6 +477,7 @@ body {
 		display:none;
 		background-color: white;
 		height: 100%;
+		padding: 16px;
 	}
 
 	.rough-page {
