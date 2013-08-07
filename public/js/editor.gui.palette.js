@@ -16,6 +16,7 @@ var palettes = [
 	{ title: 'Theme', id: 'theme'},
 	{ title: 'Change Theme', id: 'themepicker'}
 ]
+
 var Palette = {
 	init: function() {
 		var $kindPicker = $('#palette-kind-picker');
@@ -51,6 +52,15 @@ var Palette = {
 	setupPicker: function( allowedPalettes ) {
 		var $kindPicker = $('#palette-kind-picker');
 		var THIS = this;
+		if ( allowedPalettes.length == 0) {
+			$('#palette').hide();
+			$('#work-area').addClass('nopalette');
+			this.select("");
+		}
+		else {
+			$('#palette').show();
+			$('#work-area').removeClass('nopalette');
+		}
 		palettes.forEach( function(p) {
 			var id = THIS.paletteMenuitemId(p.id);
 			if ( allowedPalettes.indexOf(p.id) == -1)
@@ -59,8 +69,6 @@ var Palette = {
 				$('#'+id).show();
 			}
 		});
-		if ( allowedPalettes.length == 0)
-			this.select("");
 	},
 	select: function( paletteId ) {
 		if (!paletteId) paletteId = 'none';

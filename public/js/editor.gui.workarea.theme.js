@@ -10,16 +10,14 @@ var ThemeWorkArea = {
 		return PB.ModelMap.model( $('body').data('model_id') );
 	},
 	show: function() {
-		$('#work-area').addClass('theme');
-		var $dom = $('#work-area-theme');
-		$dom.show();
-		$dom.append( this.getSizePicker(PB.Book.default));
-		this.loadThemePicker();
 		GUI.Palette.setupPicker([]);
-		$('#workarea-menu').find('li').hide();
+		$('#work-area-theme')
+			.show()
+			.append( this.getSizePicker(PB.Book.default));
+		this.loadThemePicker();
+		GUI.WorkArea.Menu.setup([]);
 	},
 	hide: function() {
-		$('#work-area').removeClass('theme');
 		$('#work-area-theme').hide();
 		$('#work-area-size-pick').remove();
 		$('#theme-picker').remove();

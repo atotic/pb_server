@@ -154,15 +154,13 @@ var DesignWorkArea = {
 			throw new Error("Cant design before assigning theme/width");
 		}
 		$('#work-area').css({ paddingLeft: 0, paddingTop: 0});
-		$('#palette, #work-area-design').show();
+		$('#work-area-design').show();
 		GUI.Palette.setupPicker(['bookphoto', 'theme', 'themepicker']);
 		GUI.Palette.select( this.lastPaletteId || 'bookphoto' );
+		GUI.WorkArea.Menu.setup(['add-photo-btn', 'add-text-btn', 'trash-btn']);
 		GUI.CommandManager.addCommandSet(this.commandSet);
 		if ( !this.activeSelection)
 			DesignWorkArea.goTo(this._lastPage);
-		// initialize workarea-menu
-		$('#workarea-menu').find('li').hide();
-		$('#add-photo-btn, #add-text-btn').show();
 	},
 	hide: function() {
 		this.lastPaletteId = GUI.Palette.getCurrentPaletteId();
@@ -187,7 +185,7 @@ var DesignWorkArea = {
 		}
 	},
 	updateSelectionMenu: function(sel) {
-		console.log("updateSelectionMenu");
+		// console.log("updateSelectionMenu");
 		// Clear menu
 		$menu = $('#selection-menu');
 		$menu.empty();
@@ -220,7 +218,7 @@ var DesignWorkArea = {
 	updateActiveSelection: function() {
 		var active = this.activeSelection;
 		if (active != this.lastActiveSelection) {
-			console.log('updateActiveSelection');
+			// console.log('updateActiveSelection');
 			this.lastActiveSelection = active;
 			this.broadcast('activeSelection', active);
 		}
@@ -311,7 +309,6 @@ var DesignWorkArea = {
 							break;
 							case 'clickTime':
 								THIS.updateActiveSelection();
-								console.log('clickTime');
 							break;
 						}
 					});

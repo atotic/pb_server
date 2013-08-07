@@ -222,14 +222,12 @@
 		},
 		lastPaletteId: 'bookphoto',
 		show: function() {
-			$('#palette').show();
 			$('#work-area-organize').show();
 			GUI.Palette.setupPicker(['bookphoto']);
 			GUI.Palette.select( this.lastPaletteId || 'bookphoto');
+			GUI.WorkArea.Menu.setup(['add-photo-btn', 'add-page-btn', 'trash-btn']);
 			this.processDelayUntilVisible();
-			$('#workarea-menu').find('li').hide();
 			$('#selection-menu').empty();
-			$('#add-photo-btn,#add-page-btn').show();
 		},
 		hide: function() {
 			this.lastPaletteId = GUI.Palette.getCurrentPaletteId();
