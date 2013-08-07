@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Test: Print test</title>
+<%= asset_link("jquery.js") %>
+<%= asset_link("bootstrap.js") %>
+<%= asset_link("editor.js") %>
+<%= asset_link("editor.css") %>
+<style type="text/css">
+body {
+	width: 1000px;
+	height: 1000px;
+}
+div.test {
+	position:absolute;
+	width: 100px;
+	height: 100px;
+	border: 1px solid black;
+}
+</style>
+</head>
+<body>
+<div class='test' style="top:0px;left:0px">
+Plain text
+</div>
+<div class='test' style="top:0px;left:100px;background-color: yellow">
+Colored background
+</div>
+<div class='test' style="top:0px;left:200px;background-image: url('/t/admin@core/family_icon.jpg');background-size:100px 100px">
+Image background
+</div>
+<script>
+	window.onload = function() {
+		//window.print();
+	}
+
+	function insertPageDom(page) {
+		try {
+			var dom = page.generateDom({ resolution: PB.PhotoProxy.ORIGINAL });
+			$('body').append(dom);
+		}
+		catch(ex) {
+			if (ex.name == "ThemeNotFoundException" && ex.deferred) {
+				ex.deferred.done( function() {
+					insertPageDom(page);
+				});
+			}
+			else
+				consol.log("Unexpected error generating dom", ex.name, ex);
+		}
+	}
+	var bookJson = <%= PB::Book[40].to_json %>;
+	var book = new PB.Book(bookJson);
+	var pageId = book.pageList[7]
+	var page = book.page(pageId);
+	insertPageDom(page);
+</script>
+</body>
