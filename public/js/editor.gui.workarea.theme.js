@@ -107,7 +107,7 @@ var ThemeWorkArea = {
 		$picker = $('<ul id="theme-picker">');
 		var bookThemeId = this.getBook().themeId;
 		themeIds.forEach( function(id) {
-			var theme = PB.ThemeCache.get(id, '');
+			var theme = PB.ThemeCache.get(id);
 			var $li = $('<li class="theme-pick">');
 			$li.append( $('<img>').prop('src', theme.screenshots[0]));
 			$li.append( $('<p>').text( theme.title ));

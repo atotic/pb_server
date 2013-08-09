@@ -4,13 +4,11 @@
 // palette:
 // 	#palette-<token>-container
 //     #palette-<token>
-// Current palettes:
-// bookphoto
-// theme
-// themepicker
+
 (function(scope) {
 "use strict";
 
+// Palettes
 var palettes = [
 	{ title: 'Book photos', id: 'bookphoto'},
 	{ title: 'Theme', id: 'theme'},
@@ -43,6 +41,7 @@ var Palette = {
 			});
 		});
 		GUI.Palette.Theme.init();
+		GUI.Palette.ThemePicker.init();
 	},
 	bindToBook: function(book) {
 		GUI.Palette.BookPhoto.bindToBook( book );
