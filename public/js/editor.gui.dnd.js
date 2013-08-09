@@ -382,7 +382,8 @@
 			Dnd.setDest( d.droppable );
 			if (droppable) {
 				window.setTimeout( function() {
-					droppable.move($ev, transferFlavor);	// for smoother ui on touch
+					if (droppable)
+						droppable.move($ev, transferFlavor);	// for smoother ui on touch
 				},0);
 			}
 			// console.log("dragMove leave");

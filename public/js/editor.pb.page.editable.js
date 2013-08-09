@@ -1,6 +1,8 @@
 // editor.pb.page.editable.js
 
 (function(scope) {
+"use strict";
+
 	var PageDroppable = new GUI.Dnd.Droppable({
 		flavors: [
 			'background', // transferData: backgroundId

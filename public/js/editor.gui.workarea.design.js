@@ -321,6 +321,8 @@ var DesignWorkArea = {
 						THIS.fixPlaceholders();
 					});
 				}
+				else
+					console.warn("unexpected error generating page dom");
 				return getPlaceholder(page);
 			}
 		};

@@ -1,6 +1,7 @@
 // editor.gui.palette.themepicker.js
 
 (function(scope) {
+"use strict";
 
 var themes = [
 	{ id: 'admin@sports' },
