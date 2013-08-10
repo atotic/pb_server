@@ -59,4 +59,5 @@ backports DataView standard, used for reading image files
 jquery.stream http://code.google.com/p/jquery-stream/
 xhr streaming.
 obsoleted by portal project, need to replace it https://github.com/flowersinthesand/portal
+Author is looking for a job!
 

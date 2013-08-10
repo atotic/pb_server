@@ -17,6 +17,7 @@ HTML hierarchy:
 
 
 (function(scope) {
+"use strict";
 
 var DesignWorkArea = {
 	init: function() {
@@ -187,7 +188,7 @@ var DesignWorkArea = {
 	updateSelectionMenu: function(sel) {
 		// console.log("updateSelectionMenu");
 		// Clear menu
-		$menu = $('#selection-menu');
+		var $menu = $('#selection-menu');
 		$menu.empty();
 		if ( this.selectionCommandSet )
 			this.selectionCommandSet.deactivate();
@@ -405,6 +406,19 @@ var DesignWorkArea = {
 				el.replaceWith(highDpi);
 			});
 		};
+		function saveSelection() {
+			var sel = oldLeft.find('.design-page').data('page-selection');
+			if (sel) savedSelection.left = sel.store();
+			sel = oldRight.find('.design-page').data('page-selection');
+			if (sel) savedSelection.right = sel.store();
+		}
+		function restoreSelection() {
+			var sel;
+			if (savedSelection.left && (sel = newLeft.find('.design-page').data('page-selection')))
+				sel.restore(savedSelection.left);
+			if (savedSelection.right && (sel = newRight.find('.design-page').data('page-selection')))
+				sel.restore(savedSelection.right);
+		}
 
 		if (animate) {
 			oldLeft.add( oldRight ).find('.pageTitle').remove();
@@ -458,19 +472,6 @@ var DesignWorkArea = {
 		}
 		else { // no animation
 			var savedSelection = {};
-			function saveSelection() {
-				var sel = oldLeft.find('.design-page').data('page-selection');
-				if (sel) savedSelection.left = sel.store();
-				sel = oldRight.find('.design-page').data('page-selection');
-				if (sel) savedSelection.right = sel.store();
-			}
-			function restoreSelection() {
-				var sel;
-				if (savedSelection.left && (sel = newLeft.find('.design-page').data('page-selection')))
-					sel.restore(savedSelection.left);
-				if (savedSelection.right && (sel = newRight.find('.design-page').data('page-selection')))
-					sel.restore(savedSelection.right);
-			}
 			if (force)	// happens during window resize
 				saveSelection();
 			cleanUp();

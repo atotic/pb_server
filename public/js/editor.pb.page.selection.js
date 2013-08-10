@@ -1,7 +1,6 @@
 // editor.pb.page.selection.js
 
 (function(scope) {
-
 "use strict";
 
 // Special event fires when dom element has been removed

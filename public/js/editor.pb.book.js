@@ -354,7 +354,7 @@
 						return [ { model: page, prop: 'dimensions' }];
 					}
 					else
-						console.log(change.op, change.targetpath());
+						console.log(change.op, change.target.path());
 				}
 			}
 			else if (document_var == this.localData.document.photoList)

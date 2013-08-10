@@ -544,6 +544,7 @@ asset widget {
 			this.p.backgroundData = null;
 			this.p.needReflow = true;
 			PB.broadcastChange( this, 'designId', options );
+			this.book.makeDirty();
 		},
 		get designId() {
 			return this.p.designId;
