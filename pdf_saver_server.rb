@@ -21,17 +21,17 @@ module PdfSaver
 		@@last_poll = Time.now
 		MAX_CONCURRENT_WORK = 2
 		RESPONSE = {
-			:success => [ 200, 
+			:success => [ 200,
 					{ 'Content-Type' => 'text/plain', 'Content-Length' => '9',},
 					['pdf_saver']],
-			:no_work_available => [ 204, 
-					{ 'Content-Type' => 'text/plain', 'Content-Length' => '0'}, 
+			:no_work_available => [ 204,
+					{ 'Content-Type' => 'text/plain', 'Content-Length' => '0'},
 					[""]],
 			:bad_request_no_id => [400, {}, ["Bad request. Need id in query params"]],
 			:bad_request_task_stage => [405, {}, "Not allowed. Task not in STAGE_DISPATCHED_TO_CHROME" ],
 			:bad_request_task_not_found => [404, {}, ["Task not found}"]]
 		}
-	
+
 		def self.do_not_wake_up_chrome
 			@@last_poll = Time.now + 2 * 24 * 3600
 		end
@@ -44,10 +44,10 @@ module PdfSaver
 			LOGGER.info env['REQUEST_METHOD'] + " " + env['PATH_INFO'] + " " + msg
 		end
 
-		def last_poll 
+		def last_poll
 			return @@last_poll
 		end
-	
+
 		def handle_test(env)
 			log(env)
 			RESPONSE[:success]
@@ -57,13 +57,13 @@ module PdfSaver
 			@@last_poll = Time.now
 			# find a job, return 200 on success
 			task = PB::ChromePDFTask.filter(:processing_stage => PB::ChromePDFTask::STAGE_WAITING).first
-			dispatched_count = 
+			dispatched_count =
 				PB::ChromePDFTask.filter(:processing_stage => PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME).count
 			STDERR.write '.'	# short logging, since this happens every second and is usually meaningless
 			if (@poll_work_count+=1) == 80
 				STDERR.write "\n"
 				@poll_work_count = 0
-			end 
+			end
 			return RESPONSE[:no_work_available] unless task && dispatched_count < MAX_CONCURRENT_WORK
 			log(env, "task " + task.id.to_s)
 			task.processing_stage = PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME
@@ -126,16 +126,28 @@ module PdfSaver
 			log(env, "task " + task.id.to_s)
 			RESPONSE[:success]
 		end
+		def handle_pdf_test(env)
+			query = Rack::Utils.parse_query(env['QUERY_STRING'])
+			LOGGER.info("test url" + query['title'])
+			dest_path = File.join(SvegSettings.tmp_dir, "test.pdf")
+			File.open(dest_path, "wb") do |f|
+				f.write(env['rack.input'].read)
+				f.flush
+			end
+			STDERR.write("Test file saved at " + dest_path + "\n");
+			RESPONSE[:success]
+		end
 
 		def call(env)
 			response = case
 				when env['PATH_INFO'].eql?("/poll_pdf_work") then handle_poll_work(env)
 				when env['PATH_INFO'].eql?("/pdf_done") then handle_pdf_done(env)
 				when env['PATH_INFO'].eql?("/pdf_fail") then handle_pdf_fail(env)
+				when env['PATH_INFO'].eql?("/pdf_test") then handle_pdf_test(env)
 				when env['PATH_INFO'].eql?("/test") then handle_test(env)
 				when env['PATH_INFO'].eql?('/die') then raise "die die"
 				when env['PATH_INFO'].match(/favicon.ico/) then [200, {}, []]
-				else [ 400, {'Content-Type' => 'text/plain'}, ["No such path #{env['PATH_INFO']}" ]] 
+				else [ 400, {'Content-Type' => 'text/plain'}, ["No such path #{env['PATH_INFO']}" ]]
 			end
 			response
 		end
@@ -143,7 +155,7 @@ module PdfSaver
 	end
 end
 
-# Monitor chromium. 
+# Monitor chromium.
 # Restart if it has not contacted us in a while
 Thread.new {
 	chromium_timer = 5
@@ -166,13 +178,13 @@ Thread.new {
 PdfSaver::LOGGER.info "started #{SvegSettings.environment.to_s} #{Time.now.to_s}"
 #PdfSaver::LOGGER.info "tasks available: #{PB::ChromePDFTask.count}"
 
-server_builder = Rack::Builder.new do 
+server_builder = Rack::Builder.new do
 # not logging access, being polled by Chrome every second, continuosly
 #	access_log_file = ::File.new(File.join(SvegSettings.log_dir, "pdf_saver_access.#{PB.get_thin_server_port}.log" ), 'a')
 #	access_log_file.sync= true
 #	use Rack::CommonLogger, access_log_file
 	use Rack::Session::Cookie, PB::SvegMiddleware::COOKIE_OPTIONS
-	use PB::SvegMiddleware, { :ignore_sveg_http_headers => true}
+	use PB::SvegMiddleware, { :ignore_sveg_http_headers => true, :logging => false }
 	run PdfSaver::Server.new
 end
 Pdf_saver_server = server_builder.to_app
