@@ -29,7 +29,10 @@
 
 	var bookCache = [];
 
-	var Book = function(serverJson) {
+	var Book = function(serverJson, options) {
+		options = $.extend( {
+			streaming: true
+		}, options);
 		this._dirty = false;
 		this._corrupted = false;
 		this._proxies = {};
@@ -43,7 +46,8 @@
 		this._localId = PB.randomString(6);	// local id broadcast with patches
 		PB.ModelMap.set(this);
 		bookCache.push(this);
-		this.connectStream();
+		if (options.streaming)
+			this.connectStream();
 	}
 
 	Book.prototype = {

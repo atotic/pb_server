@@ -11,7 +11,7 @@ Sequel.migration do
 			DateTime :failed_at
 			String :last_error, :text=>true
 			String :queue, :size=>128
-			
+
 			index [:locked_at], :name=>:index_delayed_jobs_locked_at
 			index [:priority, :run_at], :name=>:index_delayed_jobs_run_at_priority
 		end
@@ -20,17 +20,11 @@ Sequel.migration do
 			primary_key :id
 			DateTime :created_at
 			DateTime :updated_at
-			String :book_dir, :size=>255
-			String :book_pdf, :null=>false, :size=>255
-			String :html_file, :null=>false, :size=>255
-			String :pdf_file, :null=>false, :size=>255
 			Integer :book_id, :null=>false
-			String :html_file_url, :null=>false, :size=>255
-			Integer :page_width, :null=>false
-			Integer :page_height, :null=>false
+			String :book_dir, :size=>255
 			Integer :processing_stage, :default=>0
 			TrueClass :has_error, :default=>false
-			String :error_message, :size=>128
+			String :error_message, :size=>255
 		end
 	end
 	down do

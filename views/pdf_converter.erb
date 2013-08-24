@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>PDF converter</title>
+	<%= asset_link("bootstrap.css", "application.css", "editor.css") %>
+	<%= asset_link("jquery.js") %>
+	<%= asset_link("jquery.waitforimages.js") %>
+<%= asset_link("bootstrap.js") %>
+<%= asset_link("editor.js") %>
+<script>
+// testing
+"use strict";
+
+(function(scope) {
+"use strict";
+var PDFController = {
+	book: null,
+	currentPage: null,
+	fatalError: function(msg) {
+		window.postMessage({ action: 'fail', message: msg});
+		console.error("FATAL ERROR", msg);
+	},
+	loadBook: function(id) {
+		$.ajax('/books/'+ id, { cache: false} )
+		.done(function(response, msg, jqXHR) {
+			PDFController.book = new PB.Book(response, {streaming: false });
+			window.postMessage({action:'didLoadBook', book:  PDFController.book }, "*");
+			PDFController.showPage( PDFController.book.pageList[0]);
+
+		})
+		.fail(function(response, msg, jsXHR) {
+			console.error("unable to load book");
+		});
+	},
+	loadBookFromJson: function(json) {
+		try {
+			PDFController.book = new PB.Book(json, {streaming: false});
+			window.postMessage({action:'didLoadBook', book:  PDFController.book }, "*");
+		}
+		catch(ex) {
+			console.error(ex.message, ex);
+			window.postMessage({action: 'error', name: 'loadBookFromJson', message: ex.message});
+		}
+	},
+	// deferred is completed when page is shown
+	showPage: function(pageId, resolution, deferred) {
+		var page = this.book.page(pageId);
+		if (page == null)
+			this.fatalError("Page does not exist: " + pageId);
+		if (deferred == null)
+			deferred = $.Deferred();
+		resolution = resolution || PB.PhotoProxy.ORIGINAL;
+		try {
+			var $dom = page.generateDom({ resolution: resolution || PB.PhotoProxy.LARGE });
+		}
+		catch(ex) {
+			console.log('rescheduling showPage');
+			if (ex.name != "ThemeNotFoundException") {
+				// Expected failure if templates are not loaded
+				this.fatalError(ex.type + ":" + ex.message);
+				deferred.reject();
+			}
+			else // Unexpected failure
+				ex.deferred.done( function() { PDFController.showPage(pageId, resolution, deferred) });
+			return;
+		}
+		var pageWidth = $dom.css('width');
+		var pageHeight = $dom.css('height');
+		$('body').children().detach();
+		$('body').append($dom)
+			.css({
+				width: $dom.css('width'),
+				height: $dom.css('height')
+		});
+		PDFController.currentPage = pageId;
+		deferred.resolve();
+		var start = Date.now();
+		var imageFailedToLoad = false;
+		$('body').waitForImages(
+			function() {
+				console.log("waitingForImages", Date.now() - start);
+				if (imageFailedToLoad != false)
+					fatalError("Image failed to load on page " + pageId);
+				else
+					window.postMessage({action: 'didShowPage', pageId: pageId, pageWidth: pageWidth, pageHeight: pageHeight }, "*");
+			},
+			function(loaded, count, success) {
+				if (!success) {
+					var node = this;
+					imageFailedToLoad = "Image failed on  " + pageId + " " + node.nodeName + " " +node.src;
+				}
+			},
+			true
+		);
+		return deferred;
+	},
+	nextPage: function() {
+		if (!this.book)
+			return;
+		var pageList = this.book.pageList;
+		var curr = pageList.indexOf(this.currentPage);
+		var next = 0;
+		if (curr == -1)
+			;
+		else if (curr == pageList.length - 1)
+			;
+		else
+			next = curr +1;
+		this.showPage( pageList[ next]);
+	}
+}
+$(document).on('keydown', function($ev) {
+	if ($ev.originalEvent.keyCode == 32) {
+		PDFController.nextPage();
+	}
+});
+scope.PDFController = PDFController;
+
+}(window));
+
+function messageListener(event) {
+	// console.log("pdf_converter messageListener");
+	switch(event.data.action) {
+	case 'loadBook':
+		PDFController.loadBook(event.data.bookId);
+	break;
+	case 'loadBookFromJson':
+		PDFController.loadBookFromJson(event.data.bookJson);
+	break;
+	case 'showPage':
+		PDFController.showPage(event.data.pageId);
+	break;
+	case 'didShowPage':
+	break;
+	default:
+		console.log("unknown event received", event.data);
+	}
+}
+window.addEventListener("message", messageListener, false);
+
+</script>
+</head>
+<body>
+<p>Book layout goes here</p>
+</body>

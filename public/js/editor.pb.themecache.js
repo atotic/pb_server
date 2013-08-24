@@ -27,9 +27,11 @@ var ThemeCache = {
 		options = $.extend({
 			autoload: true
 		}, options);
-		if (options.autoload)
-			this.load( this.themeUrlFromId( id ));
+		var deferred = null;
 		var err = new Error("No such theme " + id);
+		if (options.autoload) {
+			err.deferred = this.load( this.themeUrlFromId( id ));
+		}
 		err.name = "NoSuchTheme";
 		throw err;
 	},

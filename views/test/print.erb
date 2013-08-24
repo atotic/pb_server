@@ -49,9 +49,9 @@ Image background
 				consol.log("Unexpected error generating dom", ex.name, ex);
 		}
 	}
-	var bookJson = <%= PB::Book[40].to_json %>;
+	var bookJson = <%= PB::Book[2].to_json %>;
 	var book = new PB.Book(bookJson);
-	var pageId = book.pageList[7]
+	var pageId = book.pageList[0]
 	var page = book.page(pageId);
 	insertPageDom(page);
 </script>

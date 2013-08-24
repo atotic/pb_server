@@ -51,6 +51,8 @@ replaces jquery animations with css animations when possible
 actively developed. a little slow to take up a patch.
 I enabled transitionEnd events, and had to use a patch for it to work: https://github.com/rstacruz/jquery.transit/pull/145
 
+jquery.waitforimages https://github.com/alexanderdickson/waitForImages
+Used for printing, waits for all images to load
 Need update
 jdataview.js
 https://github.com/vjeux/jDataView

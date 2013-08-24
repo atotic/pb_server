@@ -535,50 +535,8 @@ class SvegApp < Sinatra::Base
 		end
 	end
 
-	get '/assets/:template_name/:asset_file' do
-		user_must_be_logged_in
-		send_file BookTemplate.get(params[:template_name]).get_asset_path(params[:asset_file], params[:size] )
-	end
-
-	get '/templates' do
-		render_erb :template_list, {:layout => :'layout/plain'}
-	end
-
-	get '/template/img/:id' do
-		begin
-			f = Template.imgIdToImgFile(params[:id], params[:size])
-			send_file f
-		rescue Errno::ENOENT
-			halt [404, ["no such image"]]
-		end
-	end
-
-	get '/template/:id_list' do
-		idArray = params["id_list"].split(',')
-
-		err = false
-		first = true
-		retVal = "{\n"
-		for id in idArray do
-			f = PB::Template.templateIdToFile( id)
-			retVal << ',' unless first
-			first = false
-			retVal << '"' << id << '"' << ':'
-			begin
-				retVal << IO.read(f) << "\n"
-			rescue Errno::ENOENT
-				err = true
-				retVal << 'null'
-			end
-		end
-		retVal << "}"
-		# jsonp
-		retVal = params["callback"] << "(" << retVal << ")" if params["callback"]
-		type = params["callback"] ? Rack::Mime.mime_type('.js') : Rack::Mime.mime_type('.json')
-		headers = {'Content-Type' => type }
-		headers['Cache-Control'] = 'no-cache' if err
-		return [404, headers, [retVal]] if err
-		[200, headers, [retVal]]
+	get '/pdf_converter' do
+		render_erb :pdf_converter #, :layout => :'layout/plain'
 	end
 
 	get '/subscribe/book/:book_id' do # async

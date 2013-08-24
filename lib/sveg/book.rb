@@ -114,40 +114,5 @@ eos
 
 end
 
-class BookPage < Sequel::Model(:book_pages)
-
-#	property :id,					 Serial
-#	property :created_at,		DateTime
-#	property :updated_at,		DateTime
-
-#	property :html,					Text, :lazy => false
-#	property :width,				String # css width units px|in|cm etc
-#	property :height,				String # css width units
-#	property :icon,					Text, :lazy => false # html icon
-#	property :position,			String # page position (see template): cover|flap|inside|middle|back
-
-	plugin :timestamps
-
-
-	def to_json(*a)
-		{
-			:id => self.pk,
-			:width => self.width,
-			:height => self.height,
-			:html => self.html,
-			:icon => self.icon,
-			:position => self.position
-		}.to_json(*a)
-	end
-
-	def before_destroy
-		# removes page from book page order
-		b = self.book
-		page_order = b.page_order.split(",")
-		page_order.delete(self.pk.to_s)
-		b.page_order = page_order.join(',')
-		b.save
-	end
-end
 
 end

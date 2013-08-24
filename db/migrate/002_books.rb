@@ -14,10 +14,6 @@ Sequel.migration do
 			Integer :last_diff
 			File :document, :size => :medium # book stored as json, :mediumblob size
 
-			# Delete these when done
-			String :template_name, :size=>255 # name of the template
-			String :template, :text=>true 	# template attributes, stored as json
-
 			index [:user_id], :name=>:index_books_user
 		end
 
@@ -57,23 +53,9 @@ Sequel.migration do
 			index [:book_id], :name=>:book_photos_book_fk
 		end
 
-		create_table(:book_pages, :ignore_index_errors=>true) do
-			primary_key :id
-			DateTime :created_at
-			DateTime :updated_at
-			String :html, :text=>true
-			String :width, :size=>128
-			String :height, :size=>128
-			String :icon, :text=>true
-			String :position, :size=>128
-			Integer :book_id, :null=>false
-
-			index [:book_id], :name=>:index_book_pages_book
-		end
-
 	end
 
 	down do
-		drop_table(:book_pages, :book_photos, :books, :photos)
+		drop_table(:book_photos, :books, :photos)
 	end
 end
