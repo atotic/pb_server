@@ -19,10 +19,9 @@ require_relative 'photo'
 #    It polls pdf_saver_server for ChromePDFTask work. Converts HTML pages to PDF, sends results back to pdf_saver_server
 # C) pdf_saver_server: Jobs gateway between delayed_job and chromium. Creates BookToPDFCompleteJob when tasks are done
 # D) delayed_job:
-#       BookToPDFPrepJob.perform creates book html files, and ChromePDFTasks
-#       ChromePDFTasks are converted to PDF with pdf_saver_server and chromium
-#       BookToPDFCompleteJob.perform
-#       combines all page pdfs into the photo book
+#       BookToPDFPrepJob. sets up directories, and ChromePDFTask
+#       ChromePDFTask is converted to PDF with pdf_saver_server and chromium extension
+#       BookToPDFCompleteJob.perform combines all page pdfs into single file
 
 
 module PB
@@ -59,6 +58,7 @@ class ChromePDFTask < Sequel::Model(:chrome_pdf_tasks)
 	def complete(options)
 		job = BookToPdfCompleteJob.new(self.book_id, self.book_dir, options)
 		Delayed::Job.enqueue job
+		self.destroy
 	end
 end
 
@@ -84,11 +84,11 @@ class BookToPdfCompleteJob
 	end
 
 	def get_pdf_pages
-		book_json = IO.read( File.join( self.book_dir, "book.json"))
+		book_json = IO.read( File.join( @book_dir, "book.json"))
 		b = JSON.parse( book_json)
 		pdfs = []
-		b.document.pageList.each do|file_name|
-			pages.push File.join(@book_dir, file_name)
+		b['document']['pageList'].each do |page_id|
+			pdfs.push File.join(@book_dir, "#{page_id}.pdf")
 		end
 		pdfs
 	end
@@ -119,7 +119,6 @@ class BookToPdfCompleteJob
 		debugger unless success
 		return generic_fail book, "PDF merge crashed. #{$?.to_s}" unless success
 		book.generate_pdf_done(book_pdf)
-		PB::ChromePDFTask.filter(:book_id => @book_id).destroy
 		@logger.info("BookToPdfCompleteJob took " + (Time.now - start_time).to_s)
 		rescue => ex
 			book.generate_pdf_fail(ex.message) if book
@@ -143,22 +142,6 @@ class BookToPdfPrepJob
 		dir
 	end
 
-	# Fix image links src="/photo/1?size=display" => src="photos/1.ext"
-	def fix_html(html)
-		split = html.split /(<img[^>]*>)/im
-		split.each_index do |i|
-			# split image into components
-			match = split[i].match( /(<img[^>]*)(src=")(\/photo\/)(\d+)([^"]*)(.*)/ )
-			if match
-				front, href, photo, image_id, size, back = match[1], match[2], match[3], match[4], match[5], match[6]
-				photo = "./photos/"
-				image_id = image_id + File.extname(PB::Photo[image_id].storage)
-				split[i] = front + href + photo + image_id + back
-			end
-		end
-		split.join
-	end
-
 	def prepare_directories
 		@book_dir = get_book_dir(@book)
 		FileUtils.rm_r(@book_dir, :force => true); # clean the dir
@@ -170,63 +153,6 @@ class BookToPdfPrepJob
 		# FileUtils.mkdir_p(@pdf_dir)
 	end
 
-	def prepare_html_files
-		@html_files = []
-		# copy css
-		FileUtils.cp(File.join(SvegSettings.book_templates_dir, "print-sheet.css"), @book_dir);
-		# copy the images
-		@book.photos.each { |photo| FileUtils.cp(photo.file_path(), @photo_dir) }
-		# TODO copy template images
-
-		# create the html files
-		i = 0
-		index = "<html><head><title>#{@book.title}</title></head><body>"
-		page_header = <<-eos
-<html>
-<head>
-	<link href='print-sheet.css' rel='stylesheet' type='text/css' />
-</head>
-<body>
-eos
-		@book.sorted_pages.each do |page|
-			i += 1
-			name = "page" + i.to_s + ".html"
-			html = page.html
-			f = File.new(File.join(@book_dir, name), "w")
-			# fix the html links
-			html = self.fix_html(page.html)
-			f.print page_header, html, "</body>"
-			f.close()
-			index << "<li><a href='#{name}'>#{name}</a>"
-			@html_files << f.path
-		end
-
-		# generate index.html just for fun
-		f = File.new(File.join(@book_dir,"index.html"), "w")
-		f.print index, "</body>"
-		f.close()
-	end
-
-	def create_pdf_files
-		@pdf_files = []
-		book_pdf = File.join(@book_dir, "book.pdf")
-		@logger.info "Creating PDFs"
-		# Create ChromePDFTask for every page
-		PB::ChromePDFTask.filter(:book_id => @book.id).each { |t| t.destroy }
-		@html_files.each_index do |index|
-			task = PB::ChromePDFTask.new( {
-				:book_id => @book.id,
-				:book_dir => @book_dir
-			})
-			begin
-				task.save
-				@pdf_files << task.pdf_file
-			rescue => ex
-				@logger.error ex.message
-				raise ex
-			end
-		end
-	end
 
 	# delayed_job callback. Creates the PDFs
 	def perform
@@ -240,9 +166,7 @@ eos
 			prepare_directories
 			task = PB::ChromePDFTask.new( {
 				:book_dir => @book_dir,
-				:book_json => @book_json,
-				:pdf_file => File.join(@pdf_dir, File.basename(@html_files[index]).sub(".html", ".pdf")),
-				:book_id => @book.id,
+				:book_id => @book.id
 			})
 			begin
 				task.save

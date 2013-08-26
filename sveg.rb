@@ -459,7 +459,7 @@ class SvegApp < Sinatra::Base
 	post '/books/:id/pdf' do
 		book = Book[params[:id]]
 		user_must_have_access book
-		status = book.generate_pdf
+		status = book.generate_pdf(true)
 		if request.xhr?
 			flash.now[:notice] = "<a href='/books/#{book.id}/pdf'>PDF</a> conversion in progress..."
 			plain_response("")
