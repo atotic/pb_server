@@ -73,8 +73,8 @@ module PdfSaver
 			end
 			# find a job, return 200 on success
 			task = PB::ChromePDFTask.filter(:processing_stage => PB::ChromePDFTask::STAGE_WAITING).first
-			dispatched_count = PB::ChromePDFTask.filter(:processing_stage => PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME).count
-			return RESPONSE[:no_work_available] unless task && dispatched_count < MAX_CONCURRENT_WORK
+			# dispatched_count = PB::ChromePDFTask.filter(:processing_stage => PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME).count
+			return RESPONSE[:no_work_available] unless task
 			log(env, "task " + task.id.to_s)
 			task.processing_stage = PB::ChromePDFTask::STAGE_DISPATCHED_TO_CHROME
 			task.save

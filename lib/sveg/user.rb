@@ -106,6 +106,18 @@ class OmniauthToken < Sequel::Model(:omniauth_tokens)
 		self.filter(:user_id => user.pk).all.map { |token| STRATEGY_CODES[token.strategy].to_s }
 	end
 
+	def self.login_as_printer
+		user = PB::User.where(:email => 'printerqueue@pook.io').first
+		unless user
+			DB.transaction do
+				user = User.new( { :display_name => 'Pookio Printer', :email => 'printerqueue@pook.io'})
+				user.is_administrator = true
+				user.save
+			end
+		end
+		user
+	end
+
 	plugin :timestamps
 
 	many_to_one :user # user this authorization is for

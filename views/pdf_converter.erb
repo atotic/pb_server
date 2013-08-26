@@ -17,7 +17,7 @@ var PDFController = {
 	book: null,
 	currentPage: null,
 	fatalError: function(msg) {
-		window.postMessage({ action: 'fail', message: msg});
+		window.postMessage({ action: 'fail', message: msg}, "*");
 		console.error("FATAL ERROR", msg);
 	},
 	loadBook: function(id) {
@@ -76,11 +76,12 @@ var PDFController = {
 		deferred.resolve();
 		var start = Date.now();
 		var imageFailedToLoad = false;
+		var THIS = this;
 		$('body').waitForImages(
 			function() {
 				console.log("waitingForImages", Date.now() - start);
 				if (imageFailedToLoad != false)
-					fatalError("Image failed to load on page " + pageId);
+					THIS.fatalError("Image failed to load on page " + pageId);
 				else
 					window.postMessage({action: 'didShowPage', pageId: pageId, pageWidth: pageWidth, pageHeight: pageHeight }, "*");
 			},

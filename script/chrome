@@ -6,7 +6,7 @@
 # Xvfd :1 -screen 0 1280x1024x24 -fbdir /tmp
 # take a peek at the screen:
 
-# xwud -in /tmp/Xvfb_screen0 
+# xwud -in /tmp/Xvfb_screen0
 require 'bundler/setup'
 
 require_relative '../config/settings'
@@ -20,7 +20,6 @@ def start
 	puts "starting chromium"
 	pid = Kernel.spawn(SvegSettings.chrome_binary,
 										 "--user-data-dir=#{SvegSettings.chrome_profile_dir}",
-										 "--no-sandbox",
 										 :chdir => SvegSettings.chrome_profile_dir,
 										 :out => File.join(SvegSettings.log_dir, "chromepdf_error.log"),
 										 :err => File.join(SvegSettings.log_dir, "chromepdf_error.log"))
@@ -37,7 +36,7 @@ def stop
 end
 
 usage unless ARGV.length == 1 && ARGV[0].match(/start|stop|restart|cmd_line/)
-case 
+case
 	when ARGV[0].eql?("start") then start
 	when ARGV[0].eql?("stop") then stop
 	when ARGV[0].eql?("restart") then stop;start

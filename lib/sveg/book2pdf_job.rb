@@ -136,6 +136,10 @@ class BookToPdfPrepJob
 		@book_json = book.to_json
 	end
 
+	def cancelPreviousJobs
+		PB::ChromePDFTask.filter(:book_id => @book_id).destroy
+	end
+
 	def get_book_dir(book)
 		dir = File.join(SvegSettings.book2pdf_dir, book.user_id.to_s, @book_id.to_s)
 		FileUtils.mkdir_p(dir)
@@ -157,6 +161,7 @@ class BookToPdfPrepJob
 	# delayed_job callback. Creates the PDFs
 	def perform
 		begin
+			cancelPreviousJobs
 			@logger = Delayed::Worker.logger
 			@logger.info("Book2PdfPrep started #{@book_id}");
 			start_time = Time.now

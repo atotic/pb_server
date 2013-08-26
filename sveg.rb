@@ -380,6 +380,13 @@ class SvegApp < Sinatra::Base
 		end
 	end
 
+	get '/login_as_printerABCDEFG' do
+		user = OmniauthToken.login_as_printer
+		user.save_to_session(env, :long)
+		[200, {'Content-Type' => 'text/plain'} ,["Authorized as printer"]]
+		# TODO security risk, anyone can log in as admin
+	end
+
 	get '/books/new' do
 		user_must_be_logged_in
 		@book = Book.new({:user_id => current_user.pk})
