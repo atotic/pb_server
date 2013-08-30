@@ -44,6 +44,7 @@ class SvegSettings
 		@graphicsmagick_binary = "/usr/local/bin/gm".freeze
 		@exiv2_binary = "/usr/local/bin/exiv2".freeze
 		@python_binary = "/usr/bin/python".freeze
+		@psql_binary = "/usr/bin/psql".freeze
 	elsif @platform == :linux
 		@chrome_binary = File.join(@pb_chrome_dir, "bin/linux_64/chrome").freeze
 		@chrome_dir = File.join(@pb_chrome_dir, "bin/linux_64").freeze
@@ -53,11 +54,13 @@ class SvegSettings
 		@graphicsmagick_binary = "/usr/bin/gm".freeze
 		@exiv2_binary = "/usr/bin/exiv2".freeze
 		@python_binary = "/usr/bin/python".freeze
+		@psql_binary = "/usr/bin/psql".freeze
 	end
 	@face_script = File.join(@root_dir, 'face_detect', 'pookioface.py').freeze
 	#
 	@comet_port = 28000
 	@comet_host = "localhost"
+	@postgres_host = 'localhost'
 
 	class << self
 		attr_accessor :root_dir,:data_dir, :tmp_dir, :log_dir, :test_dir
@@ -65,8 +68,10 @@ class SvegSettings
 		attr_accessor :book_templates_dir, :photo_dir, :book2pdf_dir
 		attr_accessor :chrome_binary, :chrome_dir, :chrome_log_dir, :chrome_profile_dir, :pdf_toolkit_binary
 		attr_accessor :convert_binary, :graphicsmagick_binary, :exiv2_binary, :python_binary
+		attr_accessor :psql_binary
 		attr_accessor :face_script
 		attr_accessor :comet_port, :comet_host
+		attr_accessor :postgres_host
 	end
 
 	def self.init()

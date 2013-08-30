@@ -8,7 +8,7 @@ gem 'rack'
 gem 'rack-flash3' # because of https://github.com/nakajima/rack-flash/issues/8
 
 gem "sequel" # database
-gem "mysql2"
+gem "pg"
 
 gem 'json'
 gem 'log4r'
@@ -28,8 +28,7 @@ gem 'em-http-request'
 
 # http://blog.wyeworks.com/2011/11/1/ruby-1-9-3-and-ruby-debug/
 group :development do
-	gem "ruby-debug", :platforms => :ruby_18
-	gem "debugger", :platforms => :ruby_19
+	gem "byebug"
 	gem "growl"
 end
 
