@@ -8,6 +8,13 @@ GIT
       i18n
       sequel
 
+GIT
+  remote: git@github.com:atotic/rack.git
+  revision: 2c88273b4d0231cecb9fc3bdb732d7cd61083f50
+  branch: rack-1.5
+  specs:
+    rack (1.5.2)
+
 GEM
   remote: http://rubygems.org/
   specs:
@@ -80,7 +87,6 @@ GEM
     polyglot (0.3.3)
     pony (1.5)
       mail (> 2.0)
-    rack (1.5.2)
     rack-flash3 (1.0.3)
       rack
       rack
@@ -126,7 +132,7 @@ DEPENDENCIES
   omniauth-google-oauth2
   pg
   pony
-  rack
+  rack!
   rack-flash3
   rack-test
   rake

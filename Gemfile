@@ -4,7 +4,7 @@ gem 'rake'
 
 gem "sinatra"
 gem "thin"
-gem 'rack'
+gem 'rack', :git => "git@github.com:atotic/rack.git", :branch => 'rack-1.5'
 gem 'rack-flash3' # because of https://github.com/nakajima/rack-flash/issues/8
 
 gem "sequel" # database
