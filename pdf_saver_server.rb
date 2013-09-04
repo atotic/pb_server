@@ -38,7 +38,9 @@ module PdfSaver
 		end
 
 		def initialize
+			@debug = false;
 		end
+		attr_accessor :debug
 
 		def logdot
 			@poll_work_count = 0 unless @poll_work_count
@@ -63,7 +65,7 @@ module PdfSaver
 		end
 
 		def handle_get_work(env)
-			logdot
+			#logdot
 			@@last_poll = Time.now
 			query = Rack::Utils.parse_query(env['QUERY_STRING'])
 			book_id = query['book_id']
@@ -130,6 +132,7 @@ module PdfSaver
 		end
 
 		def call(env)
+			byebug if @debug
 			response = case
 				when env['PATH_INFO'].eql?("/get_work") then handle_get_work(env)
 				when env['PATH_INFO'].eql?("/work_complete") then handle_work_complete(env)
@@ -165,9 +168,10 @@ Thread.new {
 	end
 }
 
-PdfSaver::LOGGER.info "started #{SvegSettings.environment.to_s} #{Time.now.to_s}"
+PdfSaver::LOGGER.info "started #{SvegSettings.environment.to_s} #{Process.pid} #{Time.now.to_s}"
 #PdfSaver::LOGGER.info "tasks available: #{PB::ChromePDFTask.count}"
 
+server = PdfSaver::Server.new
 server_builder = Rack::Builder.new do
 # not logging access, being polled by Chrome every second, continuosly
 # access_log_file = ::File.new(File.join(SvegSettings.log_dir, "pdf_saver_access.#{PB.get_thin_server_port}.log" ), 'a')
@@ -175,7 +179,11 @@ server_builder = Rack::Builder.new do
 # use Rack::CommonLogger, access_log_file
   use Rack::Session::Cookie, PB::SvegMiddleware::COOKIE_OPTIONS
   use PB::SvegMiddleware, { :ignore_sveg_http_headers => true, :logging => false }
-  run PdfSaver::Server.new
+  run server
 end
 Pdf_saver_server = server_builder.to_app
-
+PdfSaver::LOGGER.info "kill -s SIGUSR1 #{Process.pid} to interrupt"
+trap("SIGUSR1") {
+	server.debug = !server.debug
+	STDERR.write("PDF server debug is #{server.debug}")
+}
