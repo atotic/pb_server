@@ -224,9 +224,10 @@ module PB
 				headers.merge!({"X-FlashNotice" => env['x-rack.flash'][:notice]}) if env['x-rack.flash'][:notice]
 			end
 			# clear out empty flash
+			# byebug
 			env['rack.session'].delete('__FLASH__') if (env['rack.session']['__FLASH__'] && env['rack.session']['__FLASH__'].empty?)
 			# set cookie only if cookie has changed, or we are trying to delete it
-			changed = !(env['rack.session'].eql? env['rack.session.unpacked_cookie_data'])
+			changed = !(env['rack.session'].to_hash == env['rack.session.unpacked_cookie_data'])
 			changed ||= env['rack.session.options'][:expire_after] == 0
 			if (changed)
 				env['rack.session.options'][:skip] = false if changed # rack < 1.4
@@ -236,7 +237,6 @@ module PB
 					env['rack.session.options'][:expire_after] = env['rack.session']['user_id_expires'] - Time.now.to_i
 				end
 			end
-#			PB.logger.info "Setting cookie" if changed
 		end
 
 		def print_exception(env, ex)

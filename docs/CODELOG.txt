@@ -1,3 +1,5 @@
+Aug 31:
+Had to fix a bug in rack, submitted a patch. For now, I have a fork to maintain.
 
 Feb 14th estimates:
 2 weeks: comet, image resizing delayed, nginx

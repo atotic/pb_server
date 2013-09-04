@@ -1,6 +1,20 @@
+PREREQISITES:
+OS X
+# ruby setup
+brew doctor;brew update
+# rbenv, https://github.com/sstephenson/rbenv
+brew install rbenv
+brew install ruby-build
+printf 'eval "$(rbenv init -)"' >> ~/.profile
+gem install bundle
+# postgres
+http://postgresapp.com/
+# nginx
+brew install nginx
+
+LINUX
+
 Want:
-vagrant for devs, local ip login, just like oldreader setup
-redis, mongo?
 
 
 See pb_chrome/docs/linux_install for cold deployment script
