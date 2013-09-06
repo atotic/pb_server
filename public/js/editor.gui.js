@@ -405,6 +405,24 @@ Each dom element holding a model listens for PB.MODEL_CHANGED events
 			if (retVal.x == undefined)
 				console.error("bad getPageLocation", $ev);
 			return retVal;
+		},
+		focusOnDom: function($textDom, options) {
+			options = $.extend( {
+				select: 'all'	// none | all | start | end
+			});
+			var dom = $textDom[0];
+			window.setTimeout( function() {
+				dom.focus();
+				if (options.select != 'none')
+					window.setTimeout( function() {
+						switch(options.select) {
+						case 'all': dom.setSelectionRange(0, 36000); return;
+						case 'start': dom.setSelectionRange(0,0); return;
+						case 'end': dom.setSelectionRange(36000, 36000); return;
+						default: console.warn('unknown sel range', options.select);
+						}
+					}, 0);
+			}, 0);
 		}
 	}
 

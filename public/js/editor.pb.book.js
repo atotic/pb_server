@@ -348,14 +348,17 @@
 			else if (document_var == this.localData.document.pages) {
 				if (objectPath.length > 3) {
 					var page = member(objectPath, 2);
+					var pageProxy = this.page( page.id );
 					var page_var = member(objectPath, 3);
 					if (page_var == page.assets) {
 						return [
-							{ model: page, prop: 'assetList'},
+							{ model: pageProxy, prop: 'assetList'},
 							{ model: this, prop: 'photoList'}
 						]
 					} else if (page_var == page.dimensions) {
-						return [ { model: page, prop: 'dimensions' }];
+						return [ { model: pageProxy, prop: 'dimensions' }];
+					} else if (page_var == 'title') {
+						return [ { model: pageProxy, prop: 'title'} ];
 					}
 					else
 						console.log(change.op, change.target.path());

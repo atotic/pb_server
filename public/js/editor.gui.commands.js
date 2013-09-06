@@ -49,7 +49,8 @@
 			meta: "meta-",
 			leftArrow: '←',
 			rightArrow: '→',
-			backspace: 'back'
+			backspace: 'back',
+			enter: '⏎'
 		},
 		// see http://unixpapa.com/js/key.html for the madness that is js key handling
 		// 2012: most browsers not supporting html5 keyboard event specs
@@ -76,6 +77,8 @@
 						key = this.keys.leftArrow; break;
 					case "Right":
 						key = this.keys.rightArrow; break;
+					case "Enter":
+						key = this.keys.enter; break;
 					default:
 						var keyCode = parseInt(ev.keyIdentifier.replace(/U\+/, ""), 16);
 						if (keyCode)
@@ -88,6 +91,8 @@
 					case 8:
 						handleDelete();
 						break;
+					case 13:
+						key = this.keys.enter; break;
 					case 27:
 						key = this.keys.esc; break;
 					case 109: // Chrome

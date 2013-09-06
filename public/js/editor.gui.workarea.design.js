@@ -60,8 +60,19 @@ var DesignWorkArea = {
 					sel.setSelection();
 				});
 			})
-			.on('mousedown.editTitle touchstart.editTitle', '.pageTitle', function(ev) {
-				console.log("editTitle");
+			.on('mousedown.editTitle touchstart.editTitle', '.pageTitle', function($ev) {
+				$ev.stopPropagation();
+				if ($ev.target != $ev.currentTarget) {	// skip cliks in text area above
+					return;
+				}
+				$ev.preventDefault();
+				var $target = $($ev.currentTarget);
+				var $dp =  $target.parent().find('.design-page');
+				var page = PB.ModelMap.domToModel( $dp );
+				var selection = PB.Page.Selection.findClosest( $dp );
+				var manipulator = new GUI.Manipulators.EditTitle(page, $target, selection);
+				selection.setSelection();
+				selection.setManipulator(manipulator);
 			});
 
 		$('#add-text-btn').on('mousedown touchstart', function() {
@@ -319,6 +330,15 @@ var DesignWorkArea = {
 						}
 					});
 				}
+				$dom.on( PB.MODEL_CHANGED + ".design", function( ev, model, prop, eventOptions ) {
+					switch(prop) {
+					case 'title':
+						$(this).parent().find('.pageTitle').text( model.formattedTitle());
+						break;
+					default:
+					break;
+					}
+				});
 				return $dom;
 			}
 			catch(ex) { // Display placeholder if load fails
@@ -375,7 +395,7 @@ var DesignWorkArea = {
 			if (pagesDom.left.data('highDpi'))
 				pagesDom.left.data('highDpi').css('transform', transform);
 			leftDom.append(pagesDom.left);
-			leftDom.append($('<p class="pageTitle">').text(pageModels.left.pageTitle()));
+			leftDom.append($('<p class="pageTitle">').text(pageModels.left.formattedTitle()));
 		}
 		if (pagesDom.right) {
 			var transform = 'scale(' + pos.scale.toFixed(4) + ')';
@@ -387,7 +407,7 @@ var DesignWorkArea = {
 			if (pagesDom.right.data('highDpi'))
 				pagesDom.right.data('highDpi').css('transform', transform);
 			rightDom.append( pagesDom.right );
-			rightDom.append($('<p class="pageTitle">').text(pageModels.right.pageTitle()));
+			rightDom.append($('<p class="pageTitle">').text(pageModels.right.formattedTitle()));
 		}
 		// animate pages into view with 3D transitions
 		// based upon http://jsfiddle.net/atotic/B8Rng/

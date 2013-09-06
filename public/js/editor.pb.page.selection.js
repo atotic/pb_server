@@ -53,6 +53,8 @@ PageSelection.prototype = {
 			this.commandSet = commandSet;
 			this.broadcast('selection', this.selection);
 		}
+		if (newSelection.length == 0)
+			this.setManipulator();
 	},
 
 	highlight: function() {

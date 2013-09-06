@@ -645,13 +645,14 @@ EditTextManipulator.prototype = {
 		$(document.body).append(this.handles.textarea);
 		this.reposition();
 		var THIS = this;
-		window.setTimeout(function() {	// the timeout cascade to make selecting end work
-			var dom = THIS.handles.textarea.get(0);
-			dom.focus();
-			window.setTimeout( function() {
-				dom.setSelectionRange(36000, 36000);
-			}, 0)
-		}, 0);
+		GUI.Util.focusOnDom( this.handles.textarea, {select: 'end'} );
+		// window.setTimeout(function() {	// the timeout cascade to make selecting end work
+		// 	var dom = THIS.handles.textarea.get(0);
+		// 	dom.focus();
+		// 	window.setTimeout( function() {
+		// 		dom.setSelectionRange(36000, 36000);
+		// 	}, 0)
+		// }, 0);
 	},
 	remove: function() {
 		// console.log('remove');
@@ -660,6 +661,48 @@ EditTextManipulator.prototype = {
 	}
 }
 
+var EditTitleManipulator = function(page, $titleDom, selection) {
+	this.page = page;
+	this.titleDom = $titleDom;
+	this.selection = selection;
+}
+
+EditTitleManipulator.prototype = {
+	show: function() {
+		var $form = $( $.parseHTML('<form action="/nosubmit"><input type="text"></form>'));
+		this.handles = {
+			form: $form,
+			text: $form.children('input')
+		};
+		var THIS = this;
+		this.handles.text.css({
+			position: 'absolute',
+			width: '100%',
+			height: '100%',
+			left: '0',
+			top: '0'
+		})
+		.prop('value', this.page.title)
+		.prop('placeholder', "title?");
+		this.handles.form.on('submit', function($ev) { return THIS.submit($ev)});
+		this.titleDom.append( this.handles.form );
+		GUI.Util.focusOnDom( this.handles.text, {select: 'end'} );
+	},
+	remove: function() {
+		this.handles.form.remove();
+	},
+	reposition: function() {
+		console.log("reposition");
+	},
+	submit: function($ev) {
+		this.page.title = this.handles.text.prop('value');
+		if (this.selection)
+			this.selection.setManipulator();
+		this.remove();
+		$ev.stopPropagation();
+		$ev.preventDefault();
+	}
+}
 scope.Manipulator = Manipulator;
 scope.Manipulators = {
 	Default: DefaultManipulator,
@@ -668,7 +711,8 @@ scope.Manipulators = {
 	Zoom: ZoomManipulator,
 	Rotate: RotateManipulator,
 	Resize: ResizeManipulator,
-	EditText: EditTextManipulator
+	EditText: EditTextManipulator,
+	EditTitle: EditTitleManipulator
 }
 
 })(GUI);

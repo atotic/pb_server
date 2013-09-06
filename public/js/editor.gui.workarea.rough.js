@@ -261,7 +261,7 @@
 				tiles.css({width: edgeLength + "px", height: edgeLength + "px"});
 		},
 		createRoughPage: function(pageModel) {
-			var domPage = $("<div class='rough-page'><p>" + pageModel.pageTitle() + "</p></div>");
+			var domPage = $("<div class='rough-page'><p>" + pageModel.formattedTitle() + "</p></div>");
 			if (pageModel.kind !== 'page')
 				domPage.addClass('rough-page-' + pageModel.kind);
 
@@ -283,10 +283,12 @@
 		},
 		renumberRoughPages: function() {
 			$('#work-area-organize .rough-page').each(function(idx) {
+				var page = PB.ModelMap.domToModel($(this));
+				var title = page.formattedTitle();
+				$(this).children('p').text( title );
 				if (idx < 4)
 					return;
 				var pNum = idx - 3;
-				$(this).children('p').text(idx - 3);
 				if (pNum % 2 == 1)
 					$(this).removeClass('left-rough').addClass('right-rough');
 				else
@@ -465,8 +467,11 @@
 		pageChanged: function(ev, model, prop, options) {
 			options = $.extend( { animate: false }, options);
 			var roughDom = $(this);
-			if (prop === 'assetList')
+			if (prop == 'assetList')
 				RoughWorkArea.synchronizeRoughPhotoList(roughDom, options);
+			else if (prop == 'title') {
+				$(this).children('p').text( model.formattedTitle() );
+			}
 		}
 	};
 

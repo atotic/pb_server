@@ -93,6 +93,29 @@ asset widget {
 		get dimensions() {
 			return this.p.dimensions;
 		},
+		get title() {	// also see pageTitle()
+			return this.p.title;
+		},
+		set title(val) {
+			if (!val) {
+				delete this.p.title;
+			}
+			else {
+				this.p.title = val;
+			}
+			this.book.makeDirty();
+			PB.broadcastChange(this, 'title');
+		},
+		get pageNumber() {
+			switch(this.kind) {
+			case 'cover': return 'cover';
+			case 'cover-flap': return 'flap';
+			case 'back-flap': return 'flap';
+			case 'back': return 'back';
+			default:
+				return this.book.pageList.indexOf(this.id) - 3;
+			}
+		},
 		set dimensions(d) {
 			if (d == null)
 				this.p.dimensions = d;
@@ -111,15 +134,20 @@ asset widget {
 		get kind() { // cover | cover-flap | back-flap | back | page
 			return this.p.kind || 'page';
 		},
-		pageTitle: function() {
-			switch(this.kind) {
-				case 'cover': return 'cover';
-				case 'cover-flap': return 'flap';
-				case 'back-flap': return 'flap';
-				case 'back': return 'back';
-				default:
-					return this.book.pageList.indexOf(this.id) - 3;
-			}
+		formattedTitle: function(options) {
+			// formatted page title
+			options = $.extend( {
+				showTitle: true,
+				showNumber: true
+			}, options);
+			var num = this.pageNumber;
+			var title = this.title;
+			var retVal = "";
+			if (options.showNumber)
+				retVal += num;
+			if (options.showTitle && title)
+				retVal += ": " + title;
+			return retVal;
 		},
 		swapPhoto: function(oldId, newId) {
 			var assets = this.getAssets();
@@ -1183,6 +1211,8 @@ asset widget {
 						$pageDom.children().remove();
 						THIS.generateDom(
 							$.extend( {}, eventOptions, options, {enclosingDom: $pageDom} ));
+						break;
+					case 'title':
 						break;
 					default:
 						console.warn("how should I sync ", prop);
