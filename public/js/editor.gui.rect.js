@@ -133,6 +133,7 @@
 			return retVal;
 		},
 		// centers this inside enclosing rect.
+		// result top/left are in respect to enclosing rect
 		centerIn: function(enclosingRect, options) {
 			var options = $.extend({}, {
 				focalPoint: {x:50, y:50}, // Focal point is the center of new rect in % units

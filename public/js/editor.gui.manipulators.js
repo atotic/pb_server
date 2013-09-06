@@ -405,7 +405,7 @@ ResizeManipulator.prototype = {
 	reposition: function(pageDom) {
 		this.pageDom = pageDom || this.pageDom;
 		var $itemDom = this.pageDom.find('*:data("model_id=' + this.assetId + '")');
-		var pageAsset = PB.ModelMap.model(this.assetId);
+		var pageAsset = PB.ModelMap.model( this.assetId );
 		var corners = Manipulator.getBoundingCorners($itemDom, pageAsset.asset.rotate);
 
 		this.rotateRad = (pageAsset.asset.rotate || 0) * Math.PI / 180;
@@ -430,6 +430,11 @@ ResizeManipulator.prototype = {
 			left: (corners.d.x + corners.a.x) / 2,
 			transform: 'rotate(' + this.rotateRad + 'rad)'
 		});
+		this.handles.ok.css({
+			top: ( corners.a.y + corners.c.y) / 2,
+			left: (corners.a.x + corners.c.x) / 2,
+			transform: 'rotate(' + this.rotateRad + 'rad)'
+		});
 	},
 	show: function() {
 		this.pageAsset = PB.ModelMap.model( this.assetId );
@@ -438,7 +443,8 @@ ResizeManipulator.prototype = {
 			top: Manipulator.makeIconHandle('arrow-up'),
 			left: Manipulator.makeIconHandle('arrow-left'),
 			bottom: Manipulator.makeIconHandle('arrow-down'),
-			right: Manipulator.makeIconHandle('arrow-right')
+			right: Manipulator.makeIconHandle('arrow-right'),
+			ok: Manipulator.makeIconHandle('ok')
 		};
 		var THIS = this;
 		for (var p in this.handles)
@@ -459,6 +465,8 @@ ResizeManipulator.prototype = {
 			.on('dragstart', {}, function(ev) { THIS.dragstart(ev, 'right') })
 			.on('drag', {}, function(ev) { THIS.drag(ev, 'right') })
 			.on('dragend', {}, function(ev) { THIS.dragend(ev, 'right') });
+		this.handles.ok.hammer()
+			.on('touch', {}, function(ev) { THIS.resetSize(ev)});
 		if (!this.options.vertical) {
 			this.handles.top.hide();
 			this.handles.bottom.hide();
@@ -532,6 +540,29 @@ ResizeManipulator.prototype = {
 			break;
 		}
 		this.pageAsset.page.updateAsset( this.assetId, { css: newLoc } );
+		PB.stopEvent(ev.gesture);
+	},
+	resetSize: function(ev) {
+		debugger;
+		var pageAsset = PB.ModelMap.model( this.assetId );
+		var photo = pageAsset.page.book.photo( pageAsset.asset.photoId );
+		var oldPosition = new GUI.Rect( this.pageAsset.asset.css );
+		var photoRect = new GUI.Rect( photo.dimensions );
+		var newPosition = photoRect.scaleBy( photoRect.fitInside( oldPosition ))
+			.centerIn( oldPosition )
+			.moveBy( oldPosition.x, oldPosition.y );
+		pageAsset.page.updateAsset( this.assetId, {
+			css: {
+				top: newPosition.top,
+				left: newPosition.left,
+				bottom: newPosition.bottom,
+				right: newPosition.right,
+				width: newPosition.width
+			},
+			photoRect: undefined,
+			focalPoint: undefined,
+			zoom: undefined
+		});
 		PB.stopEvent(ev.gesture);
 	}
 }

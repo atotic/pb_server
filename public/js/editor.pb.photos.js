@@ -35,6 +35,9 @@
 		get dimensions() {
 			return this.p.dimensions;
 		},
+		get hasValidDimensions() {
+			return this.p.hasValidDimensions;
+		},
 		isDraggable: function() {
 			return true;
 		},
@@ -290,6 +293,9 @@
 				return { width: this._data_natural_w, height: this._data_natural_h};
 			else
 				return { width: 1936, height: 1936};
+		},
+		get hasValidDimensions() {
+			return 'original_url' in this || '_data_natural_w' in this;
 		},
 		// Just the url
 		getUrl: function(size) {

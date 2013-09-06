@@ -63,6 +63,12 @@
 		makeDirty: function() {
 			this._dirty = true;
 		},
+		photo: function(id) {
+			return this._getPhotoProxy(id);
+		},
+		page: function(id) {
+			return this._getPageProxy(id);
+		},
 		get photoList() {
 			return this.localData.document.photoList.slice();
 		},
@@ -175,9 +181,6 @@
 					throw new Error("No such page");
 			return this._proxies[id];
 		},
-		page: function(id) {
-			return this._getPageProxy(id);
-		},
 		lastPage: function() {
 			var lastPageId = this.localData.document.pageList[ this.localData.document.pageList.length - 1];
 			return this.page( lastPageId );
@@ -206,9 +209,6 @@
 		photoResolver: function() {
 			var THIS = this;
 			return function(id) { return THIS._getPhotoProxy(id);};
-		},
-		photo: function(id) {
-			return this._getPhotoProxy(id);
 		},
 		setCorrupted: function(reason) { // Called when book is corrupted.
 			this._corrupted = reason;

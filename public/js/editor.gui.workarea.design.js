@@ -54,11 +54,16 @@ var DesignWorkArea = {
 		$('#work-area-design').data('resize', function() {
 			DesignWorkArea.resize();
 		});
-		$('#work-area-design').on('mousedown touchstart', function(ev) {
-			DesignWorkArea.currentSelections.forEach(function(sel) {
-				sel.setSelection();
+		$('#work-area-design')
+			.on('mousedown touchstart', function(ev) {
+				DesignWorkArea.currentSelections.forEach(function(sel) {
+					sel.setSelection();
+				});
+			})
+			.on('mousedown.editTitle touchstart.editTitle', '.pageTitle', function(ev) {
+				console.log("editTitle");
 			});
-		});
+
 		$('#add-text-btn').on('mousedown touchstart', function() {
 			var lastSelection = DesignWorkArea.activeSelection;
 			var assetId = lastSelection.page.addAsset({ type: 'text' });

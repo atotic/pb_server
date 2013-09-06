@@ -250,7 +250,7 @@
 			}
 			$dest = $newDest;
 			if ($dest.length > 0) {
-				// console.log('dest set');
+				console.log('dest set');
 				droppable = $dest.data('pb-droppable');
 				if (droppable == null) {
 					console.warn('droppable without data');
@@ -266,7 +266,7 @@
 				}
 			}
 			else {
-				// console.log('dest removed');
+				console.log('dest removed');
 			}
 		},
 		clearWindowSelection: function() {	// FF can select on user drag
@@ -435,11 +435,11 @@
 		getTransferData: function($src, flavor) {
 			var dataTransfer = $src.originalEvent.dataTransfer;
 			if (dataTransfer.files && dataTransfer.files.length > 0) {
-				console.log('got files');
+				// console.log('got files');
 				return dataTransfer.files;
 			}
 			else if (dataTransfer.types) {
-				console.log('got file type');
+				// console.log('got file type');
 				if ('contains' in dataTransfer.types)	// Firefox
 					return dataTransfer.types.contains("Files");
 				else // Chrome
@@ -452,7 +452,7 @@
 
 	var NativeDnd = {
 		dragenter: function($ev) {
-			console.log('dragenter');
+			// console.log('dragenter');
 			var dragFiles = NativeDraggable.getTransferData( $ev, 'osFile');
 			if (dragFiles) {
 				draggable = NativeDraggable;
@@ -461,7 +461,7 @@
 			}
 		},
 		dragover: function($ev) {
-			console.log('dragover');
+			// console.log('dragover');
 			if (!draggable)
 				return;
 			var d = Dnd.findDroppable($ev);
@@ -474,14 +474,14 @@
 			$ev.preventDefault();
 		},
 		dragleave: function($ev) {
-			console.log('dragleave');
+			// console.log('dragleave');
 			$ev.stopPropagation();
 			$ev.preventDefault();
 			if (draggable)
 				Dnd.setDest( $());
 		},
 		drop: function($ev) {
-			console.log('drop');
+			// console.log('drop');
 			var dragFiles = NativeDraggable.getTransferData( $ev, 'osFile');
 			if (dragFiles) {
 				if (droppable) { // let droppable handle it

@@ -10,13 +10,13 @@ GIT
 
 GIT
   remote: git@github.com:atotic/rack.git
-  revision: 2c88273b4d0231cecb9fc3bdb732d7cd61083f50
+  revision: 81d266b8137afbb21faa0c98d827139dcf0b737b
   branch: rack-1.5
   specs:
     rack (1.5.2)
 
 GEM
-  remote: http://rubygems.org/
+  remote: https://rubygems.org/
   specs:
     activesupport (3.2.14)
       i18n (~> 0.6, >= 0.6.4)
