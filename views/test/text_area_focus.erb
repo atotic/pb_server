@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>popup text field test</title>
+<%= asset_link( "jquery.js") %>
+</head>
+<style>
+#click1 {
+	position: relative;
+}
+</style>
+
+<body>
+<p id='click1'>Click me to pop up text area</p>
+<p>No click here</p>
+<script type='text/javascript'>
+function focusOnDom($textDom, options) {
+	options = $.extend( {
+		select: 'all'	// none | all | start | end
+	});
+	var dom = $textDom[0];
+	window.setTimeout( function() {
+		dom.focus();
+		if (options.select != 'none')
+			window.setTimeout( function() {
+				switch(options.select) {
+				case 'all': dom.setSelectionRange(0, 36000); return;
+				case 'start': dom.setSelectionRange(0,0); return;
+				case 'end': dom.setSelectionRange(36000, 36000); return;
+				default: console.warn('unknown sel range', options.select);
+				}
+			}, 0);
+	}, 0);
+}
+
+$('#click1').on('mousedown touchstart', function($ev) {
+	var $p = $('#click1');
+	var $form = $( $.parseHTML('<form action="/nosubmit"><input type="text"></form>'));
+	var $text = $form.children('input');
+	$text.css({
+			position: 'absolute',
+			width: '100%',
+			height: '100%',
+			left: '0',
+			top: '0'
+	})
+	.prop('value', $p.text())
+	.prop('placeholder', 'yer txt here');
+	$form.on('submit', function($ev) {
+		$p.text($text.prop('value'));
+		$form.remove();
+		$ev.preventDefault();
+	});
+	$text.on('blur', function() {
+		console.log('blur');
+	});
+	$p.append($form);
+	focusOnDom($text);
+});
+$('body').on('click', function($ev) {
+	$('form').remove();
+});
+</script>
+</body>
