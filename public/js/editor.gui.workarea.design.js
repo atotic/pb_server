@@ -62,6 +62,7 @@ var DesignWorkArea = {
 			})
 			.on('mousedown.editTitle touchstart.editTitle', '.pageTitle', function($ev) {
 				$ev.stopPropagation();
+				// title editing
 				if ($ev.target != $ev.currentTarget) {	// skip cliks in text area above
 					return;
 				}
@@ -70,7 +71,7 @@ var DesignWorkArea = {
 				var $dp =  $target.parent().find('.design-page');
 				var page = PB.ModelMap.domToModel( $dp );
 				var selection = PB.Page.Selection.findClosest( $dp );
-				var manipulator = new GUI.Manipulators.EditTitle(page, $target, selection);
+				var manipulator = new GUI.Manipulators.EditTitle(page, $dp, selection);
 				selection.setSelection();
 				selection.setManipulator(manipulator);
 			});

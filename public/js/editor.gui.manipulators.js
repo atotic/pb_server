@@ -543,26 +543,9 @@ ResizeManipulator.prototype = {
 		PB.stopEvent(ev.gesture);
 	},
 	resetSize: function(ev) {
-		debugger;
+		// debugger;
 		var pageAsset = PB.ModelMap.model( this.assetId );
-		var photo = pageAsset.page.book.photo( pageAsset.asset.photoId );
-		var oldPosition = new GUI.Rect( this.pageAsset.asset.css );
-		var photoRect = new GUI.Rect( photo.dimensions );
-		var newPosition = photoRect.scaleBy( photoRect.fitInside( oldPosition ))
-			.centerIn( oldPosition )
-			.moveBy( oldPosition.x, oldPosition.y );
-		pageAsset.page.updateAsset( this.assetId, {
-			css: {
-				top: newPosition.top,
-				left: newPosition.left,
-				bottom: newPosition.bottom,
-				right: newPosition.right,
-				width: newPosition.width
-			},
-			photoRect: undefined,
-			focalPoint: undefined,
-			zoom: undefined
-		});
+		pageAsset.page.fitPhotoInBounds( this.assetId );
 		PB.stopEvent(ev.gesture);
 	}
 }
@@ -596,7 +579,9 @@ EditTextManipulator.prototype = {
 	autogrow: function() {
 		// console.log('autogrow');
 		var textarea = this.handles.textarea.get(0);
-		if (textarea.scrollHeight > textarea.clientHeight) {
+		var contentHeight = textarea.scrollHeight;
+		var boxHeight = textarea.clientHeight;
+		if (contentHeight > boxHeight) {
 			console.log('autogrow growing');
 			var s = window.getComputedStyle(textarea);
 			textarea.style.height = textarea.scrollHeight
@@ -661,9 +646,9 @@ EditTextManipulator.prototype = {
 	}
 }
 
-var EditTitleManipulator = function(page, $titleDom, selection) {
+var EditTitleManipulator = function(page, $pageDom, selection) {
 	this.page = page;
-	this.titleDom = $titleDom;
+	this.pageDom = $pageDom;
 	this.selection = selection;
 }
 
@@ -675,24 +660,31 @@ EditTitleManipulator.prototype = {
 			text: $form.children('input')
 		};
 		var THIS = this;
-		this.handles.text.css({
-			position: 'absolute',
-			width: '100%',
-			height: '100%',
-			left: '0',
-			top: '0'
-		})
-		.prop('value', this.page.title)
-		.prop('placeholder', "title?");
+		this.handles.text.prop('value', this.page.title)
+			.prop('placeholder', "title?")
+			.on('blur', function() {
+				console.log('blur');
+			});
 		this.handles.form.on('submit', function($ev) { return THIS.submit($ev)});
-		this.titleDom.append( this.handles.form );
+		$(document.body).append( this.handles.form );
+		this.reposition();
 		GUI.Util.focusOnDom( this.handles.text, {select: 'end'} );
 	},
 	remove: function() {
 		this.handles.form.remove();
 	},
-	reposition: function() {
-		console.log("reposition");
+	reposition: function($pageDom) {
+		this.pageDom = $pageDom || this.pageDom;
+		var $titleDom = this.pageDom.parent().find('.pageTitle');
+		var titleRect = $titleDom.get(0).getBoundingClientRect();
+		var top = $(window).scrollTop();
+		this.handles.text.css({
+			position: 'absolute',
+			width: titleRect.right - titleRect.left,
+			height: titleRect.bottom - titleRect.top,
+			left: titleRect.left,
+			top: titleRect.top + top
+		});
 	},
 	submit: function($ev) {
 		this.page.title = this.handles.text.prop('value');

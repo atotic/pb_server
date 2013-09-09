@@ -94,7 +94,8 @@ window.PB // Generic utilities
 
 	var ModelMap = {
 		model: function(id) {
-			return objectCache[id] || (resolverCache[id] || $.noop)(id)
+			var m = objectCache[id] || (resolverCache[id] || $.noop)(id);
+			return m;
 		},
 		set: function(model) {
 			objectCache[model.id] = model;
