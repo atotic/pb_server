@@ -1234,7 +1234,6 @@ asset widget {
 						var listener = function(propName, propValue) {
 							if (serverPhoto.hasValidDimensions) {
 								console.log(propName);
-								debugger;
 								THIS.addAsset( newAsset, {animate: true });
 								serverPhoto.removeListener(listener);
 							}

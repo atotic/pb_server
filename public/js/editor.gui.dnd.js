@@ -201,6 +201,7 @@
 	*/
 	var webkitIpadBugWorkaround = {
 		patchedRemove: function(selector, keepData) {	// jquery: 5421
+			console.log("patchedRemove")
 			var elem,
 				elems = selector ? jQuery.filter( selector, this ) : this,
 				i = 0;
@@ -216,6 +217,7 @@
 				return this;
 		},
 		startFix: function() {
+			// console.log("startFix");
 			if ('original_remove' in $.fn)
 				return;
 			this.remove_container = $("<div id='remove_container' style='display:none'>");
@@ -224,6 +226,7 @@
 			$.fn.remove = this.patchedRemove;
 		},
 		endFix: function() {
+			// console.log("endFix");
 			if (! ('original_remove' in $.fn))
 				return;
 			$.fn.remove = $.fn.original_remove;
@@ -282,7 +285,6 @@
 		},
 		dragStart: function($ev) {
 			// console.log("dragStart", $ev.type);
-			webkitIpadBugWorkaround.startFix();
 			if ($dragImage)	// if we get both mousedown and touchstart do only one
 				return;
 			$src = $($ev.currentTarget);
@@ -300,6 +302,7 @@
 				previousDraggable = null;
 			startTime = now;
 			// create a clone
+			webkitIpadBugWorkaround.startFix();
 			$dragImage = draggable.start( $src, $ev, startLoc );
 			$(document.body).append($dragImage);
 

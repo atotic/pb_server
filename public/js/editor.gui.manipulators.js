@@ -663,6 +663,7 @@ EditTitleManipulator.prototype = {
 		this.handles.text.prop('value', this.page.title)
 			.prop('placeholder', "title?")
 			.on('blur', function() {
+				THIS.page.title = THIS.handles.text.prop('value');
 				console.log('blur');
 			});
 		this.handles.form.on('submit', function($ev) { return THIS.submit($ev)});

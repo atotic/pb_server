@@ -352,7 +352,10 @@
 				case 'swapArray':
 					var src = containerDom.children(sel).get(diff[i].args.srcIndex);
 					var dest = containerDom.children(sel).get(diff[i].args.destIndex);
-					oldChildren = GUI.JQDiffUtil.swap(oldChildren, src, dest);
+					if (!src || !dest)
+						console.warn("synchronizePhotoList swapArray unexpected missing element");
+					else
+						oldChildren = GUI.JQDiffUtil.swap(oldChildren, src, dest);
 				break;
 				}
 			}
