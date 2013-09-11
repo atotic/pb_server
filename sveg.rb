@@ -220,6 +220,7 @@ class SvegApp < Sinatra::Base
 						"editor.gui.util.js",
 						"editor.gui.rect.js",
 						"editor.gui.commands.js",
+						"editor.gui.options.js",
 						"editor.gui.dnd.js",
 						"editor.gui.buttons.js",
 						"editor.gui.workarea.js",

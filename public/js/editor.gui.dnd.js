@@ -299,11 +299,15 @@
 					return;
 				}
 			else
-				previousDraggable = null;
+				previousDraggable = draggable;
 			startTime = now;
 			// create a clone
-			webkitIpadBugWorkaround.startFix();
-			$dragImage = draggable.start( $src, $ev, startLoc );
+			try {
+				$dragImage = draggable.start( $src, $ev, startLoc );
+			}
+			catch(ex) {
+				return; // expected, drag can be cancelled by throwing exceptions
+			}
 			$(document.body).append($dragImage);
 
 			// set dragging bounds
@@ -318,6 +322,7 @@
 			// tracking events
 			$(document.body).on('touchmove.dnd mousemove.dnd', Dnd.dragMove);
 			$(document.body).on('touchend.dnd mouseup.dnd', Dnd.dragEnd);
+			webkitIpadBugWorkaround.startFix();
 		},
 		matchFlavors: function(srcFlavors, destFlavors) {
 			for (var i=0; i<srcFlavors.length; i++) {
@@ -409,7 +414,6 @@
 		dragEnd: function($ev) {
 			// console.log('dragEnd', $ev.type);
 			webkitIpadBugWorkaround.endFix();
-			previousDraggable = draggable;
 			var transferDone = false;
 			if ($dest.length > 0)
 				transferDone = Dnd.doTransfer($ev);

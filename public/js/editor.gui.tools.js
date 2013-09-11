@@ -13,7 +13,8 @@
 	{ name: 'photoSize', value: 'large'},
 	{ name: 'pageSize', value: 'small'},
 	{ name: 'pageSize', value: 'medium'},
-	{ name: 'pageSize', value: 'large'}
+	{ name: 'pageSize', value: 'large'},
+	{ name: 'pageSize', value: 'xlarge'}
 	];
 
 	var Tools = {

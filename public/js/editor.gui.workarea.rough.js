@@ -195,6 +195,22 @@
 			},0);
 		}
 	}
+
+	// Cover pages just do double-click, no dragging
+	var RoughCoverPageDraggableOptions = {
+		flavors: [],
+		pageId: 'your id here',
+		start: function() {
+			throw new Error("Cover pages are not draggable");	// expected, only here for double click
+		},
+		doubleClick: function($el) {
+			var THIS = this;
+			window.setTimeout(function() {
+				GUI.Options.designStage = 'design';
+				GUI.DesignWorkArea.goTo( RoughWorkArea.book.page( THIS.pageId ));
+			},0);
+		}
+	}
 	var roughPageTarget = { target: null, direction: 0, dropFeedback: "" };
 
 	var RoughWorkArea = {
@@ -273,10 +289,17 @@
 			// }, 0);
 			domPage.addClass('pb-droppable')
 				.data('pb-droppable', RoughPageDroppable);
-			var dragOptions = $.extend({}, RoughPageDraggableOptions, { pageId: pageModel.id });
 			if (pageModel.kind === 'page') {
+				var dragOptions = $.extend({}, RoughPageDraggableOptions,
+					{ pageId: pageModel.id });
 				domPage.addClass('pb-draggable')
 					.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions ));
+			}
+			else {
+				var dragOptions = $.extend({}, RoughCoverPageDraggableOptions,
+					{ pageId: pageModel.id });
+				domPage.addClass('pb-draggable')
+					.data('pb-draggable', new GUI.Dnd.Draggable( dragOptions ))
 			}
 //			this.makeDraggable(domPage);
 			return domPage;
