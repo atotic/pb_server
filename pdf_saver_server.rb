@@ -4,6 +4,7 @@
 require 'rack'
 require 'thin'
 require 'json'
+require 'fileutils'
 
 require_relative 'config/settings'
 require_relative 'config/db'
@@ -90,7 +91,6 @@ module PdfSaver
 			request_id = req.params['request_id']
 			STDERR.write "/work_complete error #{request_id} #{error}" if req.params['error']
 			if (request_id.eql? "test")
-				debugger
 				dest_dir = SvegSettings.tmp_dir;
 				book = PB::Book[ req.params['book_id']]
 				doc = JSON.parse book.document
@@ -103,7 +103,7 @@ module PdfSaver
 				STDERR.write cmd_line
 				STDERR.write "\n"
 				success = Kernel.system cmd_line
-				debugger unless success
+				byebug unless success
 			else
 				task = PB::ChromePDFTask[ request_id ]
 				task.complete(req.params)
@@ -111,10 +111,12 @@ module PdfSaver
 			RESPONSE[:success]
 		end
 
-		def handle_pdf_upload(env)
+		def handle_pdf_upload_when_it_was_a_file_blob(env)
+			# obsolete
 			query = Rack::Utils.parse_query(env['QUERY_STRING'])
 			return RESPONSE[:malformed_params] unless query['request_id']
 			return RESPONSE[:malformed_params] unless query['page_id']
+
 			startTime = Time.now
 			dest_dir = SvegSettings.tmp_dir;
 			if !(query['request_id'].eql? "test")
@@ -128,6 +130,25 @@ module PdfSaver
 				f.flush
 			end
 			STDERR.write("handle_pdf_upload: #{dest_file} #{Time.now - startTime }\n");
+			return RESPONSE[:success]
+		end
+
+		def handle_pdf_upload(env)
+			# obsolete
+			req = Rack::Request.new(env)
+			return RESPONSE[:malformed_params] unless req['request_id']
+			return RESPONSE[:malformed_params] unless req['page_id']
+			return RESPONSE[:malformed_params] unless req['pdf_file_path']
+			startTime = Time.now
+			dest_dir = SvegSettings.tmp_dir;
+			if !(req['request_id'].eql? "test")
+				task = PB::ChromePDFTask[req['request_id']]
+				return [400, {}, ["Could not find task #{req['request_id']}"]] unless task
+				dest_dir = task.book_dir
+			end
+			dest_file = File.join(dest_dir, "#{req['page_id']}.pdf")
+			FileUtils.mv(req['pdf_file_path'], dest_file)
+			STDERR.write("handle_pdf_upload: #{dest_file} #{Time.now - startTime }\n")
 			return RESPONSE[:success]
 		end
 
