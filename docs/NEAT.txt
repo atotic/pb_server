@@ -1,4 +1,5 @@
 Stream:
+Google picker API: http://googlecode.blogspot.com/2011/07/get-picky-with-google-picker-api.html
 Autoprefixer: generate CSS rules as post-processor based upon caniuse https://github.com/ai/autoprefixer
 Preventing cross-site forgery: http://blog.alexmaccaw.com/jswebapps-csrf
 Resizing images on the fly: http://petewarden.com/2013/07/27/how-to-easily-resize-and-cache-images-for-the-mobile-web

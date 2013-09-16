@@ -73,6 +73,7 @@
 	var cache = {};
 	var tempPrefix = 'temp-';
 
+"use strict";
 /*
 
 */
@@ -380,33 +381,34 @@
 			var canvasWidth = imageWidth * scale;
 			var canvasHeight = imageHeight * scale;
 
+			var THIS = this;
 			function swapWidthHeight() {
 				var tmp = canvasWidth;
 				canvasWidth = canvasHeight;
 				canvasHeight = tmp;
-				tmp = this._data_natural_w;
-				this._data_natural_h = this._data_natural_w;
-				this._data_natural_w = tmp;
+				tmp = THIS._data_natural_h;
+				THIS._data_natural_h = THIS._data_natural_w;
+				THIS._data_natural_w = tmp;
 			}
 
 			switch (orientation) {
 			case 1: // no rotation
 				break;
 			case 6:
-					rot = Math.PI/2; //Math.PI /2.2;
+					rot = Math.PI / 2; // 90deg
 					swapWidthHeight();
-					trans = {x:canvasWidth / 2,y:canvasHeight/2};
-					drawLoc = {x:-imageWidth * scale /2, y:-imageHeight * scale /2};
+					trans = { x: canvasWidth / 2, y: canvasHeight/2 };
+					drawLoc = { x: -imageWidth * scale /2, y: -imageHeight * scale /2 };
 					break;
 			case 3:
 					rot = Math.PI;
-					trans = {x:canvasWidth /2, y:canvasHeight /2};
-					drawLoc = {x:-imageWidth * scale /2, y:-imageHeight * scale /2};
+					trans = {x:canvasWidth / 2, y:canvasHeight / 2};
+					drawLoc = { x: -imageWidth * scale / 2, y: -imageHeight * scale / 2 };
 					break;
 			case 8:
 					rot = Math.PI * 3 / 2;
 					swapWidthHeight();
-					trans = {x:canvasWidth /2, y:canvasHeight /2};
+					trans = {x:canvasWidth / 2, y:canvasHeight / 2};
 					drawLoc = {x:-imageWidth * scale /2, y:-imageHeight * scale /2};
 					break;
 			default:

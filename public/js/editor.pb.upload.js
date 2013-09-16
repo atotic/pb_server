@@ -203,6 +203,9 @@
 				},
 				error: function(ev) {
 					console.log("serverStream error , possible closure " + stream.id);
+					scope.NetworkErrorRetry.retryLater();
+					book.stream = null;
+					DiffStream.reconnect(book);
 				},
 				close: function(ev) {
 					console.warn("server connection closed");

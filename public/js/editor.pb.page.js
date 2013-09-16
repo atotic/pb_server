@@ -134,21 +134,6 @@ asset widget {
 		get kind() { // cover | cover-flap | back-flap | back | page
 			return this.p.kind || 'page';
 		},
-		formattedTitle: function(options) {
-			// formatted page title
-			options = $.extend( {
-				showTitle: true,
-				showNumber: true
-			}, options);
-			var num = this.pageNumber;
-			var title = this.title;
-			var retVal = "";
-			if (options.showNumber)
-				retVal += num;
-			if (options.showTitle && title)
-				retVal += ": " + title;
-			return retVal;
-		},
 		swapPhoto: function(oldId, newId) {
 			var assets = this.getAssets();
 			for (var i=0; i<assets.ids.length; i++) {
@@ -170,32 +155,6 @@ asset widget {
 		},
 		isEmpty: function() {
 			return this.p.assets.ids.length == 0;
-		},
-		debugAssets: function() {
-			function printAsset(asset, assetId) {
-				var indent = asset.dependentOf ? '  ' : '';
-				switch(asset.type) {
-					case 'photo':
-						console.log(indent, assetId, ' photo ', asset.photoId, asset.css.top, asset.css.left);
-						break;
-					case 'text':
-						console.log(indent, assetId, ' text ', asset.content, asset.css.top, asset.css.left);
-					break;
-					case 'widget':
-						console.log(indent, assetId, ' widget ', asset.widgetId, asset.css.top, asset.css.left );
-					break;
-				}
-			}
-			var assets = this.p.assets;
-			for (var i=0; i<assets.ids.length; i++) {
-				var asset = assets[ assets.ids[i]];
-				if (!asset.dependentOf) {
-					printAsset(asset, assets.ids[i]);
-					this.getDependentsIds( assets.ids[i]).forEach( function(id) {
-						printAsset( assets[id], id);
-					});
-				}
-			}
 		},
 		getAsset: function(assetId) {
 			return this.p.assets[ assetId ];
@@ -389,31 +348,6 @@ asset widget {
 				this.book.makeDirty();
 			}
 		},
-		addOsFileList: function( fileList) {
-			var THIS = this;
-			GUI.Dnd.Util.filterFileList( fileList )
-				.forEach(
-					function(file) {
-						var photo = THIS.book.addLocalPhoto(file, { animate:false } );
-						var newAsset = { type: 'photo', photoId: photo.id };
-					if ( photo.hasValidDimensions ) {
-						THIS.addAsset( newAsset, { animate: true });
-					}
-					else {
-						// can only add photo to page once we have proper dimensions
-						var serverPhoto = PB.ServerPhotoCache.get( THIS.book.serverPhotoId( photo.id) );
-						var listener = function(propName, propValue) {
-							if (serverPhoto.hasValidDimensions) {
-								console.log(propName);
-								debugger;
-								THIS.addAsset( newAsset, {animate: true });
-								serverPhoto.removeListener(listener);
-							}
-						}
-						serverPhoto.addListener(listener);
-					}
-				});
-		},
 		archiveSomething: function(options) {
 			// creates snapshot of an asset, restore with restoreSomething
 			options = $.extend( {
@@ -526,36 +460,6 @@ asset widget {
 					retVal = dep.content;
 			});
 			return retVal;
-		},
-		clearPhoto: function( assetId, options) {
-			options = $.extend( {
-				fillerBookPhotoId: null
-			}, options);
-			var asset = this.getAsset( assetId );
-			// replace existing photo with filler
-			var replacementId;	// bookPhotoId
-			if (options.fillerBookPhotoId) {
-				replacementId = options.fillerBookPhotoId;
-			}
-			else {
-				var fillerPhoto = asset.css.width > asset.css.height ?
-					PB.FillerPhotos.randomH() : PB.FillerPhotos.randomV();
-				replacementId = fillerPhoto.id;
-			}
-			var oldPhotoId = asset.photoId;
-			var oldCaption = this.getCaptionText( assetId );
-			// clean up asset
-			asset.photoId = replacementId;
-			asset.zoom = 1.0;
-			delete asset.focalPoint;
-			delete asset.photoRect;
-			this.updateAsset( assetId, asset, { clobber: true} );
-			this.removeDependents( assetId );
-			if (oldCaption) {
-				var oldPhoto = this.book.photo(oldPhotoId);
-				oldPhoto.caption = oldCaption;
-				console.log('stored caption');
-			}
 		},
 		replacePhotoId: function( assetId, bookPhotoId, options) {
 			this.clearPhoto( assetId , { fillerBookPhotoId: bookPhotoId });
@@ -1222,8 +1126,127 @@ asset widget {
 		}
 	};
 
+	var PageProxyUtils = {
+		debugAssets: function() {
+			function printAsset(asset, assetId) {
+				var indent = asset.dependentOf ? '  ' : '';
+				switch(asset.type) {
+					case 'photo':
+						console.log(indent, assetId, ' photo ', asset.photoId, asset.css.top, asset.css.left);
+						break;
+					case 'text':
+						console.log(indent, assetId, ' text ', asset.content, asset.css.top, asset.css.left);
+					break;
+					case 'widget':
+						console.log(indent, assetId, ' widget ', asset.widgetId, asset.css.top, asset.css.left );
+					break;
+				}
+			}
+			var assets = this.p.assets;
+			for (var i=0; i<assets.ids.length; i++) {
+				var asset = assets[ assets.ids[i]];
+				if (!asset.dependentOf) {
+					printAsset(asset, assets.ids[i]);
+					this.getDependentsIds( assets.ids[i]).forEach( function(id) {
+						printAsset( assets[id], id);
+					});
+				}
+			}
+		},
+		formattedTitle: function(options) {
+			// formatted page title
+			options = $.extend( {
+				showTitle: true,
+				showNumber: true
+			}, options);
+			var num = this.pageNumber;
+			var title = this.title;
+			var retVal = "";
+			if (options.showNumber)
+				retVal += num;
+			if (options.showTitle && title)
+				retVal += ": " + title;
+			return retVal;
+		},
+		clearPhoto: function( assetId, options) {
+			options = $.extend( {
+				fillerBookPhotoId: null
+			}, options);
+			var asset = this.getAsset( assetId );
+			// replace existing photo with filler
+			var replacementId;	// bookPhotoId
+			if (options.fillerBookPhotoId) {
+				replacementId = options.fillerBookPhotoId;
+			}
+			else {
+				var fillerPhoto = asset.css.width > asset.css.height ?
+					PB.FillerPhotos.randomH() : PB.FillerPhotos.randomV();
+				replacementId = fillerPhoto.id;
+			}
+			var oldPhotoId = asset.photoId;
+			var oldCaption = this.getCaptionText( assetId );
+			// clean up asset
+			asset.photoId = replacementId;
+			asset.zoom = 1.0;
+			delete asset.focalPoint;
+			delete asset.photoRect;
+			this.updateAsset( assetId, asset, { clobber: true} );
+			this.removeDependents( assetId );
+			if (oldCaption) {
+				var oldPhoto = this.book.photo(oldPhotoId);
+				oldPhoto.caption = oldCaption;
+				console.log('stored caption');
+			}
+		},
+		fitPhotoInBounds: function( assetId ) {
+			var asset = this.getAsset( assetId );
+			var photo = this.book.photo( asset.photoId );
+			var oldPosition = new GUI.Rect( asset.css );
+			var photoRect = new GUI.Rect( photo.dimensions );
+			var newPosition = photoRect.scaleBy( photoRect.fitInside( oldPosition ))
+				.centerIn( oldPosition )
+				.moveBy( oldPosition.x, oldPosition.y );
+			this.updateAsset( assetId, {
+				css: {
+					top: newPosition.top,
+					left: newPosition.left,
+					width: newPosition.width,
+					height: newPosition.height
+				},
+				photoRect: undefined,
+				focalPoint: undefined,
+				zoom: undefined
+			});
+		},
+		addOsFileList: function( fileList) {
+			var THIS = this;
+			GUI.Dnd.Util.filterFileList( fileList )
+				.forEach(
+					function(file) {
+						var photo = THIS.book.addLocalPhoto(file, { animate:false } );
+						var newAsset = { type: 'photo', photoId: photo.id };
+					if ( photo.hasValidDimensions ) {
+						THIS.addAsset( newAsset, { animate: true });
+					}
+					else {
+						// can only add photo to page once we have proper dimensions
+						var serverPhoto = PB.ServerPhotoCache.get( THIS.book.serverPhotoId( photo.id) );
+						var listener = function(propName, propValue) {
+							if (serverPhoto.hasValidDimensions) {
+								console.log(propName);
+								THIS.addAsset( newAsset, {animate: true });
+								serverPhoto.removeListener(listener);
+							}
+						}
+						serverPhoto.addListener(listener);
+					}
+				});
+		},
+
+	}
 
 	$.extend(PageProxy.prototype, PageProxyEditable);
+	$.extend(PageProxy.prototype, PageProxyUtils);
 
 	scope.Page = {
 		Proxy: PageProxy

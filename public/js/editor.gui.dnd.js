@@ -201,6 +201,7 @@
 	*/
 	var webkitIpadBugWorkaround = {
 		patchedRemove: function(selector, keepData) {	// jquery: 5421
+			console.log("patchedRemove")
 			var elem,
 				elems = selector ? jQuery.filter( selector, this ) : this,
 				i = 0;
@@ -216,6 +217,7 @@
 				return this;
 		},
 		startFix: function() {
+			// console.log("startFix");
 			if ('original_remove' in $.fn)
 				return;
 			this.remove_container = $("<div id='remove_container' style='display:none'>");
@@ -224,6 +226,7 @@
 			$.fn.remove = this.patchedRemove;
 		},
 		endFix: function() {
+			// console.log("endFix");
 			if (! ('original_remove' in $.fn))
 				return;
 			$.fn.remove = $.fn.original_remove;
@@ -282,7 +285,6 @@
 		},
 		dragStart: function($ev) {
 			// console.log("dragStart", $ev.type);
-			webkitIpadBugWorkaround.startFix();
 			if ($dragImage)	// if we get both mousedown and touchstart do only one
 				return;
 			$src = $($ev.currentTarget);
@@ -297,10 +299,15 @@
 					return;
 				}
 			else
-				previousDraggable = null;
+				previousDraggable = draggable;
 			startTime = now;
 			// create a clone
-			$dragImage = draggable.start( $src, $ev, startLoc );
+			try {
+				$dragImage = draggable.start( $src, $ev, startLoc );
+			}
+			catch(ex) {
+				return; // expected, drag can be cancelled by throwing exceptions
+			}
 			$(document.body).append($dragImage);
 
 			// set dragging bounds
@@ -315,6 +322,7 @@
 			// tracking events
 			$(document.body).on('touchmove.dnd mousemove.dnd', Dnd.dragMove);
 			$(document.body).on('touchend.dnd mouseup.dnd', Dnd.dragEnd);
+			webkitIpadBugWorkaround.startFix();
 		},
 		matchFlavors: function(srcFlavors, destFlavors) {
 			for (var i=0; i<srcFlavors.length; i++) {
@@ -406,7 +414,6 @@
 		dragEnd: function($ev) {
 			// console.log('dragEnd', $ev.type);
 			webkitIpadBugWorkaround.endFix();
-			previousDraggable = draggable;
 			var transferDone = false;
 			if ($dest.length > 0)
 				transferDone = Dnd.doTransfer($ev);
