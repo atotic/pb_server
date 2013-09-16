@@ -19,11 +19,12 @@ end
 def start
 	puts "starting chromium"
 	pid = Kernel.spawn(SvegSettings.chrome_binary,
-										 "--user-data-dir=#{SvegSettings.chrome_profile_dir}",
-										 " --disable-setuid-sandbox",
-										 :chdir => SvegSettings.chrome_profile_dir,
-										 :out => File.join(SvegSettings.log_dir, "chromepdf_error.log"),
-										 :err => File.join(SvegSettings.log_dir, "chromepdf_error.log"))
+						 "--user-data-dir=#{SvegSettings.chrome_profile_dir}",
+						 "--load-extension=#{SvegSettings.chrome_extension_dir}",
+						 "--no-sandbox",
+						 " --disable-setuid-sandbox",
+						 :out => File.join(SvegSettings.log_dir, "chromepdf_error.log"),
+						 :err => File.join(SvegSettings.log_dir, "chromepdf_error.log"))
 	 Process.detach(pid)
 	 pid
 end
@@ -42,7 +43,7 @@ case
 	when ARGV[0].eql?("stop") then stop
 	when ARGV[0].eql?("restart") then stop;start
 	when ARGV[0].eql?('cmd_line') then
-		line =  "#{SvegSettings.chrome_binary} --user-data-dir=#{SvegSettings.chrome_profile_dir} --disable-setuid-sandbox"
+		line =  "#{SvegSettings.chrome_binary} --user-data-dir=#{SvegSettings.chrome_profile_dir} --load-extension=#{SvegSettings.chrome_extension_dir} --disable-setuid-sandbox --no-sandbox"
 		puts line
 #		STDERR.write "remember to redirect output to 2> #{File.join(SvegSettings.log_dir, "chromepdf_error.log")}"
 	else usage

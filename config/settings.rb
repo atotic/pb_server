@@ -25,7 +25,6 @@ class SvegSettings
 	raise "RACK_ENV must be production|development|test" unless @environment == :development || @environment == :production || @environment == :test
 	@book_templates_dir = File.expand_path("./templates", @pb_templates_dir).freeze
 	@test_dir = File.join(@root_dir, "test").freeze
-
 	@data_dir = File.join(File.expand_path('../pb_data', @root_dir), @environment.to_s).freeze
 	@tmp_dir = File.join(@data_dir, 'tmp').freeze
 	@log_dir = File.join(@data_dir, 'log').freeze
@@ -35,10 +34,11 @@ class SvegSettings
 	@book2pdf_dir = File.join(@data_dir, 'pdf-books').freeze # generated books
 
 	# binaries
+	@chrome_profile_dir = File.join(@pb_chrome_dir, 'profile')
+	@chrome_extension_dir = File.join(@pb_chrome_dir, 'pdf_saver_extension', 'extension')
 	if @platform == :mac
 		@chrome_binary = File.join(@pb_chrome_dir, 'bin/mac/Chromium.app/Contents/MacOS/Chromium').freeze
 		@chrome_dir = File.join(@pb_chrome_dir, 'bin/mac//Chromium.app').freeze
-		@chrome_profile_dir = File.join(@pb_chrome_dir, 'chromium_profile')
 		@pdf_toolkit_binary = "/usr/local/bin/pdftk".freeze
 		@convert_binary = "/usr/local/bin/convert".freeze
 		@graphicsmagick_binary = "/usr/local/bin/gm".freeze
@@ -48,7 +48,6 @@ class SvegSettings
 	elsif @platform == :linux
 		@chrome_binary = File.join(@pb_chrome_dir, "bin/linux_64/chrome").freeze
 		@chrome_dir = File.join(@pb_chrome_dir, "bin/linux_64").freeze
-		@chrome_profile_dir = File.join(@pb_chrome_dir, 'chromium_profile')
 		@pdf_toolkit_binary = "/usr/bin/pdftk".freeze
 		@convert_binary = "/usr/bin/convert".freeze
 		@graphicsmagick_binary = "/usr/bin/gm".freeze
@@ -66,8 +65,8 @@ class SvegSettings
 		attr_accessor :root_dir,:data_dir, :tmp_dir, :log_dir, :test_dir
 		attr_accessor :environment, :platform
 		attr_accessor :book_templates_dir, :photo_dir, :book2pdf_dir
-		attr_accessor :chrome_binary, :chrome_dir, :chrome_log_dir, :chrome_profile_dir, :pdf_toolkit_binary
-		attr_accessor :convert_binary, :graphicsmagick_binary, :exiv2_binary, :python_binary
+		attr_accessor :chrome_binary, :chrome_dir, :chrome_log_dir, :chrome_profile_dir, :chrome_extension_dir
+		attr_accessor :convert_binary, :graphicsmagick_binary, :exiv2_binary, :python_binary, :pdf_toolkit_binary
 		attr_accessor :psql_binary
 		attr_accessor :face_script
 		attr_accessor :comet_port, :comet_host
