@@ -18,8 +18,8 @@ class SvegSettings
 	end
 	# directories
 	@root_dir = File.dirname(File.dirname(File.expand_path(__FILE__))).freeze
-	@pb_chrome_dir = File.expand_path('../pb_chrome', @root_dir)
-	@pb_templates_dir = File.expand_path('../pb_templates', @root_dir)
+	@pb_chrome_dir = ENV['PB_CHROME_DIR'] || File.expand_path('../pb_chrome', @root_dir)
+	@pb_templates_dir = ENV['PB_TEMPLATES_DIR'] || File.expand_path('../pb_templates', @root_dir)
 
 	@environment = ( ENV['RACK_ENV'] || :development ).to_sym # :production :development :test
 	raise "RACK_ENV must be production|development|test" unless @environment == :development || @environment == :production || @environment == :test
