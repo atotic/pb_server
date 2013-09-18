@@ -25,7 +25,7 @@ class SvegSettings
 	raise "RACK_ENV must be production|development|test" unless @environment == :development || @environment == :production || @environment == :test
 	@book_templates_dir = File.expand_path("./templates", @pb_templates_dir).freeze
 	@test_dir = File.join(@root_dir, "test").freeze
-	@data_dir = File.join(File.expand_path('../pb_data', @root_dir), @environment.to_s).freeze
+	@data_dir = ENV['PB_DATA_DIR'] || File.join(File.expand_path('../pb_data', @root_dir), @environment.to_s).freeze
 	@tmp_dir = File.join(@data_dir, 'tmp').freeze
 	@log_dir = File.join(@data_dir, 'log').freeze
 	@chrome_log_dir = File.join(@log_dir, 'chrome').freeze
