@@ -37,7 +37,7 @@ def process(options)
 
 	# set up common options
 	options = options.merge({ :environment => SvegSettings.environment.to_s})
-	options = options.merge({ :user => 'deploy', :group => 'deploy'}) if options[:environment].eql?('production')
+	# options = options.merge({ :user => 'deploy', :group => 'deploy'}) if options[:environment].eql?('production')
 
 	usage
 
