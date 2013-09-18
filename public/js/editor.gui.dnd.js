@@ -142,7 +142,7 @@
 				this.options.doubleClick($ev);
 				return true;
 			}
-			console.log("doubleClick");
+			// console.log("doubleClick");
 		}
 	}
 
@@ -253,7 +253,7 @@
 			}
 			$dest = $newDest;
 			if ($dest.length > 0) {
-				console.log('dest set');
+				// console.log('dest set');
 				droppable = $dest.data('pb-droppable');
 				if (droppable == null) {
 					console.warn('droppable without data');
@@ -269,7 +269,7 @@
 				}
 			}
 			else {
-				console.log('dest removed');
+				// console.log('dest removed');
 			}
 		},
 		clearWindowSelection: function() {	// FF can select on user drag
