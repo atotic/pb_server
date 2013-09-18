@@ -239,6 +239,8 @@
 		lastPaletteId: 'bookphoto',
 		show: function() {
 			$('#work-area-organize').show();
+			if (this.oldScrollTop)
+				document.getElementById('work-area-container').scrollTop = this.oldScrollTop;
 			GUI.Palette.setupPicker(['bookphoto']);
 			GUI.Palette.select( this.lastPaletteId || 'bookphoto');
 			GUI.WorkArea.Menu.setup(['add-photo-btn', 'add-page-btn', 'trash-btn']);
@@ -247,7 +249,8 @@
 		},
 		hide: function() {
 			this.lastPaletteId = GUI.Palette.getCurrentPaletteId();
-			$('#work-area-organize').hide();
+			this.oldScrollTop = document.getElementById('work-area-container').scrollTop;
+			$('#work-area-organize').hide()
 		},
 		makeDroppable: function() {
 			$('#work-area-organize').addClass('pb-droppable')
