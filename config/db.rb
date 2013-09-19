@@ -12,7 +12,7 @@ db_config = {
 	:user => PB::Secrets::POSTGRES_USER,
 	:password => PB::Secrets::POSTGRES_PW,
 	:host => SvegSettings.postgres_host,
-	:database => "sveg_#{SvegSettings.environment}",
+	:database => "pookio_#{SvegSettings.environment}",
 	:max_connections => 5
 }
 DB = Sequel.connect(db_config, options)
