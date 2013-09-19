@@ -172,6 +172,18 @@
 				case "PatchArray":
 					book.applyBroadcastPatches(message.payload);
 					break;
+				case 'TextMessage':
+					switch(message.severity) {
+						case 'error':
+							PB.error(message.message);
+						break;
+						case 'warn':
+							PB.warn(message.message);
+						break;
+						case 'info':
+						default:
+							PB.info(message.message);
+					}
 			}
 		},
 		reconnect: function(book) {

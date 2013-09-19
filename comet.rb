@@ -153,6 +153,22 @@ private
 			body << self.encode_msg(s)
 	end
 
+	def self.text_message(book_id, message, severity)
+		book_id = Integer(book_id)
+		s = {
+			:id => 0,
+			:type => "TextMessage",
+			:book_id => book_id,
+			:severity => severity || "info",
+			:message => message
+		}.to_json
+		encoded_message = self.encode_msg(s)
+		streams = @@listeners[book_id]
+		streams.each do |stream|
+			stream.body << encoded_message
+		end if streams
+
+	end
 end
 
 
@@ -164,6 +180,7 @@ class Server
 				['comet!']],
 		:need_async_server => [500, {}, ["Internal server error. Not running inside async server"]],
 		:unauthorized => [401, {}, ['unauthorized']],
+		:malformed_params => [400, {}, ["Malformed params"]],
 		:no_such_book => [404, {}, ['no such book']]
 	}.freeze
 
@@ -207,12 +224,21 @@ class Server
 		[200, {}, ['ok']]
 	end
 
+	def handle_text_message(env, book_id)
+		req = Rack::Request.new(env)
+		return RESPONSE[:malformed_params] unless req.params['message']
+		severity = req.params['severity'] || 'info'
+		BrowserBroadcaster.text_message(book_id, req.params['message'], severity)
+		[200, {}, ['ok']]
+	end
+
 	def call(env)
 		case
 		when env['PATH_INFO'].match( /^\/subscribe\/book\/(\d+)$/) then handle_subscribe(env, $~[1].to_i)
 		when env['PATH_INFO'].match(/^\/test/) then handle_test(env)
 		# /broadcast/:msg_id?[exclude=stream_id], or pass exclude in usual X-SvegStream header
 		when env['PATH_INFO'].match(/^\/catch_up\/(\d+)$/) then handle_catch_up(env, $~[1] )
+		when env['PATH_INFO'].match(/^\/text_message\/(\d+)/) then handle_text_message(env, $~[1])
 		when env['PATH_INFO'].match(/^\/status/) then handle_status(env)
 		when env['PATH_INFO'].match(/favicon.ico/) then [200, {}, []]
 		when env['PATH_INFO'].eql?('/die') then raise "Die!"

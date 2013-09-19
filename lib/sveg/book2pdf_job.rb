@@ -1,8 +1,12 @@
 require 'fileutils'
+require 'eventmachine'
+require 'em-http-request'
 
 require_relative 'utils'
 require_relative 'book'
 require_relative 'photo'
+require_relative 'comet_client'
+
 # PDF Generation is fully documented here, and implemented in many pieces
 #
 # Architecture discussion:
@@ -120,8 +124,12 @@ class BookToPdfCompleteJob
 		return generic_fail book, "PDF merge crashed. #{$?.to_s}" unless success
 		book.generate_pdf_done(book_pdf)
 		@logger.info("BookToPdfCompleteJob took " + (Time.now - start_time).to_s)
+		PB::CometClient.broadcast_text_message( book.id, "PDF generation complete.")
 		rescue => ex
-			book.generate_pdf_fail(ex.message) if book
+			if book
+				book.generate_pdf_fail(ex.message)
+				PB::CometClient.broadcast_text_message( book.id, "PDF generation failed. #{ex.message}", "error")
+			end
 			raise ex
 		end
 	end
@@ -157,7 +165,6 @@ class BookToPdfPrepJob
 		# FileUtils.mkdir_p(@pdf_dir)
 	end
 
-
 	# delayed_job callback. Creates the PDFs
 	def perform
 		begin
@@ -175,7 +182,9 @@ class BookToPdfPrepJob
 			})
 			begin
 				task.save
+				PB::CometClient.broadcast_text_message( @book.id, "PDF generation started.")
 			rescue => ex
+				PB::CometClient.broadcast_text_message( @book.id, "PDF generation failed.", "error")
 				@logger.error ex.message
 				raise ex
 			end
