@@ -30,7 +30,7 @@
 <h2>Books</h2>
 <% books = current_user.books %>
 <% if books.size == 0 %>
-	<p>None yet. Would you like to <a href="/books/new">make</a> your first?</p>
+	<p>None yet. Would you like to make your first?</p>
 <% end %>
 	<form action="/books" method="post" class="well form-inline">
 		<input type='text' name='title' placeholder='title' required='true'>
