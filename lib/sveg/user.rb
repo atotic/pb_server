@@ -75,12 +75,12 @@ class OmniauthToken < Sequel::Model(:omniauth_tokens)
 	def self.login_with_omniauth(omniauth)
 		strategy_id = get_strategy_id(omniauth['provider'])
 		auth = self.filter(:strategy => strategy_id, :strategy_uid => omniauth['uid']).first
-
 		if auth.nil?
 			name = omniauth['info']['name'] || "Unknown"
-			email = omniauth['info']['email'] || ""
+			email = (omniauth['info']['email'] || "").downcase
 			DB.transaction do
-				user = User.new( { :display_name => name, :email => email})
+				# logins with same email from different providers point to same user
+				user = User[:email => email] || User.new( { :display_name => name, :email => email})
 				user.is_administrator = true if email.eql? "a@totic.org"
 				user.save
 				auth = OmniauthToken.new( {

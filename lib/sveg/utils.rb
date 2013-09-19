@@ -156,10 +156,10 @@ module PB
 			:key => 'rack.session',
 			:coder => PB::SvegSessionCoder.new,
 			:sidbits => 32,
-			:skip => true,	# Rack > 1.4
-			:defer => true, # Rack < 1.4
+#			:skip => false,	# do not save
+#			:defer => false, # do not defer
 			:httponly => SvegSettings.environment == :production,
-			:secret => 'ISTHISECRETENOUGH'
+			:secret => PB::Secrets::GOOGLE_SECRET
 		}
 		def initialize(app, options = {})
 			options = {
@@ -236,7 +236,10 @@ module PB
 				if env['rack.session']['user_id_expires']
 					env['rack.session.options'][:expire_after] = env['rack.session']['user_id_expires'] - Time.now.to_i
 				end
+			else
+				env['rack.session.options'][:skip] = true
 			end
+
 		end
 
 		def print_exception(env, ex)
