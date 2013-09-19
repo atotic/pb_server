@@ -45,10 +45,10 @@ var ThemeCache = {
 		return '/t/' + id + '/theme.js';
 	},
 	themeIdFromUrl: function( url ) {
-		var match = this.themeRegex.exec(url);
-		if (!match)
+		var parsedUrl = this.parseThemeUrl(url);
+		if (!parsedUrl)
 			throw new Error("Malformed theme resource url " + url);
-		return match[1];
+		return parsedUrl.id;
 	},
 	processLoadedTheme: function(deferred, callbackName, js, url) {
 
@@ -80,11 +80,11 @@ var ThemeCache = {
 		var Noop = new function NoopF() {};
 		Noop.create = $.noop;
 		var logger = function( resUrl ) {
-			var match = ThemeCache.themeRegex.exec( resUrl );
-			if (!match) {
+			var parsedUrl = this.parseThemeUrl(resUrl);
+			if (!parsedUrl) {
 				console.warn('bad theme dependency', resUrl);
 			}
-			dependencyIds[ match[1]] = true;
+			dependencyIds[ parsedUrl.id ] = true;
 			return Noop;
 		}
 
@@ -182,22 +182,27 @@ var ThemeCache = {
 	themeRegex: new RegExp("^theme\:\/\/([^\/]+)/(.*)$"),
 	// Resource url scheme
 	// theme://theme_id/:res_type/:res_id
-	resource: function(resUrl) {
-		var match = this.themeRegex.exec(resUrl);
+	parseThemeUrl: function(url) {
+		var match = this.themeRegex.exec(url);
 		if (!match)
+			return null;
+		else
+			return { id: match[1], path: match[2] };
+	},
+	resource: function(resUrl) {
+		var parsedUrl = this.parseThemeUrl( resUrl );
+		if (!parsedUrl)
 			throw new Error("Malformed theme resource url " + resUrl);
 
-		var themeId = match[1],
-			pathStr = match[2];
-		var theme = this.themes[themeId];
+		var theme = this.themes[parsedUrl.id];
 		if (!theme) {
 			// console.warn("Theme not found", resUrl);
-			var deferred = this.load( this.themeUrlFromId( themeId ));
+			var deferred = this.load( this.themeUrlFromId( parsedUrl.id ));
 			throw new ThemeNotFoundException("Theme not found " + resUrl, deferred);
 		}
-		var p,
-			res = theme,
-			path = pathStr.split('/');
+		var p;
+		var res = theme;
+		var path = parsedUrl.path.split('/');
 		while (p = path.shift()) {
 			res =  res[p];
 			if (res === undefined) {
