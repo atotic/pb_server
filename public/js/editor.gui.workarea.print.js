@@ -8,7 +8,14 @@ var PrintWorkArea = {
 			PrintWorkArea.generatePdf();
 		});
 	},
+	get book() {
+		return PB.Book.default;
+	},
 	show: function() {
+		if (this.book.themeId == null || !this.book.dimensions.width) {
+			GUI.Options.designStage = 'theme'
+			throw new Error("Cant design before assigning theme/width");
+		}
 		GUI.Palette.setupPicker([]);
 		GUI.WorkArea.Menu.setup([]);
 		$('#work-area-print').show();
@@ -17,14 +24,21 @@ var PrintWorkArea = {
 		$('#work-area-print').hide();
 	},
 	generatePdf: function() {
-		$.ajax("/books/" + PB.Book.default.db_id + "/pdf", {
-			type: "POST",
-			success: function() {
-			},
-			error: function(jqXHR, textStatus, errorThrown) {
-				PB.error("Unexpected error trying to generate PDF\n" + textStatus);
-			}
+		var def = PB.Book.Utils.prepareForPrint( this.book );
+		var THIS = this;
+		def.done( function() {
+			$.ajax("/books/" + THIS.book.db_id + "/pdf", {
+				type: "POST",
+				success: function() {
+				},
+				error: function(jqXHR, textStatus, errorThrown) {
+					PB.error("Unexpected error trying to generate PDF\n" + textStatus);
+				}
+			});
 		});
+		def.fail( function() {
+			console.warn('book.prepareForPrint failed');
+		})
 
 	}
 }

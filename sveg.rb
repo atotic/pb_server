@@ -210,6 +210,7 @@ class SvegApp < Sinatra::Base
 						"application.js",
 						"editor.pb.js",
 						"editor.pb.book.js",
+						"editor.pb.book.utils.js",
 						"editor.pb.page.js",
 						"editor.pb.upload.js",
 						"editor.pb.photos.js",
