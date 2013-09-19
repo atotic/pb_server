@@ -39,7 +39,7 @@ class SvegSettings
 	if @platform == :mac
 		@chrome_binary = File.join(@pb_chrome_dir, 'bin/mac/Chromium.app/Contents/MacOS/Chromium').freeze
 		@chrome_dir = File.join(@pb_chrome_dir, 'bin/mac//Chromium.app').freeze
-		@pdf_toolkit_binary = "/usr/local/bin/pdftk".freeze
+		@pdf_toolkit_binary = (@environment == :production ? "/usr/bin/pdftk" : "/usr/local/bin/pdftk").freeze
 		@convert_binary = "/usr/local/bin/convert".freeze
 		@graphicsmagick_binary = "/usr/local/bin/gm".freeze
 		@exiv2_binary = "/usr/local/bin/exiv2".freeze
