@@ -14,12 +14,13 @@ def get_cmd_line(options)
 		"thin",
 		ARGV[0]
 	]
-	[:port, :rackup, :pid,:log,:tag, :timeout, :environment, :user, :group].each do |o|
+	[:port, :rackup, :pid, :log, :tag, :timeout, :environment, :user, :group].each do |o|
 		cmd_line.push("--#{o.to_s} #{options[o]}") if options.has_key? o
 	end
 	[:daemonize, :debug, :force].each do |o|
 		cmd_line.push("--#{o.to_s}") if options.has_key? o
 	end
+  cmd_line.push("--chdir '#{SvegSettings.root_dir}'")
 #	puts cmd_line.join(' ')
 	cmd_line.join(' ')
 end
