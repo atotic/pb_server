@@ -21,7 +21,7 @@ def get_cmd_line(options)
 		cmd_line.push("--#{o.to_s}") if options.has_key? o
 	end
   cmd_line.push("--chdir '#{SvegSettings.root_dir}'")
-  cmd_line.push("--servers 3") if SvegSettings.production?
+  # cmd_line.push("--servers 3") if SvegSettings.production?
 #	puts cmd_line.join(' ')
 	cmd_line.join(' ')
 end
