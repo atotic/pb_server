@@ -1,5 +1,6 @@
 require 'json'
 require 'sequel'
+require 'filesize'
 
 module PB
 
@@ -80,6 +81,15 @@ eos
 
 	def pdf_path
 		self.pdf_location
+	end
+
+	def pdf_file_size
+		size = "n/a"
+		begin
+			size = Filesize.new( File.size(self.pdf_location)).pretty if self.pdf_location
+		rescue
+		end
+		return size
 	end
 
 	def generate_pdf(force = false)

@@ -54,7 +54,7 @@
 		<td><%= print_datetime book.updated_at %></td>
 		<td>
 <% if (book.pdf_location) %>
-	<a href="/books/<%= book.id %>/pdf">view pdf</a>
+	<a href="/books/<%= book.id %>/pdf">download pdf (<%= book.pdf_file_size %>)</a>
 <% end %>
 <% if (book.pdf_generate_in_progress) %>
 	book generation in progress

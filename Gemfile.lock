@@ -45,6 +45,7 @@ GEM
     eventmachine (1.0.3)
     faraday (0.8.8)
       multipart-post (~> 1.2.0)
+    filesize (0.0.2)
     growl (1.0.3)
     hashie (2.0.5)
     http_parser.rb (0.6.0.beta.2)
@@ -123,6 +124,7 @@ DEPENDENCIES
   delayed_job (~> 3.0)
   delayed_job_sequel!
   em-http-request
+  filesize
   growl
   json
   less

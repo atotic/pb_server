@@ -16,6 +16,7 @@ gem 'nokogiri' # html parsing
 gem 'css_parser'
 gem 'less'
 gem 'therubyracer'
+gem 'filesize'
 
 gem 'delayed_job', "~> 3.0" # :git => "git://github.com/atotic/delayed_job.git"
 gem 'delayed_job_sequel', :git => "git://github.com/atotic/delayed_job_sequel.git"

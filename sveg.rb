@@ -463,6 +463,7 @@ class SvegApp < Sinatra::Base
 	get '/books/:id/pdf' do
 		book = Book[params[:id]]
 		user_must_have_access book
+		response['Content-Disposition'] = "attachment; filename=#{book.title}.pdf"
 		send_file book.pdf_path
 	end
 
