@@ -1,7 +1,7 @@
 # diff_stream.rb
-require 'eventmachine'
-require 'em-http-request'
 module PB
+
+require_relative 'comet_client'
 
 class BookOutOfDateError < StandardError
 	attr_accessor :request_diff_id, :book_diff_id
@@ -39,7 +39,7 @@ class BookDiffStream < Sequel::Model(:book_diff_stream)
 			book[:last_diff] = diff.pk
 			book.save_changes
 
-			self.broadcast_catch_up(book.pk)
+			PB::CometClient.broadcast_catch_up(book.pk)
 			diff
 		end
 	end
