@@ -62,7 +62,6 @@
 <% if (book.pdf_generate_error) %>
 	<span class='error'>pdf could not be created.(<%= book.pdf_generate_error %>)</span>
 <% end %>
-				<a href="javascript:generatePdf(<%= book.id %>)">generate pdf</a>
 				<a href="javascript:deleteBook(<%= book.id %>)">delete</a>
 	</tr>
 <% end%>

@@ -196,8 +196,9 @@ var WorkAreaMenu = {
 		GUI.Dnd.Util.preventDefaultDrag($('#add-page-btn'));
 		// Add photo
 		$('#add-photo-btn')
-			.on('mousedown touchstart', function() {
+			.on('click touchstart', function($ev) { // mousedown on Firefox causes popup blocker
 				$('#add-photo-input').click();
+				$ev.preventDefault();
 			})
 			.children('a').on('click', function(ev) {
 				// $('#add-photo-input').click();
@@ -205,6 +206,7 @@ var WorkAreaMenu = {
 			});
 		$("#add-photo-input").on( {
 			change: function(e) {
+				console.log("photo input change event");
 				for (var i=0; i<this.files.length; i++)
 					PB.Book.default.addLocalPhoto(this.files[i], {animate:true});
 		}});

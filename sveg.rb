@@ -417,23 +417,28 @@ class SvegApp < Sinatra::Base
 	post '/books' do
 		user_must_be_logged_in
 		@book = Book.new()
-		begin
-			DB.transaction do
-				@book.set_fields({ :user_id => current_user.pk, :title => params['title']}, [:user_id, :title])
-				@book.save
-				if request.xhr?
-					content_type :json
-					[200, {'Content-Type' => 'application/json'} ,["{ \"id\" : #{@book.id} }"]]
-				else
-					redirect to("/books/#{@book.id}")
-				end
-			end
-		rescue => ex
-			LOGGER.error(ex.message)
-			LOGGER.error(ex.backtrace[0..5] )
-			flash.now[:error]= "Errors prevented the book from being created. Please fix them and try again."
-			@book = Book.new unless @book
+		unless params['title'] && params['title'].length > 0
+			flash[:error] = "Book not created because you did not give it a title."
 			redirect :account
+		else
+			begin
+				DB.transaction do
+					@book.set_fields({ :user_id => current_user.pk, :title => params['title']}, [:user_id, :title])
+					@book.save
+					if request.xhr?
+						content_type :json
+						[200, {'Content-Type' => 'application/json'} ,["{ \"id\" : #{@book.id} }"]]
+					else
+						redirect to("/books/#{@book.id}")
+					end
+				end
+			rescue => ex
+				LOGGER.error(ex.message)
+				LOGGER.error(ex.backtrace[0..5] )
+				flash.now[:error]= "Errors prevented the book from being created. Please fix them and try again."
+				@book = Book.new unless @book
+				redirect :account
+			end
 		end
 	end
 
