@@ -208,7 +208,7 @@ var WorkAreaMenu = {
 			change: function(e) {
 				console.log("photo input change event");
 				for (var i=0; i<this.files.length; i++)
-					PB.Book.default.addLocalPhoto(this.files[i], {animate:true});
+					PB.Book.default.addLocalPhoto(this.files[i], {animate:true} );
 		}});
 
 	},

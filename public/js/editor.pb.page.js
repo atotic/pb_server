@@ -1225,21 +1225,21 @@ asset widget {
 					function(file) {
 						var photo = THIS.book.addLocalPhoto(file, { animate:false } );
 						var newAsset = { type: 'photo', photoId: photo.id };
-					if ( photo.hasValidDimensions ) {
-						THIS.addAsset( newAsset, { animate: true });
-					}
-					else {
-						// can only add photo to page once we have proper dimensions
-						var serverPhoto = PB.ServerPhotoCache.get( THIS.book.serverPhotoId( photo.id) );
-						var listener = function(propName, propValue) {
-							if (serverPhoto.hasValidDimensions) {
-								console.log(propName);
-								THIS.addAsset( newAsset, {animate: true });
-								serverPhoto.removeListener(listener);
-							}
+						if ( photo.hasValidDimensions ) {
+							THIS.addAsset( newAsset, { animate: true });
 						}
-						serverPhoto.addListener(listener);
-					}
+						else {
+							// can only add photo to page once we have proper dimensions
+							var serverPhoto = PB.ServerPhotoCache.get( THIS.book.serverPhotoId( photo.id) );
+							var listener = function(propName, propValue) {
+								if (serverPhoto.hasValidDimensions) {
+									console.log(propName);
+									THIS.addAsset( newAsset, {animate: true });
+									serverPhoto.removeListener(listener);
+								}
+							}
+							serverPhoto.addListener(listener);
+						}
 				});
 		},
 

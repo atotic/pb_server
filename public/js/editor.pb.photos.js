@@ -426,13 +426,14 @@
 			this._setDataUrl( c.toDataURL('image/jpeg'), canvasWidth, canvasHeight);
 		},
 		_createDataUrlFromLocalFile: function() {
+			// console.log("_createDataUrlFromLocalFile enter");
 			var img = new Image();
 			var fileUrl = this._localFileUrl();
 			if (!fileUrl)
 				return;
-
 			var THIS = this;
 			img.onload = function() {
+				// console.log("_createDataUrlFromLocalFile image loaded");
 				THIS._setDataUrlFromImage(img);
 				THIS.revokeFileUrl(fileUrl);
 

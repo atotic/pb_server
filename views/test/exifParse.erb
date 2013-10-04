@@ -1,14 +1,12 @@
 <html>
 <head>
 <title>exifParse</title>
-<link href='/css/bootstrap.css' rel='stylesheet' type='text/css' />
 <link href='/css/application.css' rel='stylesheet' type='text/css' />
-<script src='/js/jquery-1.8.0.js'></script>
-<script src='/js/bootstrap.js'></script>
-<script src='/js/jdataview.js'></script>
+<%= asset_link("jquery.js", "jdataview.js") %>
 </head>
 <body style='background-color:gray'>
 	<h1>Drop your images here</h1>
+	<input id='add-photo-input' type="file" multiple="true" accept="image/*" capture="filesystem">
 <script>
 // http://www.media.mit.edu/pia/Research/deepview/exif.html
 (function(scope) {
@@ -35,9 +33,11 @@
 		this.reader = new FileReader();
 		var THIS = this;
 		this.reader.onload = function(progressEvent) {
+			console.log("FileReader onload");
 			THIS._deferred.resolve(THIS, progressEvent);
 		};
 		this.reader.onerror = function(a) {
+			console.log("FileReader onerror")
 			THIS._deferred.reject(THIS, a);
 		};
 		this.reader.readAsArrayBuffer(filePart);
@@ -86,6 +86,7 @@
 			}
 		},
 		readIFD: function(tiffOffset, ifdOffset, littleEndian, isThumbnail) {
+			debugger;
 			var tagCount  = this.view.getUint16(ifdOffset, littleEndian);
 			var tags = {};
 			var thumbnail = {
@@ -146,6 +147,7 @@
 			return this.view.getUint32(ifdOffset + tagCount*12 + 2, littleEndian);
 		},
 		readExifData: function(offset) {
+			debugger;
 			var littleEndian;
 			if (this.view.getString(4, offset) != 'Exif')
 				return;// console.log("Invalid EXIF data");
@@ -202,6 +204,7 @@
 		EXIF_HEADER: 'Exif',
 		XMP_HEADER: 'http://ns.adobe.com/xap/1.0/',
 		readMetadata: function() {
+			debugger;
 			this.view = new jDataView(this.reader.result);
 			var offset = 0;
 			if (this.view.getUint8(offset++) != 0xFF || this.view.getUint8(offset++) != 0xD8) {
@@ -291,7 +294,9 @@ function createImageFromFile(f) {
 	else if ('webkitURL' in window)
 		fileUrl = window.webkitURL.createObjectURL(f);
 	var img = $("<img src='" + fileUrl + "' style='height:200px'>");
-	$(document.body).append(img);
+	var $p = $('<p>').text('image:');
+	$p.append(img);
+	$(document.body).append($p);
 	var jFile = new JpegFile(f);
 	jFile.deferred.then(function() {
 		jFile.readMetadata();
@@ -303,11 +308,20 @@ function createImageFromFile(f) {
 			var img = new Image();
 			img.onload = function() {
 				var c = imageToCanvas(img, jFile.exif.orientation);
-				$(document.body).append(c);
+				var $p = $('<p>');
+				$p.text("thumb: ");
+				$p.append(c);
+				$(document.body).append($p);
 			}
 			img.src = jFile.exif.thumbnail_url;
 		}
+		else
+			$(document.body).append(document.createElement('p'));
 
+	})
+	.fail(function(args) {
+		console.log("file reading failure");
+		debugger;
 	});
 }
 
@@ -337,5 +351,15 @@ var bodyDropHandler = {
 }
 
 $('body').on(bodyDropHandler);
+$('#add-photo-input').on( {
+	change: function(e) {
+		console.log("photo input change event");
+		var files = this.files;
+		window.setTimeout(function() {
+			for (var i=0; i<files.length; i++)
+				createImageFromFile(files[i]);
+		}, 100);
+	}});
+console.log("ready" + Date.now());
 </script>
 </body>
