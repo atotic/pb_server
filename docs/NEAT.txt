@@ -1,4 +1,7 @@
 Stream:
+Hackers guide to getting press http://customerdevlabs.com/2013/09/24/google-news-api-mturk-press/
+HTTPS with NGINX https://konklone.com/post/switch-to-https-now-for-free?hn
+Storing username/pw securely with source code https://crackstation.net/hashing-security.htm
 Google picker API: http://googlecode.blogspot.com/2011/07/get-picky-with-google-picker-api.html
 Autoprefixer: generate CSS rules as post-processor based upon caniuse https://github.com/ai/autoprefixer
 Preventing cross-site forgery: http://blog.alexmaccaw.com/jswebapps-csrf
