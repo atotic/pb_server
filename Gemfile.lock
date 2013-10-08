@@ -1,5 +1,5 @@
 GIT
-  remote: git://github.com/atotic/delayed_job_sequel.git
+  remote: https://github.com/atotic/delayed_job_sequel
   revision: ff60dfc8834da58e6aeaf0ad787921de46489550
   specs:
     delayed_job_sequel (0.2.0)
@@ -9,7 +9,7 @@ GIT
       sequel
 
 GIT
-  remote: git@github.com:atotic/rack.git
+  remote: https://github.com/atotic/rack
   revision: 81d266b8137afbb21faa0c98d827139dcf0b737b
   branch: rack-1.5
   specs:

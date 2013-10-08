@@ -4,7 +4,7 @@ gem 'rake'
 
 gem "sinatra"
 gem "thin"
-gem 'rack', :git => "git@github.com:atotic/rack.git", :branch => 'rack-1.5'
+gem 'rack', :git => "https://github.com/atotic/rack", :branch => 'rack-1.5'
 gem 'rack-flash3' # because of https://github.com/nakajima/rack-flash/issues/8
 
 gem "sequel" # database
@@ -19,7 +19,7 @@ gem 'therubyracer'
 gem 'filesize'
 
 gem 'delayed_job', "~> 3.0" # :git => "git://github.com/atotic/delayed_job.git"
-gem 'delayed_job_sequel', :git => "git://github.com/atotic/delayed_job_sequel.git"
+gem 'delayed_job_sequel', :git => "https://github.com/atotic/delayed_job_sequel"
 #gem 'delayed_job_sequel', :path => "../../delayed_job_sequel"
 gem 'daemons'
 gem 'pony' # email
