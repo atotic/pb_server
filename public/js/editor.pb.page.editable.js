@@ -250,7 +250,7 @@
 		leave: function(handoffAssetId) {
 			if (handoffAssetId == this.assetId) {
 				this.destinationPage.resumeSave();
-				this.sourcePage.resumeSave();
+				if (this.sourcePage) this.sourcePage.resumeSave();
 				return this.getHandoff();
 			}
 

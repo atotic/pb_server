@@ -51,7 +51,7 @@
 			return this.p.jsDate;
 		},
 		get display_name() {
-			return this.p.display_name;
+			return this.p.displayName();
 		},
 		get caption() {
 			return this.p.caption;
@@ -137,14 +137,14 @@
 				return a.loc - b.loc;
 			}
 			function nameComparator(a,b) {
-				var a_name = a.photo.display_name;
-				var b_name = b.photo.display_name;
+				var a_name = a.photo.displayName() || "";
+				var b_name = b.photo.displayName() || "";
 				// natural sort, if possible
 				var a_match = a_name.match(/(\d+)/);
 				var b_match = b_name.match(/(\d+)/);
 				var a_num = a_match ? parseInt(a_match[1], 10) : NaN;
 				var b_num = b_match ? parseInt(b_match[1], 10) : NaN;
-				if (a_num != a_num || b_num != b_num) { // weird way of testing isNan(a_num) || isNan(b_num)
+				if (a_num != a_num || b_num != b_num || a_num == b_num) { // weird way of testing isNan(a_num) || isNan(b_num)
 					if (a_name < b_name)
 						return -1;
 					else if (b_name < a_name)
@@ -535,7 +535,7 @@
 					if (!noBroadcast)
 						this.broadcast(props[i]);
 				}
-			'exif'
+//			'exif'
 			if ('display_url' in this)	// clean up generated image
 				delete this._dataUrl;
 		},
