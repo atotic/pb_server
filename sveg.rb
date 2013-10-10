@@ -414,6 +414,12 @@ class SvegApp < Sinatra::Base
 		end
 	end
 
+	get '/books/:id/contact_sheet' do
+		@book = PB::Book[params[:id]]
+		user_must_have_access @book
+		render_erb :contact_sheet
+	end
+
 	post '/books' do
 		user_must_be_logged_in
 		@book = Book.new()

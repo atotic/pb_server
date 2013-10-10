@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Contact sheet</title>
+	<%= asset_link("application.css", "editor.css") %>
+	<%= asset_link("jquery.js") %>
+<%= asset_link("editor.js") %>
+<style>
+.book_title {
+	font-size: 24px;
+	font-style: italic;
+}
+.page_title {
+	display: inline-block;
+	width: 200px;
+	vertical-align: top;
+	margin-top:8px;
+}
+.container {
+	border-bottom: 5px solid #CCC;
+}
+.pc {
+	display: inline-block;
+	margin: 8px;
+	vertical-align: top;
+}
+.pc img {
+	display: block;
+	height: 64px;
+}
+.photo_date, .photo_title {
+	font-family: courier;
+	font-size: x-small;
+}
+</style>
+<script>
+"use strict";
+
+function renderPhotoAsset(book, asset, caption) {
+	var $pc = $("<div class='pc'>");
+	var photo = book.photo( asset.photoId );
+	var $img = $("<img>").prop('src', photo.getUrl(PB.PhotoProxy.SMALL));
+	var d = photo.jsDate;
+	var date_text = d ? d.getFullYear() + "/" + (d.getMonth() + 1) + "/" + d.getDate() : 'no date';
+	$pc.append( $("<div class='photo_date'>").text(date_text));
+	$pc.append( $("<div class='photo_title'>").text(photo.display_name));
+
+	$pc.append($img);
+	if (caption)
+		$pc.append( $("<div class='caption'>").text(caption));
+	return $pc;
+}
+
+function renderPage(book, pageId) {
+	var page = book.page(pageId);
+	var assets = page.getAssets();
+	if (assets.ids.length == 0)
+		return;
+	var $container = $("<div class='container'>");
+	$container.append( $("<div class='page_title'>").text(page.formattedTitle()));
+	assets.ids.forEach( function(asset_id) {
+		var asset = page.getAsset(asset_id);
+		if (asset.type == 'photo') {
+			var caption = page.getCaptionText( asset_id );
+			$container.append( renderPhotoAsset( book, asset, caption ));
+		}
+	});
+	$(document.body).append($container);
+}
+
+function renderBook(book) {
+	$(document.body).append($("<p class='book_title'>").text(book.title));
+	book.pageList.forEach(function(pageId) {
+		renderPage(book, pageId);
+	});
+}
+$.ajax('/books/'+ <%= @book.id %>, { cache: false} )
+	.done(function(response, msg, jqXHR) {
+		renderBook( new PB.Book(response) );
+	})
+	.fail(function(response, msg, jsXHR) {
+		PB.error("Unable to load book");
+});
+</script>
+<body>
+</body>

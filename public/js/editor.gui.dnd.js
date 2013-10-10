@@ -201,7 +201,7 @@
 	*/
 	var webkitIpadBugWorkaround = {
 		patchedRemove: function(selector, keepData) {	// jquery: 5421
-			console.log("patchedRemove")
+			// console.log("patchedRemove")
 			var elem,
 				elems = selector ? jQuery.filter( selector, this ) : this,
 				i = 0;

@@ -84,12 +84,6 @@ asset widget {
 		isDraggable: function() {
 			return this.id.match(coverRegex) === null;
 		},
-		type: function() {
-			debugger; // should use get pageClass()
-		},
-		get photoList() {
-			debugger;
-		},
 		get dimensions() {
 			return this.p.dimensions;
 		},
@@ -193,9 +187,12 @@ asset widget {
 			return !this.doNotSave;
 		},
 		suspendSave: function() {
+			// console.log("suspendSave ", this.id);
+			// console.trace();
 			this.doNotSave = true;
 		},
 		resumeSave: function() {
+			// console.log("resumeSave ", this.id);
 			this.doNotSave = false;
 		},
 		// return asset id

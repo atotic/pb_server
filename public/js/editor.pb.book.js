@@ -437,6 +437,7 @@
 			var canSave = true;
 			// check if pages are in 'saveable' state
 			for (var i=0; i<pageList.length; i++) {
+				// if (!this.page(pageList[i]).canSave) console.log("cannot save ", pageList[i]);
 				canSave = canSave && this.page(pageList[i]).canSave;
 			}
 			if (!canSave)
