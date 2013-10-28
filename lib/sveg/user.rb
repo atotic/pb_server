@@ -9,9 +9,7 @@ class User < Sequel::Model
 	one_to_many :books
 	one_to_many :photos
 
-	def after_create
-		super
-	end
+	@@anonymous_user_id = -1
 
 	def save_to_session(env, expire = :session)
 		expire_in = (SvegSettings.development? ? 5 : 1) * 24 * 3600	# one day
@@ -27,8 +25,8 @@ class User < Sequel::Model
 		user_id = env['rack.session']['user_id'].to_i
 		expire = env['rack.session']['user_id_expires']
 		expire_time = Time.at(expire.to_i)
-		return "user not logged in" unless expire_time > Time.now
-		env['sveg.user'] = self[user_id]
+#		return self.anonymous_user unless expire_time > Time.now
+		env['sveg.user'] = self[user_id] || self.anonymous_user
 	end
 
 	def login(env)
@@ -42,6 +40,19 @@ class User < Sequel::Model
 
 	def to_s
 		"#{self.display_name}:#{self.pk}"
+	end
+
+	def self.anonymous_user
+		if @@anonymous_user_id == -1
+			user = self[:email => 'anonymous@pook.io']
+			unless user
+				user = User.new( { :display_name => "Anonymous", :email => "anonymous@pook.io"})
+				user.save
+			end
+			@@anonymous_user_id = user.pk
+		end
+		PB.logger.info "anonymous user"
+		return self[@@anonymous_user_id]
 	end
 
 end

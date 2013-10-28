@@ -1,39 +1,245 @@
-<h1>Log in</h1>
-<hr>
-<p>Do you already have an account on one of these sites? Click the logo to <b>log in</b> with it here:</p>
-<div id="openid_btns">
-	<a title="log in with google" href="/auth/google_oauth2?origin=/login" style="background-image: url(/img/auth/google_64.png)">log in with google</a>
-	<a title="log in with facebook" href="/auth/facebook?origin=/login" style="background-image: url(/img/auth/facebook_64.png)">log in with facebook</a>
-	<% if SvegSettings.development? %>
-	<a title="log in with pb4us" href="/auth/developer?origin=/login" style="background-image: url(/img/auth/openid_64.png)">log in as developer</a>
-	<% end %>
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Pook.io demo</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+	<%= asset_link("bootstrap.css", "application.css", "editor.css") %>
+</head>
+<body>
+<input id="add-photo-input"
+		type="file"
+		multiple="true"
+		accept="image/*"
+		capture="filesystem"
+		style="position:absolute;width:0px;height:0px;border:0;padding:0;margin:0">
+<div id='site-navbar' class="navbar navbar-inverse">
+	<div class="navbar-inner">
+		<ul class="nav">
+			<li class="dropdown" style='width:130px'>
+				<a href="#" class="brand dropdown-toggle" data-toggle="dropdown">pook.io <b class="caret"></b></a>
+				<ul class='dropdown-menu'>
+					<li class="disabled" ><a href="#">about</a></li>
+					<li><a href="/">home</a></li>
+				</ul>
+			</li>
+			<li rel='tooltip' title='Esc to toggle'>
+				<a href='/Tools' onclick="GUI.toggleTools();return false;">
+				<i class='icon-wrench icon-white'></i>Tools <i class='icon-wrench icon-white'></i> </a>
+		</ul>
+		<ul class="nav pull-right">
+		<% if current_user %>
+			<li class="dropdown">
+				<a href="#"
+					class="dropdown-toggle"
+					data-toggle="dropdown">
+		<%= current_user.display_name %><b class="caret"></b>
+				</a>
+				<ul class='dropdown-menu'>
+					<li><a href="/account">account</a></li>
+					<li><a href="/logout">log out</a></li>
+				<% if current_user.is_administrator %><li><a href="/admin" class="admin">admin</a><% end %>
+				</ul>
+		<% else %>
+					<li><a href="/auth/login">log in</a>
+		<% end %>
+			<li id='fullscreen'><a href='/Fullscreen' onclick="$(document.body).toggleFullScreen(); return false;"><i class='icon-fullscreen icon-white'></i></a></li>
+		</ul>
+	</div>
 </div>
-	<input type='checkbox' id='duration'> <label for='duration'>keep me logged in</input>
-<script>
-	$('#keep').change( function(x,y) {
-		var state = $('#duration')[0].checked ? 'long' : 'session'
-		$("#openid_btns a").each(function(index, el) {
-			el.href = el.href.replace(/\/login.*$/, '/login/' + state);
-		});
-	});
+<div id="rough-more-tools">
+	<dl>
+	<dt>
+		Display
+	</dt>
+	<dd>
+		<form class="form-horizontal">
+			<div class="control-group">
+				<label class="control-label">Show photos</label>
+				<div class="controls btn-group">
+					<button id='photoFilter-all' class="btn">All</button>
+					<button id='photoFilter-unused' class="btn">Unused</button>
+				</div>
+			</div>
+
+			<div class="control-group">
+				<label class="control-label">Sort photos by</label>
+				<div class="controls btn-group">
+					<button id='photoSort-added' class="btn">Date added</button>
+					<button id='photoSort-taken' class="btn">Date taken</button>
+					<button id='photoSort-name' class="btn">Name</button>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">Photo size</label>
+				<div class="controls btn-group">
+					<button id='photoSize-small' class="btn">Small</button>
+					<button id='photoSize-medium' class="btn">Medium</button>
+					<button id='photoSize-large' class="btn">Large</button>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">Page size</label>
+				<div class="controls btn-group">
+					<button id='pageSize-small' class="btn">Small</button>
+					<button id='pageSize-medium' class="btn">Medium</button>
+					<button id='pageSize-large' class="btn">Large</button>
+					<button id='pageSize-xlarge' class="btn">XL</button>
+				</div>
+			</div>
+		</form>
+	</dd>
+	<dt>
+		Actions
+	</dt>
+	<dd>
+		<form class="form-horizontal">
+			<div class="control-group">
+				<label class="control-label">Add photos from</label>
+				<div class="controls">
+					<button id='tool-addLocalFile' class="btn">Local files</button>
+					<button class="btn disabled">more sources to come</button>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">Photo placement</label>
+				<div class="controls">
+					<button id='tool-autoPlace' class="btn">Place all photos on pages automatically right now</button>
+				</div>
+		</form>
+	</dd>
+	</dl>
+</div>
+<div id='top-navbar' class="navbar navbar-inverse">
+	<div class="navbar-inner">
+	<ul id='top-menu' class="nav">
+		<li id='work-area-demo-nav'><a href='/Demo'>Demo</a></li>
+		<li id='work-area-organize-nav'><a href='/Organize'>Organize</a></li>
+		<li id='work-area-theme-nav'><a href='/Theme'>Theme</a></li>
+		<li id='work-area-design-nav'><a href='/Design'>Design</a></li>
+		<li id='work-area-print-nav'><a href='/Print' >Print</a></li>
+	</ul>
+	</div>
+</div>
+<div id="main-content">
+	<div id='palette'>
+		<ul id='palette-kind-picker'>
+		</ul>
+	</div>
+	<div id='work-area'>
+		<div id='work-area-container'>
+			<div id='work-area-demo'>
+			<%= erb :demo %>
+			</div>
+			<div id='work-area-organize'>
+			</div>
+			<div id='work-area-theme'>
+			Sizes! Themes!
+			</div>
+			<div id='work-area-design'>
+				<div id='work-area-design-btn-back' class="well">
+					<i class='icon-arrow-left'></i>
+				</div>
+				<div id='work-area-design-btn-forward' class="well">
+					<i class='icon-arrow-right'></i>
+				</div>
+				</button>
+					<button id='work-area-design-btn-animate' class="btn-large btn ">
+					animate
+				</button>
+			</div>
+			<div id='work-area-print'>
+				<p>We can't print physical books yet, but we can generate PDF</p>
+				<button id='generate-pdf-btn'>Generate PDF</button>
+				<p><a href="/books/<%= @book.id %>/contact_sheet">Contact sheet</a></p>
+				<p>What does print workflow looks like?</p>
+				<ul>
+					<li>Warnings about: low resolution, offscreen text
+					<li>Final PDF can be really big. Can't expect user to look at it
+					<li>Where is the book mailed to.
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div id='palette-resize-btn'>
+	</div>
+</div>
+<div id='bottom-navbar' class='navbar  navbar-fixed-bottom'>
+<div class='navbar-inner'>
+	<ul id='workarea-menu' class='nav'>
+		<li id='add-photo-btn'><a  href="#">add photo</a></li>
+		<li id='add-page-btn' rel="tooltip" title="You can DRAG the button to insert pages in the middle"><a href="#" >add page</a></li>
+		<li id='add-text-btn'><a href="#" >add text</a></li>
+		<li class="divider-vertical"></li>
+	</ul>
+	<ul id='selection-menu' class='nav'>
+	</ul>
+	<div id='trash-btn'
+		class='well pull-right'
+		rel='tooltip'
+		title='Anything dropped here will be removed (images, pages)'>
+		<i class='icon-trash icon-white'></i></li>
+	</div>
+</div>
+</div>
+<!-- Templates -->
+<script type='text/html' id='error-locked-template'>
+<div id='error-locked' class='alert alert-error'>
+	<p>Uh oh, your book is corrupted. This can happen when book is edited from two places at the same time.</p>
+	<p>You can still look at your book, but you cannot save any changes.</p>
+	<p>To unlock the book, <a href='#' onclick='window.location.reload(); return false'>reload</a>.</p>
+	<p id='lockedMessage'><p>
+	<p>Developers, look at the console for details.</p>
+</div>
 </script>
-<style type="text/css">
-	#openid_btns a {
-		display:inline-block;
-		height: 80px;
-		background-color: white;
-		border: 2px solid transparent;
-		padding-left: 8px;
-		margin-right: 16px;
-		background-position: 0px 16px;
-		background-repeat: no-repeat
-	}
-	#openid_btns a:link, a:visited{
-		text-decoration: none;
-		color: black;
-	}
-	#openid_btns a:hover {
-		box-shadow: inset 0px 0px 5px #61A326;
-		background-position: 0px 15px;
-	}
-</style>
+<script type='text/html' id='theme-picker-onetheme-template'>
+	<li><p>{title}</p><img src='{img}'></li>
+</script>
+<script type='text/html' id='theme-failed-to-load-template'>
+	<li>
+		<div class='alert alert-error'>
+			Themes failed to load.
+			<a href="javascript:GUI.ThemePicker.init()">Try again?</a>
+		</div>
+	</li>
+</script>
+<script type='text/html' id='sizes-failed-to-load-template'>
+	<div style='display:inline-block'>Failed to load book sizes. <a href="javascript:GUI.ThemePicker.initButtonList()">Try again?</a>
+	</div>
+</script>
+<script type='text/html' id='theme-size-radio-template'>
+<label class="radio inline">
+<input type="radio" name="sizeRadio" value="{width}x{height}">
+{width}x{height}
+</label>
+</script>
+<script type='text/html' id='please-relogin-template'>
+<div class='alert alert-error'>
+	<p>Your login session has expired, please log in again.</p>
+</div>
+</script>
+<%= asset_link("jquery.js") %>
+<%= asset_link("bootstrap.js") %>
+<%= asset_link("editor.js", "editor.gui.workarea.demo.js") %>
+<script>
+// DemoWorkArea js
+$('#keep').change( function(x,y) {
+	var state = $('#duration')[0].checked ? 'long' : 'session'
+	$("#openid_btns a").each(function(index, el) {
+		el.href = el.href.replace(/\/login.*$/, '/login/' + state);
+	});
+});
+// Std js
+PB.init();
+GUI.init();
+GUI.Options.designStage = 'demo';
+GUI.DemoWorkArea.show();
+$.ajax('/books/'+ <%= @book.id %>, { cache: false} )
+	.done(function(response, msg, jqXHR) {
+		GUI.bindToBook( new PB.Book(response));
+	})
+	.fail(function(response, msg, jsXHR) {
+		PB.error("Unable to load book");
+	});
+console.log("Loaded at", new Date());
+</script>
+</body>

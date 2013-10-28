@@ -6,7 +6,7 @@
 
 var WorkArea = {
 	init: function() {
-		['organize', 'theme', 'design', 'print'].forEach(function(action) {
+		['organize', 'theme', 'design', 'print', 'demo'].forEach(function(action) {
 			var id = 'work-area-' + action + '-nav';
 			$('#' + id).on('mousedown touchstart', function() {
 							GUI.Options.designStage = action;
@@ -46,13 +46,16 @@ var WorkArea = {
 			case 'print':
 				WorkArea.show('work-area-print');
 			break;
+			case 'demo':
+				WorkArea.show('work-area-demo');
+			break;
 			default:
 				console.warn("unknown designStage", val);
 			break;
 			}
 	},
 	get visibleWorkAreaId() {
-		var area = $('#work-area-organize:visible, #work-area-theme:visible, #work-area-design:visible, #work-area-print:visible');
+		var area = $('#work-area-organize:visible, #work-area-theme:visible, #work-area-design:visible, #work-area-print:visible,#work-area-demo:visible');
 		if (area.length == 1)
 			return area.get(0).id;
 		return null;
@@ -67,6 +70,8 @@ var WorkArea = {
 				return GUI.DesignWorkArea;
 			case 'work-area-print':
 				return GUI.PrintWorkArea;
+			case 'work-area-demo':
+				return GUI.DemoWorkArea;
 			default:
 				return null;
 		}

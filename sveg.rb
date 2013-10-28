@@ -356,7 +356,13 @@ class SvegApp < Sinatra::Base
 	get '/auth/login' do
 		# check http://accountchooser.net/owners
 		# content security policy
-		render_erb :login, :layout => :'layout/plain'
+		@book = PB::Book[{:title=> 'Public Demo'}]
+		unless @book
+			@book = Book.new()
+			@book.set_fields({ :user_id => PB::User.anonymous_user.pk, :title => 'Public Demo'}, [:user_id, :title])
+			@book.save
+		end
+		render_erb :login
 	end
 
 	# OmniAuth authentication callback
@@ -393,7 +399,7 @@ class SvegApp < Sinatra::Base
 	get '/books/new' do
 		user_must_be_logged_in
 		@book = Book.new({:user_id => current_user.pk})
-		render_erb :book_new, {:layout => :'layout/plain'}
+		render_erb :book_new, :layout => :'layout/plain'
 	end
 
 	delete '/books/:id' do

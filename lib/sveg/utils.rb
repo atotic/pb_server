@@ -1,7 +1,6 @@
 # Utility classes. Self-contained, can  be used by any server
-
 require 'log4r'
-
+require_relative 'user'
 class Log4r::GrowlOutputter < Log4r::Outputter
 	require 'growl'
 	def canonical_log(logevent)
@@ -258,8 +257,7 @@ module PB
 
 	# Security utility routines
 	class Security
-		@@no_security = false	# development bypass
-
+		@@no_security = true	# development/demo bypass
 		def self.xhr?(env)
 			env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest"
 		end
@@ -271,16 +269,16 @@ module PB
 		end
 
 		def self.user_must_be_admin(env)
-			return if  @@no_security && SvegSettings.development?
+			return if  @@no_security  && SvegSettings.development?
 			user_must_be_logged_in(env)
 			return if env['sveg.user'].is_administrator
 			raise "You must be an administrator to access this resource"
 		end
 
 		def self.user_must_own(env, resource)
-			return if  @@no_security && SvegSettings.development?
-			user_must_be_logged_in(env)
+			return if  @@no_security
 			raise "No such resource" unless resource
+			user_must_be_logged_in(env)
 			return if (env['sveg.user'].pk == resource[:user_id]) || (env['sveg.user'].is_administrator)
 			raise "You are not allowed access to this resource"
 		end
