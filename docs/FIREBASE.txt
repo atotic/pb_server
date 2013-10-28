@@ -1,8 +1,0 @@
-FIREBASE.txt
-
-Questions:
-
-Can I temporarily modify model, then roll back the modifications
-Alternatively, can I suspend updates to repository
-
-Offline: how is it handled?

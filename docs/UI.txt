@@ -1,28 +1,4 @@
 POOK.IO
-Part One of the Total Rewrite is finished,
-and it looks very good.
-Speed, simplicity, Bootstrap, jsdiffs, bindings
-all very good.
-
-Code is clean,
-new features fit snuggly,
-as they should,
-it is a total rewrite
-
-One step left before part one
-is done
-That one step reveals cracks
-in my simple UI
-Three words won't fit in 200 pixels
-
-Some were lit on fire
-shortly after we were born
-the fire continues
-even when standing still
-
-Braindumps help
-
-So here is my braindump
 
 Remaining tasks:
 - templates
