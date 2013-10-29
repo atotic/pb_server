@@ -1,12 +1,23 @@
 <a href="https://github.com/atotic/pb_server"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
-<p>Pook.io is an HTML5 photobook editor. This has been <a href='http://www.totic.org/'>my</a> hobby project for the last couple of years.</p>
+<h2>An HTML5 Photobook Editor Demo</h2>
+<p id='small-warn'>This demo does not fit well on small screens</p>
 
-<p>Do you already have an account on one of these sites? Click the logo to <b>log in</b> with it here:</p>
+<p>This is a technology demo of a photobook editor.</p>
+
+<p>This page is an interactive editor. Click on the "Organize"|"Design" tabs above, and experiment: drag pictures/pages around, change themes. Have your friends do the same at the same time, you are all working on the same book.</p>
+
+<p>The source code and philosophy are on Github.</p>
+
+
+<br>
+<br>
+<br>
+<p>If you'd like to create private books, log in:</p>
 <div id="openid_btns">
-	<a title="log in with google" href="/auth/google_oauth2?origin=/login" style="background-image: url(/img/auth/google_64.png)">log in with google</a>
-	<a title="log in with facebook" href="/auth/facebook?origin=/login" style="background-image: url(/img/auth/facebook_64.png)">log in with facebook</a>
+	<a title="google" href="/auth/google_oauth2?origin=/login" style="background-image: url(/img/auth/google_64.png)">google</a>
+	<a title="facebook" href="/auth/facebook?origin=/login" style="background-image: url(/img/auth/facebook_64.png)">facebook</a>
 	<% if SvegSettings.development? %>
-	<a title="log in with pb4us" href="/auth/developer?origin=/login" style="background-image: url(/img/auth/openid_64.png)">log in as developer</a>
+	<a title="developer" href="/auth/developer?origin=/login" style="background-image: url(/img/auth/openid_64.png)">developer</a>
 	<% end %>
 </div>
 	<input type='checkbox' id='duration'> <label for='duration'>keep me logged in</input>
@@ -14,13 +25,20 @@
 
 </script>
 <style type="text/css">
+	@media (min-width: 600px) {
+		#small-warn {
+			display:none;
+		}
+	}
+	#small-warn {
+		font-size:20px;
+	}
 	#work-area-demo {
 		margin: 32px;
 	}
 	#openid_btns a {
 		display:inline-block;
 		height: 80px;
-		background-color: white;
 		border: 2px solid transparent;
 		padding-left: 8px;
 		margin-right: 16px;
